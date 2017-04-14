@@ -1,0 +1,94 @@
+---
+title: "explore vicar package; t distribution"
+author: "Matthew Stephens"
+date: 2017-04-14
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+# Background
+
+I wanted to try out David's vicar package, particularly `mouthwash_secondstep`, and
+see how the $t$ distribution vs normal distribution works, particularly with the variance inflation option.
+
+# Simulate data
+
+I start with "null" data, but with t errors.
+
+```{r}
+set.seed(1)
+n=1000
+bhat = rt(n,df=4) # t with 4 df
+shat = rep(1,n)
+library(ashr)
+bhat.ash.t4 = ash(bhat,shat,df = 4)
+bhat.ash.norm = ash(bhat,shat)
+get_pi0(bhat.ash.norm)
+get_pi0(bhat.ash.t4)
+min(get_lfsr(bhat.ash.norm))
+min(get_lfsr(bhat.ash.t4))
+```
+So we see that use of a normal likelihood with $t$ data creates "false positives",
+not suprisingly.
+
+Now I wanted to check if this also occurs in mouthwash - the idea was that
+maybe the use of a variance inflation parameter in mouthwash would avoid this behaviour.
+However, it appeared not to.
+```{r}
+library("vicar")
+a = matrix(rep(1,n),nrow = n, ncol=1) # just put in an "intercept" confounder with no effect
+a_seq = bhat.ash.norm$fitted_g$a
+b_seq = bhat.ash.norm$fitted_g$b
+lambda_seq = rep(1,length(a_seq))
+lambda_seq[1] = 10
+bhat.m.norm = mouthwash_second_step(bhat,shat,a,lambda_seq = lambda_seq,a_seq = a_seq, b_seq=b_seq,mixing_dist = "uniform", likelihood="normal", scale_var = FALSE, degrees_freedom = 100000) #I had to set very high df to get it to run
+bhat.m.t4 = mouthwash_second_step(bhat,shat,a,lambda_seq = lambda_seq,a_seq = a_seq, b_seq=b_seq,mixing_dist = "uniform", likelihood="t", scale_var = FALSE, degrees_freedom = 4)
+bhat.m.norm.c = mouthwash_second_step(bhat,shat,a,lambda_seq = lambda_seq,a_seq = a_seq, b_seq=b_seq,mixing_dist = "uniform", likelihood="normal", scale_var = TRUE, degrees_freedom = 100000) #I had to set very high df to get it to run
+bhat.m.t4.c = mouthwash_second_step(bhat,shat,a,lambda_seq = lambda_seq,a_seq = a_seq, b_seq=b_seq,mixing_dist = "uniform", likelihood="t", scale_var = TRUE, degrees_freedom = 4)
+
+bhat.m.norm$pi0
+bhat.m.t4$pi0
+bhat.m.norm.c$pi0
+bhat.m.t4.c$pi0
+
+min(bhat.m.norm$result$lfsr)
+min(bhat.m.t4$result$lfsr)
+min(bhat.m.norm.c$result$lfsr)
+min(bhat.m.t4.c$result$lfsr)
+
+
+```
+
+So actually the scaling seems to make things worse here.
+Actually this seems to be because the scaling parameter is estimated to be <1.
+
+```{r}
+bhat.m.norm.c$xi
+bhat.m.t4.c$xi
+```
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
