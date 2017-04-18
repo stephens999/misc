@@ -1,0 +1,69 @@
+---
+title: "Look at pi0 under null for n=13500"
+author: "Matthew Stephens"
+date: 2017-04-18
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+# Background
+
+We saw on some simulated null data sets from RNA-seq data that the ash estimate of
+pi0 was often <1 - more often than in the New Deal paper. I wanted to check whether this
+could be due to the larger sample size in these simulations (13,500) compared with the paper (1,000).  (An alternative is that ash is reacting to some subtle "non-nullness" 
+creeping into the simulated null data).
+
+# Simulation
+
+We just simulate 10 datasets with n=13500.
+```{r}
+set.seed(1)
+nsim=10
+a = list()
+pi0 = rep(0,nsim)
+for(i in 1:nsim){
+  z = rnorm(13500)
+  a[[i]] = ashr::ash(z,1)
+  pi0[i] = ashr::get_pi0(a[[i]])
+}
+plot(pi0)
+```
+
+This looks not as bad to me as in the simulated RNA-seq data, so I'm guessing
+it is not a sample size issue. I also just wanted to check the lfsrs for the two
+datasets where pi0 is around 0.96; I reassuringly found nothing very significant:
+```{r}
+min(ashr::get_lfsr(a[[4]]))
+min(ashr::get_lfsr(a[[10]]))
+```
+
+And as a check I checked the log-likelihood 
+```{r}
+ashr::calc_loglik(g=ashr::normalmix(1,0,0),a[[4]]$data)
+ashr::calc_loglik(g=ashr::get_fitted_g(a[[4]]),a[[4]]$data)
+```
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
