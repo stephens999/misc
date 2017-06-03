@@ -1,0 +1,65 @@
+---
+title: "Test ash npmle with n big"
+author: "Matthew Stephens"
+date: 2017-06-02
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+# Background
+
+The NPMLE for the EB normal means problem is a discrete distribution.
+For n=1000 I've found it is "quite" discrete, with just a few masses.
+What happens for larger n?
+
+
+```{r}
+set.seed(1)
+library("ashr")
+bhat = rnorm(10000,0,2)
+grid = seq(from = min(bhat),to = max(bhat),length = 1000)
+k    = length(grid)
+b.ash.npmle = ash(bhat,1,g = unimix(pi = rep(1/(k-1),(k-1)),a = grid[-k],b = grid[-1]),method = "shrink")
+plot(grid[-1],get_fitted_g(b.ash.npmle)$pi)
+```
+
+
+
+
+```{r}
+bhat = rnorm(100000,0,2)
+grid = seq(from = min(bhat),to = max(bhat),length = 1000)
+k    = length(grid)
+b.ash.npmle = ash(bhat,1,g = unimix(pi = rep(1/(k-1),(k-1)),a = grid[-k],b = grid[-1]),method = "shrink")
+plot(grid[-1],get_fitted_g(b.ash.npmle)$pi)
+b.ash.npmle$loglik
+sum(dnorm(bhat,0,2,log=TRUE))
+```
+
+
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
