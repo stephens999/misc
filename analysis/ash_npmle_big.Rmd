@@ -31,22 +31,12 @@ For n=1000 I've found it is "quite" discrete, with just a few masses.
 What happens for larger n?
 
 
+
 ```{r}
 set.seed(1)
 library("ashr")
-bhat = rnorm(10000,0,2)
-grid = seq(from = min(bhat),to = max(bhat),length = 1000)
-k    = length(grid)
-b.ash.npmle = ash(bhat,1,g = unimix(pi = rep(1/(k-1),(k-1)),a = grid[-k],b = grid[-1]),method = "shrink")
-plot(grid[-1],get_fitted_g(b.ash.npmle)$pi)
-```
-
-
-
-
-```{r}
 bhat = rnorm(100000,0,2)
-grid = seq(from = min(bhat),to = max(bhat),length = 1000)
+grid = seq(from = min(bhat),to = max(bhat),length = 100)
 k    = length(grid)
 b.ash.npmle = ash(bhat,1,g = unimix(pi = rep(1/(k-1),(k-1)),a = grid[-k],b = grid[-1]),method = "shrink")
 plot(grid[-1],get_fitted_g(b.ash.npmle)$pi)
