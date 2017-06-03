@@ -11,6 +11,7 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 # Ash
 
 * [Null simulations with larger n=13500](ash_pi0_largern.html)
+* [NPMLE with larger n=100000](ash_npmle_big.html)
 
 # Mouthwash
 
