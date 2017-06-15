@@ -17,5 +17,9 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 
 * [Looking at how Mouthwash deals with t distributions vs normal](vicar_t.html)
 
+# Flash
+
+* [Looking at differentiating the likelihood at the null](EBflash_1d.html)
+
 [rmarkdown]: http://rmarkdown.rstudio.com/rmarkdown_websites.htm
 [rstudio]: https://www.rstudio.com/products/rstudio/download/preview/
