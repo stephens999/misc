@@ -1,0 +1,71 @@
+---
+title: "EB Flash, n=p=1"
+author: "Matthew Stephens"
+date: 2017-06-14
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+# Background
+
+I was interested in whether we can try to differentiate
+the flash likelihood at the "null" ($g_l=g_f=0$).
+
+Let n=p=1. And Y (1 by 1 matrix) be given by factor model
+$$Y = lf + e$$
+where $l,f \sim N(0,s^2)$ and $e \sim N(0,1)$.
+
+Integrating out $l$ and $f$ yields a likelihood for $s$:
+$$L(s) = \int p(Y| l, f) p(l) p(f) dl df $$
+
+My question is what is the derivative of the likelihood
+(or log likelihood) with respect to $s$. Particularly what is it at $s=0$
+(which is the 0-factor model)?
+
+If we define $h$ to be the log-likelihood for $l,f$ 
+$$h(l,f) = \log p(Y|l,f)$$
+then is easy to show that
+
+$$d^2h/dl^2 = f^2/s^2$$
+and 
+$$d^2h/dldf = -(Y-2lf)$$
+
+so at $l=f=0$ the hessian is the matrix with 0 on diagonal and $-Y$ on off-diagonal. This matrix has eigenvalues $\pm Y$.
+
+This suggests that the posterior distribution of $(l,f)$ will be approximated
+by a multivariate normal with inverse covariance matrix with $1/s^2$ on diagonal and $Y$ on off-diagonal. Let's try with s=0.1.
+
+```{r}
+l = rnorm(100000,0,0.1)
+f = rnorm(100000,0,0.1)
+y = 2
+Lik = dnorm((y-l*f),0,1)
+ss = sample(1:100000,prob=Lik,replace=TRUE)
+plot(l[ss],f[ss])
+```
+
+So we see the problem - indeed the posterior is approximated by this, but it looks just like the prior... So the ratio of the posterior to the prior will be 1.
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
