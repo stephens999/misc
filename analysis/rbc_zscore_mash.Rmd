@@ -1,0 +1,93 @@
+---
+title: "Apply mash to red blood cell traits"
+author: "Matthew Stephens"
+date: 2017-06-24
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+# Preparation
+
+Here we read in the data.
+```{r}
+z.old = read.table("../data/bmass.HaemgenRBC2016.Vs2.PreviousSNPs.ZScores.hclust.vs1.txt",header=TRUE,stringsAsFactors = FALSE)
+z.new = read.table("../data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt",header=TRUE,stringsAsFactors = FALSE)
+z.old.m = as.matrix(z.old[,2:7])
+z.new.m = as.matrix(z.new[,2:7])
+V = diag(6)
+V[1,]=c(0.5,-0.47,0.80,-0.47,0.73,-0.13)
+V[2,2:6] = c(0.5,0.12,0.87,0.12,0.03)
+V[3,3:6] = c(0.5,0.04,0.93,-0.1)
+V[4,4:6] = c(0.5,0.20,0.46)
+V[5,5:6] =c(0.5,0.22)
+V[6,6] = 0.5
+V  = V+t(V)
+```
+
+First we fit mash to the old hits.
+
+IMPORTANT NOTE: really we should do this on a random sample of all zs.. but I don't have that now.
+```{r}
+#devtools::install_github("stephenslab/mashr")
+library("mashr")
+d.old = set_mash_data(z.old.m, Shat=1, V=V)
+U.c = cov_canonical(d.old)
+U.pca = cov_pca(d.old,3,subset=NULL)
+U.d = cov_ed(d.old,U.pca,subset=NULL)
+m.old=mashr::mash(d.old,c(U.c,U.d),algorithm.version = "R",outputlevel=99)
+```
+
+Apply mash to the new data using fit from old data.
+```{r}
+d.new = set_mash_data(z.new.m, Shat=matrix(1,nrow=103,ncol=6), V=V)
+m.new = mashr::mash(d.new,g=ashr::get_fitted_g(m.old),fixg=TRUE)
+```
+
+
+Looking at the log-likelihoods for the observed z under the fitted model, we see some very strong outliers... indicates a potential problem!
+
+```{r}
+plot(m.new$vloglik)
+```
+
+```{r}
+postmean = ashr::get_pm(m.new)
+lfsr = ashr::get_lfsr(m.new)
+#sign_of_biggest_effect= apply(postmean, 1, function(x){m = which.max(abs(x)); #return(sign(x[m]))})
+#postmean = postmean*sign_of_biggest_effect
+postmean = postmean * sign(svd(postmean)$u[,1])
+superheat::superheat(postmean,
+                     pretty.order.cols = FALSE,pretty.order.rows=TRUE, title="Posterior Mean effect", heat.pal = c(rgb(seq(0,1,length=5),1,seq(0,1,length=5)),rgb(1,seq(1,0,length=5),seq(1,0,length=5))))
+
+```
+
+```{r}
+superheat::superheat(1*(lfsr<0.01),pretty.order.rows=TRUE, title ="heatmap of lfsr<0.01")
+```
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
