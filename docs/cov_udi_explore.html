@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Matthew Stephens" />
+
+<meta name="date" content="2017-06-25" />
+
+<title>Explorations of implementing the UDI framework in mash</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-1.1/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">misc</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Explorations of implementing the UDI framework in mash</h1>
+<h4 class="author"><em>Matthew Stephens</em></h4>
+<h4 class="date"><em>2017-06-25</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2017-06-26</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> b8ee9d1</p>
+<div id="preliminary" class="section level1">
+<h1>Preliminary</h1>
+<p>First, here is the code from Stephens (2013) PloS ONE</p>
+<pre class="r"><code>#&#39; @param VYX is (1/n) Y&#39;X is d by p
+#&#39; @param VYY is (1/n) Y&#39;Y is d by d
+#&#39; @param VXX a p-vector of the estimated variances of the SNP
+#&#39; @param U vector of length d of true/false
+#&#39; @param D vector of length d of true/false
+#&#39; @param n sample size the summaries were computed from
+#&#39; @param m a parameter in the prior (I believe)
+#&#39; @param d the number of phenotypes
+#&#39; @param sigmaa the parameter of the prior determining effect size
+logBF.fromVSummaries = function(VYX,VYY,VXX,U,D,n,m,d,sigmaa){
+
+  dd = sum(D)
+  du= sum(U)
+  p = dim(VYX)[2]
+
+  if(du&gt;0){
+    LUU = chol(VYY[U,U,drop=FALSE]) # a du by du matrix
+    VUD = VYY[U,D,drop=FALSE]      #a du by dd matrix of the correlations of Yu with Yd
+
+    c = cbind(forwardsolve(t(LUU),VYX[U,,drop=FALSE]))#c solves LUU&#39;c = phiU, c is a du by p matrix
+    b = cbind(forwardsolve(t(LUU), VUD))  # b is du by dd, and solves LUU&#39; b = VUD, so b&#39;b = VUD&#39; LUU^-1 LUU&#39;^-1 VUD = VUD&#39; (LUU&#39;LUU)^-1 VUD = VUD&#39;VYYU^-1 VUD
+  } else{c=matrix(0,nrow=1,ncol=p); b=matrix(0,nrow=1,ncol=dd);}
+
+  C = VXX - colSums(c*c)
+
+  u = VYX[D,,drop=FALSE] - crossprod(b,c)
+
+  V0 = VYY[D,D,drop=FALSE] - crossprod(b)
+  L0 = chol(V0)
+  a = forwardsolve(t(L0),u)
+  lambda = sigmaa^(-2)  / (n*C)
+  k = as.numeric(1/(1+lambda))
+  return((dd/2) * log(1-k) - 0.5*(n+m-(d-sum(D)-sum(U)))*log(1-(k/C) *colSums(a*a)))
+}</code></pre>
+<p>And now how we apply this to summary data based on the methods in Stephens (2016)</p>
+<pre class="r"><code>#&#39; @param Z a p by d matrix of Z scores
+#&#39; @param VYY a d by d matrix 
+#&#39; @param f a p vector containing the frequencies of the p SNPs
+logBF.fromZ = function(Z,VYY,f,U,D,n,m,sigmaa){
+  VXX = 2*f*(1-f)
+  VYX = t(sqrt(VXX/n) * Z)
+  logBF.fromVSummaries(VYX,VYY,VXX,U,D,n,m,d=ncol(Z),sigmaa)
+}</code></pre>
+<p>Read in some example data</p>
+<pre class="r"><code>z = read.table(&quot;../data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt&quot;,header=TRUE)
+z = as.matrix(z[,2:7])
+
+V = diag(6)
+V[1,]=c(0.5,-0.47,0.80,-0.47,0.73,-0.13)
+V[2,2:6] = c(0.5,0.12,0.87,0.12,0.03)
+V[3,3:6] = c(0.5,0.04,0.93,-0.1)
+V[4,4:6] = c(0.5,0.20,0.46)
+V[5,5:6] =c(0.5,0.22)
+V[6,6] = 0.5
+V  = V+t(V)</code></pre>
+<p>And apply the method. Here we show how changes in n and f give the same BF if we scale the prior parameter sigma_a like <span class="math inline">\(1/\sqrt{2f(1-f)n}\)</span>.</p>
+<p>First scaling in n:</p>
+<pre class="r"><code>UU = c(F,F,F,F,F,F)
+DD = c(T,T,T,T,T,T)
+p = nrow(z)
+f = 0.5
+lbf1=logBF.fromZ(z,V,rep(f,p), UU,DD,n=1000,m=0,sigmaa=sqrt(1/(2*f*(1-f)*1000)))
+lbf2=logBF.fromZ(z,V,rep(f,p), UU,DD,n=10000,m=0,sigmaa=sqrt(1/(2*f*(1-f)*10000)))
+plot(lbf1,lbf2)
+abline(a=0,b=1,col=2)</code></pre>
+<p><img src="figure/cov_udi_explore.Rmd/scaling_n-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Now try changing f:</p>
+<pre class="r"><code>f = 0.2
+lbf3=logBF.fromZ(z,V,rep(f,p), UU,DD,n=10000,m=0,sigmaa=sqrt(1/(2*f*(1-f)*10000)))
+plot(lbf2,lbf3)
+abline(a=0,b=1,col=2)</code></pre>
+<p><img src="figure/cov_udi_explore.Rmd/scaling_f-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Now check the mashr version:</p>
+<pre class="r"><code>library(&quot;mashr&quot;)
+data = set_mash_data(z,1,V)
+Ulist = list(null= mashr:::cov_all_zeros(data), all = cov_udi(data,c(&quot;D&quot;,&quot;D&quot;,&quot;D&quot;,&quot;D&quot;,&quot;D&quot;,&quot;D&quot;)))
+temp = calc_lik_matrix(data,Ulist,log=TRUE)
+plot(temp[,2]-temp[,1],lbf1,xlab=&quot;mash lBF&quot;,ylab=&quot;original lBF (n=1000)&quot;)
+abline(a=0,b=1,col=2)</code></pre>
+<p><img src="figure/cov_udi_explore.Rmd/mashr_version-1.png" width="672" style="display: block; margin: auto;" /> Pretty good agreement. But even better if we use the version with n=10k:</p>
+<pre class="r"><code>plot(temp[,2]-temp[,1],lbf2,xlab=&quot;mash lBF&quot;,ylab=&quot;original lBF (n=10k)&quot;)
+abline(a=0,b=1,col=2)</code></pre>
+<p><img src="figure/cov_udi_explore.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Now try making the first two components unassociated</p>
+<pre class="r"><code>UU = c(T,T,F,F,F,F)
+DD = c(F,F,T,T,T,T)
+lbf=logBF.fromZ(z,V,rep(f,p),UU,DD,n=10000,m=0,sigmaa=sqrt(1/(2*f*(1-f)*10000)))
+
+data = set_mash_data(z,1,V)
+Ulist = list(null= mashr:::cov_all_zeros(data), all = cov_udi(data,c(&quot;U&quot;,&quot;U&quot;,&quot;D&quot;,&quot;D&quot;,&quot;D&quot;,&quot;D&quot;)))
+temp = calc_lik_matrix(data,Ulist,log=TRUE)
+plot(temp[,2]-temp[,1],lbf,xlab=&quot;mash lBF&quot;,ylab=&quot;original lBF (n=10k)&quot;)
+abline(a=0,b=1,col=2)</code></pre>
+<p><img src="figure/cov_udi_explore.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>And making components 3-4 unassociated</p>
+<pre class="r"><code>UU = c(F,F,T,T,F,F)
+DD = c(T,T,F,F,T,T)
+lbf=logBF.fromZ(z,V,rep(f,p),UU,DD,n=10000,m=0,sigmaa=sqrt(1/(2*f*(1-f)*10000)))
+
+data = set_mash_data(z,1,V)
+Ulist = list(null= mashr:::cov_all_zeros(data), all = cov_udi(data,c(&quot;D&quot;,&quot;D&quot;,&quot;U&quot;,&quot;U&quot;,&quot;D&quot;,&quot;D&quot;)))
+temp = calc_lik_matrix(data,Ulist,log=TRUE)
+plot(temp[,2]-temp[,1],lbf,xlab=&quot;mash lBF&quot;,ylab=&quot;original lBF (n=10k)&quot;)
+abline(a=0,b=1,col=2)</code></pre>
+<p><img src="figure/cov_udi_explore.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>And also making components 1 and 6 indirectly associated</p>
+<pre class="r"><code>UU = c(F,F,T,T,F,F)
+DD = c(F,T,F,F,T,F)
+lbf=logBF.fromZ(z,V,rep(f,p),UU,DD,n=10000,m=0,sigmaa=sqrt(1/(2*f*(1-f)*10000)))
+
+data = set_mash_data(z,1,V)
+Ulist = list(null= mashr:::cov_all_zeros(data), all = cov_udi(data,c(&quot;I&quot;,&quot;D&quot;,&quot;U&quot;,&quot;U&quot;,&quot;D&quot;,&quot;I&quot;)))
+temp = calc_lik_matrix(data,Ulist,log=TRUE)
+plot(temp[,2]-temp[,1],lbf,xlab=&quot;mash lBF&quot;,ylab=&quot;original lBF (n=10k)&quot;)
+abline(a=0,b=1,col=2)</code></pre>
+<p><img src="figure/cov_udi_explore.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Without any unaffected:</p>
+<pre class="r"><code>UU = c(F,F,F,F,F,F)
+DD = c(T,T,T,F,F,F)
+lbf=logBF.fromZ(z,V,rep(f,p),UU,DD,n=10000,m=0,sigmaa=sqrt(1/(2*f*(1-f)*10000)))
+
+data = set_mash_data(z,1,V)
+Ulist = list(null= mashr:::cov_all_zeros(data), all = cov_udi(data,c(&quot;D&quot;,&quot;D&quot;,&quot;D&quot;,&quot;I&quot;,&quot;I&quot;,&quot;I&quot;)))
+temp = calc_lik_matrix(data,Ulist,log=TRUE)
+plot(temp[,2]-temp[,1],lbf,xlab=&quot;mash lBF&quot;,ylab=&quot;original lBF (n=10k)&quot;)
+abline(a=0,b=1,col=2)</code></pre>
+<p><img src="figure/cov_udi_explore.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>And another, just to check:</p>
+<pre class="r"><code>UU = c(F,F,F,F,F,F)
+DD = c(F,T,F,T,F,T)
+lbf=logBF.fromZ(z,V,rep(f,p),UU,DD,n=10000,m=0,sigmaa=sqrt(1/(2*f*(1-f)*10000)))
+
+data = set_mash_data(z,1,V)
+Ulist = list(null= mashr:::cov_all_zeros(data), all = cov_udi(data,c(&quot;I&quot;,&quot;D&quot;,&quot;I&quot;,&quot;D&quot;,&quot;I&quot;,&quot;D&quot;)))
+temp = calc_lik_matrix(data,Ulist,log=TRUE)
+plot(temp[,2]-temp[,1],lbf,xlab=&quot;mash lBF&quot;,ylab=&quot;original lBF (n=10k)&quot;)
+abline(a=0,b=1,col=2)</code></pre>
+<p><img src="figure/cov_udi_explore.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.3.2 (2016-10-31)
+Platform: x86_64-apple-darwin13.4.0 (64-bit)
+Running under: OS X El Capitan 10.11.6
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] mashr_0.1-18
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.11      knitr_1.16        magrittr_1.5     
+ [4] MASS_7.3-47       doParallel_1.0.10 pscl_1.4.9       
+ [7] SQUAREM_2016.8-2  lattice_0.20-35   foreach_1.4.3    
+[10] ashr_2.1-19       stringr_1.2.0     tools_3.3.2      
+[13] parallel_3.3.2    grid_3.3.2        rmeta_2.16       
+[16] git2r_0.18.0      htmltools_0.3.6   iterators_1.0.8  
+[19] assertthat_0.2.0  yaml_2.1.14       rprojroot_1.2    
+[22] digest_0.6.12     Matrix_1.2-10     codetools_0.2-15 
+[25] evaluate_0.10     rmarkdown_1.6     stringi_1.1.5    
+[28] backports_1.1.0   mvtnorm_1.0-6     truncnorm_1.0-7  </code></pre>
+</div>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
