@@ -13,9 +13,17 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 * [Null simulations with larger n=13500](ash_pi0_largern.html)
 * [NPMLE with larger n=100000](ash_npmle_big.html)
 
+
+# Mash
+
+* [Initial mash analysis of RBC z scores](rbc_zscore_mash.html)
+* [Comparing the UDI BFs from mash with originals](cov_udi_explore.html)
+
+
 # Mouthwash
 
 * [Looking at how Mouthwash deals with t distributions vs normal](vicar_t.html)
+
 
 # Flash
 

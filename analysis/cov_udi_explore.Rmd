@@ -1,0 +1,212 @@
+---
+title: "Explorations of implementing the UDI framework in mash"
+author: "Matthew Stephens "
+date: 2017-06-25
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+
+# Preliminary
+
+First, here is the code from Stephens (2013) PloS ONE
+
+```{r}
+#' @param VYX is (1/n) Y'X is d by p
+#' @param VYY is (1/n) Y'Y is d by d
+#' @param VXX a p-vector of the estimated variances of the SNP
+#' @param U vector of length d of true/false
+#' @param D vector of length d of true/false
+#' @param n sample size the summaries were computed from
+#' @param m a parameter in the prior (I believe)
+#' @param d the number of phenotypes
+#' @param sigmaa the parameter of the prior determining effect size
+logBF.fromVSummaries = function(VYX,VYY,VXX,U,D,n,m,d,sigmaa){
+
+  dd = sum(D)
+  du= sum(U)
+  p = dim(VYX)[2]
+
+  if(du>0){
+    LUU = chol(VYY[U,U,drop=FALSE]) # a du by du matrix
+    VUD = VYY[U,D,drop=FALSE]      #a du by dd matrix of the correlations of Yu with Yd
+
+    c = cbind(forwardsolve(t(LUU),VYX[U,,drop=FALSE]))#c solves LUU'c = phiU, c is a du by p matrix
+    b = cbind(forwardsolve(t(LUU), VUD))  # b is du by dd, and solves LUU' b = VUD, so b'b = VUD' LUU^-1 LUU'^-1 VUD = VUD' (LUU'LUU)^-1 VUD = VUD'VYYU^-1 VUD
+  } else{c=matrix(0,nrow=1,ncol=p); b=matrix(0,nrow=1,ncol=dd);}
+
+  C = VXX - colSums(c*c)
+
+  u = VYX[D,,drop=FALSE] - crossprod(b,c)
+
+  V0 = VYY[D,D,drop=FALSE] - crossprod(b)
+  L0 = chol(V0)
+  a = forwardsolve(t(L0),u)
+  lambda = sigmaa^(-2)  / (n*C)
+  k = as.numeric(1/(1+lambda))
+  return((dd/2) * log(1-k) - 0.5*(n+m-(d-sum(D)-sum(U)))*log(1-(k/C) *colSums(a*a)))
+}
+```
+
+And now how we apply this to summary data based on the
+methods in Stephens (2016)
+```{r define}
+#' @param Z a p by d matrix of Z scores
+#' @param VYY a d by d matrix 
+#' @param f a p vector containing the frequencies of the p SNPs
+logBF.fromZ = function(Z,VYY,f,U,D,n,m,sigmaa){
+  VXX = 2*f*(1-f)
+  VYX = t(sqrt(VXX/n) * Z)
+  logBF.fromVSummaries(VYX,VYY,VXX,U,D,n,m,d=ncol(Z),sigmaa)
+}
+
+
+```
+
+Read in some example data
+```{r read}
+z = read.table("../data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt",header=TRUE)
+z = as.matrix(z[,2:7])
+
+V = diag(6)
+V[1,]=c(0.5,-0.47,0.80,-0.47,0.73,-0.13)
+V[2,2:6] = c(0.5,0.12,0.87,0.12,0.03)
+V[3,3:6] = c(0.5,0.04,0.93,-0.1)
+V[4,4:6] = c(0.5,0.20,0.46)
+V[5,5:6] =c(0.5,0.22)
+V[6,6] = 0.5
+V  = V+t(V)
+```
+
+And apply the method. Here we show how changes in n and f 
+give the same BF if we scale the prior parameter sigma_a
+like $1/\sqrt{2f(1-f)n}$.
+
+First scaling in n:
+```{r scaling_n}
+UU = c(F,F,F,F,F,F)
+DD = c(T,T,T,T,T,T)
+p = nrow(z)
+f = 0.5
+lbf1=logBF.fromZ(z,V,rep(f,p), UU,DD,n=1000,m=0,sigmaa=sqrt(1/(2*f*(1-f)*1000)))
+lbf2=logBF.fromZ(z,V,rep(f,p), UU,DD,n=10000,m=0,sigmaa=sqrt(1/(2*f*(1-f)*10000)))
+plot(lbf1,lbf2)
+abline(a=0,b=1,col=2)
+```
+
+Now try changing f:
+```{r scaling_f}
+f = 0.2
+lbf3=logBF.fromZ(z,V,rep(f,p), UU,DD,n=10000,m=0,sigmaa=sqrt(1/(2*f*(1-f)*10000)))
+plot(lbf2,lbf3)
+abline(a=0,b=1,col=2)
+```
+
+Now check the mashr version:
+```{r mashr_version}
+library("mashr")
+data = set_mash_data(z,1,V)
+Ulist = list(null= mashr:::cov_all_zeros(data), all = cov_udi(data,c("D","D","D","D","D","D")))
+temp = calc_lik_matrix(data,Ulist,log=TRUE)
+plot(temp[,2]-temp[,1],lbf1,xlab="mash lBF",ylab="original lBF (n=1000)")
+abline(a=0,b=1,col=2)
+```
+Pretty good agreement. But even better if we use the version
+with n=10k:
+```{r}
+plot(temp[,2]-temp[,1],lbf2,xlab="mash lBF",ylab="original lBF (n=10k)")
+abline(a=0,b=1,col=2)
+```
+
+Now try making the first two components unassociated
+```{r}
+UU = c(T,T,F,F,F,F)
+DD = c(F,F,T,T,T,T)
+lbf=logBF.fromZ(z,V,rep(f,p),UU,DD,n=10000,m=0,sigmaa=sqrt(1/(2*f*(1-f)*10000)))
+
+data = set_mash_data(z,1,V)
+Ulist = list(null= mashr:::cov_all_zeros(data), all = cov_udi(data,c("U","U","D","D","D","D")))
+temp = calc_lik_matrix(data,Ulist,log=TRUE)
+plot(temp[,2]-temp[,1],lbf,xlab="mash lBF",ylab="original lBF (n=10k)")
+abline(a=0,b=1,col=2)
+```
+
+And making components 3-4 unassociated
+```{r}
+UU = c(F,F,T,T,F,F)
+DD = c(T,T,F,F,T,T)
+lbf=logBF.fromZ(z,V,rep(f,p),UU,DD,n=10000,m=0,sigmaa=sqrt(1/(2*f*(1-f)*10000)))
+
+data = set_mash_data(z,1,V)
+Ulist = list(null= mashr:::cov_all_zeros(data), all = cov_udi(data,c("D","D","U","U","D","D")))
+temp = calc_lik_matrix(data,Ulist,log=TRUE)
+plot(temp[,2]-temp[,1],lbf,xlab="mash lBF",ylab="original lBF (n=10k)")
+abline(a=0,b=1,col=2)
+```
+
+
+And also making components 1 and 6 indirectly associated
+```{r}
+UU = c(F,F,T,T,F,F)
+DD = c(F,T,F,F,T,F)
+lbf=logBF.fromZ(z,V,rep(f,p),UU,DD,n=10000,m=0,sigmaa=sqrt(1/(2*f*(1-f)*10000)))
+
+data = set_mash_data(z,1,V)
+Ulist = list(null= mashr:::cov_all_zeros(data), all = cov_udi(data,c("I","D","U","U","D","I")))
+temp = calc_lik_matrix(data,Ulist,log=TRUE)
+plot(temp[,2]-temp[,1],lbf,xlab="mash lBF",ylab="original lBF (n=10k)")
+abline(a=0,b=1,col=2)
+```
+
+
+Without any unaffected:
+```{r}
+UU = c(F,F,F,F,F,F)
+DD = c(T,T,T,F,F,F)
+lbf=logBF.fromZ(z,V,rep(f,p),UU,DD,n=10000,m=0,sigmaa=sqrt(1/(2*f*(1-f)*10000)))
+
+data = set_mash_data(z,1,V)
+Ulist = list(null= mashr:::cov_all_zeros(data), all = cov_udi(data,c("D","D","D","I","I","I")))
+temp = calc_lik_matrix(data,Ulist,log=TRUE)
+plot(temp[,2]-temp[,1],lbf,xlab="mash lBF",ylab="original lBF (n=10k)")
+abline(a=0,b=1,col=2)
+```
+
+And another, just to check:
+```{r}
+UU = c(F,F,F,F,F,F)
+DD = c(F,T,F,T,F,T)
+lbf=logBF.fromZ(z,V,rep(f,p),UU,DD,n=10000,m=0,sigmaa=sqrt(1/(2*f*(1-f)*10000)))
+
+data = set_mash_data(z,1,V)
+Ulist = list(null= mashr:::cov_all_zeros(data), all = cov_udi(data,c("I","D","I","D","I","D")))
+temp = calc_lik_matrix(data,Ulist,log=TRUE)
+plot(temp[,2]-temp[,1],lbf,xlab="mash lBF",ylab="original lBF (n=10k)")
+abline(a=0,b=1,col=2)
+```
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
