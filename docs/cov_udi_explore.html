@@ -316,7 +316,7 @@ shared across the workflowr files. -->
 <p><strong>Last updated:</strong> 2017-06-26</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> b8ee9d1</p>
+<p><strong>Code version:</strong> f6f5121</p>
 <div id="preliminary" class="section level1">
 <h1>Preliminary</h1>
 <p>First, here is the code from Stephens (2013) PloS ONE</p>
@@ -395,7 +395,7 @@ abline(a=0,b=1,col=2)</code></pre>
 <p>Now check the mashr version:</p>
 <pre class="r"><code>library(&quot;mashr&quot;)
 data = set_mash_data(z,1,V)
-Ulist = list(null= mashr:::cov_all_zeros(data), all = cov_udi(data,c(&quot;D&quot;,&quot;D&quot;,&quot;D&quot;,&quot;D&quot;,&quot;D&quot;,&quot;D&quot;)))
+Ulist = c(list(null= mashr:::cov_all_zeros(data)),cov_udi(data,c(&quot;D&quot;,&quot;D&quot;,&quot;D&quot;,&quot;D&quot;,&quot;D&quot;,&quot;D&quot;)))
 temp = calc_lik_matrix(data,Ulist,log=TRUE)
 plot(temp[,2]-temp[,1],lbf1,xlab=&quot;mash lBF&quot;,ylab=&quot;original lBF (n=1000)&quot;)
 abline(a=0,b=1,col=2)</code></pre>
@@ -409,7 +409,7 @@ DD = c(F,F,T,T,T,T)
 lbf=logBF.fromZ(z,V,rep(f,p),UU,DD,n=10000,m=0,sigmaa=sqrt(1/(2*f*(1-f)*10000)))
 
 data = set_mash_data(z,1,V)
-Ulist = list(null= mashr:::cov_all_zeros(data), all = cov_udi(data,c(&quot;U&quot;,&quot;U&quot;,&quot;D&quot;,&quot;D&quot;,&quot;D&quot;,&quot;D&quot;)))
+Ulist = c(list(null= mashr:::cov_all_zeros(data)), cov_udi(data,c(&quot;U&quot;,&quot;U&quot;,&quot;D&quot;,&quot;D&quot;,&quot;D&quot;,&quot;D&quot;)))
 temp = calc_lik_matrix(data,Ulist,log=TRUE)
 plot(temp[,2]-temp[,1],lbf,xlab=&quot;mash lBF&quot;,ylab=&quot;original lBF (n=10k)&quot;)
 abline(a=0,b=1,col=2)</code></pre>
@@ -420,7 +420,7 @@ DD = c(T,T,F,F,T,T)
 lbf=logBF.fromZ(z,V,rep(f,p),UU,DD,n=10000,m=0,sigmaa=sqrt(1/(2*f*(1-f)*10000)))
 
 data = set_mash_data(z,1,V)
-Ulist = list(null= mashr:::cov_all_zeros(data), all = cov_udi(data,c(&quot;D&quot;,&quot;D&quot;,&quot;U&quot;,&quot;U&quot;,&quot;D&quot;,&quot;D&quot;)))
+Ulist = c(list(null= mashr:::cov_all_zeros(data)),  cov_udi(data,c(&quot;D&quot;,&quot;D&quot;,&quot;U&quot;,&quot;U&quot;,&quot;D&quot;,&quot;D&quot;)))
 temp = calc_lik_matrix(data,Ulist,log=TRUE)
 plot(temp[,2]-temp[,1],lbf,xlab=&quot;mash lBF&quot;,ylab=&quot;original lBF (n=10k)&quot;)
 abline(a=0,b=1,col=2)</code></pre>
@@ -431,7 +431,7 @@ DD = c(F,T,F,F,T,F)
 lbf=logBF.fromZ(z,V,rep(f,p),UU,DD,n=10000,m=0,sigmaa=sqrt(1/(2*f*(1-f)*10000)))
 
 data = set_mash_data(z,1,V)
-Ulist = list(null= mashr:::cov_all_zeros(data), all = cov_udi(data,c(&quot;I&quot;,&quot;D&quot;,&quot;U&quot;,&quot;U&quot;,&quot;D&quot;,&quot;I&quot;)))
+Ulist = c(list(null= mashr:::cov_all_zeros(data)),  cov_udi(data,c(&quot;I&quot;,&quot;D&quot;,&quot;U&quot;,&quot;U&quot;,&quot;D&quot;,&quot;I&quot;)))
 temp = calc_lik_matrix(data,Ulist,log=TRUE)
 plot(temp[,2]-temp[,1],lbf,xlab=&quot;mash lBF&quot;,ylab=&quot;original lBF (n=10k)&quot;)
 abline(a=0,b=1,col=2)</code></pre>
@@ -442,7 +442,7 @@ DD = c(T,T,T,F,F,F)
 lbf=logBF.fromZ(z,V,rep(f,p),UU,DD,n=10000,m=0,sigmaa=sqrt(1/(2*f*(1-f)*10000)))
 
 data = set_mash_data(z,1,V)
-Ulist = list(null= mashr:::cov_all_zeros(data), all = cov_udi(data,c(&quot;D&quot;,&quot;D&quot;,&quot;D&quot;,&quot;I&quot;,&quot;I&quot;,&quot;I&quot;)))
+Ulist = c(list(null= mashr:::cov_all_zeros(data)),  cov_udi(data,c(&quot;D&quot;,&quot;D&quot;,&quot;D&quot;,&quot;I&quot;,&quot;I&quot;,&quot;I&quot;)))
 temp = calc_lik_matrix(data,Ulist,log=TRUE)
 plot(temp[,2]-temp[,1],lbf,xlab=&quot;mash lBF&quot;,ylab=&quot;original lBF (n=10k)&quot;)
 abline(a=0,b=1,col=2)</code></pre>
@@ -453,7 +453,7 @@ DD = c(F,T,F,T,F,T)
 lbf=logBF.fromZ(z,V,rep(f,p),UU,DD,n=10000,m=0,sigmaa=sqrt(1/(2*f*(1-f)*10000)))
 
 data = set_mash_data(z,1,V)
-Ulist = list(null= mashr:::cov_all_zeros(data), all = cov_udi(data,c(&quot;I&quot;,&quot;D&quot;,&quot;I&quot;,&quot;D&quot;,&quot;I&quot;,&quot;D&quot;)))
+Ulist = c(list(null= mashr:::cov_all_zeros(data)),  cov_udi(data,c(&quot;I&quot;,&quot;D&quot;,&quot;I&quot;,&quot;D&quot;,&quot;I&quot;,&quot;D&quot;)))
 temp = calc_lik_matrix(data,Ulist,log=TRUE)
 plot(temp[,2]-temp[,1],lbf,xlab=&quot;mash lBF&quot;,ylab=&quot;original lBF (n=10k)&quot;)
 abline(a=0,b=1,col=2)</code></pre>
@@ -473,19 +473,20 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] mashr_0.1-18
+[1] mashr_0.1-19
 
 loaded via a namespace (and not attached):
  [1] Rcpp_0.12.11      knitr_1.16        magrittr_1.5     
  [4] MASS_7.3-47       doParallel_1.0.10 pscl_1.4.9       
  [7] SQUAREM_2016.8-2  lattice_0.20-35   foreach_1.4.3    
-[10] ashr_2.1-19       stringr_1.2.0     tools_3.3.2      
-[13] parallel_3.3.2    grid_3.3.2        rmeta_2.16       
-[16] git2r_0.18.0      htmltools_0.3.6   iterators_1.0.8  
-[19] assertthat_0.2.0  yaml_2.1.14       rprojroot_1.2    
-[22] digest_0.6.12     Matrix_1.2-10     codetools_0.2-15 
-[25] evaluate_0.10     rmarkdown_1.6     stringi_1.1.5    
-[28] backports_1.1.0   mvtnorm_1.0-6     truncnorm_1.0-7  </code></pre>
+[10] plyr_1.8.4        ashr_2.1-19       stringr_1.2.0    
+[13] tools_3.3.2       parallel_3.3.2    grid_3.3.2       
+[16] rmeta_2.16        git2r_0.18.0      htmltools_0.3.6  
+[19] iterators_1.0.8   assertthat_0.2.0  yaml_2.1.14      
+[22] rprojroot_1.2     digest_0.6.12     Matrix_1.2-10    
+[25] codetools_0.2-15  evaluate_0.10     rmarkdown_1.6    
+[28] stringi_1.1.5     backports_1.1.0   mvtnorm_1.0-6    
+[31] truncnorm_1.0-7  </code></pre>
 </div>
 </div>
 
