@@ -1,0 +1,66 @@
+---
+title: "Simple illustration of issue with conservative behaviour of variational method"
+author: "Matthew Stephens"
+date: 2017-10-12
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+## Simple illustration
+
+Here's an example where flashr2 produces a rank 0 result, even when the first
+eigenvalue is clearly outstanding.
+
+```{r}
+library("flashr2")
+n = 100
+p = 300
+
+set.seed(7)
+# seed 5 also produces an example of same behaviour
+
+Y = matrix(rnorm(n*p),nrow=n,ncol=p)
+
+l= rnorm(n)
+f= rnorm(p,0,2/sqrt(p))
+Y1 = Y + outer(l,f)
+Y1.svd = svd(Y1,1,1)
+f1 = flash_r1(Y1,verbose=TRUE,var_type = "constant")
+plot(Y1.svd$d)
+```
+
+My thesis is that although in this case the variational lower bound
+favors the null (rank 0) solution, the actual likelihood - if we could
+compute it - would favor the rank 1 solution.
+
+For investigating this it may be helpful to run flash without the null check at the end, to see what the optimimum is that it found. This is done as follows:
+```{r}
+f2 = flash_r1(Y1,verbose=TRUE,var_type = "constant",nullcheck = FALSE)
+```
+
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
