@@ -27,6 +27,8 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 
 # Flash
 
+* [Illustration of conservative behaviour issue](flash_r1vsr0_conservative.html)
+
 * [Looking at differentiating the likelihood at the null](EBflash_1d.html)
 
 [rmarkdown]: http://rmarkdown.rstudio.com/rmarkdown_websites.htm
