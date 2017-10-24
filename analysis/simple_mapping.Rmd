@@ -1,0 +1,84 @@
+---
+title: "Experiment with simple fine mapping approach"
+author: "Matthew Stephens"
+date: 2017-10-17
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+# Simulate some data
+
+We will simulate data with some "LD structure". b=3 blocks of p=10 variables,
+each correlated through some latent Z.
+The phenotype model is $Y = X_1+...+X_b + e$ where
+$X_1,\dots,X_b$ are each a member of a block, and $e$ is $N(0,sd)$.
+
+```{r}
+set.seed(1)
+simulate = function(n=100,p=10,b=3,sd=1){
+  Z = list()
+  X = list()
+  Y = list()
+  for(i in 1:b) Z[[i]] = rnorm(n)
+  for(i in 1:b) X[[i]] = Z[[i]] + matrix(rnorm(n*p),nrow=n)
+  for(i in 1:b) Y[[i]] = X[[i]][,1] 
+  
+  X = do.call(cbind,X) # bind columns of X and Y
+  Y = do.call(cbind,Y)
+  Y = rowSums(Y) # each of the betas is 1
+  
+  Y = Y + rnorm(n,sd = sd)
+  return(list(X=X,Y=Y))
+}
+d = simulate()
+```
+
+Note how the first (causal) variable in each block is more correlated than others.
+```{r}
+plot(cor(d$Y,d$X)[1,],main= "correlation of Y with each variable")
+```
+
+
+```{r}
+#to run this chunk had to install varbvs
+#library(devtools)
+#install_github("pcarbo/varbvs",subdir = "varbvs-R")
+library("varbvs")
+sd.grid <- c(0,10^seq(-2,1,length.out = 19))
+res = varbvsmix(d$X,Z=NULL,d$Y,sd.grid)
+plot(res$lfsr)
+```
+
+
+Try adding three variables that are exact duplicates of the causal ones.
+Notice it picks just one of the causal ones and zeros out the others.
+```{r}
+res2 = varbvsmix(cbind(d$X[,1],d$X[,11],d$X[,21],d$X),Z=NULL,d$Y,sd.grid)
+plot(res2$lfsr)
+```
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
