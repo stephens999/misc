@@ -1,0 +1,191 @@
+---
+title: "Check fine mapping of FMO2"
+author: "Matthew Stephens"
+date: 2017-10-27
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+
+# Read in data
+
+Here we read in data and fit the two varbvs models:
+```{r}
+d=readRDS("../data/Thyroid.FMO2.1Mb.RDS")
+storage.mode(d$X) <- "double"
+d$X <- d$X[,3501:4500]
+    
+X = d$X
+y = d$y
+Z = d$Z
+n <- nrow(X)
+p <- ncol(X)
+
+set.seed(1)
+fit <- varbvs::varbvs(X,Z,y,verbose = FALSE)
+
+sd.grid <- c(0,10^seq(-2,1,length.out = 19))
+set.seed(1)
+fit2 <- varbvs::varbvsmix(X,Z,y,sa =sd.grid,verbose=FALSE)
+```
+
+
+Now try with Gao's intialization
+```{r}
+ autoselect.mixsd = function(betahat,sebetahat,mult = sqrt(2)){
+        # To avoid exact measure causing (usually by mistake)
+        sebetahat = sebetahat[sebetahat!=0] 
+        # so that the minimum is small compared with measurement precision
+        sigmaamin = min(sebetahat)/10 
+        if (all(betahat^2 <= sebetahat^2)) {
+            # to deal with the occassional odd case where this could happen; 8 is arbitrary
+            sigmaamax = 8*sigmaamin 
+        } else {
+            # this computes a rough largest value you'd want to use, 
+            # based on idea that sigmaamax^2 + sebetahat^2 should be at least betahat^2   
+            sigmaamax = 2*sqrt(max(betahat^2-sebetahat^2)) 
+        }
+        if(mult==0){
+            return(c(0,sigmaamax/2))
+        } else {
+            npoint = ceiling(log2(sigmaamax/sigmaamin)/log2(mult))
+            return(mult^((-npoint):0) * sigmaamax)
+        }
+    }
+    univariate_regression = function(X,y,Z = NULL){
+        P = dim(X)[2]
+        if (!is.null(Z)) {
+            y = lm(y~Z)$residuals
+        }
+        output = matrix(0,nrow = P,ncol = 2)
+        for(i in 1:P){
+          g = summary(lm(y ~ X[,i]))
+          output[i,] = g$coefficients[2,1:2]
+        }
+        return(list(betahat = output[,1], sebetahat = output[,2], 
+                    residuals = y))
+    }
+    lasso_reorder = function(X, y) {
+        # perform lasso regression and reorder regressors by "importance"
+        fit.glmnet <- glmnet::glmnet(X, y, intercept = F)
+        beta_path = coef(fit.glmnet)[-1,]
+        K = dim(beta_path)[2]
+        path_order = c()
+        for (k in 1:K) {
+            crt_path = which(beta_path[,k] != 0)
+            if (length(crt_path) != 0 & length(path_order) == 0) {
+                path_order = c(path_order, crt_path)
+            } else if(length(crt_path) != 0) {
+                path_order = c(path_order, crt_path[-which(crt_path %in% path_order)] )
+            }
+        }
+        path_order = unname(path_order)
+        index_order = c(path_order, seq(1,dim(beta_path)[1])[-path_order])
+        return(index_order)
+    }
+    
+    
+
+
+    initial = univariate_regression(X, y ,Z)
+    mixsd = autoselect.mixsd(initial$betahat, initial$sebetahat)
+    mu_zero = matrix(0, ncol = length(mixsd)+1, nrow = ncol(X))
+    alpha_zero = matrix(1/ncol(X), ncol = length(mixsd)+1,nrow = ncol(X))
+    alpha_zero[,1] = 1 - length(mixsd) / ncol(X)
+    index_order = lasso_reorder(X, initial$residuals)
+    fit3 = varbvs::varbvsmix(X[, index_order], Z, y, sa = c(0,mixsd^2), 
+                                                          mu = mu_zero,
+                                                          alpha = alpha_zero,verbose=FALSE)
+
+    
+    fit4 = varbvs::varbvsmix(X[, index_order], Z, y, sa = sd.grid, 
+                                                          mu = mu_zero,
+                                                          alpha = alpha_zero,verbose=FALSE)
+
+    fit5 = varbvs::varbvs(X[,index_order],Z,y,verbose=FALSE)
+    
+```
+
+Compare the fit of the fitted values 
+```{r}
+# compute fitted values from varbvsmix fit
+fv = function(X,Z,fit){
+  bhat = rowSums(fit$alpha*fit$mu)
+  return(X %*% bhat + fit$mu.cov[1] + Z %*% fit$mu.cov[-1])
+}
+
+# fitted values for varbvs fit
+fv.b = function(X,Z,fit){
+  X %*% fit$beta + fit$beta.cov[1] + Z %*% fit$beta.cov[-1]
+}
+
+fitted.values2 = fv(X,Z,fit2)
+fitted.values3 = fv(X[, index_order],Z,fit3)
+fitted.values4 = fv(X[, index_order],Z,fit4)
+
+
+fitted.values = fv.b(X,Z,fit)
+fitted.values5 = fv.b(X[,index_order],Z,fit5)
+
+
+mean((d$y - fitted.values)^2)
+mean((d$y - fitted.values2)^2)
+mean((d$y - fitted.values3)^2)
+mean((d$y - fitted.values4)^2)
+mean((d$y - fitted.values5)^2)
+```
+
+Compute BFs
+```{r}
+#simple bf calculation X an n by p matrix of genoytpes
+log10BF = function(X,y,sigmaa){
+p = ncol(X)
+n = nrow(X)
+X = cbind(rep(1,n),X)
+invnu = diag(c(0,rep(1/sigmaa^2,p)))
+invOmega = invnu + t(X) %*% X
+B = solve(invOmega, t(X) %*% cbind(y))
+invOmega0 = n
+return(-0.5*log10(det(invOmega)) + 0.5*log10(invOmega0) - p*log10(sigmaa) -(n/2) * (log10( t(y- X %*% B) %*% y) - log10(t(y) %*% y - n*mean(y)^2) ))  
+}
+
+sum(fit$pip>0.95)
+sum(fit2$lfsr<0.05)
+sum(fit3$lfsr<0.05)
+sum(fit4$lfsr<0.05)
+sum(fit5$pip>0.95)
+
+
+log10BF(X[,which(fit$pip>0.95)], initial$residuals,0.5)
+log10BF(X[,which(fit2$lfsr<0.05)], initial$residuals,0.5)
+log10BF(X[,index_order][,which(fit3$lfsr<0.05)], initial$residuals,0.5)
+log10BF(X[,index_order][,which(fit4$lfsr<0.05)], initial$residuals,0.5)
+log10BF(X[,index_order][,which(fit5$pip>0.95)], initial$residuals,0.5)
+
+
+```
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
