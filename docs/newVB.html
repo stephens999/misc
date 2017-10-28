@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Matthew Stephens" />
+
+<meta name="date" content="2017-10-27" />
+
+<title>New attempt at VB</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-1.1/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">misc</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">New attempt at VB</h1>
+<h4 class="author"><em>Matthew Stephens</em></h4>
+<h4 class="date"><em>2017-10-27</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2017-10-28</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> d27282b</p>
+<div id="outline" class="section level1">
+<h1>Outline</h1>
+<p>The model is: <span class="math display">\[Y_i = \sum_{l=1}^L \sum_j X_{ij} \gamma_{lj} \beta_{lj} + e_i\]</span></p>
+<p><span class="math display">\[(\gamma_{l1},\dots,\gamma_{lp}) \sim Multinomial(1,\pi)\]</span> <span class="math display">\[\beta_{lj} \sim g()\]</span>.</p>
+<p>For now assume <span class="math inline">\(g\)</span> is <span class="math inline">\(N(0,\sigma_\beta^2)\)</span>, and <span class="math inline">\(\pi = (1/p,\dots,1/p)\)</span>.</p>
+<p>The idea is that there are <span class="math inline">\(L\)</span> non-zero effects. (though see later comment.) For each of <span class="math inline">\(l=1,\dots,L\)</span> we assume that exactly 1 of the <span class="math inline">\(p\)</span> variables has an effect, as indicated by <span class="math inline">\(\gamma_{lj}\)</span>. <span class="math inline">\(\pi\)</span> is a <span class="math inline">\(p\)</span> vector of prior probabilities summing to 1.</p>
+<p><span class="math inline">\(g()\)</span> is an effect distribution for the non-zero effects. <span class="math inline">\(g()\)</span> could be a mixture of normals as in my ash work. <span class="math inline">\(g\)</span> could include a point mass at 0, in which case <span class="math inline">\(L\)</span> is an upper bound on the number of non-zero effects, rather than an actual number of effects. But I’m not sure we need to go this far… for now we assume <span class="math inline">\(g\)</span> normal.</p>
+<p>The idea is to seek a variational approximation (or expectation propogation?) based on <span class="math display">\[q(\gamma,\beta) = \prod_l q(\gamma_l, \beta_l)\]</span></p>
+<p>Possibly we would further factorize this to <span class="math inline">\(q(\gamma_l,\beta_l) = q(\gamma_l) q(\beta_l)\)</span>, although it might be <span class="math inline">\(q(\gamma_l) q(\beta_l | \gamma_l)\)</span>, I’m not sure.</p>
+<p>However, cruicially, we do not factorize the <span class="math inline">\(q(\gamma_l)\)</span> across the <span class="math inline">\(p\)</span> elements of <span class="math inline">\(\gamma_l\)</span>: <span class="math inline">\(\gamma_l\)</span> is a binary vector with exactly one non-zero element, so <span class="math inline">\(q(\gamma_l) = Multinimial(1, \alpha_l)\)</span> say where <span class="math inline">\(\alpha_l=(\alpha_{l1,\dots,\alpha_lp})\)</span> are variational parameters.</p>
+<p>Here I have simply guessed at what the form of the variational updates might look like, by mimicking the updates from Carbonetto and Stephens. I borrowed and modified code from the function <code>varbvsnormupdate</code> from <code>varbvs</code>. Notice that we update all the variables simultaneously for each <span class="math inline">\(l\)</span>… not one at a time. (This is a computational advantage of this approach, at least when coded in R.!)</p>
+<p>In brief, the variational parameters are as in Carbonetto and Stephens, but they become <span class="math inline">\(L \times p\)</span> matrices. That is they are <span class="math inline">\(\alpha,\mu,s\)</span> where <span class="math inline">\(\alpha_{lj}\)</span> is the posterior mean for <span class="math inline">\(\gamma_{lj}\)</span>, <span class="math inline">\(\mu_{lj}\)</span> is the posterior mean on <span class="math inline">\(\beta_{lj}\)</span>, and <span class="math inline">\(s_{lj}\)</span> is the posterior variance.</p>
+<p>In the code below <code>alpha[l,] mu[l,]</code> is an estimate of <span class="math inline">\(\hat{\beta}[l,]\)</span>, and a sum of this over <span class="math inline">\(l\)</span> is an estimate of the overall SNP effects. Call this sum <code>r</code> as in Carbonetto and Stephens. The variable <code>Xr</code> is <code>t(X) %*% r</code>, effectively the “fitted values”.</p>
+<p>Lots to do: - derive these updates (or correct them!) and the VB lower bound. - investigate how it compares with exact calculations in small problems - think about how to deal with automatically choosing L or estimating g - hyperparameter estimation…</p>
+<pre class="r"><code>new_varbvsnormupdate &lt;- function (X, sigma, sa, xy, d, alpha0, mu0, Xr0) {
+    
+    # Get the number of samples (n) and variables (p).
+    n &lt;- nrow(X)
+    p &lt;- ncol(X)
+   
+    L = nrow(alpha0) # alpha0 and mu0 must be L by p
+    pi = rep(1,p)
+    
+  # Check input X.
+    if (!is.double(X) || !is.matrix(X))
+      stop(&quot;Input X must be a double-precision matrix&quot;)
+    
+    # Check inputs sigma and sa.
+    if (length(sigma) != 1 | length(sa) != 1)
+      stop(&quot;Inputs sigma and sa must be scalars&quot;)
+    
+  
+    # Check input Xr0.
+    if (length(Xr0) != n)
+      stop(&quot;length(Xr0) must be equal to nrow(X)&quot;)
+    
+    
+    # Initialize storage for the results.
+    alpha &lt;- alpha0
+    mu    &lt;- mu0
+    Xr    &lt;- Xr0
+  
+      # Repeat for each effect to update
+    for (l in 1:L) {
+        # remove lth effect
+        Xr = Xr - X %*% (alpha[l,]*mu[l,])
+        
+        # Compute the variational estimate of the posterior variance.
+        s &lt;- sa*sigma/(sa*d + 1)
+        
+        # Update the variational estimate of the posterior mean.
+        mu[l,] &lt;- s/sigma * (xy - t(X) %*% Xr)
+        
+        # Update the variational estimate of the posterior inclusion
+        # probability. This is basically prior (pi) times BF.
+        # The BF here comes from the normal approx - could be interesting
+        # to replace it with a t version that integrates over sigma?
+        alpha[l,] &lt;- pi*exp((log(s/(sa*sigma)) + mu[l,]^2/s)/2)
+        
+        alpha[l,] &lt;- alpha[l,]/sum(alpha[l,])
+        
+        # Update Xr by adding back in the $l$th effect
+        Xr &lt;- Xr + X %*% (alpha[l,]*mu[l,]) 
+    }
+    
+    return(list(alpha = alpha,mu = mu,Xr = Xr,s=s))
+}
+
+# Just repeated applies those updates
+# X is an n by p matrix of genotypes
+# Y a n vector of phenotypes
+# sa the variance of the prior on effect sizes (actually $\beta \sim N(0,sa sigma)$ where the residual variance sigma here is fixed to the variance of Y based on a small effect assumption.)
+fit = function(X,Y,sa=1,niter=100){
+  L = 5
+  sigma = var(Y)
+  p =ncol(X)
+  xy = t(X) %*% Y
+  d = colSums(X * X)
+  alpha0= mu0 = matrix(0,nrow=L,ncol=p)
+  Xr0 = X %*% colSums(alpha0*mu0)
+  for(i in 1:niter){
+    res = new_varbvsnormupdate(X, sigma, sa, xy, d, alpha0, mu0, Xr0)
+    alpha0 = res$alpha
+    mu0 = res$mu
+    Xr0 = res$Xr
+  }
+  return(res)
+}
+
+# This computes the average lfsr across SNPs for each l, weighted by the
+# posterior inclusion probability alpha
+lfsr_fromfit = function(res){
+  pos_prob = pnorm(0,mean=t(res$mu),sd=sqrt(res$s))
+  neg_prob = 1-pos_prob
+  1-rowSums(res$alpha*t(pmax(pos_prob,neg_prob)))
+}
+
+#find how many variables in the 95% CI
+n_in_CI = function(res){
+   apply(res$alpha,1,function(x){sum(cumsum(sort(x,decreasing = TRUE))&lt;0.95)+1})
+}</code></pre>
+</div>
+<div id="null-simulation" class="section level1">
+<h1>Null simulation</h1>
+<p>This is a null simulation. Actually I don’t understand why it converges to this result where all the posteriors are the same for each <span class="math inline">\(l\)</span>. Might be interesting to understand.</p>
+<pre class="r"><code>set.seed(1)
+n = 1000
+p = 1000
+y = rnorm(n)
+X = matrix(rnorm(n*p),nrow=n,ncol=p)
+res =fit(X,y,niter=100)
+n_in_CI(res)</code></pre>
+<pre><code>[1] 889 889 889 889 889</code></pre>
+<pre class="r"><code>lfsr_fromfit(res)</code></pre>
+<pre><code>[1] 0.1461692 0.1461692 0.1461692 0.1461692 0.1461692</code></pre>
+</div>
+<div id="simple-simulation" class="section level1">
+<h1>Simple Simulation</h1>
+<p>Here the first 4 variables are actually real… just a sanity check!</p>
+<pre class="r"><code>n = 1000
+p = 1000
+beta = rep(0,p)
+beta[1] = 1
+beta[2] = 1
+beta[3] = 1
+beta[4] = 1
+X = matrix(rnorm(n*p),nrow=n,ncol=p)
+y = X %*% beta + rnorm(n)
+res =fit(X,y,niter=100)
+n_in_CI(res)</code></pre>
+<pre><code>[1]   1   1   1   1 943</code></pre>
+<pre class="r"><code>lfsr_fromfit(res)</code></pre>
+<pre><code>[1] 0.000000 0.000000 0.000000 0.000000 0.356592</code></pre>
+</div>
+<div id="real-data" class="section level1">
+<h1>Real data</h1>
+<p>These are GTEX data from Thyroid.</p>
+<pre class="r"><code>d=readRDS(&quot;../data/Thyroid.FMO2.1Mb.RDS&quot;)
+storage.mode(d$X) &lt;- &quot;double&quot;
+d$X &lt;- d$X[,3501:4500]
+    
+X = d$X
+y = d$y
+Z = d$Z
+Xresid= X
+p =ncol(Xresid)
+for(i in 1:p){Xresid[,i] = lm(X[,i]~Z)$resid}
+yresid = lm(y~Z)$resid
+res =fit(Xresid,yresid,niter=100)
+n_in_CI(res)</code></pre>
+<pre><code>[1] 838  18   9   5 204</code></pre>
+<pre class="r"><code>lfsr_fromfit(res)</code></pre>
+<pre><code>[1] 2.165177e-01 1.857956e-09 1.110223e-16 1.325606e-12 1.375487e-02</code></pre>
+<p>Notice that only <span class="math inline">\(l=2,\dots,4\)</span> have small lfsr. So first one can probably be ignored. Of the others, there are 3 eQTLs that are fairly well mapped (95% CI contains 5-18 SNPs) and one that is not all well mapped (204).</p>
+<p>Here we pick out the top marker for each <span class="math inline">\(L\)</span> and look at the BFs. Also compare with the top markers found by <code>varbvs</code>. We see the BF for the top 4 markers is higher than those from varbvs, which is encouraging.</p>
+<pre class="r"><code>markers = colnames(Xresid)[apply(res$alpha,1,which.max)]
+
+# varbvs, 1000 SNPs
+markers3 &lt;- c(&quot;chr1_171168633_C_A_b38&quot;,
+              &quot;chr1_171147265_C_A_b38&quot;,
+              &quot;chr1_171164750_C_A_b38&quot;,
+              &quot;chr1_171178589_C_T_b38&quot;)
+#simple bf calculation X an n by p matrix of genoytpes
+log10BF = function(X,y,sigmaa){
+p = ncol(X)
+n = nrow(X)
+X = cbind(rep(1,n),X)
+invnu = diag(c(0,rep(1/sigmaa^2,p)))
+invOmega = invnu + t(X) %*% X
+B = solve(invOmega, t(X) %*% cbind(y))
+invOmega0 = n
+return(-0.5*log10(det(invOmega)) + 0.5*log10(invOmega0) - p*log10(sigmaa) -(n/2) * (log10( t(y- X %*% B) %*% y) - log10(t(y) %*% y - n*mean(y)^2) ))  
+}
+
+c(log10BF(Xresid[,markers], yresid,0.5),
+log10BF(Xresid[,markers[2:5]], yresid,0.5),
+log10BF(Xresid[,markers3], yresid,0.5))</code></pre>
+<pre><code>[1] 36.31483 35.28726 33.70173</code></pre>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.3.2 (2016-10-31)
+Platform: x86_64-apple-darwin13.4.0 (64-bit)
+Running under: OS X El Capitan 10.11.6
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+ [1] backports_1.1.0 magrittr_1.5    rprojroot_1.2   tools_3.3.2    
+ [5] htmltools_0.3.6 yaml_2.1.14     Rcpp_0.12.13    stringi_1.1.5  
+ [9] rmarkdown_1.6   knitr_1.16      git2r_0.19.0    stringr_1.2.0  
+[13] digest_0.6.12   evaluate_0.10  </code></pre>
+</div>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
