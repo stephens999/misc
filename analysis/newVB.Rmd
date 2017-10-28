@@ -1,0 +1,263 @@
+---
+title: "New attempt at VB"
+author: "Matthew Stephens"
+date: 2017-10-27
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+# Outline
+
+The model is:
+$$Y_i = \sum_{l=1}^L \sum_j X_{ij} \gamma_{lj} \beta_{lj} + e_i$$
+
+$$(\gamma_{l1},\dots,\gamma_{lp}) \sim Multinomial(1,\pi)$$
+$$\beta_{lj} \sim g()$$.
+
+For now assume $g$ is $N(0,\sigma_\beta^2)$, and $\pi = (1/p,\dots,1/p)$.
+
+The idea is that there are $L$ non-zero effects. (though see later comment.)
+For each of $l=1,\dots,L$ we assume that exactly 1 of the $p$ variables has an effect, as indicated by $\gamma_{lj}$. $\pi$ is a $p$ vector of prior probabilities summing to 1. 
+
+$g()$ is an effect distribution for the non-zero effects.
+$g()$ could be a mixture of normals as in my ash work. $g$ could include a point mass at 0, in which case $L$ is an upper bound on the number of non-zero effects, rather than an actual number of effects.
+But I'm not sure we need to go this far... for now we assume $g$ normal.
+
+
+The idea is to seek a variational approximation (or expectation propogation?) based on 
+$$q(\gamma,\beta) = \prod_l q(\gamma_l, \beta_l)$$
+
+
+Possibly we would further factorize this to 
+$q(\gamma_l,\beta_l) = q(\gamma_l) q(\beta_l)$, although it might be $q(\gamma_l) q(\beta_l | \gamma_l)$, I'm not sure.
+
+However, cruicially, we do not factorize the $q(\gamma_l)$ 
+across the $p$ elements of $\gamma_l$: 
+$\gamma_l$ is a binary vector with exactly one non-zero element, so $q(\gamma_l) = Multinimial(1, \alpha_l)$ say where $\alpha_l=(\alpha_{l1,\dots,\alpha_lp})$ are variational parameters.
+
+Here I have simply guessed at what the form of the variational
+updates might look like, by mimicking the updates from Carbonetto and Stephens. I borrowed and modified 
+code from the function `varbvsnormupdate` from `varbvs`. 
+Notice that we update all the variables simultaneously for each $l$... not one at a time. (This is a computational advantage of this approach, at least when coded in R.!)
+
+In brief, the variational parameters are as in Carbonetto and Stephens,
+but they become $L \times p$ matrices.
+That is they are $\alpha,\mu,s$ 
+where $\alpha_{lj}$ is the posterior mean for $\gamma_{lj}$,
+$\mu_{lj}$ is the posterior mean on $\beta_{lj}$, and $s_{lj}$ is the posterior variance.
+
+In the code below `alpha[l,] mu[l,]` is an estimate of
+$\hat{\beta}[l,]$, and a sum of this over $l$ is an estimate
+of the overall SNP effects. Call this sum `r` as in Carbonetto
+and Stephens. The variable `Xr` is `t(X) %*% r`, effectively the 
+"fitted values".
+
+
+Lots to do: 
+- derive these updates (or correct them!) and the VB lower bound.
+- investigate how it compares with exact calculations in small problems
+- think about how to deal with automatically choosing L or estimating g
+- hyperparameter estimation...
+
+```{r}
+new_varbvsnormupdate <- function (X, sigma, sa, xy, d, alpha0, mu0, Xr0) {
+    
+    # Get the number of samples (n) and variables (p).
+    n <- nrow(X)
+    p <- ncol(X)
+   
+    L = nrow(alpha0) # alpha0 and mu0 must be L by p
+    pi = rep(1,p)
+    
+  # Check input X.
+    if (!is.double(X) || !is.matrix(X))
+      stop("Input X must be a double-precision matrix")
+    
+    # Check inputs sigma and sa.
+    if (length(sigma) != 1 | length(sa) != 1)
+      stop("Inputs sigma and sa must be scalars")
+    
+  
+    # Check input Xr0.
+    if (length(Xr0) != n)
+      stop("length(Xr0) must be equal to nrow(X)")
+    
+    
+    # Initialize storage for the results.
+    alpha <- alpha0
+    mu    <- mu0
+    Xr    <- Xr0
+  
+      # Repeat for each effect to update
+    for (l in 1:L) {
+        # remove lth effect
+        Xr = Xr - X %*% (alpha[l,]*mu[l,])
+        
+        # Compute the variational estimate of the posterior variance.
+        s <- sa*sigma/(sa*d + 1)
+        
+        # Update the variational estimate of the posterior mean.
+        mu[l,] <- s/sigma * (xy - t(X) %*% Xr)
+        
+        # Update the variational estimate of the posterior inclusion
+        # probability. This is basically prior (pi) times BF.
+        # The BF here comes from the normal approx - could be interesting
+        # to replace it with a t version that integrates over sigma?
+        alpha[l,] <- pi*exp((log(s/(sa*sigma)) + mu[l,]^2/s)/2)
+        
+        alpha[l,] <- alpha[l,]/sum(alpha[l,])
+        
+        # Update Xr by adding back in the $l$th effect
+        Xr <- Xr + X %*% (alpha[l,]*mu[l,]) 
+    }
+    
+    return(list(alpha = alpha,mu = mu,Xr = Xr,s=s))
+}
+
+# Just repeated applies those updates
+# X is an n by p matrix of genotypes
+# Y a n vector of phenotypes
+# sa the variance of the prior on effect sizes (actually $\beta \sim N(0,sa sigma)$ where the residual variance sigma here is fixed to the variance of Y based on a small effect assumption.)
+fit = function(X,Y,sa=1,niter=100){
+  L = 5
+  sigma = var(Y)
+  p =ncol(X)
+  xy = t(X) %*% Y
+  d = colSums(X * X)
+  alpha0= mu0 = matrix(0,nrow=L,ncol=p)
+  Xr0 = X %*% colSums(alpha0*mu0)
+  for(i in 1:niter){
+    res = new_varbvsnormupdate(X, sigma, sa, xy, d, alpha0, mu0, Xr0)
+    alpha0 = res$alpha
+    mu0 = res$mu
+    Xr0 = res$Xr
+  }
+  return(res)
+}
+
+# This computes the average lfsr across SNPs for each l, weighted by the
+# posterior inclusion probability alpha
+lfsr_fromfit = function(res){
+  pos_prob = pnorm(0,mean=t(res$mu),sd=sqrt(res$s))
+  neg_prob = 1-pos_prob
+  1-rowSums(res$alpha*t(pmax(pos_prob,neg_prob)))
+}
+
+#find how many variables in the 95% CI
+n_in_CI = function(res){
+   apply(res$alpha,1,function(x){sum(cumsum(sort(x,decreasing = TRUE))<0.95)+1})
+}
+```
+
+# Null simulation
+
+This is a null simulation. Actually I don't understand
+why it converges to this result where all the posteriors are the same for each $l$. Might be interesting to understand.
+```{r}
+set.seed(1)
+n = 1000
+p = 1000
+y = rnorm(n)
+X = matrix(rnorm(n*p),nrow=n,ncol=p)
+res =fit(X,y,niter=100)
+n_in_CI(res)
+lfsr_fromfit(res)
+```
+
+
+#Simple Simulation
+
+Here the first 4 variables are actually real... just a sanity check!
+```{r}
+n = 1000
+p = 1000
+beta = rep(0,p)
+beta[1] = 1
+beta[2] = 1
+beta[3] = 1
+beta[4] = 1
+X = matrix(rnorm(n*p),nrow=n,ncol=p)
+y = X %*% beta + rnorm(n)
+res =fit(X,y,niter=100)
+n_in_CI(res)
+lfsr_fromfit(res)
+```
+
+# Real data
+
+These are GTEX data from Thyroid.
+```{r}
+d=readRDS("../data/Thyroid.FMO2.1Mb.RDS")
+storage.mode(d$X) <- "double"
+d$X <- d$X[,3501:4500]
+    
+X = d$X
+y = d$y
+Z = d$Z
+Xresid= X
+p =ncol(Xresid)
+for(i in 1:p){Xresid[,i] = lm(X[,i]~Z)$resid}
+yresid = lm(y~Z)$resid
+res =fit(Xresid,yresid,niter=100)
+n_in_CI(res)
+lfsr_fromfit(res)
+```
+
+Notice that only $l=2,\dots,4$ have small lfsr. So first one
+can probably be ignored. 
+Of the others, there are 3 eQTLs that are fairly well mapped
+(95% CI contains 5-18 SNPs) and one that is not all well mapped (204).
+
+Here we pick out the top marker for each $L$ and look at the BFs.
+Also compare with the top markers found by `varbvs`.
+We see the BF for the top 4 markers is higher than those from varbvs,
+which is encouraging.
+```{r}
+markers = colnames(Xresid)[apply(res$alpha,1,which.max)]
+
+# varbvs, 1000 SNPs
+markers3 <- c("chr1_171168633_C_A_b38",
+              "chr1_171147265_C_A_b38",
+              "chr1_171164750_C_A_b38",
+              "chr1_171178589_C_T_b38")
+#simple bf calculation X an n by p matrix of genoytpes
+log10BF = function(X,y,sigmaa){
+p = ncol(X)
+n = nrow(X)
+X = cbind(rep(1,n),X)
+invnu = diag(c(0,rep(1/sigmaa^2,p)))
+invOmega = invnu + t(X) %*% X
+B = solve(invOmega, t(X) %*% cbind(y))
+invOmega0 = n
+return(-0.5*log10(det(invOmega)) + 0.5*log10(invOmega0) - p*log10(sigmaa) -(n/2) * (log10( t(y- X %*% B) %*% y) - log10(t(y) %*% y - n*mean(y)^2) ))  
+}
+
+c(log10BF(Xresid[,markers], yresid,0.5),
+log10BF(Xresid[,markers[2:5]], yresid,0.5),
+log10BF(Xresid[,markers3], yresid,0.5))
+```
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
