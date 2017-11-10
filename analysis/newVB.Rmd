@@ -439,13 +439,13 @@ points(pip.p[which(b!=0)],pip.sim[which(b!=0)],col=2,pch=16)
 ```
 
 Compare log10BF. Note the top log10BF from finemap was
-33 (for a 4 marker model). Not sure what exactly explains the differences in BFs. (I haven't been careful about 
-making sure parameters are same across methods, but generally the BF is somewhat robust to that.)
+36.7 (for a 4 marker model). So similar, but not identical. (I haven't been careful about 
+making sure parameters are exactly same across methods.)
 ```{r}
 tophits = apply(res.sim$alpha,1,which.max)
 markers = colnames(Xresid)[tophits]
-log10BF(Xresid[,markers[1:3]],ysim,0.5)
-log10BF(Xresid[,markers[1:4]],ysim,0.5)
+log10BF(Xresid[,markers[1:3]],ysim,0.4)
+log10BF(Xresid[,markers[1:4]],ysim,0.4)
 ```
 
 # Run on ACTN3 data
