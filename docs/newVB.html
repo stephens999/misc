@@ -316,7 +316,7 @@ shared across the workflowr files. -->
 <p><strong>Last updated:</strong> 2017-11-10</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> f7f805d</p>
+<p><strong>Code version:</strong> 6b3d42f</p>
 <div id="outline" class="section level1">
 <h1>Outline</h1>
 <p>The model is: <span class="math display">\[Y_i = \sum_{l=1}^L \sum_j X_{ij} \gamma_{lj} \beta_{lj} + e_i\]</span></p>
@@ -666,15 +666,15 @@ points(pip.sim[which(b!=0)],pip.fm[which(b!=0)],col=2,pch=16)</code></pre>
 plot(pip.p,pip.sim)
 points(pip.p[which(b!=0)],pip.sim[which(b!=0)],col=2,pch=16)</code></pre>
 <p><img src="figure/newVB.Rmd/unnamed-chunk-9-4.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Compare log10BF. Note the top log10BF from finemap was 33 (for a 4 marker model). Not sure what exactly explains the differences in BFs. (I haven’t been careful about making sure parameters are same across methods, but generally the BF is somewhat robust to that.)</p>
+<p>Compare log10BF. Note the top log10BF from finemap was 36.7 (for a 4 marker model). So similar, but not identical. (I haven’t been careful about making sure parameters are exactly same across methods.)</p>
 <pre class="r"><code>tophits = apply(res.sim$alpha,1,which.max)
 markers = colnames(Xresid)[tophits]
-log10BF(Xresid[,markers[1:3]],ysim,0.5)</code></pre>
+log10BF(Xresid[,markers[1:3]],ysim,0.4)</code></pre>
 <pre><code>         [,1]
-[1,] 34.95243</code></pre>
-<pre class="r"><code>log10BF(Xresid[,markers[1:4]],ysim,0.5)</code></pre>
+[1,] 33.86796</code></pre>
+<pre class="r"><code>log10BF(Xresid[,markers[1:4]],ysim,0.4)</code></pre>
 <pre><code>         [,1]
-[1,] 38.49023</code></pre>
+[1,] 37.13914</code></pre>
 </div>
 </div>
 <div id="run-on-actn3-data" class="section level1">
