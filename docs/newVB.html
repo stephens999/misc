@@ -313,10 +313,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-10-28</p>
+<p><strong>Last updated:</strong> 2017-11-10</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> d27282b</p>
+<p><strong>Code version:</strong> f7f805d</p>
 <div id="outline" class="section level1">
 <h1>Outline</h1>
 <p>The model is: <span class="math display">\[Y_i = \sum_{l=1}^L \sum_j X_{ij} \gamma_{lj} \beta_{lj} + e_i\]</span></p>
@@ -389,9 +389,10 @@ shared across the workflowr files. -->
 # X is an n by p matrix of genotypes
 # Y a n vector of phenotypes
 # sa the variance of the prior on effect sizes (actually $\beta \sim N(0,sa sigma)$ where the residual variance sigma here is fixed to the variance of Y based on a small effect assumption.)
-fit = function(X,Y,sa=1,niter=100){
-  L = 5
-  sigma = var(Y)
+fit = function(X,Y,sa=1,sigma=NULL,niter=100,L=5){
+  if(is.null(sigma)){
+    sigma=var(Y)
+  } 
   p =ncol(X)
   xy = t(X) %*% Y
   d = colSums(X * X)
@@ -415,8 +416,57 @@ lfsr_fromfit = function(res){
 }
 
 #find how many variables in the 95% CI
+# x is a probability vector
+n_in_CI_x = function(x){
+  sum(cumsum(sort(x,decreasing = TRUE))&lt;0.95)+1
+}
+
+# return binary vector indicating if each point is in CI
+# x is a probability vector
+in_CI_x = function(x){
+  n = n_in_CI_x(x)
+  o = order(x,decreasing=TRUE)
+  result = rep(0,length(x))
+  result[o[1:n]] = 1
+  return(result)
+}
+
+# Return binary matrix indicating which variables are in CI of each 
+# of effect
+in_CI = function(res){
+  t(apply(res$alpha,1,in_CI_x))
+}
+
 n_in_CI = function(res){
-   apply(res$alpha,1,function(x){sum(cumsum(sort(x,decreasing = TRUE))&lt;0.95)+1})
+  apply(res$alpha,1,n_in_CI_x)
+}
+
+# computes z score for association between each 
+# column of X and y
+calc_z = function(X,y){
+  z = rep(0,ncol(X))
+  for(i in 1:ncol(X)){
+    z[i] = summary(lm(y ~ X[,i]))$coeff[2,3]
+  }
+  return(z)
+}
+
+
+# plot p values of data and color in the 95% CIs
+# for simulated data, specify b = true effects (highlights in red)
+pplot = function(X,y,res,pos=NULL,b=NULL,CImax = 400,...){
+  z = calc_z(X,y)
+  zneg = -abs(z)
+  logp = log10(pnorm(zneg))
+  if(is.null(b)){b = rep(0,ncol(X))}
+  if(is.null(pos)){pos = 1:ncol(X)}
+  plot(pos,-logp,col=&quot;grey&quot;,xlab=&quot;&quot;,ylab=&quot;-log10(p)&quot;,...)
+  points(pos[b!=0],-logp[b!=0],col=2,pch=16)
+  for(i in 1:nrow(res$alpha)){
+    if(n_in_CI(res)[i]&lt;CImax)
+      points(pos[which(in_CI(res)[i,]&gt;0)],-logp[which(in_CI(res)[i,]&gt;0)],col=i+2)
+  }
+  
 }</code></pre>
 </div>
 <div id="null-simulation" class="section level1">
@@ -432,6 +482,8 @@ n_in_CI(res)</code></pre>
 <pre><code>[1] 889 889 889 889 889</code></pre>
 <pre class="r"><code>lfsr_fromfit(res)</code></pre>
 <pre><code>[1] 0.1461692 0.1461692 0.1461692 0.1461692 0.1461692</code></pre>
+<pre class="r"><code>pplot(X,y,res,main=&quot;null simulation&quot;)</code></pre>
+<p><img src="figure/newVB.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="simple-simulation" class="section level1">
 <h1>Simple Simulation</h1>
@@ -450,14 +502,45 @@ n_in_CI(res)</code></pre>
 <pre><code>[1]   1   1   1   1 943</code></pre>
 <pre class="r"><code>lfsr_fromfit(res)</code></pre>
 <pre><code>[1] 0.000000 0.000000 0.000000 0.000000 0.356592</code></pre>
+<pre class="r"><code>pplot(X,y,res,main=&quot;simple simulation&quot;)</code></pre>
+<p><img src="figure/newVB.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="simulate-with-ld-blocks" class="section level1">
+<h1>Simulate with LD blocks</h1>
+<p>We will simulate data with some “LD structure”. b=3 blocks of p=10 variables, each correlated through some latent Z. The phenotype model is <span class="math inline">\(Y = X_1+...+X_b + e\)</span> where <span class="math inline">\(X_1,\dots,X_b\)</span> are each a member of a block, and <span class="math inline">\(e\)</span> is <span class="math inline">\(N(0,sd)\)</span>.</p>
+<pre class="r"><code>set.seed(1)
+simulate = function(n=100,p=10,b=3,sd=1){
+  Z = list()
+  X = list()
+  Y = list()
+  for(i in 1:b) Z[[i]] = rnorm(n)
+  for(i in 1:b) X[[i]] = Z[[i]] + matrix(rnorm(n*p),nrow=n)
+  for(i in 1:b) Y[[i]] = X[[i]][,1] 
+  
+  X = do.call(cbind,X) # bind columns of X and Y
+  Y = do.call(cbind,Y)
+  Y = rowSums(Y) # each of the betas is 1
+  
+  Y = Y + rnorm(n,sd = sd)
+  return(list(X=X,Y=Y))
+}
+d = simulate()</code></pre>
+<p>Now fit the model:</p>
+<pre class="r"><code>res.LD =fit(d$X,d$Y,niter=100)
+n_in_CI(res.LD)</code></pre>
+<pre><code>[1]  1  1  1 29 29</code></pre>
+<pre class="r"><code>lfsr_fromfit(res.LD)</code></pre>
+<pre><code>[1] 2.925933e-06 1.575560e-06 2.550389e-04 3.442160e-01 3.442160e-01</code></pre>
+<pre class="r"><code>pplot(d$X,d$Y,res.LD,main=&quot;LD simulation&quot;,CImax=10)</code></pre>
+<p><img src="figure/newVB.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="real-data" class="section level1">
 <h1>Real data</h1>
 <p>These are GTEX data from Thyroid.</p>
-<pre class="r"><code>d=readRDS(&quot;../data/Thyroid.FMO2.1Mb.RDS&quot;)
+<pre class="r"><code>d=readRDS(&quot;../data/Thyroid.FMO2.pm1Mb.RDS&quot;)
 storage.mode(d$X) &lt;- &quot;double&quot;
 d$X &lt;- d$X[,3501:4500]
-    
+pos &lt;- d$pos[3501:4500]
 X = d$X
 y = d$y
 Z = d$Z
@@ -465,17 +548,22 @@ Xresid= X
 p =ncol(Xresid)
 for(i in 1:p){Xresid[,i] = lm(X[,i]~Z)$resid}
 yresid = lm(y~Z)$resid
-res =fit(Xresid,yresid,niter=100)
-n_in_CI(res)</code></pre>
-<pre><code>[1] 838  18   9   5 204</code></pre>
-<pre class="r"><code>lfsr_fromfit(res)</code></pre>
-<pre><code>[1] 2.165177e-01 1.857956e-09 1.110223e-16 1.325606e-12 1.375487e-02</code></pre>
-<p>Notice that only <span class="math inline">\(l=2,\dots,4\)</span> have small lfsr. So first one can probably be ignored. Of the others, there are 3 eQTLs that are fairly well mapped (95% CI contains 5-18 SNPs) and one that is not all well mapped (204).</p>
+res.gtex =fit(Xresid,yresid,niter=100)
+n_in_CI(res.gtex)</code></pre>
+<pre><code>[1] 840  19   8   5 152</code></pre>
+<pre class="r"><code>lfsr_fromfit(res.gtex)</code></pre>
+<pre><code>[1] 2.281823e-01 1.483460e-09 2.220446e-16 1.166622e-12 1.318208e-02</code></pre>
+<pre class="r"><code>pplot(Xresid,yresid,res.gtex)</code></pre>
+<p><img src="figure/newVB.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Interestingly, the variable with smallest <span class="math inline">\(p\)</span> value is not in the CIs of the most confident eQTLs. It seems that when we control for the other hits, that variable is no longer that significant.</p>
+<p>Notice that only <span class="math inline">\(l=2,\dots,5\)</span> have small lfsr. So the first one can probably be ignored. Of the others, there are 3 eQTLs that are fairly well mapped (95% CI contains 5-19 SNPs) and one that is not all well mapped (152).</p>
 <p>Here we pick out the top marker for each <span class="math inline">\(L\)</span> and look at the BFs. Also compare with the top markers found by <code>varbvs</code>. We see the BF for the top 4 markers is higher than those from varbvs, which is encouraging.</p>
-<pre class="r"><code>markers = colnames(Xresid)[apply(res$alpha,1,which.max)]
+<pre class="r"><code>#find top hits
+tophits = apply(res.gtex$alpha,1,which.max)
+markers = colnames(Xresid)[tophits]
 
-# varbvs, 1000 SNPs
-markers3 &lt;- c(&quot;chr1_171168633_C_A_b38&quot;,
+# varbvs, top 4 SNPs:
+markers.varbvs&lt;- c(&quot;chr1_171168633_C_A_b38&quot;,
               &quot;chr1_171147265_C_A_b38&quot;,
               &quot;chr1_171164750_C_A_b38&quot;,
               &quot;chr1_171178589_C_T_b38&quot;)
@@ -493,8 +581,122 @@ return(-0.5*log10(det(invOmega)) + 0.5*log10(invOmega0) - p*log10(sigmaa) -(n/2)
 
 c(log10BF(Xresid[,markers], yresid,0.5),
 log10BF(Xresid[,markers[2:5]], yresid,0.5),
-log10BF(Xresid[,markers3], yresid,0.5))</code></pre>
-<pre><code>[1] 36.31483 35.28726 33.70173</code></pre>
+log10BF(Xresid[,markers[2:4]], yresid,0.5),
+log10BF(Xresid[,markers.varbvs], yresid,0.5))</code></pre>
+<pre><code>[1] 36.41482 35.41237 31.07575 33.70173</code></pre>
+<div id="simulations-based-on-real-data" class="section level2">
+<h2>Simulations based on real data</h2>
+<p>Here we take the real genotypes (actually the residuals after removing Z) from the data above, and simulate effects with the effect sizes matched to the 4 significant top SNPs identified above.</p>
+<pre class="r"><code>set.seed(1)
+p =ncol(Xresid)
+n = nrow(Xresid)
+b = rep(0,p)
+index = apply(res.gtex$alpha,1,which.max)[-1]
+b[index] = diag(res.gtex$mu[2:5,index])
+fitted = Xresid %*% b
+sigma = sqrt(var(yresid) - var(fitted))
+ysim = fitted + rnorm(n, 0, sigma)
+
+write_finemap_files = function(X,Y,dir,prefix){
+  dir = normalizePath(dir)
+  z = calc_z(X,Y)
+  n = length(Y)
+  write.table(z,file.path(dir,paste0(prefix,&quot;.z&quot;)),quote=F,col.names=F)
+  write.table(cor(Xresid),file.path(dir,paste0(prefix,&quot;.ld&quot;)),quote=F,col.names=F,row.names=FALSE)
+  write.table(t(c(0,0,0,1)),file.path(dir,paste0(prefix,&quot;.k&quot;)),quote=F,col.names=F,row.names=FALSE)
+  write(&quot;z;ld;snp;config;k;log;n-ind&quot;,file=file.path(dir,&quot;data&quot;))
+  write(paste(file.path(dir,paste0(prefix,&quot;.z&quot;)),
+              file.path(dir,paste0(prefix,&quot;.ld&quot;)),
+              file.path(dir,paste0(prefix,&quot;.snp&quot;)),
+              file.path(dir,paste0(prefix,&quot;.config&quot;)),
+              file.path(dir,paste0(prefix,&quot;.k&quot;)),
+              file.path(dir,paste0(prefix,&quot;.log&quot;)),
+              n,sep=&quot;;&quot;),
+        file=file.path(dir,&quot;data&quot;),append=TRUE)
+}
+
+write_finemap_files(Xresid,ysim,&quot;../data/finemap_data/fmo2.sim&quot;,&quot;fmo2.sim&quot;)
+
+system(&quot;~/finemap_v1.1_MacOSX/finemap --sss --in-files ../data/finemap_data/fmo2.sim/data --prior-k --n-iterations 1000000 --prior-std 0.4 --regions 1&quot;)
+
+#system(&quot;~/finemap_v1.1_MacOSX/finemap --sss --in-files ../data/finemap_data/fmo2.sim/data --n-iterations 1000000 --prior-std 0.4 --regions 1 --prob-tol 0.00001&quot;)
+
+# Wrote these files to send to William for DAP
+write.table(Xresid,&quot;../data/finemap_data/fmo2.sim/Xresid.txt&quot;,quote=F,col.names=F,row.names=FALSE)
+write.table(ysim,&quot;../data/finemap_data/fmo2.sim/ysim.txt&quot;,quote=F,col.names=F,row.names=FALSE)
+
+z = calc_z(Xresid,ysim)
+write.table(c(&quot;Zscore&quot;,z),&quot;../data/paintor_data/fmo2.sim/fmo2.sim.z&quot;,quote=F,col.names=F,row.names=FALSE)
+write.table(cor(Xresid),&quot;../data/paintor_data/fmo2.sim/fmo2.sim.ld&quot;,quote=F,col.names=F,row.names=FALSE)
+write.table(cor(Xresid[,1:99]),&quot;../data/paintor_data/fmo2.sim/fmo2.sim.short.ld&quot;,quote=F,col.names=F,row.names=FALSE)
+write.table(rep(1,length(z)),&quot;../data/paintor_data/fmo2.sim/fmo2.sim.annotations&quot;,quote=F,col.names=F,row.names=FALSE)
+
+res.sim = fit(Xresid,ysim,niter=100)
+n_in_CI(res.sim)</code></pre>
+<pre><code>[1]   6   4  20 475 799</code></pre>
+<pre class="r"><code>lfsr_fromfit(res.sim)</code></pre>
+<pre><code>[1] 0.000000e+00 6.565859e-13 4.114310e-08 3.884454e-02 1.875360e-01</code></pre>
+<pre class="r"><code>#try with sigma=&quot;true&quot; sigma
+# res2.sim = fit(Xresid,ysim,sa=0.5,sigma=sigma^2,niter=100)
+# n_in_CI(res2.sim)
+# lfsr_fromfit(res2.sim)</code></pre>
+<p>Compare with p values</p>
+<pre class="r"><code>pplot(Xresid,ysim,res.sim,pos,b,100)</code></pre>
+<p><img src="figure/newVB.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ci = list()
+for(i in 1:5){ci[[i]] = which(in_CI_x(res.sim$alpha[i,])&gt;0)}
+
+pip.sim = colSums(res.sim$alpha)
+plot(pip.sim)
+which(b!=0)</code></pre>
+<pre><code>[1] 102 215 258 287</code></pre>
+<pre class="r"><code>points(which(b!=0),pip.sim[which(b!=0)],col=2,pch=16)</code></pre>
+<p><img src="figure/newVB.Rmd/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># compare with finemap results
+
+res.fm = read.table(&quot;../data/finemap_data/fmo2.sim/fmo2.sim.snp&quot;,header=TRUE,sep=&quot; &quot;)
+
+pip.fm = rep(0,1000)
+pip.fm[res.fm$index] = res.fm$snp_prob
+
+plot(pip.sim,pip.fm,xlab=&quot;PIP (proposed method)&quot;,ylab=&quot;PIP (FINEMAP)&quot;)
+points(pip.sim[which(b!=0)],pip.fm[which(b!=0)],col=2,pch=16)</code></pre>
+<p><img src="figure/newVB.Rmd/unnamed-chunk-9-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>pip.p = read.table(&quot;~/PAINTOR_V3.0/myData/fmo2.sim.results&quot;,header=TRUE)[,2]
+plot(pip.p,pip.sim)
+points(pip.p[which(b!=0)],pip.sim[which(b!=0)],col=2,pch=16)</code></pre>
+<p><img src="figure/newVB.Rmd/unnamed-chunk-9-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Compare log10BF. Note the top log10BF from finemap was 33 (for a 4 marker model). Not sure what exactly explains the differences in BFs. (I haven’t been careful about making sure parameters are same across methods, but generally the BF is somewhat robust to that.)</p>
+<pre class="r"><code>tophits = apply(res.sim$alpha,1,which.max)
+markers = colnames(Xresid)[tophits]
+log10BF(Xresid[,markers[1:3]],ysim,0.5)</code></pre>
+<pre><code>         [,1]
+[1,] 34.95243</code></pre>
+<pre class="r"><code>log10BF(Xresid[,markers[1:4]],ysim,0.5)</code></pre>
+<pre><code>         [,1]
+[1,] 38.49023</code></pre>
+</div>
+</div>
+<div id="run-on-actn3-data" class="section level1">
+<h1>Run on ACTN3 data</h1>
+<pre class="r"><code>d=readRDS(&quot;../data/Muscle_Skeletal.ACTN3.pm1Mb.RDS&quot;)
+storage.mode(d$X) &lt;- &quot;double&quot;
+#d$X &lt;- d$X[,3501:4500]
+    
+X = d$X
+y = d$y
+Z = d$Z
+Xresid= X
+p =ncol(Xresid)
+for(i in 1:p){Xresid[,i] = lm(X[,i]~Z)$resid}
+yresid = lm(y~Z)$resid
+res.actn3 =fit(Xresid,yresid,niter=100)
+n_in_CI(res.actn3)</code></pre>
+<pre><code>[1]    3 3796 3796 3796 3796</code></pre>
+<pre class="r"><code>lfsr_fromfit(res.actn3)</code></pre>
+<pre><code>[1] 0.0000000 0.2952032 0.2952032 0.2952032 0.2952032</code></pre>
+<pre class="r"><code>pplot(Xresid,yresid,res.actn3)</code></pre>
+<p><img src="figure/newVB.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
@@ -510,10 +712,10 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 loaded via a namespace (and not attached):
- [1] backports_1.1.0 magrittr_1.5    rprojroot_1.2   tools_3.3.2    
+ [1] backports_1.1.1 magrittr_1.5    rprojroot_1.2   tools_3.3.2    
  [5] htmltools_0.3.6 yaml_2.1.14     Rcpp_0.12.13    stringi_1.1.5  
- [9] rmarkdown_1.6   knitr_1.16      git2r_0.19.0    stringr_1.2.0  
-[13] digest_0.6.12   evaluate_0.10  </code></pre>
+ [9] rmarkdown_1.6   knitr_1.17      git2r_0.19.0    stringr_1.2.0  
+[13] digest_0.6.12   evaluate_0.10.1</code></pre>
 </div>
 </div>
 
