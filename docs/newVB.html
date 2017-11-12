@@ -313,10 +313,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-11-10</p>
+<p><strong>Last updated:</strong> 2017-11-12</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 6b3d42f</p>
+<p><strong>Code version:</strong> db7175d</p>
 <div id="outline" class="section level1">
 <h1>Outline</h1>
 <p>The model is: <span class="math display">\[Y_i = \sum_{l=1}^L \sum_j X_{ij} \gamma_{lj} \beta_{lj} + e_i\]</span></p>
@@ -617,7 +617,15 @@ write_finemap_files = function(X,Y,dir,prefix){
 
 write_finemap_files(Xresid,ysim,&quot;../data/finemap_data/fmo2.sim&quot;,&quot;fmo2.sim&quot;)
 
+# this version puts all weight on k=4 
+# and gives results more similar to the VB approach
 system(&quot;~/finemap_v1.1_MacOSX/finemap --sss --in-files ../data/finemap_data/fmo2.sim/data --prior-k --n-iterations 1000000 --prior-std 0.4 --regions 1&quot;)
+system(&quot;mv ../data/finemap_data/fmo2.sim/fmo2.sim.snp ../data/finemap_data/fmo2.sim/fmo2.sim.k4.snp&quot;)
+system(&quot;mv ../data/finemap_data/fmo2.sim/fmo2.sim.config ../data/finemap_data/fmo2.sim/fmo2.sim.k4.config&quot;)
+
+# this version uses default prior
+system(&quot;~/finemap_v1.1_MacOSX/finemap --sss --in-files ../data/finemap_data/fmo2.sim/data --n-iterations 1000000 --prior-std 0.4 --regions 1&quot;)
+
 
 #system(&quot;~/finemap_v1.1_MacOSX/finemap --sss --in-files ../data/finemap_data/fmo2.sim/data --n-iterations 1000000 --prior-std 0.4 --regions 1 --prob-tol 0.00001&quot;)
 
@@ -652,20 +660,51 @@ which(b!=0)</code></pre>
 <pre><code>[1] 102 215 258 287</code></pre>
 <pre class="r"><code>points(which(b!=0),pip.sim[which(b!=0)],col=2,pch=16)</code></pre>
 <p><img src="figure/newVB.Rmd/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code># compare with finemap results
-
-res.fm = read.table(&quot;../data/finemap_data/fmo2.sim/fmo2.sim.snp&quot;,header=TRUE,sep=&quot; &quot;)
-
+</div>
+</div>
+<div id="compare-with-finemap" class="section level1">
+<h1>Compare with FINEMAP</h1>
+<p>The new VB method gives similar results to FINEMAP (with FINEMAP set to <span class="math inline">\(k=4\)</span>)</p>
+<pre class="r"><code>res.fm = read.table(&quot;../data/finemap_data/fmo2.sim/fmo2.sim.snp&quot;,header=TRUE,sep=&quot; &quot;)
 pip.fm = rep(0,1000)
 pip.fm[res.fm$index] = res.fm$snp_prob
 
-plot(pip.sim,pip.fm,xlab=&quot;PIP (proposed method)&quot;,ylab=&quot;PIP (FINEMAP)&quot;)
-points(pip.sim[which(b!=0)],pip.fm[which(b!=0)],col=2,pch=16)</code></pre>
-<p><img src="figure/newVB.Rmd/unnamed-chunk-9-3.png" width="672" style="display: block; margin: auto;" /></p>
+
+res.fm.k4 = read.table(&quot;../data/finemap_data/fmo2.sim/fmo2.sim.k4.snp&quot;,header=TRUE,sep=&quot; &quot;)
+pip.fm.k4 = rep(0,1000)
+pip.fm.k4[res.fm.k4$index] = res.fm.k4$snp_prob
+
+
+
+plot(pip.sim,pip.fm.k4,xlab=&quot;PIP (new VB method)&quot;,ylab=&quot;PIP (FINEMAP, k=4)&quot;, main=&quot;New VB vs FINEMAP with k=4&quot;)
+points(pip.sim[which(b!=0)],pip.fm.k4[which(b!=0)],col=2,pch=16)
+abline(a=0,b=1)</code></pre>
+<p><img src="figure/newVB.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Now compare with DAP. William sent me two different DAP results, the first with default settings, and the second with the residual variance set to be equal to var(y), which is in some sense “conservatve”. It turns out the latter agrees really well with FINEMAP with default prior.</p>
+<pre class="r"><code>res.dap = read.table(&quot;../data/finemap_data/fmo2.sim/dap_out_snp.txt&quot;,stringsAsFactors = FALSE)
+res.dap$snp = as.numeric(substr(res.dap$V2,4,6))
+pip.dap = rep(0,1000)
+pip.dap[res.dap$snp] = res.dap$V3
+
+res.dap2 = read.table(&quot;../data/finemap_data/fmo2.sim/dap_out2_snp.txt&quot;,stringsAsFactors = FALSE)
+res.dap2$snp = as.numeric(substr(res.dap2$V2,4,6))
+pip.dap2 = rep(0,1000)
+pip.dap2[res.dap2$snp] = res.dap2$V3
+
+plot(pip.dap2,pip.fm,main =&quot;DAP (conservative) vs FINEMAP (defaults)&quot;,xlab=&quot;DAP&quot;,ylab=&quot;FINEMAP&quot;)
+points(pip.dap2[which(b!=0)],pip.fm[which(b!=0)],col=2,pch=16)
+abline(a=0,b=1)</code></pre>
+<p><img src="figure/newVB.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(pip.dap2,pip.dap,main =&quot;DAP (conservative) vs DAP (defaults)&quot;,xlab=&quot;DAP (conservative)&quot;,ylab=&quot;DAP (default)&quot;)
+points(pip.dap2[which(b!=0)],pip.dap[which(b!=0)],col=2,pch=16)
+abline(a=0,b=1)</code></pre>
+<p><img src="figure/newVB.Rmd/unnamed-chunk-11-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>In contrast, Paintor results seem pretty different:</p>
 <pre class="r"><code>pip.p = read.table(&quot;~/PAINTOR_V3.0/myData/fmo2.sim.results&quot;,header=TRUE)[,2]
 plot(pip.p,pip.sim)
-points(pip.p[which(b!=0)],pip.sim[which(b!=0)],col=2,pch=16)</code></pre>
-<p><img src="figure/newVB.Rmd/unnamed-chunk-9-4.png" width="672" style="display: block; margin: auto;" /></p>
+points(pip.p[which(b!=0)],pip.sim[which(b!=0)],col=2,pch=16)
+abline(a=0,b=1)</code></pre>
+<p><img src="figure/newVB.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Compare log10BF. Note the top log10BF from finemap was 36.7 (for a 4 marker model). So similar, but not identical. (I haven’t been careful about making sure parameters are exactly same across methods.)</p>
 <pre class="r"><code>tophits = apply(res.sim$alpha,1,which.max)
 markers = colnames(Xresid)[tophits]
@@ -675,7 +714,6 @@ log10BF(Xresid[,markers[1:3]],ysim,0.4)</code></pre>
 <pre class="r"><code>log10BF(Xresid[,markers[1:4]],ysim,0.4)</code></pre>
 <pre><code>         [,1]
 [1,] 37.13914</code></pre>
-</div>
 </div>
 <div id="run-on-actn3-data" class="section level1">
 <h1>Run on ACTN3 data</h1>
@@ -696,7 +734,7 @@ n_in_CI(res.actn3)</code></pre>
 <pre class="r"><code>lfsr_fromfit(res.actn3)</code></pre>
 <pre><code>[1] 0.0000000 0.2952032 0.2952032 0.2952032 0.2952032</code></pre>
 <pre class="r"><code>pplot(Xresid,yresid,res.actn3)</code></pre>
-<p><img src="figure/newVB.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/newVB.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
