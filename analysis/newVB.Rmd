@@ -387,7 +387,15 @@ write_finemap_files = function(X,Y,dir,prefix){
 
 write_finemap_files(Xresid,ysim,"../data/finemap_data/fmo2.sim","fmo2.sim")
 
+# this version puts all weight on k=4 
+# and gives results more similar to the VB approach
 system("~/finemap_v1.1_MacOSX/finemap --sss --in-files ../data/finemap_data/fmo2.sim/data --prior-k --n-iterations 1000000 --prior-std 0.4 --regions 1")
+system("mv ../data/finemap_data/fmo2.sim/fmo2.sim.snp ../data/finemap_data/fmo2.sim/fmo2.sim.k4.snp")
+system("mv ../data/finemap_data/fmo2.sim/fmo2.sim.config ../data/finemap_data/fmo2.sim/fmo2.sim.k4.config")
+
+# this version uses default prior
+system("~/finemap_v1.1_MacOSX/finemap --sss --in-files ../data/finemap_data/fmo2.sim/data --n-iterations 1000000 --prior-std 0.4 --regions 1")
+
 
 #system("~/finemap_v1.1_MacOSX/finemap --sss --in-files ../data/finemap_data/fmo2.sim/data --n-iterations 1000000 --prior-std 0.4 --regions 1 --prob-tol 0.00001")
 
@@ -421,22 +429,63 @@ pip.sim = colSums(res.sim$alpha)
 plot(pip.sim)
 which(b!=0)
 points(which(b!=0),pip.sim[which(b!=0)],col=2,pch=16)
-# compare with finemap results
+```
 
+# Compare with FINEMAP 
+
+The new VB method gives similar results to FINEMAP (with FINEMAP set to $k=4$)
+
+```{r}
 res.fm = read.table("../data/finemap_data/fmo2.sim/fmo2.sim.snp",header=TRUE,sep=" ")
-
 pip.fm = rep(0,1000)
 pip.fm[res.fm$index] = res.fm$snp_prob
 
-plot(pip.sim,pip.fm,xlab="PIP (proposed method)",ylab="PIP (FINEMAP)")
-points(pip.sim[which(b!=0)],pip.fm[which(b!=0)],col=2,pch=16)
 
-pip.p = read.table("~/PAINTOR_V3.0/myData/fmo2.sim.results",header=TRUE)[,2]
-plot(pip.p,pip.sim)
-points(pip.p[which(b!=0)],pip.sim[which(b!=0)],col=2,pch=16)
+res.fm.k4 = read.table("../data/finemap_data/fmo2.sim/fmo2.sim.k4.snp",header=TRUE,sep=" ")
+pip.fm.k4 = rep(0,1000)
+pip.fm.k4[res.fm.k4$index] = res.fm.k4$snp_prob
+
+
+
+plot(pip.sim,pip.fm.k4,xlab="PIP (new VB method)",ylab="PIP (FINEMAP, k=4)", main="New VB vs FINEMAP with k=4")
+points(pip.sim[which(b!=0)],pip.fm.k4[which(b!=0)],col=2,pch=16)
+abline(a=0,b=1)
 
 
 ```
+
+Now compare with DAP. William sent me two different DAP results,
+the first with default settings, and the second with the residual variance set to be equal to var(y), which is in some sense "conservatve". It turns
+out the latter agrees really well with FINEMAP with default prior.
+```{r}
+res.dap = read.table("../data/finemap_data/fmo2.sim/dap_out_snp.txt",stringsAsFactors = FALSE)
+res.dap$snp = as.numeric(substr(res.dap$V2,4,6))
+pip.dap = rep(0,1000)
+pip.dap[res.dap$snp] = res.dap$V3
+
+res.dap2 = read.table("../data/finemap_data/fmo2.sim/dap_out2_snp.txt",stringsAsFactors = FALSE)
+res.dap2$snp = as.numeric(substr(res.dap2$V2,4,6))
+pip.dap2 = rep(0,1000)
+pip.dap2[res.dap2$snp] = res.dap2$V3
+
+plot(pip.dap2,pip.fm,main ="DAP (conservative) vs FINEMAP (defaults)",xlab="DAP",ylab="FINEMAP")
+points(pip.dap2[which(b!=0)],pip.fm[which(b!=0)],col=2,pch=16)
+abline(a=0,b=1)
+
+
+plot(pip.dap2,pip.dap,main ="DAP (conservative) vs DAP (defaults)",xlab="DAP (conservative)",ylab="DAP (default)")
+points(pip.dap2[which(b!=0)],pip.dap[which(b!=0)],col=2,pch=16)
+abline(a=0,b=1)
+```
+
+In contrast, Paintor results seem pretty different:
+```{r}
+pip.p = read.table("~/PAINTOR_V3.0/myData/fmo2.sim.results",header=TRUE)[,2]
+plot(pip.p,pip.sim)
+points(pip.p[which(b!=0)],pip.sim[which(b!=0)],col=2,pch=16)
+abline(a=0,b=1)
+```
+
 
 Compare log10BF. Note the top log10BF from finemap was
 36.7 (for a 4 marker model). So similar, but not identical. (I haven't been careful about 
@@ -447,6 +496,7 @@ markers = colnames(Xresid)[tophits]
 log10BF(Xresid[,markers[1:3]],ysim,0.4)
 log10BF(Xresid[,markers[1:4]],ysim,0.4)
 ```
+
 
 # Run on ACTN3 data
 
