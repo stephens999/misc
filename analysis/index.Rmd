@@ -37,6 +37,7 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 * [Comparison of varbvs and varbvsmix](FMO2.html)
 * [A simple approach to fine mapping](simple_mapping.html)
 * [A new VB approach](newVB.html)
+* [Connect new VB to single SNP Bayesian analysis](newVB.ss.html)
 
 [rmarkdown]: http://rmarkdown.rstudio.com/rmarkdown_websites.htm
 [rstudio]: https://www.rstudio.com/products/rstudio/download/preview/
