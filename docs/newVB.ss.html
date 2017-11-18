@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Matthew Stephens" />
+
+<meta name="date" content="2017-11-18" />
+
+<title>Connect newVB with single SNP mapping</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlightingOnLoad(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">misc</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Connect newVB with single SNP mapping</h1>
+<h4 class="author"><em>Matthew Stephens</em></h4>
+<h4 class="date"><em>2017-11-18</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2017-11-18</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> 4125d0a</p>
+<div id="background" class="section level1">
+<h1>Background</h1>
+<p>Here I derive the variational updates based on standard Bayesian computations for the single-SNP model. I also implement a version that has clearer connections with that model and show it gives the same results as the original.</p>
+</div>
+<div id="derivation" class="section level1">
+<h1>Derivation</h1>
+<div id="one-snp-model" class="section level2">
+<h2>One SNP model</h2>
+<p>Consider the single-SNP (“one eQTL per gene”) regression model. That is the model <span class="math display">\[Y = Xb + E\]</span> where <span class="math inline">\(X\)</span> is <span class="math inline">\(n \times p\)</span> and <span class="math inline">\(b\)</span> is <span class="math inline">\(p \times 1\)</span> and the prior on <span class="math inline">\(b\)</span> is that exactly one element of <span class="math inline">\(b\)</span> is nonzero, with <span class="math display">\[b_j \sim (1-\pi_j) \delta_0 + \pi_j N(0,\sigma_b^2).\]</span></p>
+<p>Let <span class="math inline">\(F_1(q)\)</span> denote the VB lower bound for this model, where <span class="math inline">\(q\)</span> is a variational distribution on <span class="math inline">\(b\)</span>. Then:</p>
+<p><span class="math display">\[F_1(q; X,Y) = E_q[-||Y-Xb||^2/(2\sigma^2)] + E_q[\log p(b)/q(b)] + \text{const}\]</span> We know that the posterior distribution for <span class="math inline">\(b\)</span> is easily computed, and that it maximizes the lower-bound <span class="math inline">\(F_1(q)\)</span> over <em>all possible</em> <span class="math inline">\(q\)</span>. Let <span class="math inline">\(p_\text{post}\)</span> denote this posterior. That is</p>
+<p><span class="math display">\[p_\text{post} = \arg \max F_1(q).\]</span></p>
+<p>Note that we can write <span class="math inline">\(F_1\)</span> as follows: <span class="math display">\[F_1(q; X,Y) = -1/(2\sigma^2) E_q[Y&#39;Y + b&#39;X&#39;Xb -2Y&#39;Xb]  + E_q[\log p(b)/q(b)] + \text{const}\]</span></p>
+<p><span class="math display">\[F_1(q; X,Y) = -1/(2\sigma^2) E_q[b&#39;X&#39;Xb -2Y&#39;Xb]  + E_q[\log p(b)/q(b)] + \text{const}\]</span> where the constant does not depend on <span class="math inline">\(q\)</span>.</p>
+</div>
+<div id="two-snp-model" class="section level2">
+<h2>Two SNP model</h2>
+<p>Now consider the two-SNP model <span class="math display">\[Y = Xb_1 + Xb_2 + E.\]</span></p>
+<p>Let <span class="math inline">\(q(b_1,b_2) = q_1(b_1)q_2(b_2)\)</span> be the variational approximation to the posterior on <span class="math inline">\(b_1,b_2\)</span>.</p>
+<p>The variational lower bound is <span class="math display">\[F_2(q_1,q_2; X,Y) = E_{q_1,q_2}[-||Y-Xb_1 - Xb_2||^2/(2\sigma^2)] + 
+E_{q_1}[\log p(b_1)/ q_1(b_1)] + E_{q_2}[\log p(b_2)/ q_2(b_2)] + \text{const}\]</span></p>
+<p>Now consider maximizing <span class="math inline">\(F_2\)</span> over <span class="math inline">\(q_2\)</span> only, treating <span class="math inline">\(q_1\)</span> as fixed. That is we must maximize: <span class="math display">\[F_2(q_2; X,Y) = E_{q_1,q_2}[-||Y-Xb_1 - Xb_2||^2/(2\sigma^2)] + 
+ E_{q_2}[\log p(b_2)/ q_2(b_2)] + \text{const}\]</span> which we can write <span class="math display">\[F_2(q_2;X,Y) = -1/(2\sigma^2) E_{q_1,q_2}[(Y-Xb_1)&#39;(Y-Xb_1) +  b_2&#39;X&#39;Xb_2 -2(Y-Xb_1)&#39;Xb_2] + 
+ E_{q_2}[\log p(b_2)/ q_2(b_2)] + \text{const}\]</span> which, again absorbing some terms that do not depend on <span class="math inline">\(q_2\)</span> into the constant: <span class="math display">\[F_2(q_2; X,Y) = -1/(2\sigma^2) E_{q_2}[b_2&#39;X&#39;Xb_2 -2(Y-X\bar{b}_1)&#39;Xb_2] + 
+ E_{q_2}[\log p(b_2)/ q_2(b_2)] + \text{const}\]</span> where <span class="math inline">\(\bar{b}_1\)</span> denotes <span class="math inline">\(E_{q_1}(b_1)\)</span>.</p>
+<p>Thus we can write <span class="math inline">\(F_2\)</span> as a function of the single SNP problem <span class="math inline">\(F_1\)</span>, but with <span class="math inline">\(Y\)</span> replaced with the residualized version <span class="math inline">\(Y-X\bar{b}_1\)</span>: <span class="math display">\[F_2(q_2; X,Y) = F_1(q; X, Y-X\bar{b}_1) + \text{const}\]</span> In other words we can optimize <span class="math inline">\(F_2\)</span> over <span class="math inline">\(q_2\)</span>, with <span class="math inline">\(q_1\)</span> fixed, by applying single-SNP Bayesian computations to the residualized <span class="math inline">\(Y\)</span>s.</p>
+<p>Similarly we can optimize <span class="math inline">\(F_2\)</span> over <span class="math inline">\(q_1\)</span> with <span class="math inline">\(q_2\)</span> fixed the same way.</p>
+<p>And the same idea extends to arbitrary numbers of SNPs.</p>
+</div>
+</div>
+<div id="example" class="section level1">
+<h1>Example</h1>
+<p>Here we code up the idea directly in terms of single-SNP computations, just to make it clear.</p>
+<pre class="r"><code>knitr::read_chunk(&quot;newVB.funcs.R&quot;)</code></pre>
+<pre class="r"><code>new_varbvsnormupdate &lt;- function (X, sigma, sa, xy, d, alpha0, mu0, Xr0) {
+
+  # Get the number of samples (n) and variables (p).
+  n &lt;- nrow(X)
+  p &lt;- ncol(X)
+
+  L = nrow(alpha0) # alpha0 and mu0 must be L by p
+  pi = rep(1,p)
+
+  # Check input X.
+  if (!is.double(X) || !is.matrix(X))
+    stop(&quot;Input X must be a double-precision matrix&quot;)
+
+  # Check inputs sigma and sa.
+  if (length(sigma) != 1 | length(sa) != 1)
+    stop(&quot;Inputs sigma and sa must be scalars&quot;)
+
+
+  # Check input Xr0.
+  if (length(Xr0) != n)
+    stop(&quot;length(Xr0) must be equal to nrow(X)&quot;)
+
+
+  # Initialize storage for the results.
+  alpha &lt;- alpha0
+  mu    &lt;- mu0
+  Xr    &lt;- Xr0
+
+  # Repeat for each effect to update
+  for (l in 1:L) {
+    # remove lth effect
+    Xr = Xr - X %*% (alpha[l,]*mu[l,])
+
+    # Compute the variational estimate of the posterior variance.
+    s &lt;- sa*sigma/(sa*d + 1)
+
+    # Update the variational estimate of the posterior mean.
+    mu[l,] &lt;- s/sigma * (xy - t(X) %*% Xr)
+
+    # Update the variational estimate of the posterior inclusion
+    # probability. This is basically prior (pi) times BF.
+    # The BF here comes from the normal approx - could be interesting
+    # to replace it with a t version that integrates over sigma?
+    alpha[l,] &lt;- pi*exp((log(s/(sa*sigma)) + mu[l,]^2/s)/2)
+
+    alpha[l,] &lt;- alpha[l,]/sum(alpha[l,])
+
+    # Update Xr by adding back in the $l$th effect
+    Xr &lt;- Xr + X %*% (alpha[l,]*mu[l,])
+  }
+
+  return(list(alpha = alpha,mu = mu,Xr = Xr,s=s))
+}
+
+# Just repeated applies those updates
+# X is an n by p matrix of genotypes
+# Y a n vector of phenotypes
+# sa the variance of the prior on effect sizes (actually $\beta \sim N(0,sa sigma)$ where the residual variance sigma here is fixed to the variance of Y based on a small effect assumption.)
+fit = function(X,Y,sa=1,sigma=NULL,niter=100,L=5,calc_elbo=FALSE){
+  if(is.null(sigma)){
+    sigma=var(Y)
+  }
+  p =ncol(X)
+  xy = t(X) %*% Y
+  d = colSums(X * X)
+  alpha0= mu0 = matrix(0,nrow=L,ncol=p)
+  Xr0 = X %*% colSums(alpha0*mu0)
+  elbo = rep(NA,niter)
+  for(i in 1:niter){
+    res = new_varbvsnormupdate(X, sigma, sa, xy, d, alpha0, mu0, Xr0)
+    alpha0 = res$alpha
+    mu0 = res$mu
+    Xr0 = res$Xr
+    if(calc_elbo){
+      elbo[i] = elbo(X,Y,sigma,sa,mu0,alpha0)
+    }
+  }
+  return(c(res,list(elbo=elbo)))
+}
+
+#this is for scaled prior in which effect prior variance is sa * sigma
+elbo = function(X,Y,sigma,sa,mu,alpha){
+  L = nrow(alpha)
+  n = nrow(X)
+  p = ncol(X)
+
+  Xr = (alpha*mu) %*% t(X)
+  Xrsum = colSums(Xr)
+
+  d = colSums(X*X)
+  s &lt;- sa*sigma/(sa*d + 1)
+
+  postb2 = alpha * t(t(mu^2) + s)
+
+  Eloglik =  -(n/2) * log(2*pi* sigma) -
+    (1/(2*sigma)) * sum(Y^2) +
+    (1/sigma) * sum(Y * Xrsum) -
+    (1/(2*sigma)) * sum(Xrsum^2) +
+    (1/(2*sigma)) * sum((Xr^2)) -
+    (1/(2*sigma)) * sum(d*t(postb2))
+
+  KL1 = sum(alpha * log(alpha/(1/p)))
+  KL2 = - 0.5* sum(t(alpha) * (1 + log(s)-log(sigma*sa)))
+  + 0.5 * sum(postb2)/(sigma*sa)
+
+  return(Eloglik - KL1 - KL2)
+}
+
+
+# This computes the average lfsr across SNPs for each l, weighted by the
+# posterior inclusion probability alpha
+lfsr_fromfit = function(res){
+  pos_prob = pnorm(0,mean=t(res$mu),sd=sqrt(res$s))
+  neg_prob = 1-pos_prob
+  1-rowSums(res$alpha*t(pmax(pos_prob,neg_prob)))
+}
+
+#find how many variables in the 95% CI
+# x is a probability vector
+n_in_CI_x = function(x){
+  sum(cumsum(sort(x,decreasing = TRUE))&lt;0.95)+1
+}
+
+# return binary vector indicating if each point is in CI
+# x is a probability vector
+in_CI_x = function(x){
+  n = n_in_CI_x(x)
+  o = order(x,decreasing=TRUE)
+  result = rep(0,length(x))
+  result[o[1:n]] = 1
+  return(result)
+}
+
+# Return binary matrix indicating which variables are in CI of each
+# of effect
+in_CI = function(res){
+  t(apply(res$alpha,1,in_CI_x))
+}
+
+n_in_CI = function(res){
+  apply(res$alpha,1,n_in_CI_x)
+}
+
+# computes z score for association between each
+# column of X and y
+calc_z = function(X,y){
+  z = rep(0,ncol(X))
+  for(i in 1:ncol(X)){
+    z[i] = summary(lm(y ~ X[,i]))$coeff[2,3]
+  }
+  return(z)
+}
+
+
+# plot p values of data and color in the 95% CIs
+# for simulated data, specify b = true effects (highlights in red)
+pplot = function(X,y,res,pos=NULL,b=NULL,CImax = 400,...){
+  z = calc_z(X,y)
+  zneg = -abs(z)
+  logp = log10(pnorm(zneg))
+  if(is.null(b)){b = rep(0,ncol(X))}
+  if(is.null(pos)){pos = 1:ncol(X)}
+  plot(pos,-logp,col=&quot;grey&quot;,xlab=&quot;&quot;,ylab=&quot;-log10(p)&quot;,...)
+  points(pos[b!=0],-logp[b!=0],col=2,pch=16)
+  for(i in 1:nrow(res$alpha)){
+    if(n_in_CI(res)[i]&lt;CImax)
+      points(pos[which(in_CI(res)[i,]&gt;0)],-logp[which(in_CI(res)[i,]&gt;0)],col=i+2)
+  }
+
+}</code></pre>
+<pre class="r"><code># single snp bayes regression of Y on each column of X
+# Y is n vector
+# X is n by p
+# prior variane on beta is sa2 * s2 (ie sa2 scaled by residual variance)
+# s2 is sigma^2 (residual variance)
+single_snp = function(Y,X,sa2=1,s2=1){
+  d = colSums(X^2)
+  sa2 = s2*sa2 # scale by residual variance
+  betahat = (1/d) * t(X) %*% Y
+  shat2 = s2/d
+  alpha = dnorm(betahat,0,sqrt(sa2+shat2))/dnorm(betahat,0,sqrt(shat2)) #bf on each SNP
+  alpha = alpha/sum(alpha) # posterior prob on each SNP
+  spost2 = (1/sa2 + d/s2)^(-1) # posterior variance
+  mupost = (d/s2)*spost2*betahat
+  return(list(alpha=alpha,mu=mupost,s2=spost2))
+}
+
+new_vbupdate &lt;- function (X, sigma, sa, Y, d, alpha0, mu0, Xr0) {
+
+  # Get the number of samples (n) and variables (p).
+  n &lt;- nrow(X)
+  p &lt;- ncol(X)
+
+  L = nrow(alpha0) # alpha0 and mu0 must be L by p
+  pi = rep(1,p)
+
+  # Check input X.
+  if (!is.double(X) || !is.matrix(X))
+    stop(&quot;Input X must be a double-precision matrix&quot;)
+
+  # Check inputs sigma and sa.
+  if (length(sigma) != 1 | length(sa) != 1)
+    stop(&quot;Inputs sigma and sa must be scalars&quot;)
+
+
+  # Check input Xr0.
+  if (length(Xr0) != n)
+    stop(&quot;length(Xr0) must be equal to nrow(X)&quot;)
+
+
+  # Initialize storage for the results.
+  alpha &lt;- alpha0
+  mu    &lt;- mu0
+  Xr    &lt;- Xr0
+
+  # Repeat for each effect to update
+  for (l in 1:L) {
+    # remove lth effect
+    Xr = Xr - X %*% (alpha[l,]*mu[l,])
+    R = Y - Xr
+    res = single_snp(R,X,sa,sigma)
+
+    # Compute the variational estimate of the posterior variance.
+    s &lt;- res$s2
+
+    # Update the variational estimate of the posterior mean.
+    mu[l,] &lt;- res$mu
+    
+    # Update the variational estimate of the posterior inclusion
+    # probability. This is basically prior (pi) times BF.
+    # The BF here comes from the normal approx - could be interesting
+    # to replace it with a t version that integrates over sigma?
+    alpha[l,] &lt;- res$alpha
+
+    Xr &lt;- Xr + X %*% (alpha[l,]*mu[l,])
+  }
+
+  return(list(alpha = alpha,mu = mu,Xr = Xr,s=s))
+}
+
+
+fit2 = function(X,Y,sa=1,sigma=NULL,niter=100,L=5,calc_elbo=FALSE){
+  if(is.null(sigma)){
+    sigma=var(Y)
+  }
+  p =ncol(X)
+  xy = t(X) %*% Y
+  d = colSums(X * X)
+  alpha0= mu0 = matrix(0,nrow=L,ncol=p)
+  Xr0 = X %*% colSums(alpha0*mu0)
+  elbo = rep(NA,niter)
+  for(i in 1:niter){
+    res = new_vbupdate(X, sigma, sa, Y, d, alpha0, mu0, Xr0)
+    alpha0 = res$alpha
+    mu0 = res$mu
+    Xr0 = res$Xr
+    if(calc_elbo){
+      elbo[i] = elbo(X,Y,sigma,sa,mu0,alpha0)
+    }
+  }
+  return(c(res,list(elbo=elbo)))
+}</code></pre>
+<pre class="r"><code>set.seed(1)
+n = 1000
+p = 1000
+beta = rep(0,p)
+beta[1] = 1
+beta[2] = 1
+beta[3] = 1
+beta[4] = 1
+X = matrix(rnorm(n*p),nrow=n,ncol=p)
+y = X %*% beta + rnorm(n)
+
+#X = scale(X,center = TRUE,scale=FALSE)
+#y = y-mean(y)
+res =fit(X,y,niter=10,calc_elbo=TRUE)
+res2 =fit2(X,y,niter=10,calc_elbo = TRUE)
+all.equal(res$elbo,res2$elbo)</code></pre>
+<pre><code>[1] TRUE</code></pre>
+<pre class="r"><code>y = read.table(&quot;../data/finemap_data/fmo2.sim/ysim.txt&quot;)
+X = read.table(&quot;../data/finemap_data/fmo2.sim/Xresid.txt&quot;)
+X = as.matrix(X)
+y = as.matrix(y)
+res =fit(X,y,niter=50,calc_elbo=TRUE)
+res2 =fit(X,y,niter=50,calc_elbo=TRUE)
+all.equal(res$elbo,res2$elbo)</code></pre>
+<pre><code>[1] TRUE</code></pre>
+<pre class="r"><code>res =fit(X,y,sigma=1.2,sa=0.5,niter=50,calc_elbo=TRUE)
+res2 =fit(X,y,sigma=1.2,sa=0.5,niter=50,calc_elbo=TRUE)
+all.equal(res$elbo,res2$elbo)</code></pre>
+<pre><code>[1] TRUE</code></pre>
+<pre class="r"><code>plot(res$elbo,main=&quot;elbo is increasing&quot;)</code></pre>
+<p><img src="figure/newVB.ss.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.3.2 (2016-10-31)
+Platform: x86_64-apple-darwin13.4.0 (64-bit)
+Running under: OS X El Capitan 10.11.6
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+ [1] backports_1.1.1 magrittr_1.5    rprojroot_1.2   tools_3.3.2    
+ [5] htmltools_0.3.6 yaml_2.1.14     Rcpp_0.12.13    stringi_1.1.5  
+ [9] rmarkdown_1.7   knitr_1.17      git2r_0.19.0    stringr_1.2.0  
+[13] digest_0.6.12   evaluate_0.10.1</code></pre>
+</div>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
