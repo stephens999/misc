@@ -25,8 +25,8 @@
 <link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
 <script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
-<link href="site_libs/highlightjs-1.1/textmate.css" rel="stylesheet" />
-<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 <link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
 
 <style type="text/css">code{white-space: pre;}</style>
@@ -36,10 +36,12 @@
   }
 </style>
 <script type="text/javascript">
-if (window.hljs && document.readyState && document.readyState === "complete") {
-   window.setTimeout(function() {
-      hljs.initHighlighting();
-   }, 0);
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlightingOnLoad(); }, 0);
+  }
 }
 </script>
 
@@ -313,10 +315,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-11-12</p>
+<p><strong>Last updated:</strong> 2017-11-18</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> db7175d</p>
+<p><strong>Code version:</strong> b1b37ce</p>
 <div id="outline" class="section level1">
 <h1>Outline</h1>
 <p>The model is: <span class="math display">\[Y_i = \sum_{l=1}^L \sum_j X_{ij} \gamma_{lj} \beta_{lj} + e_i\]</span></p>
@@ -331,81 +333,115 @@ shared across the workflowr files. -->
 <p>In brief, the variational parameters are as in Carbonetto and Stephens, but they become <span class="math inline">\(L \times p\)</span> matrices. That is they are <span class="math inline">\(\alpha,\mu,s\)</span> where <span class="math inline">\(\alpha_{lj}\)</span> is the posterior mean for <span class="math inline">\(\gamma_{lj}\)</span>, <span class="math inline">\(\mu_{lj}\)</span> is the posterior mean on <span class="math inline">\(\beta_{lj}\)</span>, and <span class="math inline">\(s_{lj}\)</span> is the posterior variance.</p>
 <p>In the code below <code>alpha[l,] mu[l,]</code> is an estimate of <span class="math inline">\(\hat{\beta}[l,]\)</span>, and a sum of this over <span class="math inline">\(l\)</span> is an estimate of the overall SNP effects. Call this sum <code>r</code> as in Carbonetto and Stephens. The variable <code>Xr</code> is <code>t(X) %*% r</code>, effectively the “fitted values”.</p>
 <p>Lots to do: - derive these updates (or correct them!) and the VB lower bound. - investigate how it compares with exact calculations in small problems - think about how to deal with automatically choosing L or estimating g - hyperparameter estimation…</p>
+<pre class="r"><code>knitr::read_chunk(&quot;newVB.funcs.R&quot;)</code></pre>
 <pre class="r"><code>new_varbvsnormupdate &lt;- function (X, sigma, sa, xy, d, alpha0, mu0, Xr0) {
-    
-    # Get the number of samples (n) and variables (p).
-    n &lt;- nrow(X)
-    p &lt;- ncol(X)
-   
-    L = nrow(alpha0) # alpha0 and mu0 must be L by p
-    pi = rep(1,p)
-    
+
+  # Get the number of samples (n) and variables (p).
+  n &lt;- nrow(X)
+  p &lt;- ncol(X)
+
+  L = nrow(alpha0) # alpha0 and mu0 must be L by p
+  pi = rep(1,p)
+
   # Check input X.
-    if (!is.double(X) || !is.matrix(X))
-      stop(&quot;Input X must be a double-precision matrix&quot;)
-    
-    # Check inputs sigma and sa.
-    if (length(sigma) != 1 | length(sa) != 1)
-      stop(&quot;Inputs sigma and sa must be scalars&quot;)
-    
-  
-    # Check input Xr0.
-    if (length(Xr0) != n)
-      stop(&quot;length(Xr0) must be equal to nrow(X)&quot;)
-    
-    
-    # Initialize storage for the results.
-    alpha &lt;- alpha0
-    mu    &lt;- mu0
-    Xr    &lt;- Xr0
-  
-      # Repeat for each effect to update
-    for (l in 1:L) {
-        # remove lth effect
-        Xr = Xr - X %*% (alpha[l,]*mu[l,])
-        
-        # Compute the variational estimate of the posterior variance.
-        s &lt;- sa*sigma/(sa*d + 1)
-        
-        # Update the variational estimate of the posterior mean.
-        mu[l,] &lt;- s/sigma * (xy - t(X) %*% Xr)
-        
-        # Update the variational estimate of the posterior inclusion
-        # probability. This is basically prior (pi) times BF.
-        # The BF here comes from the normal approx - could be interesting
-        # to replace it with a t version that integrates over sigma?
-        alpha[l,] &lt;- pi*exp((log(s/(sa*sigma)) + mu[l,]^2/s)/2)
-        
-        alpha[l,] &lt;- alpha[l,]/sum(alpha[l,])
-        
-        # Update Xr by adding back in the $l$th effect
-        Xr &lt;- Xr + X %*% (alpha[l,]*mu[l,]) 
-    }
-    
-    return(list(alpha = alpha,mu = mu,Xr = Xr,s=s))
+  if (!is.double(X) || !is.matrix(X))
+    stop(&quot;Input X must be a double-precision matrix&quot;)
+
+  # Check inputs sigma and sa.
+  if (length(sigma) != 1 | length(sa) != 1)
+    stop(&quot;Inputs sigma and sa must be scalars&quot;)
+
+
+  # Check input Xr0.
+  if (length(Xr0) != n)
+    stop(&quot;length(Xr0) must be equal to nrow(X)&quot;)
+
+
+  # Initialize storage for the results.
+  alpha &lt;- alpha0
+  mu    &lt;- mu0
+  Xr    &lt;- Xr0
+
+  # Repeat for each effect to update
+  for (l in 1:L) {
+    # remove lth effect
+    Xr = Xr - X %*% (alpha[l,]*mu[l,])
+
+    # Compute the variational estimate of the posterior variance.
+    s &lt;- sa*sigma/(sa*d + 1)
+
+    # Update the variational estimate of the posterior mean.
+    mu[l,] &lt;- s/sigma * (xy - t(X) %*% Xr)
+
+    # Update the variational estimate of the posterior inclusion
+    # probability. This is basically prior (pi) times BF.
+    # The BF here comes from the normal approx - could be interesting
+    # to replace it with a t version that integrates over sigma?
+    alpha[l,] &lt;- pi*exp((log(s/(sa*sigma)) + mu[l,]^2/s)/2)
+
+    alpha[l,] &lt;- alpha[l,]/sum(alpha[l,])
+
+    # Update Xr by adding back in the $l$th effect
+    Xr &lt;- Xr + X %*% (alpha[l,]*mu[l,])
+  }
+
+  return(list(alpha = alpha,mu = mu,Xr = Xr,s=s))
 }
 
 # Just repeated applies those updates
 # X is an n by p matrix of genotypes
 # Y a n vector of phenotypes
 # sa the variance of the prior on effect sizes (actually $\beta \sim N(0,sa sigma)$ where the residual variance sigma here is fixed to the variance of Y based on a small effect assumption.)
-fit = function(X,Y,sa=1,sigma=NULL,niter=100,L=5){
+fit = function(X,Y,sa=1,sigma=NULL,niter=100,L=5,calc_elbo=FALSE){
   if(is.null(sigma)){
     sigma=var(Y)
-  } 
+  }
   p =ncol(X)
   xy = t(X) %*% Y
   d = colSums(X * X)
   alpha0= mu0 = matrix(0,nrow=L,ncol=p)
   Xr0 = X %*% colSums(alpha0*mu0)
+  elbo = rep(NA,niter)
   for(i in 1:niter){
     res = new_varbvsnormupdate(X, sigma, sa, xy, d, alpha0, mu0, Xr0)
     alpha0 = res$alpha
     mu0 = res$mu
     Xr0 = res$Xr
+    if(calc_elbo){
+      elbo[i] = elbo(X,Y,sigma,sa,mu0,alpha0)
+    }
   }
-  return(res)
+  return(c(res,list(elbo=elbo)))
 }
+
+#this is for scaled prior in which effect prior variance is sa * sigma
+elbo = function(X,Y,sigma,sa,mu,alpha){
+  L = nrow(alpha)
+  n = nrow(X)
+  p = ncol(X)
+
+  Xr = (alpha*mu) %*% t(X)
+  Xrsum = colSums(Xr)
+
+  d = colSums(X*X)
+  s &lt;- sa*sigma/(sa*d + 1)
+
+  postb2 = alpha * t(t(mu^2) + s)
+
+  Eloglik =  -(n/2) * log(2*pi* sigma) -
+    (1/(2*sigma)) * sum(Y^2) +
+    (1/sigma) * sum(Y * Xrsum) -
+    (1/(2*sigma)) * sum(Xrsum^2) +
+    (1/(2*sigma)) * sum((Xr^2)) -
+    (1/(2*sigma)) * sum(d*t(postb2))
+
+  KL1 = sum(alpha * log(alpha/(1/p)))
+  KL2 = - 0.5* sum(t(alpha) * (1 + log(s)-log(sigma*sa)))
+  + 0.5 * sum(postb2)/(sigma*sa)
+
+  return(Eloglik - KL1 - KL2)
+}
+
 
 # This computes the average lfsr across SNPs for each l, weighted by the
 # posterior inclusion probability alpha
@@ -431,7 +467,7 @@ in_CI_x = function(x){
   return(result)
 }
 
-# Return binary matrix indicating which variables are in CI of each 
+# Return binary matrix indicating which variables are in CI of each
 # of effect
 in_CI = function(res){
   t(apply(res$alpha,1,in_CI_x))
@@ -441,7 +477,7 @@ n_in_CI = function(res){
   apply(res$alpha,1,n_in_CI_x)
 }
 
-# computes z score for association between each 
+# computes z score for association between each
 # column of X and y
 calc_z = function(X,y){
   z = rep(0,ncol(X))
@@ -466,7 +502,7 @@ pplot = function(X,y,res,pos=NULL,b=NULL,CImax = 400,...){
     if(n_in_CI(res)[i]&lt;CImax)
       points(pos[which(in_CI(res)[i,]&gt;0)],-logp[which(in_CI(res)[i,]&gt;0)],col=i+2)
   }
-  
+
 }</code></pre>
 </div>
 <div id="null-simulation" class="section level1">
@@ -477,13 +513,16 @@ n = 1000
 p = 1000
 y = rnorm(n)
 X = matrix(rnorm(n*p),nrow=n,ncol=p)
-res =fit(X,y,niter=100)
+res =fit(X,y,niter=100,calc_elbo=TRUE)
 n_in_CI(res)</code></pre>
 <pre><code>[1] 889 889 889 889 889</code></pre>
 <pre class="r"><code>lfsr_fromfit(res)</code></pre>
 <pre><code>[1] 0.1461692 0.1461692 0.1461692 0.1461692 0.1461692</code></pre>
 <pre class="r"><code>pplot(X,y,res,main=&quot;null simulation&quot;)</code></pre>
 <p><img src="figure/newVB.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Note that the ELBO is increasing</p>
+<pre class="r"><code>plot(res$elbo)</code></pre>
+<p><img src="figure/newVB.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="simple-simulation" class="section level1">
 <h1>Simple Simulation</h1>
@@ -497,13 +536,15 @@ beta[3] = 1
 beta[4] = 1
 X = matrix(rnorm(n*p),nrow=n,ncol=p)
 y = X %*% beta + rnorm(n)
-res =fit(X,y,niter=100)
+res =fit(X,y,niter=100,calc_elbo=TRUE)
 n_in_CI(res)</code></pre>
 <pre><code>[1]   1   1   1   1 943</code></pre>
 <pre class="r"><code>lfsr_fromfit(res)</code></pre>
 <pre><code>[1] 0.000000 0.000000 0.000000 0.000000 0.356592</code></pre>
 <pre class="r"><code>pplot(X,y,res,main=&quot;simple simulation&quot;)</code></pre>
-<p><img src="figure/newVB.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/newVB.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(res$elbo,main=&quot;ELBO is increasing&quot;)</code></pre>
+<p><img src="figure/newVB.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="simulate-with-ld-blocks" class="section level1">
 <h1>Simulate with LD blocks</h1>
@@ -532,7 +573,7 @@ n_in_CI(res.LD)</code></pre>
 <pre class="r"><code>lfsr_fromfit(res.LD)</code></pre>
 <pre><code>[1] 2.925933e-06 1.575560e-06 2.550389e-04 3.442160e-01 3.442160e-01</code></pre>
 <pre class="r"><code>pplot(d$X,d$Y,res.LD,main=&quot;LD simulation&quot;,CImax=10)</code></pre>
-<p><img src="figure/newVB.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/newVB.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="real-data" class="section level1">
 <h1>Real data</h1>
@@ -548,13 +589,15 @@ Xresid= X
 p =ncol(Xresid)
 for(i in 1:p){Xresid[,i] = lm(X[,i]~Z)$resid}
 yresid = lm(y~Z)$resid
-res.gtex =fit(Xresid,yresid,niter=100)
+res.gtex =fit(Xresid,yresid,niter=100,calc_elbo=TRUE)
 n_in_CI(res.gtex)</code></pre>
 <pre><code>[1] 840  19   8   5 152</code></pre>
 <pre class="r"><code>lfsr_fromfit(res.gtex)</code></pre>
 <pre><code>[1] 2.281823e-01 1.483460e-09 2.220446e-16 1.166622e-12 1.318208e-02</code></pre>
 <pre class="r"><code>pplot(Xresid,yresid,res.gtex)</code></pre>
-<p><img src="figure/newVB.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/newVB.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(res.gtex$elbo,main=&quot;ELBO is increasing&quot;)</code></pre>
+<p><img src="figure/newVB.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Interestingly, the variable with smallest <span class="math inline">\(p\)</span> value is not in the CIs of the most confident eQTLs. It seems that when we control for the other hits, that variable is no longer that significant.</p>
 <p>Notice that only <span class="math inline">\(l=2,\dots,5\)</span> have small lfsr. So the first one can probably be ignored. Of the others, there are 3 eQTLs that are fairly well mapped (95% CI contains 5-19 SNPs) and one that is not all well mapped (152).</p>
 <p>Here we pick out the top marker for each <span class="math inline">\(L\)</span> and look at the BFs. Also compare with the top markers found by <code>varbvs</code>. We see the BF for the top 4 markers is higher than those from varbvs, which is encouraging.</p>
@@ -650,7 +693,7 @@ n_in_CI(res.sim)</code></pre>
 # lfsr_fromfit(res2.sim)</code></pre>
 <p>Compare with p values</p>
 <pre class="r"><code>pplot(Xresid,ysim,res.sim,pos,b,100)</code></pre>
-<p><img src="figure/newVB.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/newVB.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>ci = list()
 for(i in 1:5){ci[[i]] = which(in_CI_x(res.sim$alpha[i,])&gt;0)}
 
@@ -659,7 +702,7 @@ plot(pip.sim)
 which(b!=0)</code></pre>
 <pre><code>[1] 102 215 258 287</code></pre>
 <pre class="r"><code>points(which(b!=0),pip.sim[which(b!=0)],col=2,pch=16)</code></pre>
-<p><img src="figure/newVB.Rmd/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/newVB.Rmd/unnamed-chunk-10-2.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 </div>
 <div id="compare-with-finemap" class="section level1">
@@ -679,7 +722,7 @@ pip.fm.k4[res.fm.k4$index] = res.fm.k4$snp_prob
 plot(pip.sim,pip.fm.k4,xlab=&quot;PIP (new VB method)&quot;,ylab=&quot;PIP (FINEMAP, k=4)&quot;, main=&quot;New VB vs FINEMAP with k=4&quot;)
 points(pip.sim[which(b!=0)],pip.fm.k4[which(b!=0)],col=2,pch=16)
 abline(a=0,b=1)</code></pre>
-<p><img src="figure/newVB.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/newVB.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Now compare with DAP. William sent me two different DAP results, the first with default settings, and the second with the residual variance set to be equal to var(y), which is in some sense “conservatve”. It turns out the latter agrees really well with FINEMAP with default prior.</p>
 <pre class="r"><code>res.dap = read.table(&quot;../data/finemap_data/fmo2.sim/dap_out_snp.txt&quot;,stringsAsFactors = FALSE)
 res.dap$snp = as.numeric(substr(res.dap$V2,4,6))
@@ -694,17 +737,17 @@ pip.dap2[res.dap2$snp] = res.dap2$V3
 plot(pip.dap2,pip.fm,main =&quot;DAP (conservative) vs FINEMAP (defaults)&quot;,xlab=&quot;DAP&quot;,ylab=&quot;FINEMAP&quot;)
 points(pip.dap2[which(b!=0)],pip.fm[which(b!=0)],col=2,pch=16)
 abline(a=0,b=1)</code></pre>
-<p><img src="figure/newVB.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/newVB.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>plot(pip.dap2,pip.dap,main =&quot;DAP (conservative) vs DAP (defaults)&quot;,xlab=&quot;DAP (conservative)&quot;,ylab=&quot;DAP (default)&quot;)
 points(pip.dap2[which(b!=0)],pip.dap[which(b!=0)],col=2,pch=16)
 abline(a=0,b=1)</code></pre>
-<p><img src="figure/newVB.Rmd/unnamed-chunk-11-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/newVB.Rmd/unnamed-chunk-12-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>In contrast, Paintor results seem pretty different:</p>
 <pre class="r"><code>pip.p = read.table(&quot;~/PAINTOR_V3.0/myData/fmo2.sim.results&quot;,header=TRUE)[,2]
 plot(pip.p,pip.sim)
 points(pip.p[which(b!=0)],pip.sim[which(b!=0)],col=2,pch=16)
 abline(a=0,b=1)</code></pre>
-<p><img src="figure/newVB.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/newVB.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Compare log10BF. Note the top log10BF from finemap was 36.7 (for a 4 marker model). So similar, but not identical. (I haven’t been careful about making sure parameters are exactly same across methods.)</p>
 <pre class="r"><code>tophits = apply(res.sim$alpha,1,which.max)
 markers = colnames(Xresid)[tophits]
@@ -734,7 +777,7 @@ n_in_CI(res.actn3)</code></pre>
 <pre class="r"><code>lfsr_fromfit(res.actn3)</code></pre>
 <pre><code>[1] 0.0000000 0.2952032 0.2952032 0.2952032 0.2952032</code></pre>
 <pre class="r"><code>pplot(Xresid,yresid,res.actn3)</code></pre>
-<p><img src="figure/newVB.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/newVB.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
@@ -752,7 +795,7 @@ attached base packages:
 loaded via a namespace (and not attached):
  [1] backports_1.1.1 magrittr_1.5    rprojroot_1.2   tools_3.3.2    
  [5] htmltools_0.3.6 yaml_2.1.14     Rcpp_0.12.13    stringi_1.1.5  
- [9] rmarkdown_1.6   knitr_1.17      git2r_0.19.0    stringr_1.2.0  
+ [9] rmarkdown_1.7   knitr_1.17      git2r_0.19.0    stringr_1.2.0  
 [13] digest_0.6.12   evaluate_0.10.1</code></pre>
 </div>
 </div>
