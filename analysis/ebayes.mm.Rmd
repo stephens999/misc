@@ -87,7 +87,22 @@ We we will try it with constant $s_j=1$.
   x2 = b2 + e
   eb_mm(x2,1)
   EbayesThresh::wandafromx(x2,1,FALSE)
+  
 ```
+
+
+Try a case that is "nearly null"
+```{r}
+  b3 =b
+  b3[1:(0.99*n)] = 0
+  x3 = b3 + e
+  eb_mm(x3,1)
+  EbayesThresh::wandafromx(x3,1,FALSE)
+```
+
+
+
+
 
 
 # Thoughts
@@ -96,6 +111,8 @@ We we will try it with constant $s_j=1$.
 That might be worth thinking about. Maybe some upper quantiles would be better than 4th moment?
 
 - the case where s is not constant - probably want to work with E(x/s) rather than E(x) ?
+
+
 
 ## Session information
 
