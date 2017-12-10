@@ -33,6 +33,7 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 
 * [Apply SSVD to GTEX data](ssvd_gtex.html)
 
+* [Method of moments for EbayesThresh ](ebayes.mm.html)
 
 # Finemapping
 
