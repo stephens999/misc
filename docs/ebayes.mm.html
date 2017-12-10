@@ -318,7 +318,7 @@ shared across the workflowr files. -->
 <p><strong>Last updated:</strong> 2017-12-09</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 919969e</p>
+<p><strong>Code version:</strong> ead291e</p>
 <div id="idea" class="section level1">
 <h1>Idea</h1>
 <p>The idea is to investigate method of moments estimation for very fast EB procedures like EBayesThresh.</p>
@@ -377,6 +377,22 @@ $a
 
 $a
 [1] 1.006022</code></pre>
+<p>Try a case that is “nearly null”</p>
+<pre class="r"><code>  b3 =b
+  b3[1:(0.99*n)] = 0
+  x3 = b3 + e
+  eb_mm(x3,1)</code></pre>
+<pre><code>$pi0
+[1] 0.9822534
+
+$a
+[1] 0.8542569</code></pre>
+<pre class="r"><code>  EbayesThresh::wandafromx(x3,1,FALSE)</code></pre>
+<pre><code>$w
+[1] 0.01192894
+
+$a
+[1] 1.062469</code></pre>
 </div>
 <div id="thoughts" class="section level1">
 <h1>Thoughts</h1>
