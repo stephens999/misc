@@ -1,0 +1,181 @@
+---
+title: "Investigate ALStructure"
+author: "Matthew Stephens"
+date: 2018-04-05
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+## Load package
+
+```{r}
+#library("devtools")
+#install_github("storeylab/alstructure", build_vignettes=TRUE)
+library("alstructure")
+set.seed("12345")
+```
+
+
+Define a version that can run the factorization directly on `X`/2 instead of `F_hat`, and it also returns `F_hat` and `run_time` in the list for my convenience and allows a seed to be set (as the initialization for factorizing is random); otherwise this function is the same as 
+`alstructure`.
+```{r}
+my_alstructure = function (X, d_hat = NULL, svd_method = "base", tol = 1e-05, 
+    max_iters = 1000, order_method = "ave_admixture", P_init, 
+    Q_init, useX = FALSE, seed = 1) 
+{
+    set.seed(seed)
+    run_time <- proc.time()
+    X <- alstructure:::impute_mean(X)
+    if (is.null(d_hat)) {
+        d_hat <- estimate_d(X)
+    }
+    F_obj <- estimate_F(X, d = d_hat, svd_method = svd_method)
+    F_hat <- F_obj$F_hat
+    rowspace <- F_obj$rowspace
+    if(useX){
+      factors <- factor_F(F = X/2, d = d_hat, tol = tol, max_iters = max_iters)} else {
+      factors <- factor_F(F = F_hat, d = d_hat, tol = tol, max_iters = max_iters)  }
+    if (order_method == "ave_admixture") {
+        ordering <- order_pops(factors$P_hat, factors$Q_hat, 
+            method = "ave_admixture", Q_space = NULL)
+        factors$Q_hat <- ordering$Q_ordered
+        factors$P_hat <- ordering$P_ordered
+    }
+    else if (order_method == "var_explained") {
+        ordering <- order_pops(factors$P_hat, factors$Q_hat, 
+            method = "var_explained", Q_space = rowspace)
+        factors$Q_hat <- ordering$Q_ordered
+        factors$P_hat <- ordering$P_ordered
+    }
+    run_time <- proc.time() - run_time
+    vals = list(P_hat = factors$P_hat, Q_hat = factors$Q_hat, 
+        rowspace = rowspace, iter = factors$iter, tol = factors$tol, F_hat = F_hat, run_time=run_time)
+    return(vals)
+}
+```
+
+## Simulations
+
+Simulation as from the vignette:
+```{r}
+m = 10000 # number of SNPS
+n = 100 # number of individuals
+d = 3 # dimension of latent subspace
+alpha = c(0.1, 0.1, 0.1) # dirichlet parameters
+seed = 12345
+
+sim_data <- simulate_admixture(m, n, d, alpha, BN_params = NA, seed = seed)
+
+names(sim_data)
+```
+
+
+```{r}
+fit <- my_alstructure(X = sim_data$X, d_hat = d)
+fit2 <- my_alstructure(X = sim_data$X, d_hat = d, useX=TRUE)
+```
+
+The two lead to almost identical errors and similar run-times:
+```{r}
+mean((sim_data$F - fit$P_hat %*% fit$Q_hat)^2)
+mean((sim_data$F - fit2$P_hat %*% fit2$Q_hat)^2)
+fit$run_time
+fit2$run_time
+```
+
+Now try a harder example with 10 populations:
+```{r}
+m = 10000 # number of SNPS
+n = 100 # number of individuals
+d = 10 # dimension of latent subspace
+alpha = rep(0.1, d) # dirichlet parameters
+seed = 12345
+
+sim_data <- simulate_admixture(m, n, d, alpha, BN_params = NA, seed = seed)
+fit <- my_alstructure(X = sim_data$X, d_hat = d)
+fit2 <- my_alstructure(X = sim_data$X, d_hat = d,useX=TRUE)
+
+mean((sim_data$F - fit$P_hat %*% fit$Q_hat)^2)
+mean((sim_data$F - fit2$P_hat %*% fit2$Q_hat)^2)
+fit$run_time
+fit2$run_time
+```
+
+
+Now try a harder example with 30 populations:
+```{r}
+d = 30 # dimension of latent subspace
+n=300
+alpha = rep(0.1, d) # dirichlet parameters
+seed = 12345
+
+sim_data <- simulate_admixture(m, n, d, alpha, BN_params = NA, seed = seed)
+
+fit <- my_alstructure(X = sim_data$X, d_hat = d)
+fit2 <- my_alstructure(X = sim_data$X, d_hat = d,useX=TRUE)
+
+mean((sim_data$F - fit$P_hat %*% fit$Q_hat)^2)
+mean((sim_data$F - fit2$P_hat %*% fit2$Q_hat)^2)
+
+mean((sim_data$X - fit$P_hat %*% fit$Q_hat)^2)
+mean((sim_data$X - fit2$P_hat %*% fit2$Q_hat)^2)
+
+fit$run_time
+fit2$run_time
+```
+
+
+So now things are getting more interesting... the fits are
+similar but the dimension reduction has reduced run time.
+
+
+One issue is that Fhat itself requires an estimate of $d$.
+I'm currently giving it the true value, which might be an unfair advantage. I wonder if we can estimate $d$ instead.
+```{r}
+d_est = estimate_d(sim_data$X)
+```
+
+OK, so that didn't work! 
+Let's just see what happens with 16.
+
+
+```{r}
+fit <- my_alstructure(X = sim_data$X, d_hat = 16)
+fit2 <- my_alstructure(X = sim_data$X, d_hat = 16,useX=TRUE)
+mean((sim_data$F - fit$P_hat %*% fit$Q_hat)^2)
+mean((sim_data$F - fit2$P_hat %*% fit2$Q_hat)^2)
+
+mean((sim_data$X - fit$P_hat %*% fit$Q_hat)^2)
+mean((sim_data$X - fit2$P_hat %*% fit2$Q_hat)^2)
+
+fit$run_time
+fit2$run_time
+```
+
+So I guess more investigation is required to see if
+the run time is consistently improved....
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
