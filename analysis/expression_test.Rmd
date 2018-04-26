@@ -1,0 +1,157 @@
+---
+title: "Try varbvs on some expression data"
+author: "Matthew Stephens"
+date: 2017-05-02
+output: workflowr::wflow_html
+---
+
+
+
+
+
+
+# Load data
+
+Started by following instructions [here](http://www2.warwick.ac.uk/fac/sci/moac/people/students/peter_cock/r/geo/)
+to get a GEO dataset.
+
+
+```{r}
+#to install...
+#source("http://www.bioconductor.org/biocLite.R")
+#biocLite("GEOquery")
+library(Biobase)
+library(GEOquery)
+x <- getGEO(filename="../data/GDS5363_full.soft.gz")
+x.GPL = getGEO("GPL6947")
+eset <- GDS2eSet(x,GPL=x.GPL)
+```
+
+
+Get bits of the data; remove missing values
+```{r}
+gender = eset$gender
+y = 1*(eset$disease.state!="control")
+mat = exprs(eset)
+subset = !is.na(mat[,1])
+mat = mat[subset,]
+
+```
+
+```{r}
+mat_f = mat[,gender=="female"]
+y_f = y[gender=="female"]
+plot(log(mat_f[27642,]),log(mat_f[7235,]),pch=16,col=y_f+1)
+```
+
+
+```{r}
+plot(log(mat_f[41799,]),log(mat_f[7235,]),pch=16,col=y_f+1)
+
+```
+
+
+Look at correlation of variable 41799 with other variables
+```{r}
+logm = log(mat_f)
+logm.sc = t(scale(t(logm))) # center and scale rows
+cc = logm.sc %*% (logm.sc[41799,]) / 128
+
+
+```
+
+
+
+
+```{r}
+m1 = c(7235,48433,25125,29679,25744) # variables in table model 1
+x1 = logm[m1,]
+glm.fit = glm(y_f ~ t(x1),family="binomial")
+summary(glm.fit)
+
+```
+
+try adding a variable
+```{r}
+m1b = c(m1,41799)
+x1b = logm[m1b,]
+glm.fitb = glm(y_f ~ t(x1b),family="binomial")
+summary(glm.fitb)
+```
+
+
+try adding a variable
+```{r}
+m1c = m1b[-(4:5)]
+x1c = logm[m1c,]
+glm.fitc = glm(y_f ~ t(x1c),family="binomial")
+summary(glm.fitc)
+```
+
+
+
+```{r}
+library(glmnet)
+glmnet.fit= glmnet(t(logm), y=y_f, family="binomial")
+saveRDS(glmnet.fit, "../output/glmnet.fit.RDS")
+```
+
+Load in newVB (SuSiE) functions
+```{r}
+knitr::read_chunk("newVB.funcs.R")
+```
+
+
+```{r}
+source("newVB.funcs.R")
+x = t(logm)
+x = scale(x,center=TRUE,scale=TRUE)
+y = y_f - mean(y_f)
+susie.fit= fit(x, y,sa=0.5^2)
+bhat = colSums(susie.fit$alpha*susie.fit$mu)
+
+```
+
+
+
+```{r}
+library(varbvs)
+fit.varbvs <- varbvs(X = t(logm), y = y_f, Z = NULL, family = "binomial", sa = 1, logodds = seq(-3.5, -1.5, 0.1))
+saveRDS(fit.varbvs,"../output/fit.varbvs.RDS")
+pve = fit.varbvs$alpha %*% normalizelogweights(fit.varbvs$logw)
+```
+
+
+Run GEMMA; last run is longer
+```{r}
+temp = cbind("A", "C", logm)
+write.table(temp,row.names=TRUE,file = "../data/logm.csv", sep=",",quote=FALSE, col.names=FALSE)
+write(y_f,file="../data/y_f.txt",sep="\n")
+#system("../gemma/gemma -bslmm 1 -notsnp -g data/logm.csv -p data/y_f.txt -o test")
+#system("../gemma/gemma -bslmm 1 -notsnp -g data/logm.csv -p data/y_f.txt -o test2")
+#system("../gemma/gemma -bslmm 1 -notsnp -g data/logm.csv -p data/y_f.txt -o test3 -s 10000000 -rpace 100")
+#../gemma/gemma -bslmm 1 -notsnp -g data/logm.csv -p data/y_f.txt -seed 10 -o test4 -s 10000000 -rpace 100
+#../gemma/gemma -bslmm 1 -notsnp -g data/logm.csv -p data/y_f.txt -seed 20 -o test5 -s 10000000 -rpace 100
+
+```
+
+Following shows not such good agreement between two runs...
+```{r}
+temp = read.table("../output/test3.param.txt",header=TRUE)
+temp2 = read.table("../output/test4.param.txt",header=TRUE)
+plot(temp$gamma,temp2$gamma)
+```
+
+
+```{r}
+temp3 = read.table("../output/test3.param.txt",header=TRUE)
+
+```
+
+```{r}
+bv = scan("../output/test.bv.txt")
+plot(bv)
+```
+
+
+

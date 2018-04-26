@@ -2,29 +2,9 @@
 title: "Try SSVD on GTEX Z scores"
 author: "Matthew Stephens"
 date: 2017-12-06
-output: html_document
+output: workflowr::wflow_html
 ---
 
-<!-- The file analysis/chunks.R contains chunks that define default settings
-shared across the workflowr files. -->
-```{r read-chunk, include=FALSE, cache=FALSE}
-knitr::read_chunk("chunks.R")
-```
-
-<!-- Update knitr chunk options -->
-```{r knitr-opts-chunk, include=FALSE}
-```
-
-<!-- Insert the date the file was last updated -->
-```{r last-updated, echo=FALSE, results='asis'}
-```
-
-<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
- package git2r is installed -->
-```{r code-version, echo=FALSE, results='asis'}
-```
-
-<!-- Add your analysis here -->
 
 # Analyse GTEX Z scores with SSVD
 
@@ -64,8 +44,4 @@ I wonder if this is a consequence of imposing orthogonality?
 
 
 
-## Session information
 
-<!-- Insert the session information into the document -->
-```{r session-info}
-```

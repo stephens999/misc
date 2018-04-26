@@ -1,0 +1,37 @@
+---
+title: "Untitled"
+author: "First Last"
+date: YYYY-MM-DD
+output: workflowr::wflow_html
+---
+
+
+
+
+# Simulate data
+
+```{r}
+l = rnorm(5)
+f = rnorm(10)
+Y = l %*% t(f) + rnorm(50)
+```
+
+
+# Compute Hessian matrix
+
+Note that the (non-zero) eigenvalues of H are the same as those of Y
+```{r}
+hess = function(Y){
+  n = nrow(Y)
+  p = ncol(Y)
+  null.n = matrix(0,nrow=n, ncol=n)
+  null.p = matrix(0,nrow=p, ncol=p)
+  rbind(cbind(null.n,Y), cbind(t(Y),null.p))
+}
+H=hess(Y)
+eigen(H)$values
+svd(Y)$d
+```
+
+
+

@@ -1,0 +1,52 @@
+---
+title: "Try FINEMAP software (Benner et al)"
+author: "Matthew Stephens"
+date: 2017-11-1
+output: workflowr::wflow_html
+---
+
+
+
+
+# Data
+
+The data were simulated in (newVB.Rmd).
+
+I ran finemap using:
+`./finemap --sss --in-files data --n-iterations 1000000 --prior-std 0.4 --regions 1 --prob-tol 0.00001`
+
+```{r}
+
+write_finemap_files = function(X,Y,dir,prefix){
+  z = calc_z(X,Y)
+  n = length(Y)
+  write.table(z,file.path(dir,paste0(prefix,".z")),quote=F,col.names=F)
+  write.table(cor(Xresid),file.path(dir,paste0(prefix,".ld")),quote=F,col.names=F,row.names=FALSE)
+  write("z;ld;snp;config;k;log;n-ind",file=file.path(dir,"data"))
+  write(paste(file.path(dir,paste0(prefix,".z")),
+              file.path(dir,paste0(prefix,".ld")),
+              file.path(dir,paste0(prefix,".snp")),
+              file.path(dir,paste0(prefix,".config")),
+              file.path(dir,paste0(prefix,".k")),
+              file.path(dir,paste0(prefix,".log")),
+              n,sep=";"),
+        file=file.path(dir,"data"),append=TRUE)
+}
+
+
+```
+
+
+Now read in results.
+```{r}
+res.fm = read.table("../data/finemap_data/fmo2.sim/fmo2.snp",header=TRUE,sep=" ")
+pip.fm = rep(0,1000)
+pip.fm[res.fm$index] = res.fm$snp_prob
+plot(pip.fm)
+which(b!=0)
+points(which(b!=0),pip.fm[which(b!=0)],col=2,pch=16)
+
+
+```
+
+

@@ -1,0 +1,30 @@
+---
+title: "Untitled"
+author: "First Last"
+date: YYYY-MM-DD
+output: workflowr::wflow_html
+---
+
+
+
+
+
+# Do intermediate traits help?
+
+
+Consider $M_1: \g \rightarrow X \rightarrow Y$ and $M_2: \g,Y \rightarrow X$. 
+Note that under $M_1$, $\g$ is affecting $Y$, whereas in $M_2$ it is not.
+Then the BF for $M_1$ vs $M_2$ is:
+\begin{align}
+\frac{P(X,Y | \g,M_1)}{P(X,Y | \g,M_2)} &= \frac{P(X|\g)P(Y|X)}{P(Y)P(X|\g,Y)} \\
+&= \frac{P(X|\g)P(Y|X)}{P(Y)P(X|\g)P(Y|\g,X)/P(Y|\g)} \\
+\end{align}
+
+%That is the BF can be written as the BF for whether $Y$ is associated with $\g$ times
+an additional factor that tests whether $Y$ is conditionally independent of $\g$ given $X$.
+If $X$ is intermediate phenotype then this second factor will typically be $>1$.
+However, if truth is $Y$ is still associated with $\g$ even after controlling for $X$ then this
+last factor will tend to be $<1$.
+
+
+

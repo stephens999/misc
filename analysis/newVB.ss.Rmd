@@ -2,27 +2,11 @@
 title: "Connect newVB with single SNP mapping"
 author: "Matthew Stephens"
 date: 2017-11-18
-output: html_document
+output: workflowr::wflow_html
 ---
 
-<!-- The file analysis/chunks.R contains chunks that define default settings
-shared across the workflowr files. -->
-```{r read-chunk, include=FALSE, cache=FALSE}
-knitr::read_chunk("chunks.R")
-```
 
-<!-- Update knitr chunk options -->
-```{r knitr-opts-chunk, include=FALSE}
-```
 
-<!-- Insert the date the file was last updated -->
-```{r last-updated, echo=FALSE, results='asis'}
-```
-
-<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
- package git2r is installed -->
-```{r code-version, echo=FALSE, results='asis'}
-```
 
 
 # Background
@@ -102,8 +86,6 @@ just to make it clear.
 knitr::read_chunk("newVB.funcs.R")
 ```
 
-```{r newVB.funcs}
-```
 
 ```{r}
 # single snp bayes regression of Y on each column of X
@@ -116,11 +98,11 @@ single_snp = function(Y,X,sa2=1,s2=1){
   sa2 = s2*sa2 # scale by residual variance
   betahat = (1/d) * t(X) %*% Y
   shat2 = s2/d
-  alpha = dnorm(betahat,0,sqrt(sa2+shat2))/dnorm(betahat,0,sqrt(shat2)) #bf on each SNP
-  alpha = alpha/sum(alpha) # posterior prob on each SNP
+  bf = dnorm(betahat,0,sqrt(sa2+shat2))/dnorm(betahat,0,sqrt(shat2)) #bf on each SNP
+  alpha = bf/sum(bf) # posterior prob on each SNP
   spost2 = (1/sa2 + d/s2)^(-1) # posterior variance
   mupost = (d/s2)*spost2*betahat
-  return(list(alpha=alpha,mu=mupost,s2=spost2))
+  return(list(alpha=alpha,mu=mupost,s2=spost2,bf=bf))
 }
 
 new_vbupdate <- function (X, sigma, sa, Y, d, alpha0, mu0, Xr0) {
@@ -235,8 +217,4 @@ plot(res$elbo,main="elbo is increasing")
 ```
 
 
-## Session information
 
-<!-- Insert the session information into the document -->
-```{r session-info}
-```

@@ -1,0 +1,53 @@
+---
+title: "Plots for z scores from red blood cell traits"
+author: "Matthew Stephens"
+date: 2017-06-24
+output: workflowr::wflow_html
+---
+
+
+
+
+
+# Preparation
+
+Here we read in the data.
+```{r}
+z.old = read.table("../data/bmass.HaemgenRBC2016.Vs2.PreviousSNPs.ZScores.hclust.vs1.txt",header=TRUE,stringsAsFactors = FALSE)
+z.new = read.table("../data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt",header=TRUE,stringsAsFactors = FALSE)
+z.old = z.old[,c(1,2,4,6,3,5,7)]
+z.new = z.new[,c(1,2,4,6,3,5,7)]
+z.new.m = as.matrix(z.new[,2:7])
+
+
+```
+
+
+plot pairs of z scores
+```{r}
+pairs(z.new.m)
+```
+
+Plot a heatmap of the new results:
+```{r}
+z.new.m = sign(z.new.m[,1]+z.new.m[,3]+z.new.m[,5])*z.new.m
+superheat::superheat(z.new.m,pretty.order.cols = TRUE,pretty.order.rows=TRUE, heat.pal = c(rgb(seq(0,1,length=5),1,seq(0,1,length=5)),rgb(1,seq(1,0,length=5),seq(1,0,length=5))))
+
+```
+
+
+```{r}
+z = rbind(z.new,z.old) 
+z.m = as.matrix(z[,2:7])
+z.f = flashr::greedy(z.m,10)
+superheat::superheat(z.m,pretty.order.cols = TRUE,pretty.order.rows=TRUE, heat.pal = c(rgb(seq(0,1,length=5),1,seq(0,1,length=5)),rgb(1,seq(1,0,length=5),seq(1,0,length=5))))
+```
+
+Run flash
+```{r}
+f = flash(z.new)
+plot(f$f)
+```
+
+
+

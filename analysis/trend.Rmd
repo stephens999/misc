@@ -1,0 +1,43 @@
+---
+title: "trend filtering"
+author: "Matthew Stephens"
+date: "March 29, 2018"
+repdoc: 
+output: repdoc::repdoc_html
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Simulate data
+
+First we simulate some data
+
+```{r}
+set.seed(1)
+mu = c(rep(1,10),rep(4,100),rep(8,20),rep(1,50))
+n = length(mu)
+y = mu + rnorm(n)
+plot(y)
+```
+
+
+
+```{r}
+d = diff(y)
+s = sqrt(2)
+d.ash = ashr::ash(d,s)
+d.pm = ashr::get_pm(d.ash)
+muhat = cumsum(d.pm)
+plot(d.pm)
+
+dtrue = diff(mu)
+plot(dtrue,d.pm)
+plot(dtrue)
+
+plot(muhat)
+plot(mu)
+```
+
+

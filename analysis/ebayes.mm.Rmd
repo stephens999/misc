@@ -2,27 +2,11 @@
 title: "Trying method of moments for estimating prior in EB"
 author: "Matthew Stephens"
 date: 2017-12-09
-output: html_document
+output: workflowr::wflow_html
 ---
 
-<!-- The file analysis/chunks.R contains chunks that define default settings
-shared across the workflowr files. -->
-```{r read-chunk, include=FALSE, cache=FALSE}
-knitr::read_chunk("chunks.R")
-```
 
-<!-- Update knitr chunk options -->
-```{r knitr-opts-chunk, include=FALSE}
-```
 
-<!-- Insert the date the file was last updated -->
-```{r last-updated, echo=FALSE, results='asis'}
-```
-
-<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
- package git2r is installed -->
-```{r code-version, echo=FALSE, results='asis'}
-```
 
 # Idea
 
@@ -40,20 +24,26 @@ $E(b_j^n) = (1-\pi_0) n! (1/a)^n$.
 Also, 2nd and 4th moments of $N(0,s_j^2)$ are
 $s_j^2$ and $3s_j^4$.
 
-Thus, second and 4th moments of $x_j$ are:
-$$E(x_j^2) = s_j^2 + 2(1-\pi_0)/a^2$$
+Let $z_j := x_j/s_j$. The, second and 4th moments of $z_j$ are:
+$$E(z_j^2) = 1 + 2(1-\pi_0)/(s_j^2 a^2)$$
 
-$$E(x_j^4) = 3s_j^4 + 24(1-\pi_0)a^4 + 6 s_j^2 [2(1-\pi_0)a^2] $$.
+$$E(z_j^4) = 3 + 24(1-\pi_0)/(a^4 s_j^4) + 6[2(1-\pi_0)]/[a^2 s_j^2] $$.
 
 
-Let $m_2 := E(x_j^2 - s_j^2)$ and 
-$m_4:= E(x_j^4 - 3s_j^4)$. Then
+Let $m_{2j} := E(z_j^2 - 1)$ and 
+$m_{4j}:= E(z_j^4 - 3)$. Then
 
-$$E(m_2) = 2(1-\pi_0)/a^2$$.
-$$E(m_4) = 24[(1-\pi_0)/a^2] + 12s_j^2 (1-\pi_0)/a^2$$
-$$= m_2 (12/a^2 + 6s_j^2)$$
+$$E(m_{2j}) = 2(1-\pi_0)/(s_j^2 a^2)$$.
+
+$$E(m_{4j}) = 24[(1-\pi_0)/s_j^4a^4] + 12(1-\pi_0)/(s_j^2 a^2)$$
+
+Now we need to do somethign like sum the $m_{4j}$ and sum the $m_{2j}$ over
+$j$ to get two equations, and solve.... so the rest of this needs correcting.
+
+
+$$= E(m_{2j}) (12/s_j^2a^2 + 6)$$
 So we can solve to give
-$$a^2 = 12/ (m_4/m_2 - 6s_j^2)$$
+$$a^2 = \sum(1/s_j^2) 12/ (m_4/m_2 - 6)$$
 
 OK, so I've been sloppy with subscripts on the $m_4$ and $m_2$... need to sort that out.
 
@@ -64,10 +54,16 @@ We we will try it with constant $s_j=1$.
 
 ```{r}
   eb_mm = function(x,s){
-    m4 = mean(x^4-3*s^4)
-    m2 = mean(x^2-s^2)
-    a2 = 12/((m4/m2) - 6*mean(s^2))
-    pi0 = 1- a2*m2/2
+    z = x/s
+    S1 = mean(1/s^2)
+    S2 = mean(1/s^4)
+    
+    m4 = mean(z^4) - 3
+    m2 = mean(z^2) - 1
+
+    a2 = 12*(S2/S1)*((m4/m2)- 6)
+    
+    pi0 = 1- a2*m2/(2*S1)
     if(a2<0){a2=0; pi0=1}
     if(pi0<0){pi0=0; a2 =2/m2}
     if(pi0>1){pi0=1; a2 = 1}
@@ -105,6 +101,12 @@ due to numeric issues.
 
 
 
+```{r}
+  s = rgamma(n,1,1)
+  x4 = b3 + s*e
+  eb_mm(x4,s)
+  EbayesThresh:::wandafromx.mle(x4,s)
+```
 
 
 
@@ -117,8 +119,4 @@ That might be worth thinking about. Maybe some upper quantiles would be better t
 
 
 
-## Session information
 
-<!-- Insert the session information into the document -->
-```{r session-info}
-```

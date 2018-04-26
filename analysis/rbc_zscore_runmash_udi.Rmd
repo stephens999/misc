@@ -1,0 +1,58 @@
+---
+title: "Untitled"
+author: "First Last"
+date: YYYY-MM-DD
+output: workflowr::wflow_html
+---
+
+
+
+
+Here we try fitting mash with all the UDI (Unassociated, Directly associated, indirectly associated) models. The whole thing would take a while,
+so as a short cut we begin by just fitting the top signals to learn which
+of those matrices are most useful.
+
+First read in the data
+```{r read}
+z.old = read.table("../data/bmass.HaemgenRBC2016.Vs2.PreviousSNPs.ZScores.hclust.vs1.txt",header=TRUE,stringsAsFactors = FALSE)
+z.new = read.table("../data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt",header=TRUE,stringsAsFactors = FALSE)
+z.random = read.table("../data/bmass.HaemgenRBC2016.MAF01.Vs2.MergedDataSources.200kRanSubset.ChrBPMAFMarkerZScores.vs1.txt.gz",header=TRUE,stringsAsFactors = FALSE)
+z.old.m = as.matrix(z.old[,2:7])
+z.new.m = as.matrix(z.new[,2:7])
+z.random.m = as.matrix(z.random[,4:9])
+
+```
+
+Set up the data and covariance matrices for mash.
+Notice we don't use the singleton matrices in the canonical ones
+here because cov_udi includes these.
+
+```{r mash_setup}
+library("mashr")
+library("ashr")
+data = set_mash_data(z.random.m,1)
+V = mashr:::estimate_null_correlation(data)
+data = set_mash_data(z.random.m,1,V)
+
+# use the old hits to set up the data-driven covariances
+data.old = set_mash_data(z.old.m,1,V)
+data.new = set_mash_data(z.new.m,1,V)
+
+U.pca = cov_pca(data.old,3,subset=NULL)
+U.d = cov_ed(data.old,U.pca,subset=NULL)
+U.c = cov_canonical(data,cov_methods = c("identity","simple_het","equal_effects"))
+U.udi = cov_udi(data)
+```
+
+```
+
+```{r}
+m.cdu.old = mashr::mash(data.old,c(U.c,U.d,U.udi))
+saveRDS(m.cdu.old,file="../data/m.cdu.old.RDS")
+subset.U = (get_estimated_pi(m.cdu.old)[-1]>1e-10)
+Ulist = c(U.c,U.d,U.udi)[subset.U]
+m.cdu = mashr::mash(data,Ulist)
+```
+
+
+

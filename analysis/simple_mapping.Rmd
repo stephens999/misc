@@ -2,27 +2,11 @@
 title: "Experiment with simple fine mapping approach"
 author: "Matthew Stephens"
 date: 2017-10-17
-output: html_document
+output: workflowr::wflow_html
 ---
 
-<!-- The file analysis/chunks.R contains chunks that define default settings
-shared across the workflowr files. -->
-```{r read-chunk, include=FALSE, cache=FALSE}
-knitr::read_chunk("chunks.R")
-```
 
-<!-- Update knitr chunk options -->
-```{r knitr-opts-chunk, include=FALSE}
-```
 
-<!-- Insert the date the file was last updated -->
-```{r last-updated, echo=FALSE, results='asis'}
-```
-
-<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
- package git2r is installed -->
-```{r code-version, echo=FALSE, results='asis'}
-```
 
 # Simulate some data
 
@@ -75,10 +59,54 @@ res2 = varbvsmix(cbind(d$X[,1],d$X[,11],d$X[,21],d$X),Z=NULL,d$Y,sd.grid)
 plot(res2$lfsr)
 ```
 
+# Real Data
 
+Now try the ACTN example from GTEx. These
+data were received from Gao:
 
-## Session information
+  - data: `/project/compbio/external_private_supp/GTExV8_HDF5`, 
+  - code: http://stephenslab.github.io/gtex-eqtls/analysis/20171017_Extract_Full_Tissue_Data.html
 
-<!-- Insert the session information into the document -->
-```{r session-info}
+```{r}
+d = readRDS("../data/Muscle_Skeletal.ACTN3.1Mb.RDS")
+storage.mode(d$X)<- "double"
+d.v = varbvsmix(as.matrix(d$X),d$Z,d$y,sd.grid)
+plot(d.v$lfsr)
+
+0.739233, 0.022280
 ```
+
+remove that top SNP and try again to find next snp:
+```{r}
+d.v2 = varbvsmix(as.matrix(d$X[,-which.min(d.v$lfsr)]),d$Z,d$y,sd.grid)
+which.min(d.v2$lfsr)
+```
+
+```{r}
+summary(lm(d$y ~ d$X[,2654] + d$Z))
+summary(lm(d$y ~ d$X[,2656] + d$Z))
+```
+
+```{r}
+logABF = function(betahat,sebetahat,sigmaa){
+T = betahat/sebetahat
+lambda = sebetahat^2/(sebetahat^2+sigmaa^2)
+return(0.5*log(lambda) + 0.5*T^2 *(1-lambda))
+}
+
+
+log10ABF = function(b,s,sa){log10(exp(logABF(b,s,sa)))}
+
+log10ABF(-0.739233,0.022280,1)
+log10ABF( 0.74047 ,0.02251,1)
+
+log10ABF(-0.739233,0.022280,.3)
+log10ABF( 0.74047 ,0.02251,.3)
+
+0.74047/0.02251
+-0.739233/0.022280
+```
+
+
+
+

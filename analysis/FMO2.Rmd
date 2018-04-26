@@ -2,34 +2,18 @@
 title: "Check fine mapping of FMO2"
 author: "Matthew Stephens"
 date: 2017-10-27
-output: html_document
+output: workflowr::wflow_html
 ---
 
-<!-- The file analysis/chunks.R contains chunks that define default settings
-shared across the workflowr files. -->
-```{r read-chunk, include=FALSE, cache=FALSE}
-knitr::read_chunk("chunks.R")
-```
 
-<!-- Update knitr chunk options -->
-```{r knitr-opts-chunk, include=FALSE}
-```
 
-<!-- Insert the date the file was last updated -->
-```{r last-updated, echo=FALSE, results='asis'}
-```
-
-<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
- package git2r is installed -->
-```{r code-version, echo=FALSE, results='asis'}
-```
 
 
 # Read in data
 
 Here we read in data and fit the two varbvs models:
 ```{r}
-d=readRDS("../data/Thyroid.FMO2.1Mb.RDS")
+d=readRDS("../data/Thyroid.FMO2.pm1Mb.RDS")
 storage.mode(d$X) <- "double"
 d$X <- d$X[,3501:4500]
     
@@ -153,7 +137,7 @@ mean((d$y - fitted.values4)^2)
 mean((d$y - fitted.values5)^2)
 ```
 
-Compute BFs
+Compute BFs. 
 ```{r}
 #simple bf calculation X an n by p matrix of genoytpes
 log10BF = function(X,y,sigmaa){
@@ -180,12 +164,56 @@ log10BF(X[,index_order][,which(fit3$lfsr<0.05)], initial$residuals,0.5)
 log10BF(X[,index_order][,which(fit4$lfsr<0.05)], initial$residuals,0.5)
 log10BF(X[,index_order][,which(fit5$pip>0.95)], initial$residuals,0.5)
 
+log10BF(X[,c(341,115)], initial$residuals,0.5)
+
+
+# varbvsmix, 100 SNPs
+markers1 <- c("chr1_171172098_C_T_b38",
+             "chr1_171199984_T_C_b38",
+             "chr1_171122735_A_G_b38",
+             "chr1_171133158_A_G_b38")
+
+# varbvsmix, 1000 SNPs
+markers2 <- c("chr1_171172098_C_T_b38",
+              "chr1_171122735_A_G_b38")
+
+# varbvs, 1000 SNPs
+markers3 <- c("chr1_171168633_C_A_b38",
+              "chr1_171147265_C_A_b38",
+              "chr1_171164750_C_A_b38",
+              "chr1_171178589_C_T_b38")
+log10BF(X[,markers1], initial$residuals,0.5)
+log10BF(X[,markers2], initial$residuals,0.5)
+log10BF(X[,markers3], initial$residuals,0.5)
+
+```
+
+Those BFs don't take account of regressing out Z. Let's check the effect of
+that.
+```{r}
+Xresid= X
+p =ncol(Xresid)
+for(i in 1:p){Xresid[,i] = lm(X[,i]~Z)$resid}
+
+bf = c(log10BF(X[,which(fit$pip>0.95)], initial$residuals,0.5),
+log10BF(X[,which(fit2$lfsr<0.05)], initial$residuals,0.5),
+log10BF(X[,index_order][,which(fit3$lfsr<0.05)], initial$residuals,0.5),
+log10BF(X[,index_order][,which(fit4$lfsr<0.05)], initial$residuals,0.5),
+log10BF(X[,index_order][,which(fit5$pip>0.95)], initial$residuals,0.5))
+
+bf_resid = c(log10BF(Xresid[,which(fit$pip>0.95)], initial$residuals,0.5),
+log10BF(Xresid[,which(fit2$lfsr<0.05)], initial$residuals,0.5),
+log10BF(Xresid[,index_order][,which(fit3$lfsr<0.05)], initial$residuals,0.5),
+log10BF(Xresid[,index_order][,which(fit4$lfsr<0.05)], initial$residuals,0.5),
+log10BF(Xresid[,index_order][,which(fit5$pip>0.95)], initial$residuals,0.5))
+
+cbind(bf_resid-bf_resid[1],bf-bf[1])
+
+#df = data.frame(cbind(y = initial$residuals, X))
+#model = lm(y~., data=df)
+#slm1 <- step(model,direction="forward")
 
 ```
 
 
-## Session information
 
-<!-- Insert the session information into the document -->
-```{r session-info}
-```

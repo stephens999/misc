@@ -1,0 +1,47 @@
+---
+title: "Untitled"
+author: "First Last"
+date: YYYY-MM-DD
+output: workflowr::wflow_html
+---
+
+
+
+
+First to investigate the distribution of eigenvalues with and without
+rank 1 signal:
+```{r}
+library("flashr2")
+n = 100
+p = 100
+f0 = e0 = rep(0,100)
+f1 = e1 = rep(0,100)
+set.seed(1)
+
+for(i in 1:100){
+  Y = matrix(rnorm(n*p),nrow=n,ncol=p)
+  Y.svd = svd(Y,1,1)
+  e0[i] = Y.svd$d[1]
+  f0[i] = flash_get_sizes(flash_r1(flash_set_data(Y)))
+  
+  l= rep(0,n)
+  f = rep(0,p)
+  l[1:10] = rnorm(10,0,1)
+  f[1:10] = rnorm(10,0,1)
+  Y1 = Y + outer(l,f)
+  Y1.svd = svd(Y1,1,1)
+  e1[i] = Y1.svd$d[1]
+  f1[i] = flash_get_sizes(flash_r1(flash_set_data(Y1)))
+}
+plot(e0,e1)
+hist(e0)
+hist(e1)
+
+t = c(rep(0,100),rep(1,100)) # true values
+ttf = t[order(c(f0,f1),decreasing = TRUE)]
+tte = t[order(c(e0,e1),decreasing = TRUE)]
+plot(cumsum(ttf),type="l")
+lines(cumsum(tte),col=2)
+```
+
+

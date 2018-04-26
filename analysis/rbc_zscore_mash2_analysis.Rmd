@@ -1,0 +1,206 @@
+---
+title: "Some initial plots from simple mash run on RBC data"
+author: "Matthew Stephens"
+date: 2017-06-26
+output: workflowr::wflow_html
+---
+
+
+
+
+# Background
+
+Here we look at the results of the mash analysis 
+using standard canonical and data-driven covariances.
+
+This was run as [here](rbc_zscore_mash2.html)
+
+# The traits:
+
+From Wikipedia: PCV = Heamatocrit = volume percentage of red blood cells in blood. (https://en.wikipedia.org/wiki/Hematocrit)
+
+
+
+From: https://www.sonoraquest.com/test-information/understanding-the-complete-blood-count-cbc?AspxAutoDetectCookieSupport=1
+
+The mean corpuscle (cell) volume (MCV) is a measurement of the average size of the RBCs. Small-sized RBCs result in a lower MCV, while larger RBCs result in a higher MCV.
+
+The mean corpuscular hemoglobin (MCH) reflects the average amount of hemoglobin in a person’s RBCs. RBCs with more hemoglobin result in a higher MCH and vice versa.
+
+The mean corpuscular hemoglobin concentration (MCHC) is a measurement of the average amount of hemoglobin in the RBCs compared to the average size of the RBCs. Put another way, the MCHC is the ratio of the MCH to the MCV.
+
+
+However, another source http://www.eclinpath.com/hematology/tests/mchc/
+says:
+
+The MCHC (mean corpuscular hemoglobin concentration) is the mean hemoglobin concentration in all the red blood cells (or is the percentage of the red blood cell that contains hemoglobin) and is usually a calculated value by dividing the hemoglobin by the red blood cell mass (HCT or PCV).
+ 
+ This latter site looks more authorative to me, but it is animal
+ based not human, and this seems to have some implications. They also have
+ some useful review of pathologies associated with changes in MCHC.
+
+Other highlights from that site:
++ they say that MCV used to be computed: 
+MCV = PCV/RBC
+but now directly measured?
+
++ MCHC = Hb/PCV
+
++ MCH = Hb/RBC
+
+This seems to resolve the issue above.. under these definitions
+indeed you would have MCHC = MCH/MCV
+
+
+Note that PCV = RBC * MCV. 
+Indeed, (https://en.wikipedia.org/wiki/Hematocrit) says:
+With modern lab equipment, the hematocrit is calculated by an automated analyzer and not directly measured. It is determined by multiplying the red cell count by the mean cell volume. 
+
+
+I guess it feels like
+the number of red blood cells (RBC) and their volume (MCV) are
+the most fundamental. And PCV is then a "derived" phenotype?
+
+However PCV is very correlated with Hb. And PCV is the measurement
+used to diagnose anemia. So PCV is medically relevant (but
+maybe not what is under direct genetic control?)
+
+What do changes in Hb do
+to RBC or MCV?
+
+
+# Read in data
+
+First read in the results
+```{r read}
+library("mashr")
+library("ashr")
+m.cd= readRDS("../data/m.cd.RDS")
+m.new.cd= readRDS("../data/m.new.cd.RDS")
+m.old.cd= readRDS("../data/m.old.cd.RDS")
+z.new = read.table("../data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt",header=TRUE)
+z.old = read.table("../data/bmass.HaemgenRBC2016.Vs2.PreviousSNPs.ZScores.hclust.vs1.txt",header=TRUE)
+```
+
+Taking a look at the estimated mixture proportions, we see most non-null weight on the ED1 and ED2 which correspond to first two PCs.
+```{r}
+get_estimated_pi(m.cd)
+```
+
+We can see most of the new findings have an lfsr<0.05 in at least one trait.
+There are a few suspicous ones among the first few that we have noticed
+before and believe are due to issues with low MAF.
+```{r}
+plot(apply(get_lfsr(m.new.cd),1,min))
+plot(apply(get_lfsr(m.old.cd),1,min))
+```
+
+# Sharing
+
+## Remind ourselves of correlation
+
+This is just in raw z scores:
+```{r}
+pairs(z.new[,-1])
+```
+
+Also the pairwise posterior effects:
+```{r}
+pm.df = data.frame(ashr::get_pm(m.old.cd))
+colnames(pm.df) <- colnames(z.new)[-1]
+pairs(pm.df,pch=".")
+pairs(pm.df,pch=".",xlim=c(-10,10),ylim=c(-10,10))
+```
+
+Noticed some where PCV is unaffected but Haemoglobin affected (unusual as two are
+highly correlated).
+
+Effectively these variants are changing count and per cell volume to even out
+total volume. But influence on Hg can be either way - sometimes it changes
+with count, other times it changes concordantly with volume.
+
+So sometimes it increases mean cell volume and decreases count while decreasign Hb.
+
+```{r}
+z = z.old[which(abs(pm.df$Hb)>3 & abs(pm.df$PCV)<(1)),-1]
+z = z*sign(z[,5])
+superheat::superheat(z, pretty.order.rows = TRUE,title="increase HB; no change PCV")
+```
+
+
+## Pairwise sharing by sign
+
+Notice that PCV and Hb are shared 100% in sign.
+
+Also High sharing of RBC and PCV (so also Hb).
+
+MCHC is almost independent in sign with others?
+Note that MCHC is Hb/PCV
+
+
+```{r sharing_by_sign}
+round(mashr::get_pairwise_sharing(m.new.cd,factor = 0,lfsr_thresh = 0.05),2)
+```
+
+## Pairwise Sharing by magnitude
+
+```{r sharing_by_magnitude}
+round(mashr::get_pairwise_sharing(m.new.cd,factor = 0.5,lfsr_thresh = 0.05,FUN = abs),2)
+```
+
+
+
+## Overall sharing:
+
+How many conditions is it significant in?
+```{r}
+hist(get_n_significant_conditions(m.new.cd,thresh=0.01),main="number of significant conditions; lfsr<0.01")
+hist(get_n_significant_conditions(m.new.cd,thresh=0.05),main="number of significant conditions; lfsr<0.05")
+table(get_n_significant_conditions(m.new.cd))
+```
+
+
+```{r}
+superheat::superheat(1*(get_lfsr(m.new.cd)<0.01),pretty.order.rows=TRUE, title ="heatmap of lfsr<0.01 for new hits")
+superheat::superheat(1*(get_lfsr(m.old.cd)<0.01),pretty.order.rows=TRUE, title ="heatmap of lfsr<0.01 for old hits")
+```
+
+
+
+
+```{r}
+min(get_log10bf(m.old.cd))
+sum(get_log10bf(m.new.cd)<min(get_log10bf(m.old.cd)))
+```
+
+
+
+# Flash analysis
+
+
+First run flash
+
+```{r}
+Y = t(as.matrix(pm.df))
+Y.f = flashr::greedy(Y,K=6)
+```
+
+First factor is 
+```{r}
+flashr::plot.factor(Y,Y.f)
+```
+
+This one is the haemoglobin factor
+```{r}
+flashr::plot.factor(Y,Y.f,2)
+```
+Interestign seems primary means of increasing Hb is by increasing
+total count rather than per cell Hb.
+
+
+This one MCHC factor:
+```{r}
+flashr::plot.factor(Y,Y.f,3)
+```
+
+

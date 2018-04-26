@@ -1,5 +1,5 @@
 ---
-title: "Investigate ALStructure"
+title: "Investigate ALStructure 2"
 author: "Matthew Stephens"
 date: 2018-04-05
 output: workflowr::wflow_html
@@ -13,8 +13,7 @@ output: workflowr::wflow_html
 ```{r}
 #library("devtools")
 #install_github("storeylab/alstructure", build_vignettes=TRUE)
-library("alstructure")
-set.seed("12345")
+ library("alstructure")
 ```
 
 
@@ -36,7 +35,7 @@ my_alstructure = function (X, d_hat = NULL, svd_method = "base", tol = 1e-05,
     rowspace <- F_obj$rowspace
     if(useX){
       factors <- factor_F(F = X/2, d = d_hat, tol = tol, max_iters = max_iters)} else {
-      factors <- factor_F(F = F_hat, d = d_hat, tol = tol, max_iters = max_iters)  }
+      factors <- factor_F(F = F_hat, d = d_hat, tol = tol, max_iters = max_iters)  }#changed Fhat to X here!
     if (order_method == "ave_admixture") {
         ordering <- order_pops(factors$P_hat, factors$Q_hat, 
             method = "ave_admixture", Q_space = NULL)
@@ -56,65 +55,21 @@ my_alstructure = function (X, d_hat = NULL, svd_method = "base", tol = 1e-05,
 }
 ```
 
-## Simulations
-
-Simulation as from the vignette:
+Simulation as from the vignette, but 30 populations and 300 individuals:
 ```{r}
 m = 10000 # number of SNPS
-n = 100 # number of individuals
-d = 3 # dimension of latent subspace
-alpha = c(0.1, 0.1, 0.1) # dirichlet parameters
-seed = 12345
-
-sim_data <- simulate_admixture(m, n, d, alpha, BN_params = NA, seed = seed)
-
-names(sim_data)
-```
-
-
-```{r}
-fit <- my_alstructure(X = sim_data$X, d_hat = d)
-fit2 <- my_alstructure(X = sim_data$X, d_hat = d, useX=TRUE)
-```
-
-The two lead to almost identical errors and similar run-times:
-```{r}
-mean((sim_data$F - fit$P_hat %*% fit$Q_hat)^2)
-mean((sim_data$F - fit2$P_hat %*% fit2$Q_hat)^2)
-fit$run_time
-fit2$run_time
-```
-
-Now try a harder example with 10 populations:
-```{r}
-m = 10000 # number of SNPS
-n = 100 # number of individuals
-d = 10 # dimension of latent subspace
-alpha = rep(0.1, d) # dirichlet parameters
-seed = 12345
-
-sim_data <- simulate_admixture(m, n, d, alpha, BN_params = NA, seed = seed)
-fit <- my_alstructure(X = sim_data$X, d_hat = d)
-fit2 <- my_alstructure(X = sim_data$X, d_hat = d,useX=TRUE)
-
-mean((sim_data$F - fit$P_hat %*% fit$Q_hat)^2)
-mean((sim_data$F - fit2$P_hat %*% fit2$Q_hat)^2)
-fit$run_time
-fit2$run_time
-```
-
-
-Now try a harder example with 30 populations:
-```{r}
+n = 300 # number of individuals
 d = 30 # dimension of latent subspace
-n=300
-alpha = rep(0.1, d) # dirichlet parameters
+alpha = rep(0.1,30)
 seed = 12345
 
 sim_data <- simulate_admixture(m, n, d, alpha, BN_params = NA, seed = seed)
+```
 
-fit <- my_alstructure(X = sim_data$X, d_hat = d)
-fit2 <- my_alstructure(X = sim_data$X, d_hat = d,useX=TRUE)
+See what happens if we used d=10 in fitting
+```{r}
+fit <- my_alstructure(X = sim_data$X, d_hat = 10)
+fit2 <- my_alstructure(X = sim_data$X, d_hat = 10,useX=TRUE)
 
 mean((sim_data$F - fit$P_hat %*% fit$Q_hat)^2)
 mean((sim_data$F - fit2$P_hat %*% fit2$Q_hat)^2)
@@ -127,9 +82,7 @@ fit2$run_time
 ```
 
 
-So now things are getting more interesting... the fits are
-similar but the dimension reduction has reduced run time.
-
+So now things are getting more interesting...
 
 One issue is that Fhat itself requires an estimate of $d$.
 I'm currently giving it the true value, which might be an unfair advantage. I wonder if we can estimate $d$ instead.
@@ -137,25 +90,15 @@ I'm currently giving it the true value, which might be an unfair advantage. I wo
 d_est = estimate_d(sim_data$X)
 ```
 
-OK, so that didn't work! 
-Let's just see what happens with 16.
-
-
+OK, so that didn't work!
+Try flash:
 ```{r}
-fit <- my_alstructure(X = sim_data$X, d_hat = 16)
-fit2 <- my_alstructure(X = sim_data$X, d_hat = 16,useX=TRUE)
-mean((sim_data$F - fit$P_hat %*% fit$Q_hat)^2)
-mean((sim_data$F - fit2$P_hat %*% fit2$Q_hat)^2)
-
-mean((sim_data$X - fit$P_hat %*% fit$Q_hat)^2)
-mean((sim_data$X - fit2$P_hat %*% fit2$Q_hat)^2)
-
-fit$run_time
-fit2$run_time
+sim.f = flashr::flash(sim_data$X)
 ```
 
-So I guess more investigation is required to see if
-the run time is consistently improved....
+
+Questions: 
+- can we make things faster by exploiting Fhat low rank?
 
 
 

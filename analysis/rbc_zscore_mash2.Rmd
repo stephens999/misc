@@ -1,0 +1,59 @@
+---
+title: "Apply mash to red blood cell traits (2)"
+author: "Matthew Stephens"
+date: 2017-06-26
+output: workflowr::wflow_html
+---
+
+
+
+
+
+# Preparation
+
+Here we read in the data.
+```{r read}
+z.old = read.table("../data/bmass.HaemgenRBC2016.Vs2.PreviousSNPs.ZScores.hclust.vs1.txt",header=TRUE,stringsAsFactors = FALSE)
+z.new = read.table("../data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt",header=TRUE,stringsAsFactors = FALSE)
+z.random = read.table("../data/bmass.HaemgenRBC2016.MAF01.Vs2.MergedDataSources.200kRanSubset.ChrBPMAFMarkerZScores.vs1.txt.gz",header=TRUE,stringsAsFactors = FALSE)
+z.old.m = as.matrix(z.old[,2:7])
+z.new.m = as.matrix(z.new[,2:7])
+z.random.m = as.matrix(z.random[,4:9])
+
+```
+
+Set up the data and covariance matrices for mash:
+```{r mash_setup}
+library("mashr")
+library("ashr")
+data = set_mash_data(z.random.m,1)
+V = mashr:::estimate_null_correlation(data)
+data = set_mash_data(z.random.m,1,V)
+
+# use the old hits to set up the data-driven covariances
+data.old = set_mash_data(z.old.m,1,V)
+data.new = set_mash_data(z.new.m,1,V)
+
+U.pca = cov_pca(data.old,3,subset=NULL)
+U.d = cov_ed(data.old,U.pca,subset=NULL)
+U.c = cov_canonical(data)
+```
+
+Now we are ready to run mash:
+```{r mash_run}
+m.cd = mashr::mash(data,c(U.c,U.d),algorithm.version = "R")
+#m.cd = readRDS("../data/m.cd.RDS")
+saveRDS(m.cd,file="../data/m.cd.RDS")
+```
+
+Here we run the fitted mash model on the old and new hits.
+```{r}
+m.new.cd = mash(data.new,g = ashr::get_fitted_g(m.cd),fixg=TRUE)
+m.old.cd = mash(data.old,g = ashr::get_fitted_g(m.cd),fixg=TRUE)
+
+saveRDS(m.new.cd,file="../data/m.new.cd.RDS")
+saveRDS(m.old.cd,file="../data/m.old.cd.RDS")
+```
+
+
+
