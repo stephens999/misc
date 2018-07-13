@@ -1,0 +1,109 @@
+---
+title: "wSVD"
+author: "stephens999"
+date: "2018-06-28"
+output: workflowr::wflow_html
+---
+
+# Introduction
+
+Motivated by the desire to apply SVD and related methods
+to non-gaussian data (eg single cell data), I want to suggest
+investigating "weighted" versions of SVD that allows each observation
+to have its own measurement-error variance (in addition to any common variance). 
+We already have this kind of idea in flash and mash, but methods like
+softImpute and svd are potentially more scalable, and so it would be nice
+to implement fast general versions of these.
+
+The working model "rank k" model is
+$$X = UDV' + Z + E$$
+where $X$, $Z$ and $E$ are all $n \times p$ matrices, and $D$ is a $k \times k$ diagonal matrix.
+The elements of $E$ are iid 
+$$E_{ij} \sim N(0,\sigma^2=1/\tau)$$ 
+and 
+$$Z_{ij} \sim N(0,s^2_{ij}$$ 
+where $s_{ij}$ are known.
+
+Note: in softImpute (alternating least squares; ALS version) 
+they replace $UDV'$ by $AB'$, but the basic idea is the same.
+Also in softImpute they introduce an L2 penalty, which is a nice feature to have,
+and which I think may not complicate things much here. (to be checked!)
+
+Given $Z$ we note that the mle for $U,D,V$ is given by the SVD of ($X-Z$).
+Following the usual EM idea, each iteration we can replace $Z$ with its expectation $\bar{Z} = E(Z | U,D,V)$ where $U,D,V$ are the current values of these parameters.
+Then the M step becomes running SVD on $X-\bar{Z}$.
+
+Given $U,D,V$ define residuals $R= X-UDV$. Then from the model
+$R_{ij} | Z \sim N(Z_{ij}, \sigma^2)$. Then from standard
+Bayesian analysis of Gaussians we have:
+$$Z_{ij} | R \sim N(\mu_1,1/\tau_1)$$
+where 
+$$\mu_1 = \tau/\tau_1 R_{ij}$$
+$$\tau_1 = \tau + 1/s_{ij}^2$$.
+
+In particular the conditional mean of $Z$ needed for EM is:
+$$\bar{Z}_{ij}= \tau/\tau_1 R_{ij}$$.
+
+Note that in the special case $s_{ij}=\Inf$, which is like $X_{ij}$ is "missing",
+this gives $\bar{Z}_{ij} = R_{ij}$, and when we plug that in to get a "new" value of $R$ we get
+$R_{ij} = X_{ij}-\bar{Z}_{ij} = (UDV)_{ij}$.
+That is, each iteration 
+
+If we look in the softImpute code this is exactly what they use to deal with missing data. For example, line 49 of `simpute.als.R` is  
+`xfill[xnas] = (U %*% (Dsq * t(V)))[xnas]`.
+
+# Idea
+
+Basically my idea is that we should be able to modify the softImpute code
+by replacing this line (and similar lines involving xfill) with something
+based on the above derivation...
+
+
+# Code
+
+Before I had the idea of simply modifying softImpute
+I started coding an EM algorithm that
+imputes $Z$ each iteration.  I haven't tested it and it may be wrong...but the
+objective seems to increase. This code may or may not be useful.
+
+```{r}
+wSVD = function(x,s,k,niter=100,update_tau=FALSE){
+  n = nrow(x)
+  p = ncol(x)
+  z = matrix(0,nrow=n,ncol=p)
+  sigma2 = rep(0,niter)
+  obj = rep(0,niter)
+  tau = 1e6 #big value mimics minimizing residual
+  for(i in 1:niter){
+    x.svd = svd(x-z,k,k)
+    R = x - x.svd$u %*% diag(x.svd$d[1:k]) %*% t(x.svd$v)
+    if(update_tau){
+      stop("not implemented; probably should use uniroot to do this")
+    }
+    tau1 = tau + 1/s^2 
+    z =  (tau/tau1)*R
+    sigma2[i] = 1/tau
+    obj[i] = sum(dnorm(R, 0, sqrt(s^2+(1/tau)), log=TRUE))
+  }
+  return(list(svd = x.svd,sigma2=sigma2,obj=obj))
+}
+
+set.seed(1)
+n = 100
+p = 1000
+s = matrix(1,nrow=n,ncol=p)
+x = matrix(rnorm(n*p,0,s),nrow=n,ncol=p)
+x.wsvd = wSVD(x,s,3,10)
+plot(x.wsvd$obj)
+
+s = matrix(rgamma(n*p,1,1),nrow=n,ncol=p)
+x = matrix(rnorm(n*p,0,s),nrow=n,ncol=p)
+x.wsvd = wSVD(x,s,30,100)
+plot(x.wsvd$obj)
+```
+
+# Conclusion
+
+It converges pretty slow, particularly if tau is big (so shrinkage of Z each iteration very minimal). This seems intuitive. Possibly could improve by estimating tau, but i think there
+is no closed-form solution. In any case it seems perhaps more promising to try to adjust softImpute to allow weights?
+
