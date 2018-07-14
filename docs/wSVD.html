@@ -318,7 +318,7 @@ div.section {
 </div>
 
 
-<p><strong>Last updated:</strong> 2018-07-13</p>
+<p><strong>Last updated:</strong> 2018-07-14</p>
 <strong>workflowr checks:</strong> <small>(Click a bullet for more information)</small>
 <ul>
 <li>
@@ -342,7 +342,7 @@ div.section {
 </details>
 </li>
 <li>
-<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/ece36e85c419fc887b35e59261499d4dd8345eb0" target="_blank">ece36e8</a> </summary></p>
+<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/d007eadb07206308ff6ff589f1d864a72293ff23" target="_blank">d007ead</a> </summary></p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
 <pre><code>
 Ignored files:
@@ -484,6 +484,40 @@ Message
 Rmd
 </td>
 <td style="text-align:left;">
+<a href="https://github.com/stephens999/misc/blob/d007eadb07206308ff6ff589f1d864a72293ff23/analysis/wSVD.Rmd" target="_blank">d007ead</a>
+</td>
+<td style="text-align:left;">
+stephens999
+</td>
+<td style="text-align:left;">
+2018-07-14
+</td>
+<td style="text-align:left;">
+workflowr::wflow_publish(“analysis/wSVD.Rmd”)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+html
+</td>
+<td style="text-align:left;">
+<a href="https://cdn.rawgit.com/stephens999/misc/e79677dbe01c36a4479e673faa70d969fa0bc598/docs/wSVD.html" target="_blank">e79677d</a>
+</td>
+<td style="text-align:left;">
+stephens999
+</td>
+<td style="text-align:left;">
+2018-07-13
+</td>
+<td style="text-align:left;">
+Build site.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
 <a href="https://github.com/stephens999/misc/blob/ece36e85c419fc887b35e59261499d4dd8345eb0/analysis/wSVD.Rmd" target="_blank">ece36e8</a>
 </td>
 <td style="text-align:left;">
@@ -504,7 +538,7 @@ workflowr::wflow_publish(“analysis/wSVD.Rmd”)
 <div id="introduction" class="section level1">
 <h1>Introduction</h1>
 <p>Motivated by the desire to apply SVD and related methods to non-gaussian data (eg single cell data), I want to suggest investigating “weighted” versions of SVD that allows each observation to have its own measurement-error variance (in addition to any common variance). We already have this kind of idea in flash and mash, but methods like softImpute and svd are potentially more scalable, and so it would be nice to implement fast general versions of these.</p>
-<p>The working model “rank k” model is <span class="math display">\[X = UDV&#39; + Z + E\]</span> where <span class="math inline">\(X\)</span>, <span class="math inline">\(Z\)</span> and <span class="math inline">\(E\)</span> are all <span class="math inline">\(n \times p\)</span> matrices, and <span class="math inline">\(D\)</span> is a <span class="math inline">\(k \times k\)</span> diagonal matrix. The elements of <span class="math inline">\(E\)</span> are iid <span class="math display">\[E_{ij} \sim N(0,\sigma^2=1/\tau)\]</span> and <span class="math display">\[Z_{ij} \sim N(0,s^2_{ij}\]</span> where <span class="math inline">\(s_{ij}\)</span> are known.</p>
+<p>The working model “rank k” model is <span class="math display">\[X = UDV&#39; + Z + E\]</span> where <span class="math inline">\(X\)</span>, <span class="math inline">\(Z\)</span> and <span class="math inline">\(E\)</span> are all <span class="math inline">\(n \times p\)</span> matrices, and <span class="math inline">\(D\)</span> is a <span class="math inline">\(k \times k\)</span> diagonal matrix. The elements of <span class="math inline">\(E\)</span> are iid <span class="math display">\[E_{ij} \sim N(0,\sigma^2=1/\tau)\]</span> and <span class="math display">\[Z_{ij} \sim N(0,s^2_{ij})\]</span> where <span class="math inline">\(s_{ij}\)</span> are known.</p>
 <p>Note: in softImpute (alternating least squares; ALS version) they replace <span class="math inline">\(UDV&#39;\)</span> by <span class="math inline">\(AB&#39;\)</span>, but the basic idea is the same. Also in softImpute they introduce an L2 penalty, which is a nice feature to have, and which I think may not complicate things much here. (to be checked!)</p>
 <p>Given <span class="math inline">\(Z\)</span> we note that the mle for <span class="math inline">\(U,D,V\)</span> is given by the SVD of (<span class="math inline">\(X-Z\)</span>). Following the usual EM idea, each iteration we can replace <span class="math inline">\(Z\)</span> with its expectation <span class="math inline">\(\bar{Z} = E(Z | U,D,V)\)</span> where <span class="math inline">\(U,D,V\)</span> are the current values of these parameters. Then the M step becomes running SVD on <span class="math inline">\(X-\bar{Z}\)</span>.</p>
 <p>Given <span class="math inline">\(U,D,V\)</span> define residuals <span class="math inline">\(R= X-UDV\)</span>. Then from the model <span class="math inline">\(R_{ij} | Z \sim N(Z_{ij}, \sigma^2)\)</span>. Then from standard Bayesian analysis of Gaussians we have: <span class="math display">\[Z_{ij} | R \sim N(\mu_1,1/\tau_1)\]</span> where <span class="math display">\[\mu_1 = \tau/\tau_1 R_{ij}\]</span> <span class="math display">\[\tau_1 = \tau + 1/s_{ij}^2\]</span>.</p>
@@ -515,49 +549,62 @@ workflowr::wflow_publish(“analysis/wSVD.Rmd”)
 </div>
 <div id="idea" class="section level1">
 <h1>Idea</h1>
-<p>Basically my idea is that we should be able to modify the softImpute code by replacing this line (and similar lines involving xfill) with something based on the above derivation…</p>
+<p>Basically my idea is that we should be able to modify the softImpute code by replacing this line (and similar lines involving xfill) with something based on the above derivation…One advantage of this is that softImpute already deals with ridge penalty, and is well documented and fast…</p>
+<p>Alternatively we could just implement it ourselves as below without the ridge penalty…</p>
 </div>
 <div id="code" class="section level1">
 <h1>Code</h1>
-<p>Before I had the idea of simply modifying softImpute I started coding an EM algorithm that imputes <span class="math inline">\(Z\)</span> each iteration. I haven’t tested it and it may be wrong…but the objective seems to increase. This code may or may not be useful.</p>
-<pre class="r"><code>wSVD = function(x,s,k,niter=100,update_tau=FALSE){
+<p>I started coding an EM algorithm that imputes <span class="math inline">\(Z\)</span> each iteration. I haven’t tested it, so there may be bugs … but the objective seems to increase. This code may or may not be useful to build on.</p>
+<pre class="r"><code>wSVD = function(x,s,k,niter=100,tau=1e6){
   n = nrow(x)
   p = ncol(x)
   z = matrix(0,nrow=n,ncol=p)
   sigma2 = rep(0,niter)
   obj = rep(0,niter)
-  tau = 1e6 #big value mimics minimizing residual
   for(i in 1:niter){
-    x.svd = svd(x-z,k,k)
+    x.svd = svd(x-z,k,k) # could maybe replace this with a faster method to get top k pcs?
     R = x - x.svd$u %*% diag(x.svd$d[1:k]) %*% t(x.svd$v)
-    if(update_tau){
-      stop(&quot;not implemented; probably should use uniroot to do this&quot;)
-    }
     tau1 = tau + 1/s^2 
     z =  (tau/tau1)*R
     sigma2[i] = 1/tau
     obj[i] = sum(dnorm(R, 0, sqrt(s^2+(1/tau)), log=TRUE))
   }
   return(list(svd = x.svd,sigma2=sigma2,obj=obj))
-}
-
-set.seed(1)
+}</code></pre>
+<p>This example just runs it on constant <span class="math inline">\(s\)</span>, so it should match regular svd. I ran it with two different values of <span class="math inline">\(\tau\)</span>, but I don’t think <span class="math inline">\(\tau\)</span> affects the mle here…</p>
+<pre class="r"><code>set.seed(1)
 n = 100
 p = 1000
 s = matrix(1,nrow=n,ncol=p)
 x = matrix(rnorm(n*p,0,s),nrow=n,ncol=p)
-x.wsvd = wSVD(x,s,3,10)
+x.wsvd = wSVD(x,s,3,10,1)
 plot(x.wsvd$obj)</code></pre>
-<p><img src="figure/wSVD.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/wSVD.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>x.wsvd2 = wSVD(x,s,3,10,1e6)
+plot(x.wsvd2$svd$u[,1],svd(x,3,3)$u[,1])</code></pre>
+<p><img src="figure/wSVD.Rmd/unnamed-chunk-2-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(x.wsvd$svd$u[,1],svd(x,3,3)$u[,1])</code></pre>
+<p><img src="figure/wSVD.Rmd/unnamed-chunk-2-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Now this version is non-constant variance. At least the objective is increasing…</p>
 <pre class="r"><code>s = matrix(rgamma(n*p,1,1),nrow=n,ncol=p)
 x = matrix(rnorm(n*p,0,s),nrow=n,ncol=p)
-x.wsvd = wSVD(x,s,30,100)
+x.wsvd = wSVD(x,s,30,100,1)
 plot(x.wsvd$obj)</code></pre>
-<p><img src="figure/wSVD.Rmd/unnamed-chunk-1-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/wSVD.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
-<div id="conclusion" class="section level1">
-<h1>Conclusion</h1>
-<p>It converges pretty slow, particularly if tau is big (so shrinkage of Z each iteration very minimal). This seems intuitive. Possibly could improve by estimating tau, but i think there is no closed-form solution. In any case it seems perhaps more promising to try to adjust softImpute to allow weights?</p>
+<div id="applying-to-poisson-data" class="section level1">
+<h1>Applying to Poisson data</h1>
+<p>Here is outline of how we might apply this to Poisson data.</p>
+<p>Let <span class="math inline">\(Y_{ij} \sim Poi(\mu_{ij})\)</span> be observations. Let <span class="math inline">\(m_{ij}\)</span> be a “current fitted value” for <span class="math inline">\(\mu_{ij}\)</span>, for example it could be the current value of <span class="math inline">\(Y_{ij} - Z_{ij}\)</span> if <span class="math inline">\(Z_{ij}\)</span> where <span class="math inline">\(Z_{ij}\)</span> is the estimated “measurement error” in the above. Or for initialization <span class="math inline">\(m_{ij}\)</span> could be the mean of <span class="math inline">\(X_{i\cdot}\)</span> if <span class="math inline">\(j\)</span> indexes genes.</p>
+<p>Basically the idea is to do a Taylor series expansion of the Poisson likelihood about <span class="math inline">\(m_{ij}\)</span>. This leads to - set <span class="math inline">\(X_{ij} = \log(m_{ij}) + (Y_{ij}-m_{ij})/m_{ij}\)</span> - set <span class="math inline">\(s^2_{ij} = 1/m_{ij}\)</span> which we could apply wSVD to. And then repeat…</p>
+</div>
+<div id="other-issues" class="section level1">
+<h1>Other issues</h1>
+<ul>
+<li><p>I think there is something of a literature on wSVD, but not much implemented. Would be good to look further.</p></li>
+<li><p>We would want to estimate the residual precision <span class="math inline">\(\tau\)</span> too. I believe there is a EM update for that based on computing expected squared residuals (which will involve second moment of <span class="math inline">\(Z_{ij}\)</span>, which is available).</p></li>
+<li><p>It would be nice if we could estimate the ridge penalty in softImpute by maximum likelihood/variational approximation (as in flash/PEER) rather than having to do cross-validation.</p></li>
+</ul>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
 <pre class="r"><code>sessionInfo()</code></pre>
