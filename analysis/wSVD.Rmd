@@ -68,7 +68,11 @@ imputes $Z$ each iteration.  I haven't tested it, so there may be bugs ... but t
 objective seems to increase. This code may or may not be useful to build on.
 
 ```{r}
-wSVD = function(x,s,k,niter=100,tau=1e6){
+wSVD = function(x,s,k,niter=100,tau=NULL){
+  if(is.null(tau)){ #for now just estimate tau by residual variance from fit of first k svd
+    x.svd = svd(x,k,k)
+    tau = 1/mean((x - x.svd$u %*% diag(x.svd$d[1:k]) %*% t(x.svd$v))^2) 
+  }
   n = nrow(x)
   p = ncol(x)
   z = matrix(0,nrow=n,ncol=p)
@@ -105,7 +109,7 @@ Now this version is non-constant variance. At least the objective is increasing.
 ```{r}
 s = matrix(rgamma(n*p,1,1),nrow=n,ncol=p)
 x = matrix(rnorm(n*p,0,s),nrow=n,ncol=p)
-x.wsvd = wSVD(x,s,30,100,1)
+x.wsvd = wSVD(x,s,30,100)
 plot(x.wsvd$obj)
 ```
 
