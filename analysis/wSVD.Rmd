@@ -21,7 +21,7 @@ where $X$, $Z$ and $E$ are all $n \times p$ matrices, and $D$ is a $k \times k$ 
 The elements of $E$ are iid 
 $$E_{ij} \sim N(0,\sigma^2=1/\tau)$$ 
 and 
-$$Z_{ij} \sim N(0,s^2_{ij}$$ 
+$$Z_{ij} \sim N(0,s^2_{ij})$$ 
 where $s_{ij}$ are known.
 
 Note: in softImpute (alternating least squares; ALS version) 
@@ -56,30 +56,27 @@ If we look in the softImpute code this is exactly what they use to deal with mis
 
 Basically my idea is that we should be able to modify the softImpute code
 by replacing this line (and similar lines involving xfill) with something
-based on the above derivation...
+based on the above derivation...One advantage of this is that softImpute
+already deals with ridge penalty, and is well documented and fast...
 
+Alternatively we could just implement it ourselves as below without the ridge penalty...
 
 # Code
 
-Before I had the idea of simply modifying softImpute
 I started coding an EM algorithm that
-imputes $Z$ each iteration.  I haven't tested it and it may be wrong...but the
-objective seems to increase. This code may or may not be useful.
+imputes $Z$ each iteration.  I haven't tested it, so there may be bugs ... but the
+objective seems to increase. This code may or may not be useful to build on.
 
 ```{r}
-wSVD = function(x,s,k,niter=100,update_tau=FALSE){
+wSVD = function(x,s,k,niter=100,tau=1e6){
   n = nrow(x)
   p = ncol(x)
   z = matrix(0,nrow=n,ncol=p)
   sigma2 = rep(0,niter)
   obj = rep(0,niter)
-  tau = 1e6 #big value mimics minimizing residual
   for(i in 1:niter){
-    x.svd = svd(x-z,k,k)
+    x.svd = svd(x-z,k,k) # could maybe replace this with a faster method to get top k pcs?
     R = x - x.svd$u %*% diag(x.svd$d[1:k]) %*% t(x.svd$v)
-    if(update_tau){
-      stop("not implemented; probably should use uniroot to do this")
-    }
     tau1 = tau + 1/s^2 
     z =  (tau/tau1)*R
     sigma2[i] = 1/tau
@@ -87,23 +84,55 @@ wSVD = function(x,s,k,niter=100,update_tau=FALSE){
   }
   return(list(svd = x.svd,sigma2=sigma2,obj=obj))
 }
+```
 
+This example just runs it on constant $s$, so it should match regular svd.
+I ran it with two different values of $\tau$, but I don't think $\tau$ affects the mle here...
+```{r}
 set.seed(1)
 n = 100
 p = 1000
 s = matrix(1,nrow=n,ncol=p)
 x = matrix(rnorm(n*p,0,s),nrow=n,ncol=p)
-x.wsvd = wSVD(x,s,3,10)
+x.wsvd = wSVD(x,s,3,10,1)
 plot(x.wsvd$obj)
+x.wsvd2 = wSVD(x,s,3,10,1e6)
+plot(x.wsvd2$svd$u[,1],svd(x,3,3)$u[,1])
+plot(x.wsvd$svd$u[,1],svd(x,3,3)$u[,1])
+```
 
+Now this version is non-constant variance. At least the objective is increasing...
+```{r}
 s = matrix(rgamma(n*p,1,1),nrow=n,ncol=p)
 x = matrix(rnorm(n*p,0,s),nrow=n,ncol=p)
-x.wsvd = wSVD(x,s,30,100)
+x.wsvd = wSVD(x,s,30,100,1)
 plot(x.wsvd$obj)
 ```
 
-# Conclusion
 
-It converges pretty slow, particularly if tau is big (so shrinkage of Z each iteration very minimal). This seems intuitive. Possibly could improve by estimating tau, but i think there
-is no closed-form solution. In any case it seems perhaps more promising to try to adjust softImpute to allow weights?
+# Applying to Poisson data
 
+Here is outline of how we might apply this to Poisson data.
+
+Let $Y_{ij} \sim Poi(\mu_{ij})$ be observations.
+Let $m_{ij}$ be a "current fitted value" for $\mu_{ij}$, for example
+it could be the current value of $Y_{ij} - Z_{ij}$ if $Z_{ij}$ where $Z_{ij}$
+is the estimated "measurement error" in the above.
+Or for initialization $m_{ij}$ could be the mean of $X_{i\cdot}$ if $j$ indexes
+genes. 
+
+Basically the idea is to do a Taylor series expansion of the Poisson likelihood about $m_{ij}$. This leads to
+- set $X_{ij} = \log(m_{ij}) + (Y_{ij}-m_{ij})/m_{ij}$
+- set $s^2_{ij} = 1/m_{ij}$ 
+which we could apply wSVD to. And then repeat...
+
+# Other issues
+
+- I think there is something of a literature on wSVD, but not much implemented.
+Would be good to look further. 
+
+- We would want to estimate the residual precision $\tau$ too. I believe there is
+a EM update for that based on computing expected squared residuals (which will involve second moment of $Z_{ij}$, which is available).
+
+- It would be nice if we could estimate the ridge penalty in softImpute by
+maximum likelihood/variational approximation (as in flash/PEER) rather than having to do cross-validation.
