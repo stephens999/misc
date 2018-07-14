@@ -36,6 +36,10 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 
 * [Method of moments for EbayesThresh ](ebayes.mm.html)
 
+# Weighted SVD 
+
+* [Outline of EM algorithm for fitting weighted SVD](wSVD.html)
+
 # Finemapping
 
 * [Comparison of varbvs and varbvsmix](FMO2.html)
