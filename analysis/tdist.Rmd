@@ -1,0 +1,47 @@
+---
+title: "tdist"
+author: "stephens999"
+date: "2018-08-24"
+output: workflowr::wflow_html
+---
+
+## Introduction
+
+I want to illustrate the fact that 
+$$\hat\beta/\hat{s} \sim t$$
+does not imply
+$$\hat\beta/\hat{s} | \hat{s} \sim t.$$
+
+Consider even the simplest case of true $s_j=1$ and $\beta=0$ (and df of $d=5$).
+So 
+$$\hat{\beta} \sim N(0,1)$$ 
+and 
+$$\hat{s} \sim \chi_d^2/d.$$
+```{r}
+bhat = rnorm(1000)
+d=5
+shat = rchisq(1000,df=d)/d
+plot(shat,bhat/shat)
+```
+
+In fact, it should  be obvious in this case
+that 
+$$\hat{\beta}/\hat{s} | \hat{s} \sim N(0, \hat{s}^{-2})$$
+
+
+Apply ash:
+```{r}
+library("ashr")
+b.ash = ash(bhat,shat,df=5)
+sum(get_lfsr(b.ash)<0.05)
+```
+
+Now try shrinking variances first:
+```{r}
+library("vashr")
+s.vash = vash(shat,df=5,singlecomp = TRUE)
+plot(s.vash$sd.post, shat)
+b.ash2 = ash(bhat,s.vash$sd.post,df=2*s.vash$PosteriorShape[1])
+sum(get_lfsr(b.ash2)<0.05)
+```
+
