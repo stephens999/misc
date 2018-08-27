@@ -16,11 +16,11 @@ Consider even the simplest case of true $s_j=1$ and $\beta=0$ (and df of $d=5$).
 So 
 $$\hat{\beta} \sim N(0,1)$$ 
 and 
-$$\hat{s} \sim \chi_d^2/d.$$
+$$\hat{s}^2 \sim \chi_d^2/d.$$
 ```{r}
 bhat = rnorm(1000)
 d=5
-shat = rchisq(1000,df=d)/d
+shat = sqrt(rchisq(1000,df=d)/d)
 plot(shat,bhat/shat)
 ```
 
