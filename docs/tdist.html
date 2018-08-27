@@ -323,7 +323,7 @@ div.section {
 </div>
 
 
-<p><strong>Last updated:</strong> 2018-08-24</p>
+<p><strong>Last updated:</strong> 2018-08-27</p>
 <strong>workflowr checks:</strong> <small>(Click a bullet for more information)</small>
 <ul>
 <li>
@@ -347,7 +347,7 @@ div.section {
 </details>
 </li>
 <li>
-<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/dcfd01e016fbdd46f76c108ed0362aa7cf7d1fc6" target="_blank">dcfd01e</a> </summary></p>
+<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/34bda157ce931ae39d30819c054d7818a1a7754f" target="_blank">34bda15</a> </summary></p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
 <pre><code>
 Ignored files:
@@ -489,6 +489,40 @@ Message
 Rmd
 </td>
 <td style="text-align:left;">
+<a href="https://github.com/stephens999/misc/blob/34bda157ce931ae39d30819c054d7818a1a7754f/analysis/tdist.Rmd" target="_blank">34bda15</a>
+</td>
+<td style="text-align:left;">
+stephens999
+</td>
+<td style="text-align:left;">
+2018-08-27
+</td>
+<td style="text-align:left;">
+workflowr::wflow_publish(“tdist.Rmd”)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+html
+</td>
+<td style="text-align:left;">
+<a href="https://cdn.rawgit.com/stephens999/misc/48b97b0dbbf8c3e06119647fa9041be1a6001443/docs/tdist.html" target="_blank">48b97b0</a>
+</td>
+<td style="text-align:left;">
+stephens999
+</td>
+<td style="text-align:left;">
+2018-08-24
+</td>
+<td style="text-align:left;">
+Build site.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
 <a href="https://github.com/stephens999/misc/blob/dcfd01e016fbdd46f76c108ed0362aa7cf7d1fc6/analysis/tdist.Rmd" target="_blank">dcfd01e</a>
 </td>
 <td style="text-align:left;">
@@ -509,18 +543,48 @@ workflowr::wflow_publish(“tdist.Rmd”)
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
 <p>I want to illustrate the fact that <span class="math display">\[\hat\beta/\hat{s} \sim t\]</span> does not imply <span class="math display">\[\hat\beta/\hat{s} | \hat{s} \sim t.\]</span></p>
-<p>Consider even the simplest case of true <span class="math inline">\(s_j=1\)</span> and <span class="math inline">\(\beta=0\)</span> (and df of <span class="math inline">\(d=5\)</span>). So <span class="math display">\[\hat{\beta} \sim N(0,1)\]</span> and <span class="math display">\[\hat{s} \sim \chi_d^2/d.\]</span></p>
+<p>Consider even the simplest case of true <span class="math inline">\(s_j=1\)</span> and <span class="math inline">\(\beta=0\)</span> (and df of <span class="math inline">\(d=5\)</span>). So <span class="math display">\[\hat{\beta} \sim N(0,1)\]</span> and <span class="math display">\[\hat{s}^2 \sim \chi_d^2/d.\]</span></p>
 <pre class="r"><code>bhat = rnorm(1000)
 d=5
-shat = rchisq(1000,df=d)/d
+shat = sqrt(rchisq(1000,df=d)/d)
 plot(shat,bhat/shat)</code></pre>
 <p><img src="figure/tdist.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
+<details> <summary><em>Expand here to see past versions of unnamed-chunk-1-1.png:</em></summary>
+<table style="border-collapse:separate; border-spacing:5px;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Version
+</th>
+<th style="text-align:left;">
+Author
+</th>
+<th style="text-align:left;">
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+<a href="https://github.com/stephens999/misc/blob/48b97b0dbbf8c3e06119647fa9041be1a6001443/docs/figure/tdist.Rmd/unnamed-chunk-1-1.png" target="_blank">48b97b0</a>
+</td>
+<td style="text-align:left;">
+stephens999
+</td>
+<td style="text-align:left;">
+2018-08-24
+</td>
+</tr>
+</tbody>
+</table>
+<p></details></p>
 <p>In fact, it should be obvious in this case that <span class="math display">\[\hat{\beta}/\hat{s} | \hat{s} \sim N(0, \hat{s}^{-2})\]</span></p>
 <p>Apply ash:</p>
 <pre class="r"><code>library(&quot;ashr&quot;)
 b.ash = ash(bhat,shat,df=5)
 sum(get_lfsr(b.ash)&lt;0.05)</code></pre>
-<pre><code>[1] 54</code></pre>
+<pre><code>[1] 4</code></pre>
 <p>Now try shrinking variances first:</p>
 <pre class="r"><code>library(&quot;vashr&quot;)</code></pre>
 <pre><code>Loading required package: SQUAREM</code></pre>
@@ -528,9 +592,39 @@ sum(get_lfsr(b.ash)&lt;0.05)</code></pre>
 <pre class="r"><code>s.vash = vash(shat,df=5,singlecomp = TRUE)
 plot(s.vash$sd.post, shat)</code></pre>
 <p><img src="figure/tdist.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<details> <summary><em>Expand here to see past versions of unnamed-chunk-3-1.png:</em></summary>
+<table style="border-collapse:separate; border-spacing:5px;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Version
+</th>
+<th style="text-align:left;">
+Author
+</th>
+<th style="text-align:left;">
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+<a href="https://github.com/stephens999/misc/blob/48b97b0dbbf8c3e06119647fa9041be1a6001443/docs/figure/tdist.Rmd/unnamed-chunk-3-1.png" target="_blank">48b97b0</a>
+</td>
+<td style="text-align:left;">
+stephens999
+</td>
+<td style="text-align:left;">
+2018-08-24
+</td>
+</tr>
+</tbody>
+</table>
+<p></details></p>
 <pre class="r"><code>b.ash2 = ash(bhat,s.vash$sd.post,df=2*s.vash$PosteriorShape[1])
 sum(get_lfsr(b.ash2)&lt;0.05)</code></pre>
-<pre><code>[1] 9</code></pre>
+<pre><code>[1] 0</code></pre>
 </div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
