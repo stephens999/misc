@@ -1,0 +1,41 @@
+---
+title: "ash-depletion"
+author: "stephens999"
+date: "2018-08-30"
+output: workflowr::wflow_html
+---
+
+## Introduction
+
+Let $J$ denote the number of classes (eg 4 for DNA data).
+
+Suppose we have observed $J$-vectors of counts $x =(x_1,\dots,x_J)$ and $y=(y_1,\dots,y_J)$, with
+$$x|p \sim Mult(n_p,p)$$ and 
+$$y|q \sim Mult(n_q,q).$$
+
+If $n_p,n_q$ are large it is natural to use a Poisson approximation:
+$$x_j \sim Poi(n_p p_j); y_j \sim Poi(n_q q_j)$$
+from which we have:
+$$x_j | (x_j+y_j) \sim Bin(x_j+y_j, \rho_j) \quad [*]$$
+where
+$$\rho_j = n_p p_j / (n_p p_j + n_q q_j).$$
+
+Now note that 
+$$\log[\rho_j/(1-\rho_j)] = n_p p_j / n_q q_j = \log[n_p/n_q] + \log[p_j/q_j] \quad [**]$$
+So estimating $\log(p_j/q_j)$ is effectively the same problem as estimating $\log(\rho_j/(1-\rho_j))$. 
+
+Now a natural esimate of $\log(\rho_j/(1-\rho_j))$ from [*] is $\log(x_j/y_j)$, but that does not work when either $x_j$ or $y_j$ 
+is 0.
+We had exactly this problem in smash (Xing and Stephens).
+In that paper (section B.1) we developed a solution, which gives
+an estimator for $\log(\rho_j/(1-\rho_j))$ and its standard error.
+So the idea is we can use that estimator (subtracting $\log[n_p/n_q]$ as in [**]) as an estimator of $\log[p_j/q_j]$.
+We also have standard errors, and can thus shrink these using ashr (estimating the mode using `mode="estimate"`).
+This gives us shrunken estimates of $\log[p_j/q_j]$, and note
+that the shrinkage will be strongest for those with large se,
+which is the ones with small counts (especially 0s!)
+
+
+
+
+
