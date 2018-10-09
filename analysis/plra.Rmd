@@ -158,8 +158,8 @@ This was weird that expansion around the truth was
 so bad. So I tried more stringent convergence:
 
 ```{r}
-x.plra1.true2 = pois_lra1(x,1,lam=lambda,max_iters = 10000,atol=1e-9,verbose=TRUE) 
-x.plra1.naive2 = pois_lra1(x,1,max_iters = 10000,atol=1e-9,verbose=TRUE) 
+x.plra1.true2 = pois_lra1(x,1,lam=lambda,max_iters = 10000,atol=1e-9) 
+x.plra1.naive2 = pois_lra1(x,1,max_iters = 10000,atol=1e-9) 
 pois_llik(x,x.plra1.naive2$fit)
 pois_llik(x,x.plra1.true2$fit)
 ```
