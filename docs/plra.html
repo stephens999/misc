@@ -1,0 +1,2776 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="stephens999" />
+
+<meta name="date" content="2018-10-08" />
+
+<title>plra</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.0.13/css/fa-svg-with-js.css" rel="stylesheet" />
+<script src="site_libs/font-awesome-5.0.13/js/fontawesome-all.min.js"></script>
+<script src="site_libs/font-awesome-5.0.13/js/fa-v4-shims.min.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">misc</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">plra</h1>
+<h4 class="author"><em>stephens999</em></h4>
+<h4 class="date"><em>2018-10-08</em></h4>
+
+</div>
+
+
+<p><strong>Last updated:</strong> 2018-10-09</p>
+<strong>workflowr checks:</strong> <small>(Click a bullet for more information)</small>
+<ul>
+<li>
+<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>R Markdown file:</strong> up-to-date </summary></p>
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</details>
+</li>
+<li>
+<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>Environment:</strong> empty </summary></p>
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</details>
+</li>
+<li>
+<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>Seed:</strong> <code>set.seed(12345)</code> </summary></p>
+<p>The command <code>set.seed(12345)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</details>
+</li>
+<li>
+<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>Session information:</strong> recorded </summary></p>
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</details>
+</li>
+<li>
+<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/2756e44aaa5c9449173c325e47bfe6b419b06232" target="_blank">2756e44</a> </summary></p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.RData
+    Ignored:    analysis/.Rhistory
+    Ignored:    analysis/ALStruct_cache/
+    Ignored:    data/.Rhistory
+    Ignored:    docs/figure/.DS_Store
+
+Untracked files:
+    Untracked:  .dropbox
+    Untracked:  Icon
+    Untracked:  _workflowr.yml
+    Untracked:  analysis/GTEX-cogaps.Rmd
+    Untracked:  analysis/SPCAvRP.rmd
+    Untracked:  analysis/eQTL.perm.rand.pdf
+    Untracked:  analysis/ieQTL.perm.rand.pdf
+    Untracked:  analysis/mash_bhat_z.Rmd
+    Untracked:  analysis/mash_ieqtl_permutations.Rmd
+    Untracked:  analysis/pseudodata.Rmd
+    Untracked:  analysis/sc_bimodal.Rmd
+    Untracked:  analysis/susie_example.Rmd
+    Untracked:  analysis/svd-timing.Rmd
+    Untracked:  analysis/test_sparse.Rmd
+    Untracked:  analysis/z.txt
+    Untracked:  code/multivariate_testfuncs.R
+    Untracked:  data/4matthew/
+    Untracked:  data/4matthew2/
+    Untracked:  data/E-MTAB-2805.processed.1/
+    Untracked:  data/ENSG00000156738.Sim_Y2.RDS
+    Untracked:  data/GDS5363_full.soft.gz
+    Untracked:  data/GSE41265_allGenesTPM.txt
+    Untracked:  data/Muscle_Skeletal.ACTN3.pm1Mb.RDS
+    Untracked:  data/Thyroid.FMO2.pm1Mb.RDS
+    Untracked:  data/bmass.HaemgenRBC2016.MAF01.Vs2.MergedDataSources.200kRanSubset.ChrBPMAFMarkerZScores.vs1.txt.gz
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.PreviousSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/finemap_data/fmo2.sim/b.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/data
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.ld
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.z
+    Untracked:  data/finemap_data/fmo2.sim/pos.txt
+    Untracked:  data/logm.csv
+    Untracked:  data/m.cd.RDS
+    Untracked:  data/m.cdu.old.RDS
+    Untracked:  data/m.new.cd.RDS
+    Untracked:  data/m.old.cd.RDS
+    Untracked:  data/mainbib.bib.old
+    Untracked:  data/mat.csv
+    Untracked:  data/mat.txt
+    Untracked:  data/mat_new.csv
+    Untracked:  data/paintor_data/
+    Untracked:  data/temp.txt
+    Untracked:  data/y.txt
+    Untracked:  data/y_f.txt
+    Untracked:  docs/figure/eigen.Rmd/
+    Untracked:  docs/figure/fmo2.sim.Rmd/
+    Untracked:  docs/figure/newVB.elbo.Rmd/
+    Untracked:  docs/figure/rbc_zscore_mash2.Rmd/
+    Untracked:  docs/figure/rbc_zscore_mash2_analysis.Rmd/
+    Untracked:  docs/figure/rbc_zscores.Rmd/
+    Untracked:  docs/trend_files/
+    Untracked:  docs/z.txt
+    Untracked:  explore_udi.R
+    Untracked:  output/fit.varbvs.RDS
+    Untracked:  output/glmnet.fit.RDS
+    Untracked:  output/test.bv.txt
+    Untracked:  output/test.gamma.txt
+    Untracked:  output/test.hyp.txt
+    Untracked:  output/test.log.txt
+    Untracked:  output/test.param.txt
+    Untracked:  output/test2.bv.txt
+    Untracked:  output/test2.gamma.txt
+    Untracked:  output/test2.hyp.txt
+    Untracked:  output/test2.log.txt
+    Untracked:  output/test2.param.txt
+    Untracked:  output/test3.bv.txt
+    Untracked:  output/test3.gamma.txt
+    Untracked:  output/test3.hyp.txt
+    Untracked:  output/test3.log.txt
+    Untracked:  output/test3.param.txt
+    Untracked:  output/test4.bv.txt
+    Untracked:  output/test4.gamma.txt
+    Untracked:  output/test4.hyp.txt
+    Untracked:  output/test4.log.txt
+    Untracked:  output/test4.param.txt
+    Untracked:  output/test5.bv.txt
+    Untracked:  output/test5.gamma.txt
+    Untracked:  output/test5.hyp.txt
+    Untracked:  output/test5.log.txt
+    Untracked:  output/test5.param.txt
+
+Unstaged changes:
+    Modified:   analysis/_site.yml
+    Deleted:    analysis/chunks.R
+    Modified:   analysis/eigen.Rmd
+    Modified:   analysis/fmo2.sim.Rmd
+    Modified:   analysis/newVB.Rmd
+    Modified:   analysis/wSVD.Rmd
+
+</code></pre>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes. </details>
+</li>
+</ul>
+<details> <summary> <small><strong>Expand here to see past versions:</strong></small> </summary>
+<ul>
+<table style="border-collapse:separate; border-spacing:5px;">
+<thead>
+<tr>
+<th style="text-align:left;">
+File
+</th>
+<th style="text-align:left;">
+Version
+</th>
+<th style="text-align:left;">
+Author
+</th>
+<th style="text-align:left;">
+Date
+</th>
+<th style="text-align:left;">
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
+<a href="https://github.com/stephens999/misc/blob/2756e44aaa5c9449173c325e47bfe6b419b06232/analysis/plra.Rmd" target="_blank">2756e44</a>
+</td>
+<td style="text-align:left;">
+stephens999
+</td>
+<td style="text-align:left;">
+2018-10-09
+</td>
+<td style="text-align:left;">
+workflowr::wflow_publish(“plra.Rmd”)
+</td>
+</tr>
+</tbody>
+</table>
+</ul>
+<p></details></p>
+<hr />
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>I’m going to try to do a version of Poisson low rank approximation in R so I can play with it, based on Abhishek Sarkar’s python code (here)[<a href="https://github.com/aksarkar/wlra/blob/master/wlra/wlra.py" class="uri">https://github.com/aksarkar/wlra/blob/master/wlra/wlra.py</a>].</p>
+</div>
+<div id="poisson-low-rank-approximation" class="section level2">
+<h2>Poisson low rank approximation</h2>
+<pre class="r"><code># return truncated svd (truncated to rank principal components)
+lra = function(x, rank){
+  x.svd = svd(x,nu=rank,nv=rank)
+  
+  return(x.svd$u %*% diag(x.svd$d[1:rank],nrow=rank) %*% t(x.svd$v))
+}
+  
+# Return the weighted low rank approximation of x
+# Minimize the weighted Frobenius norm between x and the approximation z using EM [SJ03].
+#
+#&#39; @param x input data (n, p)
+#&#39; @param w input weights (n, p)
+#&#39; @param rank rank of the approximation (non-negative)
+#&#39; @param max_iters - maximum number of EM iterations
+#&#39; @param atol - minimum absolute difference in objective function for convergence
+#&#39; @param verbose - print objective function updates
+#&#39; @return an n by p matrix
+wlra = function(x, w, rank, max_iters=1000, atol=1e-3,verbose=FALSE){
+  n = nrow(x)
+  p = ncol(x)
+
+  # Important: WLRA requires weights 0 &lt;= w &lt;= 1
+  w = w/max(w)
+  
+    # Important: the procedure is deterministic, so initialization
+  # matters.
+  #
+  # Srebro and Jaakkola suggest the best strategy is to initialize
+  # from zero, but go from a full rank down to a rank k approximation in
+  # the first iterations
+  #
+  # For now, take the simpler strategy of just initializing to zero. Srebro and
+  # Jaakkola suggest this can underfit.
+  z = matrix(0,nrow=n,ncol=p)
+  obj = mean(w * x^2)
+  if(verbose){
+    print(paste0(&quot;wsvd [0]=&quot;,obj))
+  }
+
+  for(i in 0:max_iters){
+    z1 = lra(w * x + (1 - w) * z, rank)
+    update = mean(w * (x - z1)^2)
+    if(verbose){print(paste0(&quot;wsvd [&quot;,i+1,&quot;]=&quot;,update))}
+    if(update &gt; obj){
+      stop(&quot;objective increased&quot;)
+    } else if(max(abs(update-obj))&lt;atol){
+      return(z1)
+    } else {
+      z = z1
+      obj = update
+    }
+  }
+  stop(&quot;failed to converge&quot;)
+}
+
+# return log(p(Y|lambda=exp(eta))) for Y \sim Poi(lambda)
+pois_llik= function(y, eta){
+  sum(dpois(y,exp(eta),log=TRUE))
+}
+
+#&#39; @details Assume x_ij ~ Poisson(exp(eta_ij)), eta_ij = L_ik F_kj
+#&#39;  Maximize the log likelihood by using Taylor approximation to rewrite the problem as WLRA.
+#&#39; @param x: input data (n, p)
+#&#39; @param rank: rank of the approximation
+#&#39; @param max_outer_iters: maximum number of calls to WLRA
+#&#39; @param max_iters: maximum number of EM iterations in WLRA
+#&#39; @param verbose: print objective function updates
+#&#39; @return low rank approximation (n, p) matrix
+pois_lra= function(x, rank, max_outer_iters=50, max_iters=1000, atol=1e-3, verbose=FALSE){
+  n = nrow(x)
+  p = ncol(x)
+  nmf = NNLM::nnmf(x, rank)
+  eta = log(nmf$W %*% nmf$H)
+  obj = mean(pois_llik(x, eta))
+  if(verbose)
+    print(paste0(&quot;pois_lra [0]:&quot;,obj))
+  for(i in 0:max_outer_iters){
+    lam = exp(eta)
+    w = lam
+    target = eta + x / lam - 1
+    w[is.na(x)]=0 # Mark missing data with weight 0
+    
+      # Now we can go ahead and fill in the missing values with something
+      # computationally convenient, because the WLRA EM update will ignore the
+      # value for weight zero.
+    target[is.na(x)] = 0
+    eta1 = wlra(target, w, rank, max_iters=max_iters, atol=atol, verbose=verbose)
+    update = mean(pois_llik(x, eta1))
+    if(verbose){
+      print(paste0(&quot;pois_lra [&quot;,i + 1,&quot;]:&quot;,update))
+    }
+    if(max(abs(update-obj))&lt;atol){
+      return(list(fit=eta1,w=w,target=target))
+    } else {
+      eta = eta1
+      obj = update
+    }
+  }
+  stop(&quot;failed to converge&quot;)
+}
+
+# this just does a simple TSE about lam and runs wSVD once without any iteration
+pois_lra1 = function(x, rank, lam = ifelse(x&gt;0,x,0.5), max_iters=1000, atol=1e-3, verbose=FALSE){
+  target = log(lam) + x / lam - 1
+  w = lam
+  w[is.na(x)]=0 # Mark missing data with weight 0
+    
+      # Now we can go ahead and fill in the missing values with something
+      # computationally convenient, because the WLRA EM update will ignore the
+      # value for weight zero.
+    target[is.na(x)] = 0
+    eta1 = wlra(target, w, rank, max_iters=max_iters, atol=atol, verbose=verbose)
+    return(list(fit=eta1,w=w,target=target))
+}</code></pre>
+<p>First simulate some data:</p>
+<pre class="r"><code>set.seed(1)
+l = rnorm(100)
+f = rnorm(100)
+eta = outer(l,f)
+lambda = exp(eta)
+x = matrix(rpois(length(lambda),lambda),nrow=nrow(lambda))</code></pre>
+<p>Now fit various models: the plra, plra1 with the “naive” expansion (around x, or 0.5 for x=0) and around the true value of lambda:</p>
+<pre class="r"><code>x.plra=pois_lra(x,rank=1,verbose=TRUE)</code></pre>
+<pre><code>[1] &quot;pois_lra [0]:-56393.8383721883&quot;
+[1] &quot;wsvd [0]=9.11187664142563&quot;
+[1] &quot;wsvd [1]=9.09767330084035&quot;
+[1] &quot;wsvd [2]=9.0942294282996&quot;
+[1] &quot;wsvd [3]=9.09252076154906&quot;
+[1] &quot;wsvd [4]=9.09146781601123&quot;
+[1] &quot;wsvd [5]=9.09073663864168&quot;
+[1] &quot;pois_lra [1]:-20730.5265718132&quot;
+[1] &quot;wsvd [0]=0.0254032600526617&quot;
+[1] &quot;wsvd [1]=0.018730302153258&quot;
+[1] &quot;wsvd [2]=0.0173472213350827&quot;
+[1] &quot;wsvd [3]=0.0166205649043371&quot;
+[1] &quot;pois_lra [2]:-24476.2310334721&quot;
+[1] &quot;wsvd [0]=0.0342958650072393&quot;
+[1] &quot;wsvd [1]=0.0302492341697698&quot;
+[1] &quot;wsvd [2]=0.0295946545829222&quot;
+[1] &quot;pois_lra [3]:-26631.5708456328&quot;
+[1] &quot;wsvd [0]=0.0594742391599983&quot;
+[1] &quot;wsvd [1]=0.0558114666026009&quot;
+[1] &quot;wsvd [2]=0.0551636349735505&quot;
+[1] &quot;pois_lra [4]:-26775.5968189102&quot;
+[1] &quot;wsvd [0]=0.0654476543467692&quot;
+[1] &quot;wsvd [1]=0.0617080003798833&quot;
+[1] &quot;wsvd [2]=0.0609634116407461&quot;
+[1] &quot;pois_lra [5]:-26663.0720352895&quot;
+[1] &quot;wsvd [0]=0.0639419959608682&quot;
+[1] &quot;wsvd [1]=0.0601941802731442&quot;
+[1] &quot;wsvd [2]=0.0594430040900086&quot;
+[1] &quot;pois_lra [6]:-26653.5190878185&quot;
+[1] &quot;wsvd [0]=0.0637737656022713&quot;
+[1] &quot;wsvd [1]=0.0600262104698666&quot;
+[1] &quot;wsvd [2]=0.0592754713652051&quot;
+[1] &quot;pois_lra [7]:-26653.9093042342&quot;
+[1] &quot;wsvd [0]=0.063778632660418&quot;
+[1] &quot;wsvd [1]=0.0600311044827268&quot;
+[1] &quot;wsvd [2]=0.0592803862918574&quot;
+[1] &quot;pois_lra [8]:-26653.9404182592&quot;
+[1] &quot;wsvd [0]=0.0637791754208205&quot;
+[1] &quot;wsvd [1]=0.0600316465363189&quot;
+[1] &quot;wsvd [2]=0.0592809270276872&quot;
+[1] &quot;pois_lra [9]:-26653.9393089239&quot;
+[1] &quot;wsvd [0]=0.0637791618254631&quot;
+[1] &quot;wsvd [1]=0.0600316328646063&quot;
+[1] &quot;wsvd [2]=0.0592809132945037&quot;
+[1] &quot;pois_lra [10]:-26653.9392199259&quot;</code></pre>
+<pre class="r"><code>x.plra1.naive=pois_lra1(x,rank=1,verbose=TRUE)</code></pre>
+<pre><code>[1] &quot;wsvd [0]=0.0357370934894206&quot;
+[1] &quot;wsvd [1]=0.0216973393395743&quot;
+[1] &quot;wsvd [2]=0.0183559836838193&quot;
+[1] &quot;wsvd [3]=0.0166671902679346&quot;
+[1] &quot;wsvd [4]=0.0156058206162763&quot;
+[1] &quot;wsvd [5]=0.0148556454379835&quot;</code></pre>
+<pre class="r"><code>x.plra1.true = pois_lra1(x,1,lam=lambda) </code></pre>
+<pre class="r"><code>pois_llik(x,eta) #log likelihood at true value of eta</code></pre>
+<pre><code>[1] -13269.62</code></pre>
+<pre class="r"><code>pois_llik(x,x.plra$fit)</code></pre>
+<pre><code>[1] -26653.94</code></pre>
+<pre class="r"><code>pois_llik(x,x.plra1.naive$fit)</code></pre>
+<pre><code>[1] -20770.27</code></pre>
+<pre class="r"><code>pois_llik(x,x.plra1.true$fit)</code></pre>
+<pre><code>[1] -20830.33</code></pre>
+<p>This was weird that expansion around the truth was so bad. So I tried more stringent convergence:</p>
+<pre class="r"><code>x.plra1.true2 = pois_lra1(x,1,lam=lambda,max_iters = 10000,atol=1e-9,verbose=TRUE) </code></pre>
+<pre><code>[1] &quot;wsvd [0]=0.0345547809715475&quot;
+[1] &quot;wsvd [1]=0.0207263959799866&quot;
+[1] &quot;wsvd [2]=0.0174407325265061&quot;
+[1] &quot;wsvd [3]=0.0157745000299274&quot;
+[1] &quot;wsvd [4]=0.0147294810989384&quot;
+[1] &quot;wsvd [5]=0.0139947047339968&quot;
+[1] &quot;wsvd [6]=0.0134405646816002&quot;
+[1] &quot;wsvd [7]=0.0130030394359756&quot;
+[1] &quot;wsvd [8]=0.0126464909227861&quot;
+[1] &quot;wsvd [9]=0.012349219468963&quot;
+[1] &quot;wsvd [10]=0.0120970680644167&quot;
+[1] &quot;wsvd [11]=0.0118802897240533&quot;
+[1] &quot;wsvd [12]=0.0116918827807944&quot;
+[1] &quot;wsvd [13]=0.0115266446027147&quot;
+[1] &quot;wsvd [14]=0.0113806024851364&quot;
+[1] &quot;wsvd [15]=0.0112506546653568&quot;
+[1] &quot;wsvd [16]=0.0111343344795743&quot;
+[1] &quot;wsvd [17]=0.0110296499093777&quot;
+[1] &quot;wsvd [18]=0.0109349710709728&quot;
+[1] &quot;wsvd [19]=0.0108489492265877&quot;
+[1] &quot;wsvd [20]=0.0107704571407363&quot;
+[1] &quot;wsvd [21]=0.0106985442718116&quot;
+[1] &quot;wsvd [22]=0.0106324025160935&quot;
+[1] &quot;wsvd [23]=0.010571339613379&quot;
+[1] &quot;wsvd [24]=0.0105147582173843&quot;
+[1] &quot;wsvd [25]=0.0104621392222806&quot;
+[1] &quot;wsvd [26]=0.0104130283325444&quot;
+[1] &quot;wsvd [27]=0.0103670251352177&quot;
+[1] &quot;wsvd [28]=0.010323774124084&quot;
+[1] &quot;wsvd [29]=0.0102829572609871&quot;
+[1] &quot;wsvd [30]=0.010244287757877&quot;
+[1] &quot;wsvd [31]=0.0102075048355588&quot;
+[1] &quot;wsvd [32]=0.0101723692691997&quot;
+[1] &quot;wsvd [33]=0.0101386595716251&quot;
+[1] &quot;wsvd [34]=0.0101061686969389&quot;
+[1] &quot;wsvd [35]=0.0100747011715784&quot;
+[1] &quot;wsvd [36]=0.0100440705794027&quot;
+[1] &quot;wsvd [37]=0.010014097343138&quot;
+[1] &quot;wsvd [38]=0.00998460675745698&quot;
+[1] &quot;wsvd [39]=0.0099554272398796&quot;
+[1] &quot;wsvd [40]=0.00992638877511808&quot;
+[1] &quot;wsvd [41]=0.00989732153685665&quot;
+[1] &quot;wsvd [42]=0.00986805467858832&quot;
+[1] &quot;wsvd [43]=0.00983841529224545&quot;
+[1] &quot;wsvd [44]=0.00980822754011714&quot;
+[1] &quot;wsvd [45]=0.00977731197201945&quot;
+[1] &quot;wsvd [46]=0.00974548504587779&quot;
+[1] &quot;wsvd [47]=0.00971255887571109&quot;
+[1] &quot;wsvd [48]=0.00967834123630306&quot;
+[1] &quot;wsvd [49]=0.00964263585833216&quot;
+[1] &quot;wsvd [50]=0.00960524305102644&quot;
+[1] &quot;wsvd [51]=0.00956596069101885&quot;
+[1] &quot;wsvd [52]=0.00952458561540583&quot;
+[1] &quot;wsvd [53]=0.0094809154533755&quot;
+[1] &quot;wsvd [54]=0.00943475092345007&quot;
+[1] &quot;wsvd [55]=0.00938589861167933&quot;
+[1] &quot;wsvd [56]=0.00933417422944722&quot;
+[1] &quot;wsvd [57]=0.00927940632756793&quot;
+[1] &quot;wsvd [58]=0.00922144041609716&quot;
+[1] &quot;wsvd [59]=0.00916014340735611&quot;
+[1] &quot;wsvd [60]=0.00909540826434175&quot;
+[1] &quot;wsvd [61]=0.00902715870005596&quot;
+[1] &quot;wsvd [62]=0.00895535373823257&quot;
+[1] &quot;wsvd [63]=0.00887999191611026&quot;
+[1] &quot;wsvd [64]=0.00880111488941361&quot;
+[1] &quot;wsvd [65]=0.0087188101927575&quot;
+[1] &quot;wsvd [66]=0.00863321291898988&quot;
+[1] &quot;wsvd [67]=0.00854450611109585&quot;
+[1] &quot;wsvd [68]=0.00845291971097561&quot;
+[1] &quot;wsvd [69]=0.00835872797914897&quot;
+[1] &quot;wsvd [70]=0.00826224538415828&quot;
+[1] &quot;wsvd [71]=0.00816382105367115&quot;
+[1] &quot;wsvd [72]=0.00806383197274062&quot;
+[1] &quot;wsvd [73]=0.00796267519922755&quot;
+[1] &quot;wsvd [74]=0.00786075943327471&quot;
+[1] &quot;wsvd [75]=0.00775849631983691&quot;
+[1] &quot;wsvd [76]=0.00765629187623029&quot;
+[1] &quot;wsvd [77]=0.00755453841945491&quot;
+[1] &quot;wsvd [78]=0.00745360732314718&quot;
+[1] &quot;wsvd [79]=0.00735384286694553&quot;
+[1] &quot;wsvd [80]=0.00725555735945015&quot;
+[1] &quot;wsvd [81]=0.00715902762842662&quot;
+[1] &quot;wsvd [82]=0.00706449288680204&quot;
+[1] &quot;wsvd [83]=0.00697215390741367&quot;
+[1] &quot;wsvd [84]=0.00688217337851253&quot;
+[1] &quot;wsvd [85]=0.00679467726853902&quot;
+[1] &quot;wsvd [86]=0.00670975700330715&quot;
+[1] &quot;wsvd [87]=0.00662747225023184&quot;
+[1] &quot;wsvd [88]=0.00654785411004353&quot;
+[1] &quot;wsvd [89]=0.00647090853322582&quot;
+[1] &quot;wsvd [90]=0.0063966198026211&quot;
+[1] &quot;wsvd [91]=0.00632495395190205&quot;
+[1] &quot;wsvd [92]=0.00625586201901082&quot;
+[1] &quot;wsvd [93]=0.00618928306196224&quot;
+[1] &quot;wsvd [94]=0.00612514689001128&quot;
+[1] &quot;wsvd [95]=0.00606337648514052&quot;
+[1] &quot;wsvd [96]=0.00600389010671461&quot;
+[1] &quot;wsvd [97]=0.00594660308596605&quot;
+[1] &quot;wsvd [98]=0.00589142932700378&quot;
+[1] &quot;wsvd [99]=0.00583828253773391&quot;
+[1] &quot;wsvd [100]=0.00578707721799839&quot;
+[1] &quot;wsvd [101]=0.00573772943393736&quot;
+[1] &quot;wsvd [102]=0.00569015740760073&quot;
+[1] &quot;wsvd [103]=0.00564428194964958&quot;
+[1] &quot;wsvd [104]=0.00560002676100251&quot;
+[1] &quot;wsvd [105]=0.00555731862682069&quot;
+[1] &quot;wsvd [106]=0.00551608752354144&quot;
+[1] &quot;wsvd [107]=0.0054762666569499&quot;
+[1] &quot;wsvd [108]=0.0054377924466528&quot;
+[1] &quot;wsvd [109]=0.00540060446987247&quot;
+[1] &quot;wsvd [110]=0.00536464537526318&quot;
+[1] &quot;wsvd [111]=0.00532986077548909&quot;
+[1] &quot;wsvd [112]=0.00529619912559655&quot;
+[1] &quot;wsvd [113]=0.005263611592755&quot;
+[1] &quot;wsvd [114]=0.0052320519217122&quot;
+[1] &quot;wsvd [115]=0.0052014762992891&quot;
+[1] &quot;wsvd [116]=0.00517184322040291&quot;
+[1] &quot;wsvd [117]=0.00514311335742961&quot;
+[1] &quot;wsvd [118]=0.00511524943417583&quot;
+[1] &quot;wsvd [119]=0.00508821610530338&quot;
+[1] &quot;wsvd [120]=0.00506197984171756&quot;
+[1] &quot;wsvd [121]=0.00503650882217724&quot;
+[1] &quot;wsvd [122]=0.00501177283119364&quot;
+[1] &quot;wsvd [123]=0.00498774316314558&quot;
+[1] &quot;wsvd [124]=0.00496439253243934&quot;
+[1] &quot;wsvd [125]=0.00494169498947336&quot;
+[1] &quot;wsvd [126]=0.0049196258421246&quot;
+[1] &quot;wsvd [127]=0.00489816158244848&quot;
+[1] &quot;wsvd [128]=0.00487727981827311&quot;
+[1] &quot;wsvd [129]=0.00485695920936781&quot;
+[1] &quot;wsvd [130]=0.00483717940787239&quot;
+[1] &quot;wsvd [131]=0.00481792100268496&quot;
+[1] &quot;wsvd [132]=0.00479916546752084&quot;
+[1] &quot;wsvd [133]=0.00478089511237186&quot;
+[1] &quot;wsvd [134]=0.0047630930381128&quot;
+[1] &quot;wsvd [135]=0.00474574309401977&quot;
+[1] &quot;wsvd [136]=0.00472882983798274&quot;
+[1] &quot;wsvd [137]=0.00471233849921164&quot;
+[1] &quot;wsvd [138]=0.00469625494325128&quot;
+[1] &quot;wsvd [139]=0.00468056563913587&quot;
+[1] &quot;wsvd [140]=0.00466525762852754&quot;
+[1] &quot;wsvd [141]=0.0046503184966968&quot;
+[1] &quot;wsvd [142]=0.00463573634521435&quot;
+[1] &quot;wsvd [143]=0.00462149976623485&quot;
+[1] &quot;wsvd [144]=0.00460759781826321&quot;
+[1] &quot;wsvd [145]=0.00459402000330287&quot;
+[1] &quot;wsvd [146]=0.00458075624529387&quot;
+[1] &quot;wsvd [147]=0.004567796869756&quot;
+[1] &quot;wsvd [148]=0.00455513258455877&quot;
+[1] &quot;wsvd [149]=0.00454275446174662&quot;
+[1] &quot;wsvd [150]=0.00453065392035257&quot;
+[1] &quot;wsvd [151]=0.00451882271013928&quot;
+[1] &quot;wsvd [152]=0.00450725289621047&quot;
+[1] &quot;wsvd [153]=0.00449593684444013&quot;
+[1] &quot;wsvd [154]=0.00448486720767052&quot;
+[1] &quot;wsvd [155]=0.00447403691263356&quot;
+[1] &quot;wsvd [156]=0.00446343914755314&quot;
+[1] &quot;wsvd [157]=0.00445306735038899&quot;
+[1] &quot;wsvd [158]=0.00444291519768516&quot;
+[1] &quot;wsvd [159]=0.0044329765939886&quot;
+[1] &quot;wsvd [160]=0.00442324566180582&quot;
+[1] &quot;wsvd [161]=0.00441371673206721&quot;
+[1] &quot;wsvd [162]=0.00440438433507084&quot;
+[1] &quot;wsvd [163]=0.0043952431918792&quot;
+[1] &quot;wsvd [164]=0.00438628820614386&quot;
+[1] &quot;wsvd [165]=0.00437751445633477&quot;
+[1] &quot;wsvd [166]=0.00436891718835201&quot;
+[1] &quot;wsvd [167]=0.00436049180849943&quot;
+[1] &quot;wsvd [168]=0.00435223387680052&quot;
+[1] &quot;wsvd [169]=0.00434413910063832&quot;
+[1] &quot;wsvd [170]=0.00433620332870181&quot;
+[1] &quot;wsvd [171]=0.00432842254522281&quot;
+[1] &quot;wsvd [172]=0.00432079286448764&quot;
+[1] &quot;wsvd [173]=0.00431331052560928&quot;
+[1] &quot;wsvd [174]=0.00430597188754628&quot;
+[1] &quot;wsvd [175]=0.00429877342435543&quot;
+[1] &quot;wsvd [176]=0.00429171172066608&quot;
+[1] &quot;wsvd [177]=0.00428478346736455&quot;
+[1] &quot;wsvd [178]=0.00427798545747773&quot;
+[1] &quot;wsvd [179]=0.00427131458224563&quot;
+[1] &quot;wsvd [180]=0.00426476782737319&quot;
+[1] &quot;wsvd [181]=0.00425834226945212&quot;
+[1] &quot;wsvd [182]=0.00425203507254413&quot;
+[1] &quot;wsvd [183]=0.00424584348491733&quot;
+[1] &quot;wsvd [184]=0.00423976483592813&quot;
+[1] &quot;wsvd [185]=0.00423379653304117&quot;
+[1] &quot;wsvd [186]=0.00422793605898048&quot;
+[1] &quot;wsvd [187]=0.00422218096900524&quot;
+[1] &quot;wsvd [188]=0.00421652888830404&quot;
+[1] &quot;wsvd [189]=0.00421097750950155&quot;
+[1] &quot;wsvd [190]=0.00420552459027236&quot;
+[1] &quot;wsvd [191]=0.00420016795105644&quot;
+[1] &quot;wsvd [192]=0.00419490547287146&quot;
+[1] &quot;wsvd [193]=0.00418973509521716&quot;
+[1] &quot;wsvd [194]=0.00418465481406731&quot;
+[1] &quot;wsvd [195]=0.00417966267994508&quot;
+[1] &quot;wsvd [196]=0.00417475679607782&quot;
+[1] &quot;wsvd [197]=0.00416993531662737&quot;
+[1] &quot;wsvd [198]=0.0041651964449925&quot;
+[1] &quot;wsvd [199]=0.00416053843217985&quot;
+[1] &quot;wsvd [200]=0.00415595957524034&quot;
+[1] &quot;wsvd [201]=0.00415145821576786&quot;
+[1] &quot;wsvd [202]=0.00414703273845744&quot;
+[1] &quot;wsvd [203]=0.00414268156972007&quot;
+[1] &quot;wsvd [204]=0.00413840317635165&quot;
+[1] &quot;wsvd [205]=0.00413419606425348&quot;
+[1] &quot;wsvd [206]=0.0041300587772021&quot;
+[1] &quot;wsvd [207]=0.00412598989566609&quot;
+[1] &quot;wsvd [208]=0.00412198803566783&quot;
+[1] &quot;wsvd [209]=0.00411805184768819&quot;
+[1] &quot;wsvd [210]=0.00411418001561219&quot;
+[1] &quot;wsvd [211]=0.0041103712557139&quot;
+[1] &quot;wsvd [212]=0.00410662431567878&quot;
+[1] &quot;wsvd [213]=0.00410293797366188&quot;
+[1] &quot;wsvd [214]=0.00409931103738037&quot;
+[1] &quot;wsvd [215]=0.00409574234323881&quot;
+[1] &quot;wsvd [216]=0.00409223075548585&quot;
+[1] &quot;wsvd [217]=0.00408877516540107&quot;
+[1] &quot;wsvd [218]=0.0040853744905105&quot;
+[1] &quot;wsvd [219]=0.00408202767382982&quot;
+[1] &quot;wsvd [220]=0.00407873368313396&quot;
+[1] &quot;wsvd [221]=0.00407549151025205&quot;
+[1] &quot;wsvd [222]=0.00407230017038665&quot;
+[1] &quot;wsvd [223]=0.00406915870145627&quot;
+[1] &quot;wsvd [224]=0.00406606616346029&quot;
+[1] &quot;wsvd [225]=0.00406302163786529&quot;
+[1] &quot;wsvd [226]=0.00406002422701191&quot;
+[1] &quot;wsvd [227]=0.00405707305354163&quot;
+[1] &quot;wsvd [228]=0.00405416725984232&quot;
+[1] &quot;wsvd [229]=0.00405130600751221&quot;
+[1] &quot;wsvd [230]=0.00404848847684126&quot;
+[1] &quot;wsvd [231]=0.00404571386630938&quot;
+[1] &quot;wsvd [232]=0.0040429813921009&quot;
+[1] &quot;wsvd [233]=0.00404029028763453&quot;
+[1] &quot;wsvd [234]=0.00403763980310828&quot;
+[1] &quot;wsvd [235]=0.0040350292050589&quot;
+[1] &quot;wsvd [236]=0.00403245777593502&quot;
+[1] &quot;wsvd [237]=0.00402992481368371&quot;
+[1] &quot;wsvd [238]=0.00402742963134994&quot;
+[1] &quot;wsvd [239]=0.00402497155668828&quot;
+[1] &quot;wsvd [240]=0.0040225499317866&quot;
+[1] &quot;wsvd [241]=0.00402016411270127&quot;
+[1] &quot;wsvd [242]=0.00401781346910336&quot;
+[1] &quot;wsvd [243]=0.00401549738393553&quot;
+[1] &quot;wsvd [244]=0.00401321525307922&quot;
+[1] &quot;wsvd [245]=0.00401096648503178&quot;
+[1] &quot;wsvd [246]=0.00400875050059306&quot;
+[1] &quot;wsvd [247]=0.00400656673256141&quot;
+[1] &quot;wsvd [248]=0.00400441462543841&quot;
+[1] &quot;wsvd [249]=0.00400229363514234&quot;
+[1] &quot;wsvd [250]=0.00400020322872984&quot;
+[1] &quot;wsvd [251]=0.00399814288412569&quot;
+[1] &quot;wsvd [252]=0.00399611208986031&quot;
+[1] &quot;wsvd [253]=0.00399411034481466&quot;
+[1] &quot;wsvd [254]=0.0039921371579725&quot;
+[1] &quot;wsvd [255]=0.0039901920481796&quot;
+[1] &quot;wsvd [256]=0.0039882745439096&quot;
+[1] &quot;wsvd [257]=0.00398638418303661&quot;
+[1] &quot;wsvd [258]=0.00398452051261395&quot;
+[1] &quot;wsvd [259]=0.00398268308865908&quot;
+[1] &quot;wsvd [260]=0.00398087147594446&quot;
+[1] &quot;wsvd [261]=0.00397908524779412&quot;
+[1] &quot;wsvd [262]=0.0039773239858857&quot;
+[1] &quot;wsvd [263]=0.00397558728005802&quot;
+[1] &quot;wsvd [264]=0.00397387472812364&quot;
+[1] &quot;wsvd [265]=0.00397218593568663&quot;
+[1] &quot;wsvd [266]=0.00397052051596509&quot;
+[1] &quot;wsvd [267]=0.00396887808961845&quot;
+[1] &quot;wsvd [268]=0.00396725828457931&quot;
+[1] &quot;wsvd [269]=0.00396566073588976&quot;
+[1] &quot;wsvd [270]=0.00396408508554192&quot;
+[1] &quot;wsvd [271]=0.00396253098232272&quot;
+[1] &quot;wsvd [272]=0.00396099808166269&quot;
+[1] &quot;wsvd [273]=0.00395948604548862&quot;
+[1] &quot;wsvd [274]=0.00395799454208011&quot;
+[1] &quot;wsvd [275]=0.00395652324592973&quot;
+[1] &quot;wsvd [276]=0.00395507183760675&quot;
+[1] &quot;wsvd [277]=0.00395364000362443&quot;
+[1] &quot;wsvd [278]=0.00395222743631054&quot;
+[1] &quot;wsvd [279]=0.00395083383368128&quot;
+[1] &quot;wsvd [280]=0.00394945889931825&quot;
+[1] &quot;wsvd [281]=0.00394810234224864&quot;
+[1] &quot;wsvd [282]=0.00394676387682824&quot;
+[1] &quot;wsvd [283]=0.0039454432226275&quot;
+[1] &quot;wsvd [284]=0.00394414010432037&quot;
+[1] &quot;wsvd [285]=0.00394285425157581&quot;
+[1] &quot;wsvd [286]=0.00394158539895207&quot;
+[1] &quot;wsvd [287]=0.00394033328579347&quot;
+[1] &quot;wsvd [288]=0.00393909765612977&quot;
+[1] &quot;wsvd [289]=0.00393787825857792&quot;
+[1] &quot;wsvd [290]=0.00393667484624622&quot;
+[1] &quot;wsvd [291]=0.00393548717664077&quot;
+[1] &quot;wsvd [292]=0.00393431501157418&quot;
+[1] &quot;wsvd [293]=0.00393315811707651&quot;
+[1] &quot;wsvd [294]=0.00393201626330821&quot;
+[1] &quot;wsvd [295]=0.00393088922447527&quot;
+[1] &quot;wsvd [296]=0.00392977677874625&quot;
+[1] &quot;wsvd [297]=0.0039286787081714&quot;
+[1] &quot;wsvd [298]=0.00392759479860356&quot;
+[1] &quot;wsvd [299]=0.00392652483962099&quot;
+[1] &quot;wsvd [300]=0.00392546862445197&quot;
+[1] &quot;wsvd [301]=0.00392442594990114&quot;
+[1] &quot;wsvd [302]=0.0039233966162776&quot;
+[1] &quot;wsvd [303]=0.00392238042732465&quot;
+[1] &quot;wsvd [304]=0.0039213771901511&quot;
+[1] &quot;wsvd [305]=0.0039203867151642&quot;
+[1] &quot;wsvd [306]=0.00391940881600416&quot;
+[1] &quot;wsvd [307]=0.00391844330948003&quot;
+[1] &quot;wsvd [308]=0.00391749001550716&quot;
+[1] &quot;wsvd [309]=0.00391654875704602&quot;
+[1] &quot;wsvd [310]=0.00391561936004241&quot;
+[1] &quot;wsvd [311]=0.00391470165336903&quot;
+[1] &quot;wsvd [312]=0.00391379546876832&quot;
+[1] &quot;wsvd [313]=0.00391290064079668&quot;
+[1] &quot;wsvd [314]=0.00391201700676978&quot;
+[1] &quot;wsvd [315]=0.00391114440670923&quot;
+[1] &quot;wsvd [316]=0.00391028268329038&quot;
+[1] &quot;wsvd [317]=0.00390943168179122&quot;
+[1] &quot;wsvd [318]=0.00390859125004251&quot;
+[1] &quot;wsvd [319]=0.00390776123837892&quot;
+[1] &quot;wsvd [320]=0.00390694149959127&quot;
+[1] &quot;wsvd [321]=0.00390613188887986&quot;
+[1] &quot;wsvd [322]=0.0039053322638087&quot;
+[1] &quot;wsvd [323]=0.00390454248426088&quot;
+[1] &quot;wsvd [324]=0.00390376241239479&quot;
+[1] &quot;wsvd [325]=0.00390299191260134&quot;
+[1] &quot;wsvd [326]=0.00390223085146209&quot;
+[1] &quot;wsvd [327]=0.00390147909770826&quot;
+[1] &quot;wsvd [328]=0.00390073652218069&quot;
+[1] &quot;wsvd [329]=0.00390000299779055&quot;
+[1] &quot;wsvd [330]=0.00389927839948093&quot;
+[1] &quot;wsvd [331]=0.0038985626041893&quot;
+[1] &quot;wsvd [332]=0.0038978554908107&quot;
+[1] &quot;wsvd [333]=0.00389715694016168&quot;
+[1] &quot;wsvd [334]=0.00389646683494512&quot;
+[1] &quot;wsvd [335]=0.00389578505971563&quot;
+[1] &quot;wsvd [336]=0.00389511150084584&quot;
+[1] &quot;wsvd [337]=0.00389444604649324&quot;
+[1] &quot;wsvd [338]=0.0038937885865678&quot;
+[1] &quot;wsvd [339]=0.00389313901270026&quot;
+[1] &quot;wsvd [340]=0.00389249721821106&quot;
+[1] &quot;wsvd [341]=0.00389186309807986&quot;
+[1] &quot;wsvd [342]=0.00389123654891582&quot;
+[1] &quot;wsvd [343]=0.00389061746892833&quot;
+[1] &quot;wsvd [344]=0.00389000575789846&quot;
+[1] &quot;wsvd [345]=0.00388940131715096&quot;
+[1] &quot;wsvd [346]=0.00388880404952678&quot;
+[1] &quot;wsvd [347]=0.00388821385935623&quot;
+[1] &quot;wsvd [348]=0.00388763065243264&quot;
+[1] &quot;wsvd [349]=0.00388705433598651&quot;
+[1] &quot;wsvd [350]=0.0038864848186603&quot;
+[1] &quot;wsvd [351]=0.00388592201048362&quot;
+[1] &quot;wsvd [352]=0.00388536582284892&quot;
+[1] &quot;wsvd [353]=0.00388481616848775&quot;
+[1] &quot;wsvd [354]=0.00388427296144744&quot;
+[1] &quot;wsvd [355]=0.00388373611706821&quot;
+[1] &quot;wsvd [356]=0.00388320555196078&quot;
+[1] &quot;wsvd [357]=0.00388268118398446&quot;
+[1] &quot;wsvd [358]=0.00388216293222557&quot;
+[1] &quot;wsvd [359]=0.00388165071697637&quot;
+[1] &quot;wsvd [360]=0.00388114445971437&quot;
+[1] &quot;wsvd [361]=0.00388064408308207&quot;
+[1] &quot;wsvd [362]=0.00388014951086704&quot;
+[1] &quot;wsvd [363]=0.00387966066798245&quot;
+[1] &quot;wsvd [364]=0.00387917748044798&quot;
+[1] &quot;wsvd [365]=0.00387869987537103&quot;
+[1] &quot;wsvd [366]=0.00387822778092835&quot;
+[1] &quot;wsvd [367]=0.00387776112634804&quot;
+[1] &quot;wsvd [368]=0.00387729984189186&quot;
+[1] &quot;wsvd [369]=0.00387684385883786&quot;
+[1] &quot;wsvd [370]=0.00387639310946342&quot;
+[1] &quot;wsvd [371]=0.00387594752702854&quot;
+[1] &quot;wsvd [372]=0.00387550704575948&quot;
+[1] &quot;wsvd [373]=0.00387507160083272&quot;
+[1] &quot;wsvd [374]=0.00387464112835917&quot;
+[1] &quot;wsvd [375]=0.0038742155653688&quot;
+[1] &quot;wsvd [376]=0.0038737948497954&quot;
+[1] &quot;wsvd [377]=0.00387337892046176&quot;
+[1] &quot;wsvd [378]=0.00387296771706505&quot;
+[1] &quot;wsvd [379]=0.00387256118016251&quot;
+[1] &quot;wsvd [380]=0.00387215925115741&quot;
+[1] &quot;wsvd [381]=0.00387176187228523&quot;
+[1] &quot;wsvd [382]=0.00387136898660018&quot;
+[1] &quot;wsvd [383]=0.00387098053796184&quot;
+[1] &quot;wsvd [384]=0.00387059647102221&quot;
+[1] &quot;wsvd [385]=0.00387021673121285&quot;
+[1] &quot;wsvd [386]=0.00386984126473236&quot;
+[1] &quot;wsvd [387]=0.00386947001853403&quot;
+[1] &quot;wsvd [388]=0.00386910294031376&quot;
+[1] &quot;wsvd [389]=0.00386873997849814&quot;
+[1] &quot;wsvd [390]=0.00386838108223284&quot;
+[1] &quot;wsvd [391]=0.00386802620137113&quot;
+[1] &quot;wsvd [392]=0.00386767528646263&quot;
+[1] &quot;wsvd [393]=0.00386732828874229&quot;
+[1] &quot;wsvd [394]=0.00386698516011953&quot;
+[1] &quot;wsvd [395]=0.00386664585316763&quot;
+[1] &quot;wsvd [396]=0.00386631032111324&quot;
+[1] &quot;wsvd [397]=0.00386597851782614&quot;
+[1] &quot;wsvd [398]=0.00386565039780914&quot;
+[1] &quot;wsvd [399]=0.00386532591618822&quot;
+[1] &quot;wsvd [400]=0.00386500502870276&quot;
+[1] &quot;wsvd [401]=0.00386468769169599&quot;
+[1] &quot;wsvd [402]=0.00386437386210568&quot;
+[1] &quot;wsvd [403]=0.00386406349745482&quot;
+[1] &quot;wsvd [404]=0.00386375655584265&quot;
+[1] &quot;wsvd [405]=0.00386345299593573&quot;
+[1] &quot;wsvd [406]=0.00386315277695923&quot;
+[1] &quot;wsvd [407]=0.00386285585868829&quot;
+[1] &quot;wsvd [408]=0.00386256220143967&quot;
+[1] &quot;wsvd [409]=0.00386227176606341&quot;
+[1] &quot;wsvd [410]=0.00386198451393469&quot;
+[1] &quot;wsvd [411]=0.00386170040694587&quot;
+[1] &quot;wsvd [412]=0.00386141940749856&quot;
+[1] &quot;wsvd [413]=0.003861141478496&quot;
+[1] &quot;wsvd [414]=0.00386086658333534&quot;
+[1] &quot;wsvd [415]=0.00386059468590031&quot;
+[1] &quot;wsvd [416]=0.0038603257505538&quot;
+[1] &quot;wsvd [417]=0.00386005974213067&quot;
+[1] &quot;wsvd [418]=0.0038597966259307&quot;
+[1] &quot;wsvd [419]=0.0038595363677116&quot;
+[1] &quot;wsvd [420]=0.00385927893368217&quot;
+[1] &quot;wsvd [421]=0.00385902429049559&quot;
+[1] &quot;wsvd [422]=0.00385877240524277&quot;
+[1] &quot;wsvd [423]=0.00385852324544591&quot;
+[1] &quot;wsvd [424]=0.00385827677905205&quot;
+[1] &quot;wsvd [425]=0.00385803297442681&quot;
+[1] &quot;wsvd [426]=0.00385779180034824&quot;
+[1] &quot;wsvd [427]=0.00385755322600069&quot;
+[1] &quot;wsvd [428]=0.00385731722096889&quot;
+[1] &quot;wsvd [429]=0.00385708375523204&quot;
+[1] &quot;wsvd [430]=0.00385685279915805&quot;
+[1] &quot;wsvd [431]=0.0038566243234979&quot;
+[1] &quot;wsvd [432]=0.00385639829937996&quot;
+[1] &quot;wsvd [433]=0.00385617469830461&quot;
+[1] &quot;wsvd [434]=0.00385595349213877&quot;
+[1] &quot;wsvd [435]=0.00385573465311058&quot;
+[1] &quot;wsvd [436]=0.00385551815380424&quot;
+[1] &quot;wsvd [437]=0.0038553039671548&quot;
+[1] &quot;wsvd [438]=0.00385509206644316&quot;
+[1] &quot;wsvd [439]=0.00385488242529107&quot;
+[1] &quot;wsvd [440]=0.00385467501765623&quot;
+[1] &quot;wsvd [441]=0.00385446981782751&quot;
+[1] &quot;wsvd [442]=0.00385426680042019&quot;
+[1] &quot;wsvd [443]=0.00385406594037132&quot;
+[1] &quot;wsvd [444]=0.00385386721293514&quot;
+[1] &quot;wsvd [445]=0.00385367059367855&quot;
+[1] &quot;wsvd [446]=0.00385347605847669&quot;
+[1] &quot;wsvd [447]=0.00385328358350861&quot;
+[1] &quot;wsvd [448]=0.00385309314525289&quot;
+[1] &quot;wsvd [449]=0.00385290472048353&quot;
+[1] &quot;wsvd [450]=0.00385271828626569&quot;
+[1] &quot;wsvd [451]=0.00385253381995165&quot;
+[1] &quot;wsvd [452]=0.00385235129917679&quot;
+[1] &quot;wsvd [453]=0.00385217070185561&quot;
+[1] &quot;wsvd [454]=0.00385199200617782&quot;
+[1] &quot;wsvd [455]=0.00385181519060454&quot;
+[1] &quot;wsvd [456]=0.00385164023386448&quot;
+[1] &quot;wsvd [457]=0.00385146711495025&quot;
+[1] &quot;wsvd [458]=0.00385129581311469&quot;
+[1] &quot;wsvd [459]=0.00385112630786728&quot;
+[1] &quot;wsvd [460]=0.00385095857897059&quot;
+[1] &quot;wsvd [461]=0.00385079260643675&quot;
+[1] &quot;wsvd [462]=0.0038506283705241&quot;
+[1] &quot;wsvd [463]=0.00385046585173371&quot;
+[1] &quot;wsvd [464]=0.00385030503080614&quot;
+[1] &quot;wsvd [465]=0.00385014588871808&quot;
+[1] &quot;wsvd [466]=0.00384998840667919&quot;
+[1] &quot;wsvd [467]=0.00384983256612886&quot;
+[1] &quot;wsvd [468]=0.00384967834873316&quot;
+[1] &quot;wsvd [469]=0.00384952573638167&quot;
+[1] &quot;wsvd [470]=0.0038493747111845&quot;
+[1] &quot;wsvd [471]=0.0038492252554693&quot;
+[1] &quot;wsvd [472]=0.00384907735177831&quot;
+[1] &quot;wsvd [473]=0.00384893098286545&quot;
+[1] &quot;wsvd [474]=0.00384878613169349&quot;
+[1] &quot;wsvd [475]=0.00384864278143123&quot;
+[1] &quot;wsvd [476]=0.00384850091545071&quot;
+[1] &quot;wsvd [477]=0.00384836051732454&quot;
+[1] &quot;wsvd [478]=0.00384822157082316&quot;
+[1] &quot;wsvd [479]=0.00384808405991223&quot;
+[1] &quot;wsvd [480]=0.00384794796875001&quot;
+[1] &quot;wsvd [481]=0.0038478132816848&quot;
+[1] &quot;wsvd [482]=0.00384767998325242&quot;
+[1] &quot;wsvd [483]=0.00384754805817371&quot;
+[1] &quot;wsvd [484]=0.00384741749135208&quot;
+[1] &quot;wsvd [485]=0.0038472882678711&quot;
+[1] &quot;wsvd [486]=0.00384716037299212&quot;
+[1] &quot;wsvd [487]=0.00384703379215192&quot;
+[1] &quot;wsvd [488]=0.00384690851096041&quot;
+[1] &quot;wsvd [489]=0.00384678451519835&quot;
+[1] &quot;wsvd [490]=0.00384666179081511&quot;
+[1] &quot;wsvd [491]=0.00384654032392644&quot;
+[1] &quot;wsvd [492]=0.00384642010081234&quot;
+[1] &quot;wsvd [493]=0.00384630110791487&quot;
+[1] &quot;wsvd [494]=0.00384618333183606&quot;
+[1] &quot;wsvd [495]=0.00384606675933582&quot;
+[1] &quot;wsvd [496]=0.0038459513773299&quot;
+[1] &quot;wsvd [497]=0.00384583717288785&quot;
+[1] &quot;wsvd [498]=0.00384572413323105&quot;
+[1] &quot;wsvd [499]=0.00384561224573071&quot;
+[1] &quot;wsvd [500]=0.00384550149790597&quot;
+[1] &quot;wsvd [501]=0.00384539187742199&quot;
+[1] &quot;wsvd [502]=0.00384528337208805&quot;
+[1] &quot;wsvd [503]=0.00384517596985571&quot;
+[1] &quot;wsvd [504]=0.00384506965881697&quot;
+[1] &quot;wsvd [505]=0.0038449644272025&quot;
+[1] &quot;wsvd [506]=0.00384486026337983&quot;
+[1] &quot;wsvd [507]=0.00384475715585163&quot;
+[1] &quot;wsvd [508]=0.00384465509325396&quot;
+[1] &quot;wsvd [509]=0.00384455406435461&quot;
+[1] &quot;wsvd [510]=0.00384445405805138&quot;
+[1] &quot;wsvd [511]=0.00384435506337044&quot;
+[1] &quot;wsvd [512]=0.00384425706946473&quot;
+[1] &quot;wsvd [513]=0.00384416006561232&quot;
+[1] &quot;wsvd [514]=0.00384406404121485&quot;
+[1] &quot;wsvd [515]=0.00384396898579595&quot;
+[1] &quot;wsvd [516]=0.00384387488899974&quot;
+[1] &quot;wsvd [517]=0.00384378174058926&quot;
+[1] &quot;wsvd [518]=0.003843689530445&quot;
+[1] &quot;wsvd [519]=0.00384359824856346&quot;
+[1] &quot;wsvd [520]=0.00384350788505562&quot;
+[1] &quot;wsvd [521]=0.00384341843014557&quot;
+[1] &quot;wsvd [522]=0.00384332987416909&quot;
+[1] &quot;wsvd [523]=0.00384324220757222&quot;
+[1] &quot;wsvd [524]=0.00384315542090991&quot;
+[1] &quot;wsvd [525]=0.00384306950484467&quot;
+[1] &quot;wsvd [526]=0.00384298445014522&quot;
+[1] &quot;wsvd [527]=0.00384290024768516&quot;
+[1] &quot;wsvd [528]=0.00384281688844172&quot;
+[1] &quot;wsvd [529]=0.00384273436349442&quot;
+[1] &quot;wsvd [530]=0.00384265266402382&quot;
+[1] &quot;wsvd [531]=0.0038425717813103&quot;
+[1] &quot;wsvd [532]=0.0038424917067328&quot;
+[1] &quot;wsvd [533]=0.00384241243176761&quot;
+[1] &quot;wsvd [534]=0.00384233394798719&quot;
+[1] &quot;wsvd [535]=0.00384225624705899&quot;
+[1] &quot;wsvd [536]=0.00384217932074424&quot;
+[1] &quot;wsvd [537]=0.00384210316089686&quot;
+[1] &quot;wsvd [538]=0.0038420277594623&quot;
+[1] &quot;wsvd [539]=0.0038419531084764&quot;
+[1] &quot;wsvd [540]=0.00384187920006435&quot;
+[1] &quot;wsvd [541]=0.00384180602643954&quot;
+[1] &quot;wsvd [542]=0.00384173357990249&quot;
+[1] &quot;wsvd [543]=0.00384166185283984&quot;
+[1] &quot;wsvd [544]=0.00384159083772326&quot;
+[1] &quot;wsvd [545]=0.00384152052710845&quot;
+[1] &quot;wsvd [546]=0.00384145091363408&quot;
+[1] &quot;wsvd [547]=0.00384138199002083&quot;
+[1] &quot;wsvd [548]=0.00384131374907039&quot;
+[1] &quot;wsvd [549]=0.00384124618366447&quot;
+[1] &quot;wsvd [550]=0.00384117928676383&quot;
+[1] &quot;wsvd [551]=0.00384111305140736&quot;
+[1] &quot;wsvd [552]=0.00384104747071112&quot;
+[1] &quot;wsvd [553]=0.00384098253786741&quot;
+[1] &quot;wsvd [554]=0.00384091824614386&quot;
+[1] &quot;wsvd [555]=0.00384085458888256&quot;
+[1] &quot;wsvd [556]=0.0038407915594991&quot;
+[1] &quot;wsvd [557]=0.00384072915148176&quot;
+[1] &quot;wsvd [558]=0.00384066735839061&quot;
+[1] &quot;wsvd [559]=0.00384060617385666&quot;
+[1] &quot;wsvd [560]=0.00384054559158102&quot;
+[1] &quot;wsvd [561]=0.00384048560533406&quot;
+[1] &quot;wsvd [562]=0.00384042620895461&quot;
+[1] &quot;wsvd [563]=0.00384036739634909&quot;
+[1] &quot;wsvd [564]=0.0038403091614908&quot;
+[1] &quot;wsvd [565]=0.00384025149841905&quot;
+[1] &quot;wsvd [566]=0.00384019440123839&quot;
+[1] &quot;wsvd [567]=0.00384013786411791&quot;
+[1] &quot;wsvd [568]=0.00384008188129039&quot;
+[1] &quot;wsvd [569]=0.00384002644705159&quot;
+[1] &quot;wsvd [570]=0.00383997155575952&quot;
+[1] &quot;wsvd [571]=0.0038399172018337&quot;
+[1] &quot;wsvd [572]=0.00383986337975441&quot;
+[1] &quot;wsvd [573]=0.00383981008406203&quot;
+[1] &quot;wsvd [574]=0.00383975730935629&quot;
+[1] &quot;wsvd [575]=0.00383970505029561&quot;
+[1] &quot;wsvd [576]=0.00383965330159638&quot;
+[1] &quot;wsvd [577]=0.00383960205803231&quot;
+[1] &quot;wsvd [578]=0.00383955131443377&quot;
+[1] &quot;wsvd [579]=0.00383950106568708&quot;
+[1] &quot;wsvd [580]=0.00383945130673393&quot;
+[1] &quot;wsvd [581]=0.00383940203257067&quot;
+[1] &quot;wsvd [582]=0.00383935323824773&quot;
+[1] &quot;wsvd [583]=0.00383930491886896&quot;
+[1] &quot;wsvd [584]=0.00383925706959101&quot;
+[1] &quot;wsvd [585]=0.00383920968562275&quot;
+[1] &quot;wsvd [586]=0.00383916276222462&quot;
+[1] &quot;wsvd [587]=0.00383911629470808&quot;
+[1] &quot;wsvd [588]=0.003839070278435&quot;
+[1] &quot;wsvd [589]=0.00383902470881707&quot;
+[1] &quot;wsvd [590]=0.00383897958131526&quot;
+[1] &quot;wsvd [591]=0.0038389348914392&quot;
+[1] &quot;wsvd [592]=0.00383889063474669&quot;
+[1] &quot;wsvd [593]=0.00383884680684307&quot;
+[1] &quot;wsvd [594]=0.00383880340338075&quot;
+[1] &quot;wsvd [595]=0.00383876042005861&quot;
+[1] &quot;wsvd [596]=0.00383871785262152&quot;
+[1] &quot;wsvd [597]=0.00383867569685976&quot;
+[1] &quot;wsvd [598]=0.00383863394860856&quot;
+[1] &quot;wsvd [599]=0.00383859260374753&quot;
+[1] &quot;wsvd [600]=0.00383855165820021&quot;
+[1] &quot;wsvd [601]=0.00383851110793353&quot;
+[1] &quot;wsvd [602]=0.00383847094895732&quot;
+[1] &quot;wsvd [603]=0.00383843117732384&quot;
+[1] &quot;wsvd [604]=0.00383839178912729&quot;
+[1] &quot;wsvd [605]=0.00383835278050335&quot;
+[1] &quot;wsvd [606]=0.00383831414762867&quot;
+[1] &quot;wsvd [607]=0.00383827588672045&quot;
+[1] &quot;wsvd [608]=0.00383823799403596&quot;
+[1] &quot;wsvd [609]=0.00383820046587207&quot;
+[1] &quot;wsvd [610]=0.00383816329856486&quot;
+[1] &quot;wsvd [611]=0.00383812648848911&quot;
+[1] &quot;wsvd [612]=0.00383809003205791&quot;
+[1] &quot;wsvd [613]=0.00383805392572223&quot;
+[1] &quot;wsvd [614]=0.00383801816597045&quot;
+[1] &quot;wsvd [615]=0.00383798274932799&quot;
+[1] &quot;wsvd [616]=0.00383794767235687&quot;
+[1] &quot;wsvd [617]=0.00383791293165528&quot;
+[1] &quot;wsvd [618]=0.00383787852385725&quot;
+[1] &quot;wsvd [619]=0.00383784444563214&quot;
+[1] &quot;wsvd [620]=0.00383781069368434&quot;
+[1] &quot;wsvd [621]=0.00383777726475283&quot;
+[1] &quot;wsvd [622]=0.00383774415561081&quot;
+[1] &quot;wsvd [623]=0.00383771136306529&quot;
+[1] &quot;wsvd [624]=0.00383767888395677&quot;
+[1] &quot;wsvd [625]=0.00383764671515882&quot;
+[1] &quot;wsvd [626]=0.00383761485357772&quot;
+[1] &quot;wsvd [627]=0.00383758329615212&quot;
+[1] &quot;wsvd [628]=0.00383755203985264&quot;
+[1] &quot;wsvd [629]=0.00383752108168156&quot;
+[1] &quot;wsvd [630]=0.00383749041867244&quot;
+[1] &quot;wsvd [631]=0.00383746004788978&quot;
+[1] &quot;wsvd [632]=0.00383742996642869&quot;
+[1] &quot;wsvd [633]=0.00383740017141453&quot;
+[1] &quot;wsvd [634]=0.0038373706600026&quot;
+[1] &quot;wsvd [635]=0.00383734142937778&quot;
+[1] &quot;wsvd [636]=0.00383731247675424&quot;
+[1] &quot;wsvd [637]=0.00383728379937508&quot;
+[1] &quot;wsvd [638]=0.00383725539451205&quot;
+[1] &quot;wsvd [639]=0.00383722725946521&quot;
+[1] &quot;wsvd [640]=0.0038371993915626&quot;
+[1] &quot;wsvd [641]=0.00383717178815999&quot;
+[1] &quot;wsvd [642]=0.00383714444664052&quot;
+[1] &quot;wsvd [643]=0.00383711736441444&quot;
+[1] &quot;wsvd [644]=0.00383709053891879&quot;
+[1] &quot;wsvd [645]=0.00383706396761709&quot;
+[1] &quot;wsvd [646]=0.00383703764799912&quot;
+[1] &quot;wsvd [647]=0.00383701157758054&quot;
+[1] &quot;wsvd [648]=0.00383698575390267&quot;
+[1] &quot;wsvd [649]=0.00383696017453221&quot;
+[1] &quot;wsvd [650]=0.00383693483706093&quot;
+[1] &quot;wsvd [651]=0.00383690973910542&quot;
+[1] &quot;wsvd [652]=0.0038368848783068&quot;
+[1] &quot;wsvd [653]=0.00383686025233048&quot;
+[1] &quot;wsvd [654]=0.0038368358588659&quot;
+[1] &quot;wsvd [655]=0.00383681169562622&quot;
+[1] &quot;wsvd [656]=0.00383678776034811&quot;
+[1] &quot;wsvd [657]=0.00383676405079149&quot;
+[1] &quot;wsvd [658]=0.00383674056473925&quot;
+[1] &quot;wsvd [659]=0.00383671729999702&quot;
+[1] &quot;wsvd [660]=0.00383669425439295&quot;
+[1] &quot;wsvd [661]=0.00383667142577742&quot;
+[1] &quot;wsvd [662]=0.00383664881202281&quot;
+[1] &quot;wsvd [663]=0.0038366264110233&quot;
+[1] &quot;wsvd [664]=0.00383660422069459&quot;
+[1] &quot;wsvd [665]=0.00383658223897368&quot;
+[1] &quot;wsvd [666]=0.00383656046381867&quot;
+[1] &quot;wsvd [667]=0.00383653889320849&quot;
+[1] &quot;wsvd [668]=0.0038365175251427&quot;
+[1] &quot;wsvd [669]=0.00383649635764127&quot;
+[1] &quot;wsvd [670]=0.00383647538874435&quot;
+[1] &quot;wsvd [671]=0.00383645461651206&quot;
+[1] &quot;wsvd [672]=0.00383643403902427&quot;
+[1] &quot;wsvd [673]=0.0038364136543804&quot;
+[1] &quot;wsvd [674]=0.0038363934606992&quot;
+[1] &quot;wsvd [675]=0.00383637345611853&quot;
+[1] &quot;wsvd [676]=0.00383635363879521&quot;
+[1] &quot;wsvd [677]=0.00383633400690475&quot;
+[1] &quot;wsvd [678]=0.00383631455864119&quot;
+[1] &quot;wsvd [679]=0.00383629529221689&quot;
+[1] &quot;wsvd [680]=0.00383627620586233&quot;
+[1] &quot;wsvd [681]=0.00383625729782595&quot;
+[1] &quot;wsvd [682]=0.0038362385663739&quot;
+[1] &quot;wsvd [683]=0.0038362200097899&quot;
+[1] &quot;wsvd [684]=0.00383620162637504&quot;
+[1] &quot;wsvd [685]=0.0038361834144476&quot;
+[1] &quot;wsvd [686]=0.00383616537234284&quot;
+[1] &quot;wsvd [687]=0.00383614749841286&quot;
+[1] &quot;wsvd [688]=0.00383612979102639&quot;
+[1] &quot;wsvd [689]=0.00383611224856863&quot;
+[1] &quot;wsvd [690]=0.00383609486944107&quot;
+[1] &quot;wsvd [691]=0.00383607765206133&quot;
+[1] &quot;wsvd [692]=0.00383606059486295&quot;
+[1] &quot;wsvd [693]=0.00383604369629528&quot;
+[1] &quot;wsvd [694]=0.00383602695482327&quot;
+[1] &quot;wsvd [695]=0.00383601036892733&quot;
+[1] &quot;wsvd [696]=0.00383599393710313&quot;
+[1] &quot;wsvd [697]=0.00383597765786149&quot;
+[1] &quot;wsvd [698]=0.00383596152972818&quot;
+[1] &quot;wsvd [699]=0.00383594555124378&quot;
+[1] &quot;wsvd [700]=0.00383592972096354&quot;
+[1] &quot;wsvd [701]=0.00383591403745718&quot;
+[1] &quot;wsvd [702]=0.00383589849930878&quot;
+[1] &quot;wsvd [703]=0.00383588310511661&quot;
+[1] &quot;wsvd [704]=0.003835867853493&quot;
+[1] &quot;wsvd [705]=0.00383585274306415&quot;
+[1] &quot;wsvd [706]=0.00383583777247004&quot;
+[1] &quot;wsvd [707]=0.00383582294036425&quot;
+[1] &quot;wsvd [708]=0.00383580824541382&quot;
+[1] &quot;wsvd [709]=0.00383579368629912&quot;
+[1] &quot;wsvd [710]=0.00383577926171371&quot;
+[1] &quot;wsvd [711]=0.00383576497036418&quot;
+[1] &quot;wsvd [712]=0.00383575081097007&quot;
+[1] &quot;wsvd [713]=0.00383573678226365&quot;
+[1] &quot;wsvd [714]=0.00383572288298988&quot;
+[1] &quot;wsvd [715]=0.00383570911190619&quot;
+[1] &quot;wsvd [716]=0.00383569546778241&quot;
+[1] &quot;wsvd [717]=0.00383568194940065&quot;
+[1] &quot;wsvd [718]=0.00383566855555509&quot;
+[1] &quot;wsvd [719]=0.00383565528505195&quot;
+[1] &quot;wsvd [720]=0.00383564213670932&quot;
+[1] &quot;wsvd [721]=0.00383562910935702&quot;
+[1] &quot;wsvd [722]=0.00383561620183653&quot;
+[1] &quot;wsvd [723]=0.00383560341300081&quot;
+[1] &quot;wsvd [724]=0.00383559074171422&quot;
+[1] &quot;wsvd [725]=0.0038355781868524&quot;
+[1] &quot;wsvd [726]=0.00383556574730214&quot;
+[1] &quot;wsvd [727]=0.00383555342196125&quot;
+[1] &quot;wsvd [728]=0.0038355412097385&quot;
+[1] &quot;wsvd [729]=0.00383552910955344&quot;
+[1] &quot;wsvd [730]=0.00383551712033633&quot;
+[1] &quot;wsvd [731]=0.00383550524102802&quot;
+[1] &quot;wsvd [732]=0.00383549347057985&quot;
+[1] &quot;wsvd [733]=0.00383548180795352&quot;
+[1] &quot;wsvd [734]=0.00383547025212101&quot;
+[1] &quot;wsvd [735]=0.00383545880206443&quot;
+[1] &quot;wsvd [736]=0.00383544745677597&quot;
+[1] &quot;wsvd [737]=0.00383543621525776&quot;
+[1] &quot;wsvd [738]=0.00383542507652179&quot;
+[1] &quot;wsvd [739]=0.00383541403958978&quot;
+[1] &quot;wsvd [740]=0.00383540310349312&quot;
+[1] &quot;wsvd [741]=0.00383539226727272&quot;
+[1] &quot;wsvd [742]=0.00383538152997897&quot;
+[1] &quot;wsvd [743]=0.0038353708906716&quot;
+[1] &quot;wsvd [744]=0.00383536034841958&quot;
+[1] &quot;wsvd [745]=0.00383534990230106&quot;
+[1] &quot;wsvd [746]=0.00383533955140327&quot;
+[1] &quot;wsvd [747]=0.00383532929482239&quot;
+[1] &quot;wsvd [748]=0.0038353191316635&quot;
+[1] &quot;wsvd [749]=0.00383530906104048&quot;
+[1] &quot;wsvd [750]=0.00383529908207588&quot;
+[1] &quot;wsvd [751]=0.00383528919390089&quot;
+[1] &quot;wsvd [752]=0.00383527939565524&quot;
+[1] &quot;wsvd [753]=0.00383526968648706&quot;
+[1] &quot;wsvd [754]=0.00383526006555287&quot;
+[1] &quot;wsvd [755]=0.00383525053201742&quot;
+[1] &quot;wsvd [756]=0.00383524108505368&quot;
+[1] &quot;wsvd [757]=0.00383523172384271&quot;
+[1] &quot;wsvd [758]=0.00383522244757356&quot;
+[1] &quot;wsvd [759]=0.00383521325544326&quot;
+[1] &quot;wsvd [760]=0.00383520414665666&quot;
+[1] &quot;wsvd [761]=0.0038351951204264&quot;
+[1] &quot;wsvd [762]=0.00383518617597282&quot;
+[1] &quot;wsvd [763]=0.00383517731252387&quot;
+[1] &quot;wsvd [764]=0.00383516852931505&quot;
+[1] &quot;wsvd [765]=0.00383515982558931&quot;
+[1] &quot;wsvd [766]=0.00383515120059699&quot;
+[1] &quot;wsvd [767]=0.00383514265359577&quot;
+[1] &quot;wsvd [768]=0.00383513418385054&quot;
+[1] &quot;wsvd [769]=0.00383512579063336&quot;
+[1] &quot;wsvd [770]=0.0038351174732234&quot;
+[1] &quot;wsvd [771]=0.00383510923090683&quot;
+[1] &quot;wsvd [772]=0.0038351010629768&quot;
+[1] &quot;wsvd [773]=0.00383509296873331&quot;
+[1] &quot;wsvd [774]=0.00383508494748319&quot;
+[1] &quot;wsvd [775]=0.00383507699854&quot;
+[1] &quot;wsvd [776]=0.003835069121224&quot;
+[1] &quot;wsvd [777]=0.00383506131486201&quot;
+[1] &quot;wsvd [778]=0.00383505357878744&quot;
+[1] &quot;wsvd [779]=0.00383504591234015&quot;
+[1] &quot;wsvd [780]=0.0038350383148664&quot;
+[1] &quot;wsvd [781]=0.00383503078571882&quot;
+[1] &quot;wsvd [782]=0.0038350233242563&quot;
+[1] &quot;wsvd [783]=0.00383501592984395&quot;
+[1] &quot;wsvd [784]=0.00383500860185305&quot;
+[1] &quot;wsvd [785]=0.00383500133966096&quot;
+[1] &quot;wsvd [786]=0.00383499414265108&quot;
+[1] &quot;wsvd [787]=0.00383498701021277&quot;
+[1] &quot;wsvd [788]=0.0038349799417413&quot;
+[1] &quot;wsvd [789]=0.00383497293663781&quot;
+[1] &quot;wsvd [790]=0.00383496599430923&quot;
+[1] &quot;wsvd [791]=0.0038349591141682&quot;
+[1] &quot;wsvd [792]=0.00383495229563306&quot;
+[1] &quot;wsvd [793]=0.00383494553812778&quot;
+[1] &quot;wsvd [794]=0.00383493884108187&quot;
+[1] &quot;wsvd [795]=0.00383493220393037&quot;
+[1] &quot;wsvd [796]=0.00383492562611375&quot;
+[1] &quot;wsvd [797]=0.0038349191070779&quot;
+[1] &quot;wsvd [798]=0.00383491264627406&quot;
+[1] &quot;wsvd [799]=0.00383490624315874&quot;
+[1] &quot;wsvd [800]=0.0038348998971937&quot;
+[1] &quot;wsvd [801]=0.00383489360784589&quot;
+[1] &quot;wsvd [802]=0.0038348873745874&quot;
+[1] &quot;wsvd [803]=0.00383488119689538&quot;
+[1] &quot;wsvd [804]=0.00383487507425203&quot;
+[1] &quot;wsvd [805]=0.00383486900614455&quot;
+[1] &quot;wsvd [806]=0.00383486299206503&quot;
+[1] &quot;wsvd [807]=0.00383485703151049&quot;
+[1] &quot;wsvd [808]=0.00383485112398276&quot;
+[1] &quot;wsvd [809]=0.00383484526898847&quot;
+[1] &quot;wsvd [810]=0.00383483946603896&quot;
+[1] &quot;wsvd [811]=0.0038348337146503&quot;
+[1] &quot;wsvd [812]=0.0038348280143432&quot;
+[1] &quot;wsvd [813]=0.00383482236464295&quot;
+[1] &quot;wsvd [814]=0.0038348167650794&quot;
+[1] &quot;wsvd [815]=0.00383481121518693&quot;
+[1] &quot;wsvd [816]=0.00383480571450436&quot;
+[1] &quot;wsvd [817]=0.00383480026257495&quot;
+[1] &quot;wsvd [818]=0.00383479485894632&quot;
+[1] &quot;wsvd [819]=0.00383478950317042&quot;
+[1] &quot;wsvd [820]=0.00383478419480351&quot;
+[1] &quot;wsvd [821]=0.00383477893340609&quot;
+[1] &quot;wsvd [822]=0.00383477371854285&quot;
+[1] &quot;wsvd [823]=0.00383476854978267&quot;
+[1] &quot;wsvd [824]=0.00383476342669853&quot;
+[1] &quot;wsvd [825]=0.0038347583488675&quot;
+[1] &quot;wsvd [826]=0.0038347533158707&quot;
+[1] &quot;wsvd [827]=0.00383474832729324&quot;
+[1] &quot;wsvd [828]=0.0038347433827242&quot;
+[1] &quot;wsvd [829]=0.00383473848175658&quot;
+[1] &quot;wsvd [830]=0.00383473362398727&quot;
+[1] &quot;wsvd [831]=0.00383472880901698&quot;
+[1] &quot;wsvd [832]=0.00383472403645028&quot;
+[1] &quot;wsvd [833]=0.00383471930589545&quot;
+[1] &quot;wsvd [834]=0.00383471461696456&quot;
+[1] &quot;wsvd [835]=0.00383470996927333&quot;
+[1] &quot;wsvd [836]=0.00383470536244117&quot;
+[1] &quot;wsvd [837]=0.00383470079609111&quot;
+[1] &quot;wsvd [838]=0.00383469626984975&quot;
+[1] &quot;wsvd [839]=0.00383469178334728&quot;
+[1] &quot;wsvd [840]=0.00383468733621736&quot;
+[1] &quot;wsvd [841]=0.00383468292809718&quot;
+[1] &quot;wsvd [842]=0.00383467855862736&quot;
+[1] &quot;wsvd [843]=0.00383467422745193&quot;
+[1] &quot;wsvd [844]=0.0038346699342183&quot;
+[1] &quot;wsvd [845]=0.00383466567857725&quot;
+[1] &quot;wsvd [846]=0.00383466146018287&quot;
+[1] &quot;wsvd [847]=0.00383465727869251&quot;
+[1] &quot;wsvd [848]=0.00383465313376681&quot;
+[1] &quot;wsvd [849]=0.0038346490250696&quot;
+[1] &quot;wsvd [850]=0.00383464495226791&quot;
+[1] &quot;wsvd [851]=0.00383464091503192&quot;
+[1] &quot;wsvd [852]=0.00383463691303495&quot;
+[1] &quot;wsvd [853]=0.00383463294595341&quot;
+[1] &quot;wsvd [854]=0.00383462901346676&quot;
+[1] &quot;wsvd [855]=0.00383462511525753&quot;
+[1] &quot;wsvd [856]=0.00383462125101121&quot;
+[1] &quot;wsvd [857]=0.00383461742041631&quot;
+[1] &quot;wsvd [858]=0.00383461362316426&quot;
+[1] &quot;wsvd [859]=0.00383460985894942&quot;
+[1] &quot;wsvd [860]=0.00383460612746904&quot;
+[1] &quot;wsvd [861]=0.00383460242842323&quot;
+[1] &quot;wsvd [862]=0.00383459876151492&quot;
+[1] &quot;wsvd [863]=0.00383459512644987&quot;
+[1] &quot;wsvd [864]=0.00383459152293662&quot;
+[1] &quot;wsvd [865]=0.00383458795068643&quot;
+[1] &quot;wsvd [866]=0.00383458440941333&quot;
+[1] &quot;wsvd [867]=0.003834580898834&quot;
+[1] &quot;wsvd [868]=0.00383457741866784&quot;
+[1] &quot;wsvd [869]=0.00383457396863686&quot;
+[1] &quot;wsvd [870]=0.00383457054846572&quot;
+[1] &quot;wsvd [871]=0.00383456715788165&quot;
+[1] &quot;wsvd [872]=0.00383456379661446&quot;
+[1] &quot;wsvd [873]=0.00383456046439651&quot;
+[1] &quot;wsvd [874]=0.00383455716096268&quot;
+[1] &quot;wsvd [875]=0.00383455388605033&quot;
+[1] &quot;wsvd [876]=0.00383455063939932&quot;
+[1] &quot;wsvd [877]=0.00383454742075194&quot;
+[1] &quot;wsvd [878]=0.00383454422985289&quot;
+[1] &quot;wsvd [879]=0.00383454106644931&quot;
+[1] &quot;wsvd [880]=0.00383453793029068&quot;
+[1] &quot;wsvd [881]=0.00383453482112885&quot;
+[1] &quot;wsvd [882]=0.003834531738718&quot;
+[1] &quot;wsvd [883]=0.00383452868281462&quot;
+[1] &quot;wsvd [884]=0.00383452565317749&quot;
+[1] &quot;wsvd [885]=0.00383452264956765&quot;
+[1] &quot;wsvd [886]=0.00383451967174838&quot;
+[1] &quot;wsvd [887]=0.00383451671948518&quot;
+[1] &quot;wsvd [888]=0.00383451379254576&quot;
+[1] &quot;wsvd [889]=0.0038345108907&quot;
+[1] &quot;wsvd [890]=0.00383450801371994&quot;
+[1] &quot;wsvd [891]=0.00383450516137975&quot;
+[1] &quot;wsvd [892]=0.00383450233345572&quot;
+[1] &quot;wsvd [893]=0.00383449952972625&quot;
+[1] &quot;wsvd [894]=0.00383449674997179&quot;
+[1] &quot;wsvd [895]=0.00383449399397485&quot;
+[1] &quot;wsvd [896]=0.00383449126152&quot;
+[1] &quot;wsvd [897]=0.00383448855239379&quot;
+[1] &quot;wsvd [898]=0.00383448586638479&quot;
+[1] &quot;wsvd [899]=0.00383448320328355&quot;
+[1] &quot;wsvd [900]=0.00383448056288256&quot;
+[1] &quot;wsvd [901]=0.00383447794497626&quot;
+[1] &quot;wsvd [902]=0.00383447534936102&quot;
+[1] &quot;wsvd [903]=0.00383447277583508&quot;
+[1] &quot;wsvd [904]=0.00383447022419859&quot;
+[1] &quot;wsvd [905]=0.00383446769425358&quot;
+[1] &quot;wsvd [906]=0.00383446518580389&quot;
+[1] &quot;wsvd [907]=0.00383446269865521&quot;
+[1] &quot;wsvd [908]=0.00383446023261504&quot;
+[1] &quot;wsvd [909]=0.00383445778749268&quot;
+[1] &quot;wsvd [910]=0.00383445536309921&quot;
+[1] &quot;wsvd [911]=0.00383445295924746&quot;
+[1] &quot;wsvd [912]=0.003834450575752&quot;
+[1] &quot;wsvd [913]=0.00383444821242915&quot;
+[1] &quot;wsvd [914]=0.00383444586909691&quot;
+[1] &quot;wsvd [915]=0.00383444354557501&quot;
+[1] &quot;wsvd [916]=0.00383444124168482&quot;
+[1] &quot;wsvd [917]=0.00383443895724941&quot;
+[1] &quot;wsvd [918]=0.00383443669209346&quot;
+[1] &quot;wsvd [919]=0.0038344344460433&quot;
+[1] &quot;wsvd [920]=0.00383443221892688&quot;
+[1] &quot;wsvd [921]=0.00383443001057374&quot;
+[1] &quot;wsvd [922]=0.003834427820815&quot;
+[1] &quot;wsvd [923]=0.00383442564948335&quot;
+[1] &quot;wsvd [924]=0.00383442349641305&quot;
+[1] &quot;wsvd [925]=0.00383442136143988&quot;
+[1] &quot;wsvd [926]=0.00383441924440115&quot;
+[1] &quot;wsvd [927]=0.00383441714513568&quot;
+[1] &quot;wsvd [928]=0.00383441506348379&quot;
+[1] &quot;wsvd [929]=0.00383441299928728&quot;
+[1] &quot;wsvd [930]=0.00383441095238941&quot;
+[1] &quot;wsvd [931]=0.0038344089226349&quot;
+[1] &quot;wsvd [932]=0.0038344069098699&quot;
+[1] &quot;wsvd [933]=0.00383440491394201&quot;
+[1] &quot;wsvd [934]=0.0038344029347002&quot;
+[1] &quot;wsvd [935]=0.00383440097199488&quot;
+[1] &quot;wsvd [936]=0.00383439902567782&quot;
+[1] &quot;wsvd [937]=0.00383439709560217&quot;
+[1] &quot;wsvd [938]=0.00383439518162244&quot;
+[1] &quot;wsvd [939]=0.00383439328359449&quot;
+[1] &quot;wsvd [940]=0.00383439140137549&quot;
+[1] &quot;wsvd [941]=0.00383438953482397&quot;
+[1] &quot;wsvd [942]=0.00383438768379973&quot;
+[1] &quot;wsvd [943]=0.00383438584816388&quot;
+[1] &quot;wsvd [944]=0.00383438402777883&quot;
+[1] &quot;wsvd [945]=0.00383438222250823&quot;
+[1] &quot;wsvd [946]=0.00383438043221702&quot;
+[1] &quot;wsvd [947]=0.00383437865677135&quot;
+[1] &quot;wsvd [948]=0.00383437689603865&quot;
+[1] &quot;wsvd [949]=0.00383437514988753&quot;
+[1] &quot;wsvd [950]=0.00383437341818785&quot;
+[1] &quot;wsvd [951]=0.00383437170081063&quot;
+[1] &quot;wsvd [952]=0.00383436999762813&quot;
+[1] &quot;wsvd [953]=0.00383436830851373&quot;
+[1] &quot;wsvd [954]=0.00383436663334203&quot;
+[1] &quot;wsvd [955]=0.00383436497198874&quot;
+[1] &quot;wsvd [956]=0.00383436332433075&quot;
+[1] &quot;wsvd [957]=0.00383436169024607&quot;
+[1] &quot;wsvd [958]=0.00383436006961383&quot;
+[1] &quot;wsvd [959]=0.00383435846231427&quot;
+[1] &quot;wsvd [960]=0.00383435686822873&quot;
+[1] &quot;wsvd [961]=0.00383435528723967&quot;
+[1] &quot;wsvd [962]=0.0038343537192306&quot;
+[1] &quot;wsvd [963]=0.0038343521640861&quot;
+[1] &quot;wsvd [964]=0.00383435062169183&quot;
+[1] &quot;wsvd [965]=0.0038343490919345&quot;
+[1] &quot;wsvd [966]=0.00383434757470184&quot;
+[1] &quot;wsvd [967]=0.00383434606988263&quot;
+[1] &quot;wsvd [968]=0.00383434457736666&quot;
+[1] &quot;wsvd [969]=0.00383434309704475&quot;
+[1] &quot;wsvd [970]=0.00383434162880869&quot;
+[1] &quot;wsvd [971]=0.0038343401725513&quot;
+[1] &quot;wsvd [972]=0.00383433872816636&quot;
+[1] &quot;wsvd [973]=0.00383433729554862&quot;
+[1] &quot;wsvd [974]=0.00383433587459382&quot;
+[1] &quot;wsvd [975]=0.00383433446519863&quot;
+[1] &quot;wsvd [976]=0.00383433306726069&quot;
+[1] &quot;wsvd [977]=0.00383433168067854&quot;
+[1] &quot;wsvd [978]=0.0038343303053517&quot;
+[1] &quot;wsvd [979]=0.00383432894118057&quot;
+[1] &quot;wsvd [980]=0.00383432758806648&quot;
+[1] &quot;wsvd [981]=0.00383432624591166&quot;
+[1] &quot;wsvd [982]=0.00383432491461924&quot;
+[1] &quot;wsvd [983]=0.00383432359409322&quot;
+[1] &quot;wsvd [984]=0.0038343222842385&quot;
+[1] &quot;wsvd [985]=0.00383432098496082&quot;
+[1] &quot;wsvd [986]=0.00383431969616682&quot;
+[1] &quot;wsvd [987]=0.00383431841776396&quot;
+[1] &quot;wsvd [988]=0.00383431714966057&quot;
+[1] &quot;wsvd [989]=0.00383431589176579&quot;
+[1] &quot;wsvd [990]=0.00383431464398962&quot;
+[1] &quot;wsvd [991]=0.00383431340624286&quot;
+[1] &quot;wsvd [992]=0.00383431217843713&quot;
+[1] &quot;wsvd [993]=0.00383431096048486&quot;
+[1] &quot;wsvd [994]=0.00383430975229929&quot;
+[1] &quot;wsvd [995]=0.00383430855379441&quot;
+[1] &quot;wsvd [996]=0.00383430736488505&quot;
+[1] &quot;wsvd [997]=0.00383430618548678&quot;
+[1] &quot;wsvd [998]=0.00383430501551595&quot;
+[1] &quot;wsvd [999]=0.00383430385488966&quot;
+[1] &quot;wsvd [1000]=0.0038343027035258&quot;
+[1] &quot;wsvd [1001]=0.00383430156134296&quot;
+[1] &quot;wsvd [1002]=0.0038343004282605&quot;
+[1] &quot;wsvd [1003]=0.00383429930419853&quot;
+[1] &quot;wsvd [1004]=0.00383429818907784&quot;
+[1] &quot;wsvd [1005]=0.00383429708281998&quot;
+[1] &quot;wsvd [1006]=0.00383429598534721&quot;
+[1] &quot;wsvd [1007]=0.00383429489658247&quot;
+[1] &quot;wsvd [1008]=0.00383429381644943&quot;
+[1] &quot;wsvd [1009]=0.00383429274487244&quot;
+[1] &quot;wsvd [1010]=0.00383429168177654&quot;
+[1] &quot;wsvd [1011]=0.00383429062708745&quot;
+[1] &quot;wsvd [1012]=0.00383428958073157&quot;
+[1] &quot;wsvd [1013]=0.00383428854263597&quot;
+[1] &quot;wsvd [1014]=0.00383428751272836&quot;
+[1] &quot;wsvd [1015]=0.00383428649093713&quot;
+[1] &quot;wsvd [1016]=0.00383428547719132&quot;
+[1] &quot;wsvd [1017]=0.0038342844714206&quot;
+[1] &quot;wsvd [1018]=0.00383428347355528&quot;</code></pre>
+<pre class="r"><code>x.plra1.naive2 = pois_lra1(x,1,max_iters = 10000,atol=1e-9,verbose=TRUE) </code></pre>
+<pre><code>[1] &quot;wsvd [0]=0.0357370934894206&quot;
+[1] &quot;wsvd [1]=0.0216973393395743&quot;
+[1] &quot;wsvd [2]=0.0183559836838193&quot;
+[1] &quot;wsvd [3]=0.0166671902679346&quot;
+[1] &quot;wsvd [4]=0.0156058206162763&quot;
+[1] &quot;wsvd [5]=0.0148556454379835&quot;
+[1] &quot;wsvd [6]=0.0142861298681759&quot;
+[1] &quot;wsvd [7]=0.013833147538475&quot;
+[1] &quot;wsvd [8]=0.0134611235799792&quot;
+[1] &quot;wsvd [9]=0.0131484370771326&quot;
+[1] &quot;wsvd [10]=0.012880983456594&quot;
+[1] &quot;wsvd [11]=0.0126490337851493&quot;
+[1] &quot;wsvd [12]=0.0124455735801941&quot;
+[1] &quot;wsvd [13]=0.0122653630701558&quot;
+[1] &quot;wsvd [14]=0.0121043743099799&quot;
+[1] &quot;wsvd [15]=0.0119594370517658&quot;
+[1] &quot;wsvd [16]=0.0118280063032763&quot;
+[1] &quot;wsvd [17]=0.011708004069002&quot;
+[1] &quot;wsvd [18]=0.0115977081385263&quot;
+[1] &quot;wsvd [19]=0.0114956717781811&quot;
+[1] &quot;wsvd [20]=0.011400664365524&quot;
+[1] &quot;wsvd [21]=0.0113116266182692&quot;
+[1] &quot;wsvd [22]=0.011227636252621&quot;
+[1] &quot;wsvd [23]=0.0111478812675515&quot;
+[1] &quot;wsvd [24]=0.0110716389255055&quot;
+[1] &quot;wsvd [25]=0.0109982590761071&quot;
+[1] &quot;wsvd [26]=0.0109271508586666&quot;
+[1] &quot;wsvd [27]=0.0108577720882793&quot;
+[1] &quot;wsvd [28]=0.010789620819991&quot;
+[1] &quot;wsvd [29]=0.0107222287215383&quot;
+[1] &quot;wsvd [30]=0.0106551559838807&quot;
+[1] &quot;wsvd [31]=0.0105879875706331&quot;
+[1] &quot;wsvd [32]=0.0105203306593684&quot;
+[1] &quot;wsvd [33]=0.0104518131639629&quot;
+[1] &quot;wsvd [34]=0.0103820832504919&quot;
+[1] &quot;wsvd [35]=0.0103108097714377&quot;
+[1] &quot;wsvd [36]=0.0102376835453458&quot;
+[1] &quot;wsvd [37]=0.0101624194024742&quot;
+[1] &quot;wsvd [38]=0.0100847589023808&quot;
+[1] &quot;wsvd [39]=0.0100044736079557&quot;
+[1] &quot;wsvd [40]=0.00992136877377786&quot;
+[1] &quot;wsvd [41]=0.00983528727707797&quot;
+[1] &quot;wsvd [42]=0.00974611358989482&quot;
+[1] &quot;wsvd [43]=0.00965377756471187&quot;
+[1] &quot;wsvd [44]=0.00955825778683369&quot;
+[1] &quot;wsvd [45]=0.00945958423899753&quot;
+[1] &quot;wsvd [46]=0.00935784003081019&quot;
+[1] &quot;wsvd [47]=0.0092531619702242&quot;
+[1] &quot;wsvd [48]=0.00914573979760668&quot;
+[1] &quot;wsvd [49]=0.00903581396424226&quot;
+[1] &quot;wsvd [50]=0.00892367191338431&quot;
+[1] &quot;wsvd [51]=0.00880964290810675&quot;
+[1] &quot;wsvd [52]=0.00869409153934431&quot;
+[1] &quot;wsvd [53]=0.00857741013175579&quot;
+[1] &quot;wsvd [54]=0.00846001033647807&quot;
+[1] &quot;wsvd [55]=0.00834231425155498&quot;
+[1] &quot;wsvd [56]=0.00822474543790227&quot;
+[1] &quot;wsvd [57]=0.00810772019884672&quot;
+[1] &quot;wsvd [58]=0.00799163946522883&quot;
+[1] &quot;wsvd [59]=0.00787688157921606&quot;
+[1] &quot;wsvd [60]=0.00776379620395342&quot;
+[1] &quot;wsvd [61]=0.00765269950992438&quot;
+[1] &quot;wsvd [62]=0.00754387070971126&quot;
+[1] &quot;wsvd [63]=0.00743754993749412&quot;
+[1] &quot;wsvd [64]=0.00733393740361531&quot;
+[1] &quot;wsvd [65]=0.00723319370168147&quot;
+[1] &quot;wsvd [66]=0.00713544110796183&quot;
+[1] &quot;wsvd [67]=0.00704076569054782&quot;
+[1] &quot;wsvd [68]=0.00694922003773357&quot;
+[1] &quot;wsvd [69]=0.00686082641923442&quot;
+[1] &quot;wsvd [70]=0.0067755802074884&quot;
+[1] &quot;wsvd [71]=0.00669345340651867&quot;
+[1] &quot;wsvd [72]=0.00661439815994234&quot;
+[1] &quot;wsvd [73]=0.0065383501353162&quot;
+[1] &quot;wsvd [74]=0.00646523170720401&quot;
+[1] &quot;wsvd [75]=0.00639495488473385&quot;
+[1] &quot;wsvd [76]=0.00632742395007832&quot;
+[1] &quot;wsvd [77]=0.00626253779174328&quot;
+[1] &quot;wsvd [78]=0.00620019193064968&quot;
+[1] &quot;wsvd [79]=0.0061402802478447&quot;
+[1] &quot;wsvd [80]=0.00608269643056267&quot;
+[1] &quot;wsvd [81]=0.0060273351586537&quot;
+[1] &quot;wsvd [82]=0.00597409305653323&quot;
+[1] &quot;wsvd [83]=0.0059228694372047&quot;
+[1] &quot;wsvd [84]=0.00587356686497122&quot;
+[1] &quot;wsvd [85]=0.00582609156253562&quot;
+[1] &quot;wsvd [86]=0.00578035368659729&quot;
+[1] &quot;wsvd [87]=0.00573626749403727&quot;
+[1] &quot;wsvd [88]=0.00569375141853934&quot;
+[1] &quot;wsvd [89]=0.00565272807517424&quot;
+[1] &quot;wsvd [90]=0.005613124208189&quot;
+[1] &quot;wsvd [91]=0.00557487059506764&quot;
+[1] &quot;wsvd [92]=0.00553790191791545&quot;
+[1] &quot;wsvd [93]=0.0055021566113923&quot;
+[1] &quot;wsvd [94]=0.00546757669479487&quot;
+[1] &quot;wsvd [95]=0.00543410759446247&quot;
+[1] &quot;wsvd [96]=0.0054016979614494&quot;
+[1] &quot;wsvd [97]=0.00537029948835545&quot;
+[1] &quot;wsvd [98]=0.00533986672831934&quot;
+[1] &quot;wsvd [99]=0.00531035691844026&quot;
+[1] &quot;wsvd [100]=0.00528172980928286&quot;
+[1] &quot;wsvd [101]=0.00525394750162384&quot;
+[1] &quot;wsvd [102]=0.00522697429119773&quot;
+[1] &quot;wsvd [103]=0.00520077652188098&quot;
+[1] &quot;wsvd [104]=0.00517532244750396&quot;
+[1] &quot;wsvd [105]=0.00515058210228814&quot;
+[1] &quot;wsvd [106]=0.00512652717976084&quot;
+[1] &quot;wsvd [107]=0.00510313091989329&quot;
+[1] &quot;wsvd [108]=0.00508036800413224&quot;
+[1] &quot;wsvd [109]=0.00505821445794513&quot;
+[1] &quot;wsvd [110]=0.00503664756046735&quot;
+[1] &quot;wsvd [111]=0.00501564576082491&quot;
+[1] &quot;wsvd [112]=0.00499518860070152&quot;
+[1] &quot;wsvd [113]=0.00497525664272427&quot;
+[1] &quot;wsvd [114]=0.00495583140425306&quot;
+[1] &quot;wsvd [115]=0.0049368952961752&quot;
+[1] &quot;wsvd [116]=0.00491843156632551&quot;
+[1] &quot;wsvd [117]=0.00490042424717311&quot;
+[1] &quot;wsvd [118]=0.00488285810743825&quot;
+[1] &quot;wsvd [119]=0.00486571860732497&quot;
+[1] &quot;wsvd [120]=0.00484899185707717&quot;
+[1] &quot;wsvd [121]=0.00483266457858789&quot;
+[1] &quot;wsvd [122]=0.00481672406981185&quot;
+[1] &quot;wsvd [123]=0.00480115817175139&quot;
+[1] &quot;wsvd [124]=0.00478595523780479&quot;
+[1] &quot;wsvd [125]=0.00477110410528297&quot;
+[1] &quot;wsvd [126]=0.0047565940689176&quot;
+[1] &quot;wsvd [127]=0.00474241485619808&quot;
+[1] &quot;wsvd [128]=0.00472855660438936&quot;
+[1] &quot;wsvd [129]=0.00471500983909516&quot;
+[1] &quot;wsvd [130]=0.00470176545424309&quot;
+[1] &quot;wsvd [131]=0.00468881469337887&quot;
+[1] &quot;wsvd [132]=0.00467614913216681&quot;
+[1] &quot;wsvd [133]=0.00466376066200272&quot;
+[1] &quot;wsvd [134]=0.0046516414746536&quot;
+[1] &quot;wsvd [135]=0.00463978404784583&quot;
+[1] &quot;wsvd [136]=0.00462818113173063&quot;
+[1] &quot;wsvd [137]=0.00461682573616145&quot;
+[1] &quot;wsvd [138]=0.00460571111872367&quot;
+[1] &quot;wsvd [139]=0.00459483077346211&quot;
+[1] &quot;wsvd [140]=0.00458417842025635&quot;
+[1] &quot;wsvd [141]=0.00457374799479819&quot;
+[1] &quot;wsvd [142]=0.00456353363912928&quot;
+[1] &quot;wsvd [143]=0.00455352969270034&quot;
+[1] &quot;wsvd [144]=0.00454373068391679&quot;
+[1] &quot;wsvd [145]=0.00453413132213805&quot;
+[1] &quot;wsvd [146]=0.0045247264901008&quot;
+[1] &quot;wsvd [147]=0.00451551123673849&quot;
+[1] &quot;wsvd [148]=0.00450648077037172&quot;
+[1] &quot;wsvd [149]=0.00449763045224599&quot;
+[1] &quot;wsvd [150]=0.00448895579039524&quot;
+[1] &quot;wsvd [151]=0.00448045243381087&quot;
+[1] &quot;wsvd [152]=0.00447211616689796&quot;
+[1] &quot;wsvd [153]=0.00446394290420117&quot;
+[1] &quot;wsvd [154]=0.00445592868538455&quot;
+[1] &quot;wsvd [155]=0.00444806967045027&quot;
+[1] &quot;wsvd [156]=0.00444036213518251&quot;
+[1] &quot;wsvd [157]=0.00443280246680363&quot;
+[1] &quot;wsvd [158]=0.00442538715983074&quot;
+[1] &quot;wsvd [159]=0.00441811281212126&quot;
+[1] &quot;wsvd [160]=0.00441097612109737&quot;
+[1] &quot;wsvd [161]=0.00440397388013931&quot;
+[1] &quot;wsvd [162]=0.0043971029751386&quot;
+[1] &quot;wsvd [163]=0.00439036038120258&quot;
+[1] &quot;wsvd [164]=0.00438374315950236&quot;
+[1] &quot;wsvd [165]=0.00437724845425651&quot;
+[1] &quot;wsvd [166]=0.00437087348984374&quot;
+[1] &quot;wsvd [167]=0.00436461556803774&quot;
+[1] &quot;wsvd [168]=0.00435847206535808&quot;
+[1] &quot;wsvd [169]=0.00435244043053136&quot;
+[1] &quot;wsvd [170]=0.00434651818205714&quot;
+[1] &quot;wsvd [171]=0.00434070290587335&quot;
+[1] &quot;wsvd [172]=0.00433499225311651&quot;
+[1] &quot;wsvd [173]=0.00432938393797209&quot;
+[1] &quot;wsvd [174]=0.00432387573561062&quot;
+[1] &quot;wsvd [175]=0.00431846548020562&quot;
+[1] &quot;wsvd [176]=0.00431315106302933&quot;
+[1] &quot;wsvd [177]=0.00430793043062276&quot;
+[1] &quot;wsvd [178]=0.00430280158303644&quot;
+[1] &quot;wsvd [179]=0.00429776257213882&quot;
+[1] &quot;wsvd [180]=0.00429281149998904&quot;
+[1] &quot;wsvd [181]=0.00428794651727129&quot;
+[1] &quot;wsvd [182]=0.00428316582178792&quot;
+[1] &quot;wsvd [183]=0.00427846765700871&quot;
+[1] &quot;wsvd [184]=0.00427385031067386&quot;
+[1] &quot;wsvd [185]=0.00426931211344821&quot;
+[1] &quot;wsvd [186]=0.00426485143762463&quot;
+[1] &quot;wsvd [187]=0.0042604666958743&quot;
+[1] &quot;wsvd [188]=0.00425615634004198&quot;
+[1] &quot;wsvd [189]=0.00425191885998428&quot;
+[1] &quot;wsvd [190]=0.00424775278244916&quot;
+[1] &quot;wsvd [191]=0.00424365666999489&quot;
+[1] &quot;wsvd [192]=0.00423962911994684&quot;
+[1] &quot;wsvd [193]=0.00423566876339054&quot;
+[1] &quot;wsvd [194]=0.00423177426419953&quot;
+[1] &quot;wsvd [195]=0.00422794431809653&quot;
+[1] &quot;wsvd [196]=0.00422417765174661&quot;
+[1] &quot;wsvd [197]=0.00422047302188111&quot;
+[1] &quot;wsvd [198]=0.00421682921445101&quot;
+[1] &quot;wsvd [199]=0.00421324504380861&quot;
+[1] &quot;wsvd [200]=0.00420971935191642&quot;
+[1] &quot;wsvd [201]=0.00420625100758218&quot;
+[1] &quot;wsvd [202]=0.00420283890571894&quot;
+[1] &quot;wsvd [203]=0.00419948196662938&quot;
+[1] &quot;wsvd [204]=0.00419617913531321&quot;
+[1] &quot;wsvd [205]=0.004192929380797&quot;
+[1] &quot;wsvd [206]=0.00418973169548547&quot;
+[1] &quot;wsvd [207]=0.00418658509453339&quot;
+[1] &quot;wsvd [208]=0.0041834886152374&quot;
+[1] &quot;wsvd [209]=0.00418044131644707&quot;
+[1] &quot;wsvd [210]=0.00417744227799424&quot;
+[1] &quot;wsvd [211]=0.00417449060014029&quot;
+[1] &quot;wsvd [212]=0.00417158540304041&quot;
+[1] &quot;wsvd [213]=0.00416872582622442&quot;
+[1] &quot;wsvd [214]=0.00416591102809353&quot;
+[1] &quot;wsvd [215]=0.00416314018543232&quot;
+[1] &quot;wsvd [216]=0.00416041249293562&quot;
+[1] &quot;wsvd [217]=0.00415772716274957&quot;
+[1] &quot;wsvd [218]=0.00415508342402653&quot;
+[1] &quot;wsvd [219]=0.00415248052249314&quot;
+[1] &quot;wsvd [220]=0.00414991772003131&quot;
+[1] &quot;wsvd [221]=0.00414739429427156&quot;
+[1] &quot;wsvd [222]=0.00414490953819821&quot;
+[1] &quot;wsvd [223]=0.00414246275976627&quot;
+[1] &quot;wsvd [224]=0.00414005328152934&quot;
+[1] &quot;wsvd [225]=0.00413768044027837&quot;
+[1] &quot;wsvd [226]=0.00413534358669071&quot;
+[1] &quot;wsvd [227]=0.00413304208498941&quot;
+[1] &quot;wsvd [228]=0.00413077531261203&quot;
+[1] &quot;wsvd [229]=0.00412854265988899&quot;
+[1] &quot;wsvd [230]=0.004126343529731&quot;
+[1] &quot;wsvd [231]=0.00412417733732524&quot;
+[1] &quot;wsvd [232]=0.00412204350984005&quot;
+[1] &quot;wsvd [233]=0.00411994148613793&quot;
+[1] &quot;wsvd [234]=0.00411787071649641&quot;
+[1] &quot;wsvd [235]=0.00411583066233672&quot;
+[1] &quot;wsvd [236]=0.00411382079595983&quot;
+[1] &quot;wsvd [237]=0.00411184060028985&quot;
+[1] &quot;wsvd [238]=0.00410988956862431&quot;
+[1] &quot;wsvd [239]=0.00410796720439128&quot;
+[1] &quot;wsvd [240]=0.0041060730209131&quot;
+[1] &quot;wsvd [241]=0.00410420654117636&quot;
+[1] &quot;wsvd [242]=0.00410236729760818&quot;
+[1] &quot;wsvd [243]=0.00410055483185839&quot;
+[1] &quot;wsvd [244]=0.00409876869458754&quot;
+[1] &quot;wsvd [245]=0.0040970084452605&quot;
+[1] &quot;wsvd [246]=0.00409527365194553&quot;
+[1] &quot;wsvd [247]=0.00409356389111864&quot;
+[1] &quot;wsvd [248]=0.00409187874747308&quot;
+[1] &quot;wsvd [249]=0.00409021781373375&quot;
+[1] &quot;wsvd [250]=0.0040885806904765&quot;
+[1] &quot;wsvd [251]=0.00408696698595208&quot;
+[1] &quot;wsvd [252]=0.00408537631591461&quot;
+[1] &quot;wsvd [253]=0.00408380830345451&quot;
+[1] &quot;wsvd [254]=0.00408226257883568&quot;
+[1] &quot;wsvd [255]=0.00408073877933682&quot;
+[1] &quot;wsvd [256]=0.00407923654909679&quot;
+[1] &quot;wsvd [257]=0.00407775553896392&quot;
+[1] &quot;wsvd [258]=0.00407629540634908&quot;
+[1] &quot;wsvd [259]=0.00407485581508248&quot;
+[1] &quot;wsvd [260]=0.00407343643527402&quot;
+[1] &quot;wsvd [261]=0.00407203694317716&quot;
+[1] &quot;wsvd [262]=0.00407065702105619&quot;
+[1] &quot;wsvd [263]=0.00406929635705671&quot;
+[1] &quot;wsvd [264]=0.00406795464507942&quot;
+[1] &quot;wsvd [265]=0.00406663158465696&quot;
+[1] &quot;wsvd [266]=0.00406532688083376&quot;
+[1] &quot;wsvd [267]=0.00406404024404885&quot;
+[1] &quot;wsvd [268]=0.00406277139002157&quot;
+[1] &quot;wsvd [269]=0.00406152003963994&quot;
+[1] &quot;wsvd [270]=0.00406028591885187&quot;
+[1] &quot;wsvd [271]=0.00405906875855892&quot;
+[1] &quot;wsvd [272]=0.00405786829451261&quot;
+[1] &quot;wsvd [273]=0.00405668426721323&quot;
+[1] &quot;wsvd [274]=0.00405551642181113&quot;
+[1] &quot;wsvd [275]=0.00405436450801025&quot;
+[1] &quot;wsvd [276]=0.00405322827997402&quot;
+[1] &quot;wsvd [277]=0.00405210749623348&quot;
+[1] &quot;wsvd [278]=0.00405100191959753&quot;
+[1] &quot;wsvd [279]=0.00404991131706534&quot;
+[1] &quot;wsvd [280]=0.00404883545974079&quot;
+[1] &quot;wsvd [281]=0.00404777412274889&quot;
+[1] &quot;wsvd [282]=0.0040467270851542&quot;
+[1] &quot;wsvd [283]=0.00404569412988111&quot;
+[1] &quot;wsvd [284]=0.00404467504363594&quot;
+[1] &quot;wsvd [285]=0.00404366961683094&quot;
+[1] &quot;wsvd [286]=0.0040426776435099&quot;
+[1] &quot;wsvd [287]=0.00404169892127559&quot;
+[1] &quot;wsvd [288]=0.00404073325121878&quot;
+[1] &quot;wsvd [289]=0.00403978043784893&quot;
+[1] &quot;wsvd [290]=0.00403884028902645&quot;
+[1] &quot;wsvd [291]=0.00403791261589643&quot;
+[1] &quot;wsvd [292]=0.00403699723282399&quot;
+[1] &quot;wsvd [293]=0.00403609395733096&quot;
+[1] &quot;wsvd [294]=0.00403520261003409&quot;
+[1] &quot;wsvd [295]=0.00403432301458457&quot;
+[1] &quot;wsvd [296]=0.00403345499760895&quot;
+[1] &quot;wsvd [297]=0.00403259838865132&quot;
+[1] &quot;wsvd [298]=0.00403175302011687&quot;
+[1] &quot;wsvd [299]=0.00403091872721659&quot;
+[1] &quot;wsvd [300]=0.00403009534791327&quot;
+[1] &quot;wsvd [301]=0.00402928272286864&quot;
+[1] &quot;wsvd [302]=0.00402848069539174&quot;
+[1] &quot;wsvd [303]=0.00402768911138832&quot;
+[1] &quot;wsvd [304]=0.00402690781931143&quot;
+[1] &quot;wsvd [305]=0.00402613667011305&quot;
+[1] &quot;wsvd [306]=0.00402537551719679&quot;
+[1] &quot;wsvd [307]=0.00402462421637155&quot;
+[1] &quot;wsvd [308]=0.00402388262580631&quot;
+[1] &quot;wsvd [309]=0.00402315060598575&quot;
+[1] &quot;wsvd [310]=0.0040224280196669&quot;
+[1] &quot;wsvd [311]=0.00402171473183673&quot;
+[1] &quot;wsvd [312]=0.00402101060967061&quot;
+[1] &quot;wsvd [313]=0.00402031552249164&quot;
+[1] &quot;wsvd [314]=0.0040196293417309&quot;
+[1] &quot;wsvd [315]=0.0040189519408885&quot;
+[1] &quot;wsvd [316]=0.00401828319549545&quot;
+[1] &quot;wsvd [317]=0.00401762298307638&quot;
+[1] &quot;wsvd [318]=0.00401697118311297&quot;
+[1] &quot;wsvd [319]=0.0040163276770082&quot;
+[1] &quot;wsvd [320]=0.00401569234805135&quot;
+[1] &quot;wsvd [321]=0.00401506508138367&quot;
+[1] &quot;wsvd [322]=0.00401444576396482&quot;
+[1] &quot;wsvd [323]=0.00401383428454003&quot;
+[1] &quot;wsvd [324]=0.00401323053360781&quot;
+[1] &quot;wsvd [325]=0.00401263440338851&quot;
+[1] &quot;wsvd [326]=0.00401204578779333&quot;
+[1] &quot;wsvd [327]=0.00401146458239415&quot;
+[1] &quot;wsvd [328]=0.00401089068439383&quot;
+[1] &quot;wsvd [329]=0.00401032399259719&quot;
+[1] &quot;wsvd [330]=0.00400976440738259&quot;
+[1] &quot;wsvd [331]=0.004009211830674&quot;
+[1] &quot;wsvd [332]=0.00400866616591379&quot;
+[1] &quot;wsvd [333]=0.00400812731803585&quot;
+[1] &quot;wsvd [334]=0.0040075951934395&quot;
+[1] &quot;wsvd [335]=0.00400706969996371&quot;
+[1] &quot;wsvd [336]=0.00400655074686194&quot;
+[1] &quot;wsvd [337]=0.0040060382447775&quot;
+[1] &quot;wsvd [338]=0.00400553210571933&quot;
+[1] &quot;wsvd [339]=0.0040050322430383&quot;
+[1] &quot;wsvd [340]=0.004004538571404&quot;
+[1] &quot;wsvd [341]=0.00400405100678192&quot;
+[1] &quot;wsvd [342]=0.00400356946641117&quot;
+[1] &quot;wsvd [343]=0.00400309386878256&quot;
+[1] &quot;wsvd [344]=0.00400262413361713&quot;
+[1] &quot;wsvd [345]=0.00400216018184514&quot;
+[1] &quot;wsvd [346]=0.00400170193558542&quot;
+[1] &quot;wsvd [347]=0.00400124931812515&quot;
+[1] &quot;wsvd [348]=0.00400080225389999&quot;
+[1] &quot;wsvd [349]=0.00400036066847468&quot;
+[1] &quot;wsvd [350]=0.00399992448852389&quot;
+[1] &quot;wsvd [351]=0.00399949364181358&quot;
+[1] &quot;wsvd [352]=0.0039990680571826&quot;
+[1] &quot;wsvd [353]=0.00399864766452469&quot;
+[1] &quot;wsvd [354]=0.00399823239477083&quot;
+[1] &quot;wsvd [355]=0.00399782217987195&quot;
+[1] &quot;wsvd [356]=0.00399741695278185&quot;
+[1] &quot;wsvd [357]=0.00399701664744063&quot;
+[1] &quot;wsvd [358]=0.00399662119875826&quot;
+[1] &quot;wsvd [359]=0.00399623054259856&quot;
+[1] &quot;wsvd [360]=0.00399584461576346&quot;
+[1] &quot;wsvd [361]=0.00399546335597752&quot;
+[1] &quot;wsvd [362]=0.0039950867018728&quot;
+[1] &quot;wsvd [363]=0.00399471459297397&quot;
+[1] &quot;wsvd [364]=0.0039943469696837&quot;
+[1] &quot;wsvd [365]=0.00399398377326832&quot;
+[1] &quot;wsvd [366]=0.00399362494584378&quot;
+[1] &quot;wsvd [367]=0.00399327043036183&quot;
+[1] &quot;wsvd [368]=0.00399292017059647&quot;
+[1] &quot;wsvd [369]=0.00399257411113063&quot;
+[1] &quot;wsvd [370]=0.00399223219734315&quot;
+[1] &quot;wsvd [371]=0.00399189437539592&quot;
+[1] &quot;wsvd [372]=0.00399156059222133&quot;
+[1] &quot;wsvd [373]=0.00399123079550988&quot;
+[1] &quot;wsvd [374]=0.00399090493369808&quot;
+[1] &quot;wsvd [375]=0.0039905829559565&quot;
+[1] &quot;wsvd [376]=0.00399026481217811&quot;
+[1] &quot;wsvd [377]=0.00398995045296678&quot;
+[1] &quot;wsvd [378]=0.00398963982962598&quot;
+[1] &quot;wsvd [379]=0.00398933289414775&quot;
+[1] &quot;wsvd [380]=0.00398902959920176&quot;
+[1] &quot;wsvd [381]=0.00398872989812469&quot;
+[1] &quot;wsvd [382]=0.00398843374490968&quot;
+[1] &quot;wsvd [383]=0.00398814109419606&quot;
+[1] &quot;wsvd [384]=0.0039878519012592&quot;
+[1] &quot;wsvd [385]=0.00398756612200058&quot;
+[1] &quot;wsvd [386]=0.00398728371293803&quot;
+[1] &quot;wsvd [387]=0.00398700463119609&quot;
+[1] &quot;wsvd [388]=0.00398672883449663&quot;
+[1] &quot;wsvd [389]=0.00398645628114956&quot;
+[1] &quot;wsvd [390]=0.0039861869300437&quot;
+[1] &quot;wsvd [391]=0.00398592074063792&quot;
+[1] &quot;wsvd [392]=0.00398565767295225&quot;
+[1] &quot;wsvd [393]=0.00398539768755933&quot;
+[1] &quot;wsvd [394]=0.00398514074557586&quot;
+[1] &quot;wsvd [395]=0.00398488680865431&quot;
+[1] &quot;wsvd [396]=0.00398463583897469&quot;
+[1] &quot;wsvd [397]=0.00398438779923652&quot;
+[1] &quot;wsvd [398]=0.0039841426526509&quot;
+[1] &quot;wsvd [399]=0.00398390036293273&quot;
+[1] &quot;wsvd [400]=0.00398366089429306&quot;
+[1] &quot;wsvd [401]=0.00398342421143159&quot;
+[1] &quot;wsvd [402]=0.00398319027952927&quot;
+[1] &quot;wsvd [403]=0.00398295906424104&quot;
+[1] &quot;wsvd [404]=0.00398273053168867&quot;
+[1] &quot;wsvd [405]=0.00398250464845376&quot;
+[1] &quot;wsvd [406]=0.00398228138157085&quot;
+[1] &quot;wsvd [407]=0.00398206069852061&quot;
+[1] &quot;wsvd [408]=0.00398184256722316&quot;
+[1] &quot;wsvd [409]=0.00398162695603156&quot;
+[1] &quot;wsvd [410]=0.00398141383372531&quot;
+[1] &quot;wsvd [411]=0.00398120316950401&quot;
+[1] &quot;wsvd [412]=0.00398099493298118&quot;
+[1] &quot;wsvd [413]=0.00398078909417805&quot;
+[1] &quot;wsvd [414]=0.00398058562351759&quot;
+[1] &quot;wsvd [415]=0.00398038449181852&quot;
+[1] &quot;wsvd [416]=0.00398018567028953&quot;
+[1] &quot;wsvd [417]=0.00397998913052354&quot;
+[1] &quot;wsvd [418]=0.00397979484449199&quot;
+[1] &quot;wsvd [419]=0.00397960278453939&quot;
+[1] &quot;wsvd [420]=0.00397941292337775&quot;
+[1] &quot;wsvd [421]=0.00397922523408132&quot;
+[1] &quot;wsvd [422]=0.00397903969008121&quot;
+[1] &quot;wsvd [423]=0.00397885626516026&quot;
+[1] &quot;wsvd [424]=0.00397867493344789&quot;
+[1] &quot;wsvd [425]=0.0039784956694151&quot;
+[1] &quot;wsvd [426]=0.00397831844786947&quot;
+[1] &quot;wsvd [427]=0.00397814324395035&quot;
+[1] &quot;wsvd [428]=0.00397797003312404&quot;
+[1] &quot;wsvd [429]=0.00397779879117907&quot;
+[1] &quot;wsvd [430]=0.00397762949422157&quot;
+[1] &quot;wsvd [431]=0.00397746211867073&quot;
+[1] &quot;wsvd [432]=0.00397729664125426&quot;
+[1] &quot;wsvd [433]=0.00397713303900402&quot;
+[1] &quot;wsvd [434]=0.00397697128925162&quot;
+[1] &quot;wsvd [435]=0.0039768113696242&quot;
+[1] &quot;wsvd [436]=0.00397665325804016&quot;
+[1] &quot;wsvd [437]=0.00397649693270505&quot;
+[1] &quot;wsvd [438]=0.0039763423721075&quot;
+[1] &quot;wsvd [439]=0.00397618955501514&quot;
+[1] &quot;wsvd [440]=0.00397603846047074&quot;
+[1] &quot;wsvd [441]=0.00397588906778824&quot;
+[1] &quot;wsvd [442]=0.00397574135654896&quot;
+[1] &quot;wsvd [443]=0.00397559530659783&quot;
+[1] &quot;wsvd [444]=0.00397545089803966&quot;
+[1] &quot;wsvd [445]=0.00397530811123549&quot;
+[1] &quot;wsvd [446]=0.00397516692679903&quot;
+[1] &quot;wsvd [447]=0.00397502732559306&quot;
+[1] &quot;wsvd [448]=0.003974889288726&quot;
+[1] &quot;wsvd [449]=0.00397475279754843&quot;
+[1] &quot;wsvd [450]=0.00397461783364974&quot;
+[1] &quot;wsvd [451]=0.00397448437885481&quot;
+[1] &quot;wsvd [452]=0.00397435241522071&quot;
+[1] &quot;wsvd [453]=0.00397422192503349&quot;
+[1] &quot;wsvd [454]=0.003974092890805&quot;
+[1] &quot;wsvd [455]=0.00397396529526976&quot;
+[1] &quot;wsvd [456]=0.00397383912138189&quot;
+[1] &quot;wsvd [457]=0.00397371435231205&quot;
+[1] &quot;wsvd [458]=0.0039735909714445&quot;
+[1] &quot;wsvd [459]=0.00397346896237411&quot;
+[1] &quot;wsvd [460]=0.00397334830890351&quot;
+[1] &quot;wsvd [461]=0.00397322899504018&quot;
+[1] &quot;wsvd [462]=0.0039731110049937&quot;
+[1] &quot;wsvd [463]=0.00397299432317294&quot;
+[1] &quot;wsvd [464]=0.00397287893418336&quot;
+[1] &quot;wsvd [465]=0.00397276482282432&quot;
+[1] &quot;wsvd [466]=0.00397265197408639&quot;
+[1] &quot;wsvd [467]=0.00397254037314885&quot;
+[1] &quot;wsvd [468]=0.00397243000537699&quot;
+[1] &quot;wsvd [469]=0.00397232085631971&quot;
+[1] &quot;wsvd [470]=0.00397221291170694&quot;
+[1] &quot;wsvd [471]=0.00397210615744722&quot;
+[1] &quot;wsvd [472]=0.00397200057962529&quot;
+[1] &quot;wsvd [473]=0.0039718961644997&quot;
+[1] &quot;wsvd [474]=0.00397179289850046&quot;
+[1] &quot;wsvd [475]=0.00397169076822673&quot;
+[1] &quot;wsvd [476]=0.00397158976044457&quot;
+[1] &quot;wsvd [477]=0.00397148986208466&quot;
+[1] &quot;wsvd [478]=0.00397139106024009&quot;
+[1] &quot;wsvd [479]=0.00397129334216422&quot;
+[1] &quot;wsvd [480]=0.0039711966952685&quot;
+[1] &quot;wsvd [481]=0.00397110110712037&quot;
+[1] &quot;wsvd [482]=0.00397100656544117&quot;
+[1] &quot;wsvd [483]=0.00397091305810408&quot;
+[1] &quot;wsvd [484]=0.00397082057313213&quot;
+[1] &quot;wsvd [485]=0.00397072909869616&quot;
+[1] &quot;wsvd [486]=0.00397063862311288&quot;
+[1] &quot;wsvd [487]=0.00397054913484295&quot;
+[1] &quot;wsvd [488]=0.00397046062248902&quot;
+[1] &quot;wsvd [489]=0.00397037307479392&quot;
+[1] &quot;wsvd [490]=0.00397028648063873&quot;
+[1] &quot;wsvd [491]=0.00397020082904101&quot;
+[1] &quot;wsvd [492]=0.00397011610915299&quot;
+[1] &quot;wsvd [493]=0.00397003231025977&quot;
+[1] &quot;wsvd [494]=0.00396994942177758&quot;
+[1] &quot;wsvd [495]=0.00396986743325209&quot;
+[1] &quot;wsvd [496]=0.00396978633435664&quot;
+[1] &quot;wsvd [497]=0.00396970611489065&quot;
+[1] &quot;wsvd [498]=0.0039696267647779&quot;
+[1] &quot;wsvd [499]=0.00396954827406492&quot;
+[1] &quot;wsvd [500]=0.00396947063291943&quot;
+[1] &quot;wsvd [501]=0.00396939383162867&quot;
+[1] &quot;wsvd [502]=0.00396931786059793&quot;
+[1] &quot;wsvd [503]=0.00396924271034896&quot;
+[1] &quot;wsvd [504]=0.00396916837151846&quot;
+[1] &quot;wsvd [505]=0.0039690948348566&quot;
+[1] &quot;wsvd [506]=0.00396902209122554&quot;
+[1] &quot;wsvd [507]=0.00396895013159798&quot;
+[1] &quot;wsvd [508]=0.00396887894705571&quot;
+[1] &quot;wsvd [509]=0.00396880852878823&quot;
+[1] &quot;wsvd [510]=0.00396873886809134&quot;
+[1] &quot;wsvd [511]=0.00396866995636575&quot;
+[1] &quot;wsvd [512]=0.00396860178511576&quot;
+[1] &quot;wsvd [513]=0.0039685343459479&quot;
+[1] &quot;wsvd [514]=0.00396846763056964&quot;
+[1] &quot;wsvd [515]=0.00396840163078804&quot;
+[1] &quot;wsvd [516]=0.00396833633850855&quot;
+[1] &quot;wsvd [517]=0.00396827174573368&quot;
+[1] &quot;wsvd [518]=0.00396820784456176&quot;
+[1] &quot;wsvd [519]=0.00396814462718578&quot;
+[1] &quot;wsvd [520]=0.00396808208589209&quot;
+[1] &quot;wsvd [521]=0.00396802021305927&quot;
+[1] &quot;wsvd [522]=0.00396795900115691&quot;
+[1] &quot;wsvd [523]=0.00396789844274451&quot;
+[1] &quot;wsvd [524]=0.00396783853047024&quot;
+[1] &quot;wsvd [525]=0.00396777925706992&quot;
+[1] &quot;wsvd [526]=0.00396772061536581&quot;
+[1] &quot;wsvd [527]=0.00396766259826559&quot;
+[1] &quot;wsvd [528]=0.00396760519876121&quot;
+[1] &quot;wsvd [529]=0.00396754840992787&quot;
+[1] &quot;wsvd [530]=0.00396749222492294&quot;
+[1] &quot;wsvd [531]=0.00396743663698493&quot;
+[1] &quot;wsvd [532]=0.00396738163943247&quot;
+[1] &quot;wsvd [533]=0.00396732722566329&quot;
+[1] &quot;wsvd [534]=0.00396727338915322&quot;
+[1] &quot;wsvd [535]=0.0039672201234552&quot;
+[1] &quot;wsvd [536]=0.00396716742219834&quot;
+[1] &quot;wsvd [537]=0.00396711527908692&quot;
+[1] &quot;wsvd [538]=0.00396706368789949&quot;
+[1] &quot;wsvd [539]=0.00396701264248789&quot;
+[1] &quot;wsvd [540]=0.00396696213677637&quot;
+[1] &quot;wsvd [541]=0.00396691216476067&quot;
+[1] &quot;wsvd [542]=0.0039668627205071&quot;
+[1] &quot;wsvd [543]=0.00396681379815172&quot;
+[1] &quot;wsvd [544]=0.00396676539189938&quot;
+[1] &quot;wsvd [545]=0.00396671749602296&quot;
+[1] &quot;wsvd [546]=0.00396667010486243&quot;
+[1] &quot;wsvd [547]=0.00396662321282409&quot;
+[1] &quot;wsvd [548]=0.00396657681437968&quot;
+[1] &quot;wsvd [549]=0.00396653090406562&quot;
+[1] &quot;wsvd [550]=0.00396648547648216&quot;
+[1] &quot;wsvd [551]=0.00396644052629265&quot;
+[1] &quot;wsvd [552]=0.00396639604822266&quot;
+[1] &quot;wsvd [553]=0.00396635203705932&quot;
+[1] &quot;wsvd [554]=0.00396630848765047&quot;
+[1] &quot;wsvd [555]=0.00396626539490396&quot;
+[1] &quot;wsvd [556]=0.00396622275378688&quot;
+[1] &quot;wsvd [557]=0.00396618055932486&quot;
+[1] &quot;wsvd [558]=0.0039661388066013&quot;
+[1] &quot;wsvd [559]=0.00396609749075671&quot;
+[1] &quot;wsvd [560]=0.00396605660698798&quot;
+[1] &quot;wsvd [561]=0.00396601615054767&quot;
+[1] &quot;wsvd [562]=0.00396597611674336&quot;
+[1] &quot;wsvd [563]=0.00396593650093695&quot;
+[1] &quot;wsvd [564]=0.00396589729854402&quot;
+[1] &quot;wsvd [565]=0.00396585850503312&quot;
+[1] &quot;wsvd [566]=0.0039658201159252&quot;
+[1] &quot;wsvd [567]=0.00396578212679287&quot;
+[1] &quot;wsvd [568]=0.00396574453325986&quot;
+[1] &quot;wsvd [569]=0.00396570733100034&quot;
+[1] &quot;wsvd [570]=0.00396567051573833&quot;
+[1] &quot;wsvd [571]=0.00396563408324707&quot;
+[1] &quot;wsvd [572]=0.00396559802934844&quot;
+[1] &quot;wsvd [573]=0.00396556234991235&quot;
+[1] &quot;wsvd [574]=0.00396552704085618&quot;
+[1] &quot;wsvd [575]=0.00396549209814418&quot;
+[1] &quot;wsvd [576]=0.00396545751778689&quot;
+[1] &quot;wsvd [577]=0.00396542329584064&quot;
+[1] &quot;wsvd [578]=0.00396538942840689&quot;
+[1] &quot;wsvd [579]=0.0039653559116318&quot;
+[1] &quot;wsvd [580]=0.0039653227417056&quot;
+[1] &quot;wsvd [581]=0.0039652899148621&quot;
+[1] &quot;wsvd [582]=0.00396525742737814&quot;
+[1] &quot;wsvd [583]=0.00396522527557309&quot;
+[1] &quot;wsvd [584]=0.00396519345580832&quot;
+[1] &quot;wsvd [585]=0.00396516196448673&quot;
+[1] &quot;wsvd [586]=0.00396513079805217&quot;
+[1] &quot;wsvd [587]=0.00396509995298905&quot;
+[1] &quot;wsvd [588]=0.00396506942582175&quot;
+[1] &quot;wsvd [589]=0.00396503921311423&quot;
+[1] &quot;wsvd [590]=0.0039650093114695&quot;
+[1] &quot;wsvd [591]=0.00396497971752914&quot;
+[1] &quot;wsvd [592]=0.00396495042797289&quot;
+[1] &quot;wsvd [593]=0.00396492143951816&quot;
+[1] &quot;wsvd [594]=0.00396489274891956&quot;
+[1] &quot;wsvd [595]=0.0039648643529685&quot;
+[1] &quot;wsvd [596]=0.00396483624849273&quot;
+[1] &quot;wsvd [597]=0.00396480843235587&quot;
+[1] &quot;wsvd [598]=0.00396478090145705&quot;
+[1] &quot;wsvd [599]=0.00396475365273042&quot;
+[1] &quot;wsvd [600]=0.00396472668314479&quot;
+[1] &quot;wsvd [601]=0.00396469998970317&quot;
+[1] &quot;wsvd [602]=0.00396467356944238&quot;
+[1] &quot;wsvd [603]=0.00396464741943266&quot;
+[1] &quot;wsvd [604]=0.00396462153677727&quot;
+[1] &quot;wsvd [605]=0.00396459591861206&quot;
+[1] &quot;wsvd [606]=0.00396457056210513&quot;
+[1] &quot;wsvd [607]=0.00396454546445644&quot;
+[1] &quot;wsvd [608]=0.00396452062289741&quot;
+[1] &quot;wsvd [609]=0.00396449603469056&quot;
+[1] &quot;wsvd [610]=0.00396447169712914&quot;
+[1] &quot;wsvd [611]=0.00396444760753677&quot;
+[1] &quot;wsvd [612]=0.00396442376326707&quot;
+[1] &quot;wsvd [613]=0.00396440016170334&quot;
+[1] &quot;wsvd [614]=0.00396437680025815&quot;
+[1] &quot;wsvd [615]=0.00396435367637305&quot;
+[1] &quot;wsvd [616]=0.00396433078751821&quot;
+[1] &quot;wsvd [617]=0.00396430813119205&quot;
+[1] &quot;wsvd [618]=0.00396428570492096&quot;
+[1] &quot;wsvd [619]=0.00396426350625896&quot;
+[1] &quot;wsvd [620]=0.00396424153278733&quot;
+[1] &quot;wsvd [621]=0.00396421978211435&quot;
+[1] &quot;wsvd [622]=0.00396419825187494&quot;
+[1] &quot;wsvd [623]=0.00396417693973036&quot;
+[1] &quot;wsvd [624]=0.00396415584336793&quot;
+[1] &quot;wsvd [625]=0.00396413496050067&quot;
+[1] &quot;wsvd [626]=0.00396411428886705&quot;
+[1] &quot;wsvd [627]=0.00396409382623064&quot;
+[1] &quot;wsvd [628]=0.00396407357037988&quot;
+[1] &quot;wsvd [629]=0.00396405351912774&quot;
+[1] &quot;wsvd [630]=0.00396403367031145&quot;
+[1] &quot;wsvd [631]=0.00396401402179223&quot;
+[1] &quot;wsvd [632]=0.00396399457145496&quot;
+[1] &quot;wsvd [633]=0.00396397531720799&quot;
+[1] &quot;wsvd [634]=0.00396395625698279&quot;
+[1] &quot;wsvd [635]=0.0039639373887337&quot;
+[1] &quot;wsvd [636]=0.0039639187104377&quot;
+[1] &quot;wsvd [637]=0.0039639002200941&quot;
+[1] &quot;wsvd [638]=0.00396388191572431&quot;
+[1] &quot;wsvd [639]=0.00396386379537157&quot;
+[1] &quot;wsvd [640]=0.00396384585710069&quot;
+[1] &quot;wsvd [641]=0.00396382809899783&quot;
+[1] &quot;wsvd [642]=0.00396381051917022&quot;
+[1] &quot;wsvd [643]=0.00396379311574594&quot;
+[1] &quot;wsvd [644]=0.00396377588687366&quot;
+[1] &quot;wsvd [645]=0.0039637588307224&quot;
+[1] &quot;wsvd [646]=0.00396374194548133&quot;
+[1] &quot;wsvd [647]=0.00396372522935949&quot;
+[1] &quot;wsvd [648]=0.00396370868058559&quot;
+[1] &quot;wsvd [649]=0.00396369229740779&quot;
+[1] &quot;wsvd [650]=0.00396367607809343&quot;
+[1] &quot;wsvd [651]=0.00396366002092888&quot;
+[1] &quot;wsvd [652]=0.00396364412421925&quot;
+[1] &quot;wsvd [653]=0.00396362838628823&quot;
+[1] &quot;wsvd [654]=0.00396361280547783&quot;
+[1] &quot;wsvd [655]=0.0039635973801482&quot;
+[1] &quot;wsvd [656]=0.00396358210867744&quot;
+[1] &quot;wsvd [657]=0.00396356698946132&quot;
+[1] &quot;wsvd [658]=0.00396355202091317&quot;
+[1] &quot;wsvd [659]=0.0039635372014636&quot;
+[1] &quot;wsvd [660]=0.00396352252956037&quot;
+[1] &quot;wsvd [661]=0.00396350800366813&quot;
+[1] &quot;wsvd [662]=0.00396349362226827&quot;
+[1] &quot;wsvd [663]=0.00396347938385872&quot;
+[1] &quot;wsvd [664]=0.00396346528695374&quot;
+[1] &quot;wsvd [665]=0.00396345133008377&quot;
+[1] &quot;wsvd [666]=0.00396343751179521&quot;
+[1] &quot;wsvd [667]=0.00396342383065027&quot;
+[1] &quot;wsvd [668]=0.00396341028522675&quot;
+[1] &quot;wsvd [669]=0.0039633968741179&quot;
+[1] &quot;wsvd [670]=0.00396338359593223&quot;
+[1] &quot;wsvd [671]=0.00396337044929334&quot;
+[1] &quot;wsvd [672]=0.00396335743283974&quot;
+[1] &quot;wsvd [673]=0.00396334454522467&quot;
+[1] &quot;wsvd [674]=0.00396333178511597&quot;
+[1] &quot;wsvd [675]=0.00396331915119589&quot;
+[1] &quot;wsvd [676]=0.00396330664216091&quot;
+[1] &quot;wsvd [677]=0.00396329425672162&quot;
+[1] &quot;wsvd [678]=0.00396328199360253&quot;
+[1] &quot;wsvd [679]=0.00396326985154191&quot;
+[1] &quot;wsvd [680]=0.00396325782929165&quot;
+[1] &quot;wsvd [681]=0.00396324592561711&quot;
+[1] &quot;wsvd [682]=0.00396323413929694&quot;
+[1] &quot;wsvd [683]=0.00396322246912297&quot;
+[1] &quot;wsvd [684]=0.00396321091390001&quot;
+[1] &quot;wsvd [685]=0.00396319947244577&quot;
+[1] &quot;wsvd [686]=0.00396318814359065&quot;
+[1] &quot;wsvd [687]=0.00396317692617763&quot;
+[1] &quot;wsvd [688]=0.00396316581906211&quot;
+[1] &quot;wsvd [689]=0.00396315482111182&quot;
+[1] &quot;wsvd [690]=0.0039631439312066&quot;
+[1] &quot;wsvd [691]=0.00396313314823834&quot;
+[1] &quot;wsvd [692]=0.00396312247111079&quot;
+[1] &quot;wsvd [693]=0.00396311189873947&quot;
+[1] &quot;wsvd [694]=0.0039631014300515&quot;
+[1] &quot;wsvd [695]=0.00396309106398549&quot;
+[1] &quot;wsvd [696]=0.00396308079949141&quot;
+[1] &quot;wsvd [697]=0.00396307063553047&quot;
+[1] &quot;wsvd [698]=0.00396306057107497&quot;
+[1] &quot;wsvd [699]=0.00396305060510821&quot;
+[1] &quot;wsvd [700]=0.00396304073662432&quot;
+[1] &quot;wsvd [701]=0.00396303096462818&quot;
+[1] &quot;wsvd [702]=0.00396302128813531&quot;
+[1] &quot;wsvd [703]=0.00396301170617168&quot;
+[1] &quot;wsvd [704]=0.00396300221777368&quot;
+[1] &quot;wsvd [705]=0.00396299282198795&quot;
+[1] &quot;wsvd [706]=0.00396298351787129&quot;
+[1] &quot;wsvd [707]=0.00396297430449052&quot;
+[1] &quot;wsvd [708]=0.00396296518092239&quot;
+[1] &quot;wsvd [709]=0.00396295614625348&quot;
+[1] &quot;wsvd [710]=0.00396294719958007&quot;
+[1] &quot;wsvd [711]=0.00396293834000803&quot;
+[1] &quot;wsvd [712]=0.00396292956665272&quot;
+[1] &quot;wsvd [713]=0.00396292087863889&quot;
+[1] &quot;wsvd [714]=0.00396291227510059&quot;
+[1] &quot;wsvd [715]=0.00396290375518101&quot;
+[1] &quot;wsvd [716]=0.00396289531803246&quot;
+[1] &quot;wsvd [717]=0.00396288696281619&quot;
+[1] &quot;wsvd [718]=0.00396287868870235&quot;
+[1] &quot;wsvd [719]=0.00396287049486986&quot;
+[1] &quot;wsvd [720]=0.00396286238050633&quot;
+[1] &quot;wsvd [721]=0.00396285434480793&quot;
+[1] &quot;wsvd [722]=0.00396284638697935&quot;
+[1] &quot;wsvd [723]=0.00396283850623367&quot;
+[1] &quot;wsvd [724]=0.00396283070179227&quot;
+[1] &quot;wsvd [725]=0.00396282297288473&quot;
+[1] &quot;wsvd [726]=0.00396281531874878&quot;
+[1] &quot;wsvd [727]=0.00396280773863015&quot;
+[1] &quot;wsvd [728]=0.00396280023178255&quot;
+[1] &quot;wsvd [729]=0.00396279279746751&quot;
+[1] &quot;wsvd [730]=0.00396278543495436&quot;
+[1] &quot;wsvd [731]=0.0039627781435201&quot;
+[1] &quot;wsvd [732]=0.00396277092244932&quot;
+[1] &quot;wsvd [733]=0.00396276377103416&quot;
+[1] &quot;wsvd [734]=0.00396275668857415&quot;
+[1] &quot;wsvd [735]=0.00396274967437621&quot;
+[1] &quot;wsvd [736]=0.00396274272775451&quot;
+[1] &quot;wsvd [737]=0.00396273584803042&quot;
+[1] &quot;wsvd [738]=0.00396272903453242&quot;
+[1] &quot;wsvd [739]=0.00396272228659603&quot;
+[1] &quot;wsvd [740]=0.00396271560356372&quot;
+[1] &quot;wsvd [741]=0.00396270898478485&quot;
+[1] &quot;wsvd [742]=0.00396270242961559&quot;
+[1] &quot;wsvd [743]=0.00396269593741883&quot;
+[1] &quot;wsvd [744]=0.00396268950756413&quot;
+[1] &quot;wsvd [745]=0.00396268313942762&quot;
+[1] &quot;wsvd [746]=0.00396267683239197&quot;
+[1] &quot;wsvd [747]=0.00396267058584627&quot;
+[1] &quot;wsvd [748]=0.003962664399186&quot;
+[1] &quot;wsvd [749]=0.00396265827181292&quot;
+[1] &quot;wsvd [750]=0.00396265220313506&quot;
+[1] &quot;wsvd [751]=0.00396264619256658&quot;
+[1] &quot;wsvd [752]=0.00396264023952777&quot;
+[1] &quot;wsvd [753]=0.00396263434344492&quot;
+[1] &quot;wsvd [754]=0.00396262850375034&quot;
+[1] &quot;wsvd [755]=0.00396262271988218&quot;
+[1] &quot;wsvd [756]=0.00396261699128448&quot;
+[1] &quot;wsvd [757]=0.00396261131740703&quot;
+[1] &quot;wsvd [758]=0.00396260569770534&quot;
+[1] &quot;wsvd [759]=0.00396260013164056&quot;
+[1] &quot;wsvd [760]=0.00396259461867946&quot;
+[1] &quot;wsvd [761]=0.0039625891582943&quot;
+[1] &quot;wsvd [762]=0.00396258374996284&quot;
+[1] &quot;wsvd [763]=0.00396257839316824&quot;
+[1] &quot;wsvd [764]=0.003962573087399&quot;
+[1] &quot;wsvd [765]=0.00396256783214893&quot;
+[1] &quot;wsvd [766]=0.00396256262691706&quot;
+[1] &quot;wsvd [767]=0.00396255747120763&quot;
+[1] &quot;wsvd [768]=0.00396255236452997&quot;
+[1] &quot;wsvd [769]=0.0039625473063985&quot;
+[1] &quot;wsvd [770]=0.00396254229633265&quot;
+[1] &quot;wsvd [771]=0.0039625373338568&quot;
+[1] &quot;wsvd [772]=0.00396253241850025&quot;
+[1] &quot;wsvd [773]=0.00396252754979714&quot;
+[1] &quot;wsvd [774]=0.00396252272728644&quot;
+[1] &quot;wsvd [775]=0.00396251795051183&quot;
+[1] &quot;wsvd [776]=0.00396251321902172&quot;
+[1] &quot;wsvd [777]=0.00396250853236915&quot;
+[1] &quot;wsvd [778]=0.00396250389011178&quot;
+[1] &quot;wsvd [779]=0.00396249929181179&quot;
+[1] &quot;wsvd [780]=0.00396249473703588&quot;
+[1] &quot;wsvd [781]=0.0039624902253552&quot;
+[1] &quot;wsvd [782]=0.0039624857563453&quot;
+[1] &quot;wsvd [783]=0.0039624813295861&quot;
+[1] &quot;wsvd [784]=0.0039624769446618&quot;
+[1] &quot;wsvd [785]=0.00396247260116089&quot;
+[1] &quot;wsvd [786]=0.00396246829867608&quot;
+[1] &quot;wsvd [787]=0.00396246403680424&quot;
+[1] &quot;wsvd [788]=0.00396245981514638&quot;
+[1] &quot;wsvd [789]=0.00396245563330758&quot;
+[1] &quot;wsvd [790]=0.00396245149089698&quot;
+[1] &quot;wsvd [791]=0.0039624473875277&quot;
+[1] &quot;wsvd [792]=0.00396244332281684&quot;
+[1] &quot;wsvd [793]=0.00396243929638538&quot;
+[1] &quot;wsvd [794]=0.0039624353078582&quot;
+[1] &quot;wsvd [795]=0.003962431356864&quot;
+[1] &quot;wsvd [796]=0.00396242744303526&quot;
+[1] &quot;wsvd [797]=0.00396242356600823&quot;
+[1] &quot;wsvd [798]=0.00396241972542285&quot;
+[1] &quot;wsvd [799]=0.00396241592092273&quot;
+[1] &quot;wsvd [800]=0.00396241215215513&quot;
+[1] &quot;wsvd [801]=0.00396240841877089&quot;
+[1] &quot;wsvd [802]=0.0039624047204244&quot;
+[1] &quot;wsvd [803]=0.00396240105677357&quot;
+[1] &quot;wsvd [804]=0.00396239742747979&quot;
+[1] &quot;wsvd [805]=0.0039623938322079&quot;
+[1] &quot;wsvd [806]=0.00396239027062612&quot;
+[1] &quot;wsvd [807]=0.00396238674240608&quot;
+[1] &quot;wsvd [808]=0.0039623832472227&quot;
+[1] &quot;wsvd [809]=0.00396237978475424&quot;
+[1] &quot;wsvd [810]=0.00396237635468218&quot;
+[1] &quot;wsvd [811]=0.00396237295669127&quot;
+[1] &quot;wsvd [812]=0.00396236959046944&quot;
+[1] &quot;wsvd [813]=0.00396236625570777&quot;
+[1] &quot;wsvd [814]=0.00396236295210048&quot;
+[1] &quot;wsvd [815]=0.00396235967934488&quot;
+[1] &quot;wsvd [816]=0.00396235643714135&quot;
+[1] &quot;wsvd [817]=0.00396235322519329&quot;
+[1] &quot;wsvd [818]=0.0039623500432071&quot;
+[1] &quot;wsvd [819]=0.00396234689089216&quot;
+[1] &quot;wsvd [820]=0.00396234376796077&quot;
+[1] &quot;wsvd [821]=0.00396234067412813&quot;
+[1] &quot;wsvd [822]=0.00396233760911234&quot;
+[1] &quot;wsvd [823]=0.0039623345726343&quot;
+[1] &quot;wsvd [824]=0.00396233156441778&quot;
+[1] &quot;wsvd [825]=0.00396232858418928&quot;
+[1] &quot;wsvd [826]=0.00396232563167809&quot;
+[1] &quot;wsvd [827]=0.00396232270661621&quot;
+[1] &quot;wsvd [828]=0.00396231980873835&quot;
+[1] &quot;wsvd [829]=0.00396231693778187&quot;
+[1] &quot;wsvd [830]=0.0039623140934868&quot;
+[1] &quot;wsvd [831]=0.00396231127559574&quot;
+[1] &quot;wsvd [832]=0.00396230848385393&quot;
+[1] &quot;wsvd [833]=0.00396230571800912&quot;
+[1] &quot;wsvd [834]=0.00396230297781162&quot;
+[1] &quot;wsvd [835]=0.00396230026301424&quot;
+[1] &quot;wsvd [836]=0.00396229757337227&quot;
+[1] &quot;wsvd [837]=0.00396229490864344&quot;
+[1] &quot;wsvd [838]=0.00396229226858794&quot;
+[1] &quot;wsvd [839]=0.00396228965296833&quot;
+[1] &quot;wsvd [840]=0.00396228706154956&quot;
+[1] &quot;wsvd [841]=0.00396228449409894&quot;
+[1] &quot;wsvd [842]=0.00396228195038609&quot;
+[1] &quot;wsvd [843]=0.00396227943018296&quot;
+[1] &quot;wsvd [844]=0.00396227693326375&quot;
+[1] &quot;wsvd [845]=0.00396227445940495&quot;
+[1] &quot;wsvd [846]=0.00396227200838524&quot;
+[1] &quot;wsvd [847]=0.00396226957998556&quot;
+[1] &quot;wsvd [848]=0.00396226717398899&quot;
+[1] &quot;wsvd [849]=0.0039622647901808&quot;
+[1] &quot;wsvd [850]=0.0039622624283484&quot;
+[1] &quot;wsvd [851]=0.00396226008828131&quot;
+[1] &quot;wsvd [852]=0.00396225776977115&quot;
+[1] &quot;wsvd [853]=0.00396225547261163&quot;
+[1] &quot;wsvd [854]=0.00396225319659848&quot;
+[1] &quot;wsvd [855]=0.00396225094152951&quot;
+[1] &quot;wsvd [856]=0.00396224870720449&quot;
+[1] &quot;wsvd [857]=0.00396224649342522&quot;
+[1] &quot;wsvd [858]=0.00396224429999545&quot;
+[1] &quot;wsvd [859]=0.00396224212672089&quot;
+[1] &quot;wsvd [860]=0.00396223997340917&quot;
+[1] &quot;wsvd [861]=0.00396223783986984&quot;
+[1] &quot;wsvd [862]=0.00396223572591433&quot;
+[1] &quot;wsvd [863]=0.00396223363135594&quot;
+[1] &quot;wsvd [864]=0.00396223155600984&quot;
+[1] &quot;wsvd [865]=0.003962229499693&quot;
+[1] &quot;wsvd [866]=0.00396222746222424&quot;
+[1] &quot;wsvd [867]=0.00396222544342414&quot;
+[1] &quot;wsvd [868]=0.00396222344311507&quot;
+[1] &quot;wsvd [869]=0.00396222146112117&quot;
+[1] &quot;wsvd [870]=0.0039622194972683&quot;
+[1] &quot;wsvd [871]=0.00396221755138404&quot;
+[1] &quot;wsvd [872]=0.0039622156232977&quot;
+[1] &quot;wsvd [873]=0.00396221371284025&quot;
+[1] &quot;wsvd [874]=0.00396221181984434&quot;
+[1] &quot;wsvd [875]=0.00396220994414427&quot;
+[1] &quot;wsvd [876]=0.00396220808557597&quot;
+[1] &quot;wsvd [877]=0.003962206243977&quot;
+[1] &quot;wsvd [878]=0.0039622044191865&quot;
+[1] &quot;wsvd [879]=0.00396220261104522&quot;
+[1] &quot;wsvd [880]=0.00396220081939548&quot;
+[1] &quot;wsvd [881]=0.00396219904408111&quot;
+[1] &quot;wsvd [882]=0.00396219728494753&quot;
+[1] &quot;wsvd [883]=0.00396219554184165&quot;
+[1] &quot;wsvd [884]=0.0039621938146119&quot;
+[1] &quot;wsvd [885]=0.00396219210310818&quot;
+[1] &quot;wsvd [886]=0.00396219040718189&quot;
+[1] &quot;wsvd [887]=0.00396218872668587&quot;
+[1] &quot;wsvd [888]=0.00396218706147443&quot;
+[1] &quot;wsvd [889]=0.00396218541140327&quot;
+[1] &quot;wsvd [890]=0.00396218377632954&quot;
+[1] &quot;wsvd [891]=0.00396218215611178&quot;
+[1] &quot;wsvd [892]=0.00396218055060991&quot;
+[1] &quot;wsvd [893]=0.00396217895968524&quot;
+[1] &quot;wsvd [894]=0.00396217738320041&quot;
+[1] &quot;wsvd [895]=0.00396217582101944&quot;
+[1] &quot;wsvd [896]=0.00396217427300765&quot;
+[1] &quot;wsvd [897]=0.00396217273903169&quot;
+[1] &quot;wsvd [898]=0.00396217121895952&quot;
+[1] &quot;wsvd [899]=0.00396216971266039&quot;
+[1] &quot;wsvd [900]=0.00396216822000481&quot;
+[1] &quot;wsvd [901]=0.00396216674086458&quot;
+[1] &quot;wsvd [902]=0.00396216527511273&quot;
+[1] &quot;wsvd [903]=0.00396216382262355&quot;
+[1] &quot;wsvd [904]=0.00396216238327253&quot;
+[1] &quot;wsvd [905]=0.0039621609569364&quot;
+[1] &quot;wsvd [906]=0.00396215954349308&quot;
+[1] &quot;wsvd [907]=0.00396215814282167&quot;
+[1] &quot;wsvd [908]=0.00396215675480247&quot;
+[1] &quot;wsvd [909]=0.00396215537931694&quot;
+[1] &quot;wsvd [910]=0.00396215401624767&quot;
+[1] &quot;wsvd [911]=0.00396215266547842&quot;
+[1] &quot;wsvd [912]=0.00396215132689406&quot;
+[1] &quot;wsvd [913]=0.00396215000038061&quot;
+[1] &quot;wsvd [914]=0.00396214868582516&quot;
+[1] &quot;wsvd [915]=0.00396214738311592&quot;
+[1] &quot;wsvd [916]=0.00396214609214218&quot;
+[1] &quot;wsvd [917]=0.0039621448127943&quot;
+[1] &quot;wsvd [918]=0.00396214354496372&quot;
+[1] &quot;wsvd [919]=0.0039621422885429&quot;
+[1] &quot;wsvd [920]=0.00396214104342539&quot;
+[1] &quot;wsvd [921]=0.00396213980950572&quot;
+[1] &quot;wsvd [922]=0.00396213858667948&quot;
+[1] &quot;wsvd [923]=0.00396213737484326&quot;
+[1] &quot;wsvd [924]=0.00396213617389465&quot;
+[1] &quot;wsvd [925]=0.00396213498373222&quot;
+[1] &quot;wsvd [926]=0.00396213380425554&quot;
+[1] &quot;wsvd [927]=0.00396213263536513&quot;
+[1] &quot;wsvd [928]=0.00396213147696251&quot;
+[1] &quot;wsvd [929]=0.0039621303289501&quot;
+[1] &quot;wsvd [930]=0.00396212919123129&quot;
+[1] &quot;wsvd [931]=0.00396212806371042&quot;
+[1] &quot;wsvd [932]=0.00396212694629271&quot;
+[1] &quot;wsvd [933]=0.00396212583888433&quot;
+[1] &quot;wsvd [934]=0.00396212474139235&quot;
+[1] &quot;wsvd [935]=0.00396212365372471&quot;
+[1] &quot;wsvd [936]=0.00396212257579027&quot;
+[1] &quot;wsvd [937]=0.00396212150749875&quot;
+[1] &quot;wsvd [938]=0.00396212044876074&quot;
+[1] &quot;wsvd [939]=0.00396211939948769&quot;
+[1] &quot;wsvd [940]=0.00396211835959191&quot;
+[1] &quot;wsvd [941]=0.00396211732898655&quot;
+[1] &quot;wsvd [942]=0.00396211630758559&quot;
+[1] &quot;wsvd [943]=0.00396211529530385&quot;
+[1] &quot;wsvd [944]=0.00396211429205694&quot;
+[1] &quot;wsvd [945]=0.00396211329776132&quot;</code></pre>
+<pre class="r"><code>pois_llik(x,x.plra1.naive2$fit)</code></pre>
+<pre><code>[1] -13163.59</code></pre>
+<pre class="r"><code>pois_llik(x,x.plra1.true2$fit)</code></pre>
+<pre><code>[1] -13145.19</code></pre>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.5.1 (2018-07-02)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: OS X El Capitan 10.11.6
+
+Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.5/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.5/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+ [1] workflowr_1.1.1   Rcpp_0.12.19      NNLM_0.4.2       
+ [4] digest_0.6.17     rprojroot_1.3-2   R.methodsS3_1.7.1
+ [7] backports_1.1.2   git2r_0.23.0      magrittr_1.5     
+[10] evaluate_0.11     stringi_1.2.4     whisker_0.3-2    
+[13] R.oo_1.22.0       R.utils_2.7.0     rmarkdown_1.10   
+[16] tools_3.5.1       stringr_1.3.1     yaml_2.2.0       
+[19] compiler_3.5.1    htmltools_0.3.6   knitr_1.20       </code></pre>
+</div>
+
+<hr>
+<p>
+    
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+<hr>
+<p>
+  This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a>
+  analysis was created with
+  <a href="https://github.com/jdblischak/workflowr">workflowr</a> 1.1.1
+</p>
+<hr>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
