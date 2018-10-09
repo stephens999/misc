@@ -1,0 +1,168 @@
+---
+title: "plra"
+author: "stephens999"
+date: "2018-10-08"
+output: workflowr::wflow_html
+---
+
+## Introduction
+
+I'm going to try to do a version of Poisson low rank approximation in R so I can play with it, based on Abhishek Sarkar's python code (here)[https://github.com/aksarkar/wlra/blob/master/wlra/wlra.py]. 
+
+## Poisson low rank approximation
+```{r}
+# return truncated svd (truncated to rank principal components)
+lra = function(x, rank){
+  x.svd = svd(x,nu=rank,nv=rank)
+  
+  return(x.svd$u %*% diag(x.svd$d[1:rank],nrow=rank) %*% t(x.svd$v))
+}
+  
+# Return the weighted low rank approximation of x
+# Minimize the weighted Frobenius norm between x and the approximation z using EM [SJ03].
+#
+#' @param x input data (n, p)
+#' @param w input weights (n, p)
+#' @param rank rank of the approximation (non-negative)
+#' @param max_iters - maximum number of EM iterations
+#' @param atol - minimum absolute difference in objective function for convergence
+#' @param verbose - print objective function updates
+#' @return an n by p matrix
+wlra = function(x, w, rank, max_iters=1000, atol=1e-3,verbose=FALSE){
+  n = nrow(x)
+  p = ncol(x)
+
+  # Important: WLRA requires weights 0 <= w <= 1
+  w = w/max(w)
+  
+    # Important: the procedure is deterministic, so initialization
+  # matters.
+  #
+  # Srebro and Jaakkola suggest the best strategy is to initialize
+  # from zero, but go from a full rank down to a rank k approximation in
+  # the first iterations
+  #
+  # For now, take the simpler strategy of just initializing to zero. Srebro and
+  # Jaakkola suggest this can underfit.
+  z = matrix(0,nrow=n,ncol=p)
+  obj = mean(w * x^2)
+  if(verbose){
+    print(paste0("wsvd [0]=",obj))
+  }
+
+  for(i in 0:max_iters){
+    z1 = lra(w * x + (1 - w) * z, rank)
+    update = mean(w * (x - z1)^2)
+    if(verbose){print(paste0("wsvd [",i+1,"]=",update))}
+    if(update > obj){
+      stop("objective increased")
+    } else if(max(abs(update-obj))<atol){
+      return(z1)
+    } else {
+      z = z1
+      obj = update
+    }
+  }
+  stop("failed to converge")
+}
+
+# return log(p(Y|lambda=exp(eta))) for Y \sim Poi(lambda)
+pois_llik= function(y, eta){
+  sum(dpois(y,exp(eta),log=TRUE))
+}
+
+#' @details Assume x_ij ~ Poisson(exp(eta_ij)), eta_ij = L_ik F_kj
+#'  Maximize the log likelihood by using Taylor approximation to rewrite the problem as WLRA.
+#' @param x: input data (n, p)
+#' @param rank: rank of the approximation
+#' @param max_outer_iters: maximum number of calls to WLRA
+#' @param max_iters: maximum number of EM iterations in WLRA
+#' @param verbose: print objective function updates
+#' @return low rank approximation (n, p) matrix
+pois_lra= function(x, rank, max_outer_iters=50, max_iters=1000, atol=1e-3, verbose=FALSE){
+  n = nrow(x)
+  p = ncol(x)
+  nmf = NNLM::nnmf(x, rank)
+  eta = log(nmf$W %*% nmf$H)
+  obj = mean(pois_llik(x, eta))
+  if(verbose)
+    print(paste0("pois_lra [0]:",obj))
+  for(i in 0:max_outer_iters){
+    lam = exp(eta)
+    w = lam
+    target = eta + x / lam - 1
+    w[is.na(x)]=0 # Mark missing data with weight 0
+    
+      # Now we can go ahead and fill in the missing values with something
+      # computationally convenient, because the WLRA EM update will ignore the
+      # value for weight zero.
+    target[is.na(x)] = 0
+    eta1 = wlra(target, w, rank, max_iters=max_iters, atol=atol, verbose=verbose)
+    update = mean(pois_llik(x, eta1))
+    if(verbose){
+      print(paste0("pois_lra [",i + 1,"]:",update))
+    }
+    if(max(abs(update-obj))<atol){
+      return(list(fit=eta1,w=w,target=target))
+    } else {
+      eta = eta1
+      obj = update
+    }
+  }
+  stop("failed to converge")
+}
+
+# this just does a simple TSE about lam and runs wSVD once without any iteration
+pois_lra1 = function(x, rank, lam = ifelse(x>0,x,0.5), max_iters=1000, atol=1e-3, verbose=FALSE){
+  target = log(lam) + x / lam - 1
+  w = lam
+  w[is.na(x)]=0 # Mark missing data with weight 0
+    
+      # Now we can go ahead and fill in the missing values with something
+      # computationally convenient, because the WLRA EM update will ignore the
+      # value for weight zero.
+    target[is.na(x)] = 0
+    eta1 = wlra(target, w, rank, max_iters=max_iters, atol=atol, verbose=verbose)
+    return(list(fit=eta1,w=w,target=target))
+}
+```
+
+
+First simulate some data:
+```{r}
+set.seed(1)
+l = rnorm(100)
+f = rnorm(100)
+eta = outer(l,f)
+lambda = exp(eta)
+x = matrix(rpois(length(lambda),lambda),nrow=nrow(lambda))
+```
+
+Now fit various models: the plra, plra1 with the "naive"
+expansion (around x, or 0.5 for x=0) and around the true
+value of lambda:
+```{r}
+x.plra=pois_lra(x,rank=1,verbose=TRUE)
+x.plra1.naive=pois_lra1(x,rank=1,verbose=TRUE)
+x.plra1.true = pois_lra1(x,1,lam=lambda) 
+```
+
+```{r}
+pois_llik(x,eta) #log likelihood at true value of eta
+pois_llik(x,x.plra$fit)
+pois_llik(x,x.plra1.naive$fit)
+pois_llik(x,x.plra1.true$fit)
+```
+
+This was weird that expansion around the truth was
+so bad. So I tried more stringent convergence:
+
+```{r}
+x.plra1.true2 = pois_lra1(x,1,lam=lambda,max_iters = 10000,atol=1e-9,verbose=TRUE) 
+x.plra1.naive2 = pois_lra1(x,1,max_iters = 10000,atol=1e-9,verbose=TRUE) 
+pois_llik(x,x.plra1.naive2$fit)
+pois_llik(x,x.plra1.true2$fit)
+```
+
+
+
