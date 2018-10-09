@@ -39,6 +39,7 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 # Weighted SVD 
 
 * [Outline of EM algorithm for fitting weighted SVD](wSVD.html)
+* [Invesitgation of weighted SVD for Poisson data](plra.html)
 
 # Finemapping
 
