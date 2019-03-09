@@ -1,0 +1,234 @@
+---
+title: "miximash"
+author: "Matthew Stephens"
+date: "2019-03-09"
+output: workflowr::wflow_html
+---
+
+## Introduction
+
+This is my first attempt to code an EM algorithm for
+the miximash model using ash.
+
+NOTES:
+ - should edit ash to allow vloglik to be output directly
+
+```{r}
+library(ashr)
+```
+
+```{r}
+#' fix point function for miximash em algorithm
+#' @param w an N by K matrix of weights w
+#' @param pi a K vector of mixture proportions
+#' @param Bhat an N by R matrix of observations
+#' @param Shat an N by R matrix of standard errors
+miximash.fixpt = function(w,pi,Bhat,Shat){
+  K = ncol(w)
+  N = nrow(w)
+  R = ncol(Bhat)
+  loglik = array(0,dim=c(N,K,R)) #matrix of loglikelihoods
+  
+  #initialize glist
+  glist = vector("list",K)
+  for(k in 1:K){
+    glist[[k]] = vector("list",R)
+  }
+      
+  for(k in 1:K){
+    for(r in 1:R){
+      a = ashr::ash(Bhat[,r],Shat[,r],weights = w[,k],outputlevel = 1,method="shrink",mixcompdist="normal",gridmult=2^0.25)
+      glist[[k]][[r]] = ashr::get_fitted_g(a)
+      loglik[,k,r] = ashr::calc_vloglik(glist[[k]][[r]],ashr::set_data(Bhat[,r],Shat[,r],alpha=0))
+    }
+  }
+  
+  # compute the log-likelihood for each observation in each component
+  loglik.sum = apply(loglik,c(1,2),sum) # sums across 3rd dimension, which is R
+  loglik.max = apply(loglik.sum,1,max)
+  loglik.sum = loglik.sum - loglik.max# avoid overflow 
+  
+  w = t(pi*exp(t(loglik.sum))) # an N by K matrix of weights
+  w.sum = rowSums(w) # an N vector
+  w = w/w.sum 
+  loglik.total = sum( log(w.sum) + loglik.max)
+  pi = colMeans(w)
+  return(list(w=w,pi=pi,loglik=loglik.total,glist=glist))
+}
+
+
+#' @param loglik_array an N by K by R array
+#' @param pi a K vectro
+miximash.loglik = function(loglik_array,pi){
+  loglik.sum = apply(loglik_array,c(1,2),sum) # sums across 3rd dimension, which is R
+  offset = apply(loglik.sum,1,max)
+  loglik.sum= loglik.sum - offset
+  lik = exp(loglik.sum)
+  sum(log(colSums(pi*t(lik)))+offset)
+}
+
+miximash = function(Bhat,Shat,w=NULL,tol=0.001,max_iter = 100){
+  N = nrow(Bhat)
+  R = ncol(Bhat)
+  if(is.null(w)){
+    w= array(runif(N*K), dim=c(N,K)) #initialize weights
+  }
+  pi= rep(1/K,K)
+
+  loglik=-Inf
+
+  state = list(w=w,pi=pi)
+  for(i in 1:max_iter){
+    state = miximash.fixpt(state$w,state$pi,Bhat,Shat)
+    loglik = c(loglik,state$loglik)
+    if( (loglik[i+1]-loglik[i]) < tol ) break;
+  }
+  return(list(state=state,loglik=loglik))
+}
+
+
+
+```
+
+Simulate some data with 5 conditions.
+The first group (1-50) have effects in 1-4.
+The second group (51-75) have effects in 1,5.
+The third group is null.
+
+```{r}
+K = 3
+N = 100
+R = 5
+sd = 16
+
+set.seed(1)
+B = matrix(0,nrow=N,ncol=R) 
+B[1:(N/2),1] = sd*rnorm((N/2))
+B[1:(N/2),2] = sd*rnorm((N/2))
+B[1:(N/2),3] = sd*rnorm((N/2))
+B[1:(N/2),4] = sd*rnorm((N/2))
+
+B[((N/2)+1):(3*N/4),1] = sd*rnorm((N/4))
+B[((N/2)+1):(3*N/4),5] = sd*rnorm((N/4))
+heatmap(B^2,Rowv=NA,Colv=NA)
+
+Bhat = B + rnorm(N*R)
+Shat = matrix(1,nrow=N,ncol=R)
+```
+
+
+Set up glist containing true effects for testing
+```{r}
+glist = vector("list",K)
+for(k in 1:K){
+  glist[[k]] = vector("list",R)
+}
+
+# set up true values
+glist[[1]][[1]] = normalmix(c(1),c(0),c(16)) 
+glist[[1]][[2]] = normalmix(c(1),c(0),c(16))
+glist[[1]][[3]] = normalmix(c(1),c(0),c(16))
+glist[[1]][[4]] = normalmix(c(1),c(0),c(16))
+glist[[1]][[5]] = normalmix(c(1),c(0),c(0))
+
+glist[[2]][[1]] = normalmix(c(1),c(0),c(16)) 
+glist[[2]][[2]] = normalmix(c(1),c(0),c(0))
+glist[[2]][[3]] = normalmix(c(1),c(0),c(0))
+glist[[2]][[4]] = normalmix(c(1),c(0),c(0))
+glist[[2]][[5]] = normalmix(c(1),c(0),c(16))
+
+glist[[3]][[1]] = normalmix(c(1),c(0),c(0)) 
+glist[[3]][[2]] = normalmix(c(1),c(0),c(0))
+glist[[3]][[3]] = normalmix(c(1),c(0),c(0))
+glist[[3]][[4]] = normalmix(c(1),c(0),c(0))
+glist[[3]][[5]] = normalmix(c(1),c(0),c(0))
+
+loglik = array(0,dim=c(N,K,R)) #matrix of loglikelihoods
+  
+
+for(k in 1:K){
+    for(r in 1:R){
+      loglik[,k,r] = ashr::calc_vloglik(glist[[k]][[r]],ashr::set_data(Bhat[,r],Shat[,r],alpha=0))
+  }
+}
+
+loglik_oracle = miximash.loglik(loglik,c(0.5,0.25,0.25))
+loglik_oracle
+w_true = array(0,dim=c(N,K))
+w_true[1:50,1]=1
+w_true[51:75,2]=1
+w_true[76:100,3]=1
+```
+
+Run miximash (twice from random; third time from truth)
+```{r}
+s1 = miximash(Bhat,Shat)
+s2 = miximash(Bhat,Shat)
+s3 = miximash(Bhat,Shat,w=w_true) #initalize from truth
+```
+
+```{r}
+par(mfrow=c(1,1))
+par(mai=.6*c(1,1,1,1))
+plot(s3$loglik,type="l",ylim=c(min(s1$loglik[-1]),max(s3$loglik)),xlim=c(1,20))
+
+lines(s1$loglik,col="green")
+lines(s2$loglik,col="green")
+
+abline(h=loglik_oracle,col="red")
+
+x = seq(-10,10,length=100)
+par(mfrow=c(3,5))
+par(mai=.1*c(1,1,1,1))
+for(k in 1:K){
+  for(r in 1:R){
+    plot(x,ashr::dens(s3$state$glist[[k]][[r]],x),type="l",ylim=c(0,0.4))
+  }
+}
+
+```
+
+# Test loglikelihoods
+
+This was an initial test of the log-likelihood computations - could
+be useful as a unit test...
+
+```{r}
+N= 8
+K=2
+R=3
+glist = vector("list",K)
+for(k in 1:K){
+  glist[[k]] = vector("list",R)
+}
+
+# set up N(0,0) and N(0,4)
+glist[[1]][[1]] = normalmix(c(1),c(0),c(0)) 
+glist[[1]][[2]] = normalmix(c(1),c(0),c(0))
+glist[[1]][[3]] = normalmix(c(1),c(0),c(0))
+
+glist[[2]][[1]] = normalmix(c(1),c(0),c(4))
+glist[[2]][[2]] = normalmix(c(1),c(0),c(4))
+glist[[2]][[3]] = normalmix(c(1),c(0),c(4))
+
+loglik = array(0,dim=c(N,K,R)) #matrix of loglikelihoods
+  
+
+set.seed(1)
+B = matrix(0,nrow=N,ncol=R) 
+B[1:(N/2),] = rnorm((N/2)*R,0,4) 
+
+Bhat = B + rnorm(N*R)
+
+Shat = matrix(1,nrow=N,ncol=R)
+
+for(k in 1:K){
+    for(r in 1:R){
+      loglik[,k,r] = ashr::calc_vloglik(glist[[k]][[r]],ashr::set_data(Bhat[,r],Shat[,r],alpha=0))
+  }
+}
+
+loglik[,1,]==dnorm(Bhat,0,1,log=TRUE)
+loglik[,2,]==dnorm(Bhat,0,sqrt(17),log=TRUE)
+```
+
