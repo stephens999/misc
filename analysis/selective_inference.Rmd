@@ -91,11 +91,17 @@ print(out)
 
 Try lower correlation (about 0.95), and repeat 10 times. Each time
 we store the first selected variable and the corresponding $p$ value.
+
+We also run susie. Note that it outputs large CSs (because the variables are correlated)
+and 96 out of 100 include the true effect variable.
 ```{r}
 set.seed(32)
 n_iter = 100
 out_select = rep(0,n_iter)
 out_pv = rep(0,n_iter)
+out_susie_cs_size =rep(0,n_iter) # size of first CS
+out_susie_cs_inc = rep(0,n_iter) # whether CS includes true effect variable
+out_susie_cs_num = rep(0,n_iter) # number of CSs reported (just to check not more than 1)
 for(i in 1:n_iter){
   dat= simdata(50,10,1,5,0.2,1)
   mean(cor(dat$x))
@@ -107,9 +113,21 @@ for(i in 1:n_iter){
   out = fsInf(fsfit)
   out_select[i] = out$vars[1]
   out_pv[i] = out$pv[1]
+  
+  s.fit = susieR::susie(dat$x,dat$y,estimate_prior_variance = TRUE)
+  
+  s.cs = susieR::susie_get_cs(s.fit)$cs
+  out_susie_cs_num[i] = length(s.cs)
+  s.cs = s.cs[[1]]
+  out_susie_cs_size[i] = length(s.cs)
+  out_susie_cs_inc[i] = is.element(5,s.cs)
+  
 }
 hist(out_select)
 summary(out_pv)
 mean(out_select[out_pv<0.05]==5)
+hist(out_susie_cs_size,breaks=seq(0.5,10.5,length=11))
+mean(out_susie_cs_inc)
+mean(out_susie_cs_num)
 ```
 
