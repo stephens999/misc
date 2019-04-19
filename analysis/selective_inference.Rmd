@@ -1,0 +1,115 @@
+---
+title: "selective_inference"
+author: "Matthew Stephens"
+date: "2019-04-19"
+output: workflowr::wflow_html
+---
+
+## Introduction
+
+The aim here is to illustrate selective inference with correlated predictors.
+
+
+```{r}
+library("selectiveInference")
+```
+
+This function simulates matrix x with highly columns, and then $y=x\beta+e$ with $\beta$ having
+one non-zero element ($b$).
+
+```{r}
+simdata = function(n,p,b,signal_index,cor_sd,sigma=1){
+  z = rnorm(n)
+  x = matrix(rep(z,p),nrow=n) + matrix(rnorm(n*p,sd=cor_sd),nrow=n)
+
+  beta = rep(0,p)
+  beta[signal_index] = b
+  y = x %*% beta + sigma*rnorm(n)
+  return(list(y=y,x=x,beta=beta))
+}
+```
+
+## Very high correlation
+
+Here the correlation is very high ($>0.999$ on average). The true non-zero element is $beta[5]=3$. Here the method selects the wrong variable. It was unexpected to me that the method considered the first (wrong) variable entered highly significant. I thought the presence of other highly correlated variables would mean
+that the estimate of that coefficient be highly uncertain. I guess that
+maybe the method is estimating the coefficient of the selected variable in a univariate
+regression, rather than the multiple regression coefficient?
+```{r}
+set.seed(33)
+dat= simdata(50,10,3,5,0.01,1)
+mean(cor(dat$x))
+# run forward stepwise, plot results
+fsfit = fs(dat$x,dat$y)
+plot(fsfit)
+
+# compute sequential p-values and confidence intervals
+# (sigma estimated from full model)
+out = fsInf(fsfit)
+print(out)
+```
+
+
+
+## High correlation
+
+Here I try with a less extreme, but still high correlation ($0.986$ average).
+Here it picks the right variable first.
+```{r}
+set.seed(33)
+dat= simdata(50,10,3,5,0.1,1)
+mean(cor(dat$x))
+# run forward stepwise, plot results
+fsfit = fs(dat$x,dat$y)
+plot(fsfit)
+
+# compute sequential p-values and confidence intervals
+# (sigma estimated from full model)
+out = fsInf(fsfit)
+print(out)
+```
+
+## High correlation, smaller effect
+
+Try reducing effect size to $b=1$.
+```{r}
+set.seed(33)
+dat= simdata(50,10,1,5,0.1,1)
+mean(cor(dat$x))
+# run forward stepwise, plot results
+fsfit = fs(dat$x,dat$y)
+plot(fsfit)
+
+# compute sequential p-values and confidence intervals
+# (sigma estimated from full model)
+out = fsInf(fsfit)
+print(out)
+```
+
+
+## High correlation, smaller effect
+
+Try lower correlation (about 0.95), and repeat 10 times. Each time
+we store the first selected variable and the corresponding $p$ value.
+```{r}
+set.seed(32)
+n_iter = 100
+out_select = rep(0,n_iter)
+out_pv = rep(0,n_iter)
+for(i in 1:n_iter){
+  dat= simdata(50,10,1,5,0.2,1)
+  mean(cor(dat$x))
+# run forward stepwise, plot results
+  fsfit = fs(dat$x,dat$y)
+
+# compute sequential p-values and confidence intervals
+# (sigma estimated from full model)
+  out = fsInf(fsfit)
+  out_select[i] = out$vars[1]
+  out_pv[i] = out$pv[1]
+}
+hist(out_select)
+summary(out_pv)
+mean(out_select[out_pv<0.05]==5)
+```
+
