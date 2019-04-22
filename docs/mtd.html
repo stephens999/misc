@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Matthew Stephens" />
+
+<meta name="date" content="2019-04-22" />
+
+<title>mtd</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">misc</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/stephens999/misc">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">mtd</h1>
+<h4 class="author"><em>Matthew Stephens</em></h4>
+<h4 class="date"><em>2019-04-22</em></h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#report"> Report <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2019-04-22
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>misc/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.2.0). The <em>Report</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="report" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed12345code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(12345)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed12345code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(12345)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree6e6c76a02b29ce50192a4c956499ff59d3329322targetblank6e6c76aa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/6e6c76a02b29ce50192a4c956499ff59d3329322" target="_blank">6e6c76a</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree6e6c76a02b29ce50192a4c956499ff59d3329322targetblank6e6c76aa" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.RData
+    Ignored:    analysis/.Rhistory
+    Ignored:    analysis/ALStruct_cache/
+    Ignored:    data/.Rhistory
+    Ignored:    docs/figure/.DS_Store
+
+Untracked files:
+    Untracked:  .dropbox
+    Untracked:  Icon
+    Untracked:  _workflowr.yml
+    Untracked:  analysis/GTEX-cogaps.Rmd
+    Untracked:  analysis/SPCAvRP.rmd
+    Untracked:  analysis/cormotif.Rmd
+    Untracked:  analysis/eQTL.perm.rand.pdf
+    Untracked:  analysis/flash_test_tree.Rmd
+    Untracked:  analysis/ieQTL.perm.rand.pdf
+    Untracked:  analysis/m6amash.Rmd
+    Untracked:  analysis/mash_bhat_z.Rmd
+    Untracked:  analysis/mash_ieqtl_permutations.Rmd
+    Untracked:  analysis/mixsqp.Rmd
+    Untracked:  analysis/normalize.Rmd
+    Untracked:  analysis/pseudodata.Rmd
+    Untracked:  analysis/sc_bimodal.Rmd
+    Untracked:  analysis/susie_en.Rmd
+    Untracked:  analysis/susie_z_investigate.Rmd
+    Untracked:  analysis/svd-timing.Rmd
+    Untracked:  analysis/test_sparse.Rmd
+    Untracked:  analysis/z.txt
+    Untracked:  code/multivariate_testfuncs.R
+    Untracked:  data/4matthew/
+    Untracked:  data/4matthew2/
+    Untracked:  data/E-MTAB-2805.processed.1/
+    Untracked:  data/ENSG00000156738.Sim_Y2.RDS
+    Untracked:  data/GDS5363_full.soft.gz
+    Untracked:  data/GSE41265_allGenesTPM.txt
+    Untracked:  data/Muscle_Skeletal.ACTN3.pm1Mb.RDS
+    Untracked:  data/Thyroid.FMO2.pm1Mb.RDS
+    Untracked:  data/bmass.HaemgenRBC2016.MAF01.Vs2.MergedDataSources.200kRanSubset.ChrBPMAFMarkerZScores.vs1.txt.gz
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.PreviousSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/finemap_data/fmo2.sim/b.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/data
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.ld
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.z
+    Untracked:  data/finemap_data/fmo2.sim/pos.txt
+    Untracked:  data/logm.csv
+    Untracked:  data/m.cd.RDS
+    Untracked:  data/m.cdu.old.RDS
+    Untracked:  data/m.new.cd.RDS
+    Untracked:  data/m.old.cd.RDS
+    Untracked:  data/mainbib.bib.old
+    Untracked:  data/mat.csv
+    Untracked:  data/mat.txt
+    Untracked:  data/mat_new.csv
+    Untracked:  data/matrix_lik.rds
+    Untracked:  data/paintor_data/
+    Untracked:  data/temp.txt
+    Untracked:  data/y.txt
+    Untracked:  data/y_f.txt
+    Untracked:  data/zscore_jointLCLs_m6AQTLs_susie_eQTLpruned.rds
+    Untracked:  data/zscore_jointLCLs_random.rds
+    Untracked:  docs/figure/eigen.Rmd/
+    Untracked:  docs/figure/fmo2.sim.Rmd/
+    Untracked:  docs/figure/newVB.elbo.Rmd/
+    Untracked:  docs/figure/rbc_zscore_mash2.Rmd/
+    Untracked:  docs/figure/rbc_zscore_mash2_analysis.Rmd/
+    Untracked:  docs/figure/rbc_zscores.Rmd/
+    Untracked:  docs/figure/susie_en.Rmd/
+    Untracked:  docs/trend_files/
+    Untracked:  docs/z.txt
+    Untracked:  explore_udi.R
+    Untracked:  output/fit.varbvs.RDS
+    Untracked:  output/glmnet.fit.RDS
+    Untracked:  output/test.bv.txt
+    Untracked:  output/test.gamma.txt
+    Untracked:  output/test.hyp.txt
+    Untracked:  output/test.log.txt
+    Untracked:  output/test.param.txt
+    Untracked:  output/test2.bv.txt
+    Untracked:  output/test2.gamma.txt
+    Untracked:  output/test2.hyp.txt
+    Untracked:  output/test2.log.txt
+    Untracked:  output/test2.param.txt
+    Untracked:  output/test3.bv.txt
+    Untracked:  output/test3.gamma.txt
+    Untracked:  output/test3.hyp.txt
+    Untracked:  output/test3.log.txt
+    Untracked:  output/test3.param.txt
+    Untracked:  output/test4.bv.txt
+    Untracked:  output/test4.gamma.txt
+    Untracked:  output/test4.hyp.txt
+    Untracked:  output/test4.log.txt
+    Untracked:  output/test4.param.txt
+    Untracked:  output/test5.bv.txt
+    Untracked:  output/test5.gamma.txt
+    Untracked:  output/test5.hyp.txt
+    Untracked:  output/test5.log.txt
+    Untracked:  output/test5.param.txt
+
+Unstaged changes:
+    Modified:   analysis/_site.yml
+    Deleted:    analysis/chunks.R
+    Modified:   analysis/eigen.Rmd
+    Modified:   analysis/fmo2.sim.Rmd
+    Modified:   analysis/newVB.Rmd
+    Modified:   analysis/selective_inference.Rmd
+    Modified:   analysis/wSVD.Rmd
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the R Markdown and HTML files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view them.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/6e6c76a02b29ce50192a4c956499ff59d3329322/analysis/mtd.Rmd" target="_blank">6e6c76a</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2019-04-22
+</td>
+<td>
+workflowr::wflow_publish(“mtd.Rmd”)
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Here we do a small simulation study to compare with the results of Mandozzi and Buhlmann (2016,JASA).</p>
+<p>We consider particularly the “high correlation within large blocks” design which is in some way most similar to genetic data, and also a scenario where the existing methods do poorly. See Table 4 of MB.</p>
+<pre class="r"><code>library(&quot;susieR&quot;)</code></pre>
+<pre class="r"><code># simulate with 10 blocks of 20 correlated variables
+simdata_hcl = function(n=100,snr=8,rho=0.99){
+  x = NULL
+  b = vector()
+  for(i in 1:10){ 
+    p=20
+    z = rnorm(n,sd=sqrt(rho))
+    e = matrix(rnorm(n*p,sd=sqrt(1-rho)),nrow=n)
+    x = cbind(x,z + e)
+    index = sample(1:p,1)
+    beta = rep(0,p)
+    beta[index] = (-1)^(runif(1)&lt;0.5)
+    b = c(b,beta)
+  }
+  
+  xb = x %*% cbind(b)
+  sigma = sqrt(sum(xb^2)/ (n * snr^2))
+  y = xb + rnorm(n,sd=sigma)
+  return(list(x=x,y=y,b=b))
+}</code></pre>
+</div>
+<div id="run-susie" class="section level2">
+<h2>Run susie</h2>
+<p>Run susie with <span class="math inline">\(L=20\)</span> (so not cheating by telling it the true value). Note that these simulations have very small residual variance (high PVE) and regular susie, initialized from the null, converges to poor local optima in such cases, so we first run susie with fixed large pve (0.99) and then use that to initialize.</p>
+<pre class="r"><code>sim_study_hcl = function(n_iter=100,rho){
+
+  out_susie = list(n_iter=n_iter, rho=rho, nselect = rep(NA,n_iter), select_true = rep(NA,n_iter),mtd_size = NULL)
+
+  for(i in 1:n_iter){
+    dat = simdata_hcl(rho=rho)
+    fit.s0 = susie(dat$x,dat$y,L=20,residual_variance = 0.01*var(dat$y),estimate_residual_variance=FALSE)
+    fit.s = susie(dat$x,dat$y,L=20,s_init = fit.s0)
+    cs.s = fit.s$sets$cs # susie cs&#39;s
+    cs.nsig = lapply(cs.s, FUN=function(x){return(length(intersect(which(dat$b !=0),x)))}) # number of signals in each cs
+    out_susie$nselect[i] = length(cs.nsig)
+    out_susie$select_true[i] = sum(cs.nsig&gt;0)
+    
+    mtd = cs.s[which(cs.nsig&gt;0)]
+    out_susie$mtd_size = c(out_susie$mtd_size, unlist(lapply(mtd,length)))
+  }
+  
+  return(out_susie)
+}
+
+
+summarize_sim  = function(out_susie){
+  hist(out_susie$nselect,breaks=seq(-0.5,20.5,length=22),main=&quot;number of CSs selected&quot;)
+  
+# FWER
+  fwer= mean((out_susie$nselect-out_susie$select_true)&gt;0)
+
+  #number of mtd and sizes
+  mtd = mean(out_susie$select_true)
+  mtd1 = sum(out_susie$mtd_size==1)/out_susie$n_iter # number of singletons
+  mtd2 = sum(out_susie$mtd_size==2)/out_susie$n_iter # number of doubletons
+  mtd3.10  = sum(out_susie$mtd_size&gt;=3 &amp; out_susie$mtd_size&lt;=10 )/out_susie$n_iter # number of 3-10
+  mtd10.20  = sum(out_susie$mtd_size&gt;=10 &amp; out_susie$mtd_size&lt;=20)/out_susie$n_iter # number of 3-10
+  
+  return(list(fwer= fwer, mtd = mtd,mtd1 = mtd1,  mtd2 = mtd2, mtd3.10= mtd3.10, mtd10.20 = mtd10.20))
+}</code></pre>
+<pre class="r"><code>set.seed(1)
+out_susie.99 = sim_study_hcl(n=100,rho=0.99)</code></pre>
+<pre><code>Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!</code></pre>
+<pre class="r"><code>s.99 = summarize_sim(out_susie.99)</code></pre>
+<p><img src="figure/mtd.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>set.seed(1)
+out_susie.95 = sim_study_hcl(n=100,rho=0.95)</code></pre>
+<pre><code>Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!</code></pre>
+<pre class="r"><code>s.95 = summarize_sim(out_susie.95)</code></pre>
+<p><img src="figure/mtd.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>set.seed(1)
+out_susie.9 = sim_study_hcl(n=100,rho=0.9)</code></pre>
+<pre><code>Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!</code></pre>
+<pre class="r"><code>s.9 = summarize_sim(out_susie.9)</code></pre>
+<p><img src="figure/mtd.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>set.seed(1)
+out_susie.0 = sim_study_hcl(n=100,rho=0)</code></pre>
+<pre><code>Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!
+
+Warning in susie(dat$x, dat$y, L = 20, residual_variance = 0.01 *
+var(dat$y), : IBSS algorithm did not converge in 100 iterations!</code></pre>
+<pre class="r"><code>s.0 = summarize_sim(out_susie.0)</code></pre>
+<p><img src="figure/mtd.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="summarize-results" class="section level2">
+<h2>Summarize results</h2>
+<p>Here we compare with results for method “C” from Mandozzi and Buhlmann (2016,JASA), Table 4. Note that susie does not try to control fwer so it is difficult to compare the results in many ways: susie has more mtd and more singletons (mtd1) but generally at cost of higher fwer.</p>
+<p>However,for rho=0.99 susie get better fwer and better detection.</p>
+<p>Note also that very occassionally susie reports overlapping CSs, which is why in some cases the number of true detections is very slightly above 10.</p>
+<pre class="r"><code>mb.0 = list(fwer=0 , mtd = 10,mtd1 = 10,  mtd2 = 0, mtd3.10= 0, mtd10.20 = 0)
+mb.9 = list(fwer=0 , mtd = 6.62,mtd1 = 0.06,  mtd2 = 0, mtd3.10= 0.2, mtd10.20 = 6.1)
+mb.95 = list(fwer=0.05 , mtd = 9.94,mtd1 = 1.25,  mtd2 = 0, mtd3.10= 0.77, mtd10.20 = 7.92)
+mb.99 = list(fwer=0.88 , mtd = 8.55,mtd1 = 3.26,  mtd2 = 0.14, mtd3.10= 2.8, mtd10.20 = 2.35)
+knitr::kable(rbind(s.99,mb.99))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th align="left">fwer</th>
+<th align="left">mtd</th>
+<th align="left">mtd1</th>
+<th align="left">mtd2</th>
+<th align="left">mtd3.10</th>
+<th align="left">mtd10.20</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>s.99</td>
+<td align="left">0.71</td>
+<td align="left">8.53</td>
+<td align="left">2.55</td>
+<td align="left">0.99</td>
+<td align="left">4.19</td>
+<td align="left">1.23</td>
+</tr>
+<tr class="even">
+<td>mb.99</td>
+<td align="left">0.88</td>
+<td align="left">8.55</td>
+<td align="left">3.26</td>
+<td align="left">0.14</td>
+<td align="left">2.8</td>
+<td align="left">2.35</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>knitr::kable(rbind(s.95,mb.95))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th align="left">fwer</th>
+<th align="left">mtd</th>
+<th align="left">mtd1</th>
+<th align="left">mtd2</th>
+<th align="left">mtd3.10</th>
+<th align="left">mtd10.20</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>s.95</td>
+<td align="left">0.2</td>
+<td align="left">9.92</td>
+<td align="left">9.76</td>
+<td align="left">0.04</td>
+<td align="left">0.05</td>
+<td align="left">0.07</td>
+</tr>
+<tr class="even">
+<td>mb.95</td>
+<td align="left">0.05</td>
+<td align="left">9.94</td>
+<td align="left">1.25</td>
+<td align="left">0</td>
+<td align="left">0.77</td>
+<td align="left">7.92</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>knitr::kable(rbind(s.9,mb.9))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th align="left">fwer</th>
+<th align="left">mtd</th>
+<th align="left">mtd1</th>
+<th align="left">mtd2</th>
+<th align="left">mtd3.10</th>
+<th align="left">mtd10.20</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>s.9</td>
+<td align="left">0.28</td>
+<td align="left">10.01</td>
+<td align="left">9.95</td>
+<td align="left">0.02</td>
+<td align="left">0.02</td>
+<td align="left">0.02</td>
+</tr>
+<tr class="even">
+<td>mb.9</td>
+<td align="left">0</td>
+<td align="left">6.62</td>
+<td align="left">0.06</td>
+<td align="left">0</td>
+<td align="left">0.2</td>
+<td align="left">6.1</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>knitr::kable(rbind(s.0,mb.0))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th align="left">fwer</th>
+<th align="left">mtd</th>
+<th align="left">mtd1</th>
+<th align="left">mtd2</th>
+<th align="left">mtd3.10</th>
+<th align="left">mtd10.20</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>s.0</td>
+<td align="left">0.01</td>
+<td align="left">10</td>
+<td align="left">10</td>
+<td align="left">0</td>
+<td align="left">0</td>
+<td align="left">0</td>
+</tr>
+<tr class="even">
+<td>mb.0</td>
+<td align="left">0</td>
+<td align="left">10</td>
+<td align="left">10</td>
+<td align="left">0</td>
+<td align="left">0</td>
+<td align="left">0</td>
+</tr>
+</tbody>
+</table>
+<br> <br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.5.2 (2018-12-20)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS Mojave 10.14.1
+
+Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.5/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.5/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] susieR_0.7.1.0487
+
+loaded via a namespace (and not attached):
+ [1] workflowr_1.2.0    Rcpp_1.0.0         matrixStats_0.54.0
+ [4] lattice_0.20-38    digest_0.6.18      rprojroot_1.3-2   
+ [7] grid_3.5.2         backports_1.1.3    git2r_0.24.0      
+[10] magrittr_1.5       evaluate_0.12      highr_0.7         
+[13] stringi_1.2.4      fs_1.2.6           whisker_0.3-2     
+[16] Matrix_1.2-15      rmarkdown_1.11     tools_3.5.2       
+[19] stringr_1.3.1      glue_1.3.0         xfun_0.4          
+[22] yaml_2.2.0         compiler_3.5.2     htmltools_0.3.6   
+[25] knitr_1.21        </code></pre>
+</div>
+</div>
+
+<hr>
+<p>
+    
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
