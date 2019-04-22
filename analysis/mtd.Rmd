@@ -1,0 +1,142 @@
+---
+title: "mtd"
+author: "Matthew Stephens"
+date: "2019-04-22"
+output: workflowr::wflow_html
+---
+
+## Introduction
+
+Here we do a small simulation study to 
+compare with the results of Mandozzi and Buhlmann (2016,JASA).
+
+We consider particularly the 
+"high correlation within large blocks" design which is
+in some way most similar to genetic data, and also a scenario where the
+existing methods do poorly. See Table 4 of MB.
+
+```{r}
+library("susieR")
+```
+
+
+```{r}
+# simulate with 10 blocks of 20 correlated variables
+simdata_hcl = function(n=100,snr=8,rho=0.99){
+  x = NULL
+  b = vector()
+  for(i in 1:10){ 
+    p=20
+    z = rnorm(n,sd=sqrt(rho))
+    e = matrix(rnorm(n*p,sd=sqrt(1-rho)),nrow=n)
+    x = cbind(x,z + e)
+    index = sample(1:p,1)
+    beta = rep(0,p)
+    beta[index] = (-1)^(runif(1)<0.5)
+    b = c(b,beta)
+  }
+  
+  xb = x %*% cbind(b)
+  sigma = sqrt(sum(xb^2)/ (n * snr^2))
+  y = xb + rnorm(n,sd=sigma)
+  return(list(x=x,y=y,b=b))
+}
+```
+
+## Run susie
+
+Run susie with $L=20$ (so not cheating by telling it the true value).
+Note that these simulations have very small residual variance (high PVE)
+and regular susie, initialized from the null, converges to poor local optima in
+such cases, so we first run susie with fixed large pve (0.99) and then use that
+to initialize.
+
+```{r}
+
+sim_study_hcl = function(n_iter=100,rho){
+
+  out_susie = list(n_iter=n_iter, rho=rho, nselect = rep(NA,n_iter), select_true = rep(NA,n_iter),mtd_size = NULL)
+
+  for(i in 1:n_iter){
+    dat = simdata_hcl(rho=rho)
+    fit.s0 = susie(dat$x,dat$y,L=20,residual_variance = 0.01*var(dat$y),estimate_residual_variance=FALSE)
+    fit.s = susie(dat$x,dat$y,L=20,s_init = fit.s0)
+    cs.s = fit.s$sets$cs # susie cs's
+    cs.nsig = lapply(cs.s, FUN=function(x){return(length(intersect(which(dat$b !=0),x)))}) # number of signals in each cs
+    out_susie$nselect[i] = length(cs.nsig)
+    out_susie$select_true[i] = sum(cs.nsig>0)
+    
+    mtd = cs.s[which(cs.nsig>0)]
+    out_susie$mtd_size = c(out_susie$mtd_size, unlist(lapply(mtd,length)))
+  }
+  
+  return(out_susie)
+}
+
+
+summarize_sim  = function(out_susie){
+  hist(out_susie$nselect,breaks=seq(-0.5,20.5,length=22),main="number of CSs selected")
+  
+# FWER
+  fwer= mean((out_susie$nselect-out_susie$select_true)>0)
+
+  #number of mtd and sizes
+  mtd = mean(out_susie$select_true)
+  mtd1 = sum(out_susie$mtd_size==1)/out_susie$n_iter # number of singletons
+  mtd2 = sum(out_susie$mtd_size==2)/out_susie$n_iter # number of doubletons
+  mtd3.10  = sum(out_susie$mtd_size>=3 & out_susie$mtd_size<=10 )/out_susie$n_iter # number of 3-10
+  mtd10.20  = sum(out_susie$mtd_size>=10 & out_susie$mtd_size<=20)/out_susie$n_iter # number of 3-10
+  
+  return(list(fwer= fwer, mtd = mtd,mtd1 = mtd1,  mtd2 = mtd2, mtd3.10= mtd3.10, mtd10.20 = mtd10.20))
+}
+```
+
+
+```{r}
+set.seed(1)
+out_susie.99 = sim_study_hcl(n=100,rho=0.99)
+s.99 = summarize_sim(out_susie.99)
+```
+
+```{r}
+set.seed(1)
+out_susie.95 = sim_study_hcl(n=100,rho=0.95)
+s.95 = summarize_sim(out_susie.95)
+```
+
+
+```{r}
+set.seed(1)
+out_susie.9 = sim_study_hcl(n=100,rho=0.9)
+s.9 = summarize_sim(out_susie.9)
+```
+
+
+```{r}
+set.seed(1)
+out_susie.0 = sim_study_hcl(n=100,rho=0)
+s.0 = summarize_sim(out_susie.0)
+```
+
+## Summarize results
+
+Here we compare with results for method "C" from Mandozzi and Buhlmann (2016,JASA), Table 4.
+Note that susie does not try to control fwer so it is difficult to compare
+the results in many ways: susie has more mtd and more singletons (mtd1)
+but generally at cost of higher fwer. 
+
+However,for rho=0.99 susie get better fwer and better detection.
+
+Note also that very occassionally susie reports overlapping CSs, which is why
+in some cases the number of true detections is very slightly above 10.
+```{r}
+mb.0 = list(fwer=0 , mtd = 10,mtd1 = 10,  mtd2 = 0, mtd3.10= 0, mtd10.20 = 0)
+mb.9 = list(fwer=0 , mtd = 6.62,mtd1 = 0.06,  mtd2 = 0, mtd3.10= 0.2, mtd10.20 = 6.1)
+mb.95 = list(fwer=0.05 , mtd = 9.94,mtd1 = 1.25,  mtd2 = 0, mtd3.10= 0.77, mtd10.20 = 7.92)
+mb.99 = list(fwer=0.88 , mtd = 8.55,mtd1 = 3.26,  mtd2 = 0.14, mtd3.10= 2.8, mtd10.20 = 2.35)
+knitr::kable(rbind(s.99,mb.99))
+knitr::kable(rbind(s.95,mb.95))
+knitr::kable(rbind(s.9,mb.9))
+knitr::kable(rbind(s.0,mb.0))
+```
+
