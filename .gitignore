@@ -3,6 +3,7 @@
 .RData
 .Ruserdata
 .DS_Store
+data/pbmc*
 analysis/figure
 analysis/*html
 analysis/*_cache
