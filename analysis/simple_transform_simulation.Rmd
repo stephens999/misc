@@ -1,0 +1,105 @@
+---
+title: "simple_transform_simulation"
+author: "Matthew Stephens"
+date: "2019-05-10"
+output: workflowr::wflow_html
+---
+
+## Introduction
+
+Let's try a simple simulation to test t test on log-tranformed count data.
+
+Specifically I simulate $X_i | s_i \sim Poi(s_i \lambda_i)$ 
+for two groups where the library size $s_i$ differs between the groups
+(by a factor of 10, so quite extreme)
+but distribution of $\lambda_i$ is the same in each group.
+
+Indeed, here i just fix the $\lambda_i$ to be all equal, 
+to a value such that the data
+have mean 1 in one group and mean 10 in the other group.
+
+Then do transform $Y_i = \log(X_i/(s_i/median(s_i)) +  1)$
+
+
+```{r}
+set.seed(1)
+n = 100
+s = c(rep(10^5,n), rep(10^4,n))
+l = rep(1/10^4,2*n)
+
+niter = 1000
+pval = rep(0,niter)
+for(i in 1:niter){
+  x = rpois(2*n, s*l)
+  y = log(x/(s/median(s))+1)
+  pval[i] = t.test(y[1:100],y[101:200])$p.value
+}
+hist(pval)
+
+```
+
+So we see the t test p values are very non-uniform.
+One can see why one might worry about this....
+
+Plot one example:
+```{r}
+plot(y)
+mean(y[1:100])
+mean(y[101:200])
+```
+
+
+## smaller difference in library size
+
+Try the same thing but with only a factor 2 in library size
+
+```{r}
+set.seed(1)
+n = 100
+s = c(rep(10^5,n), rep(0.5*10^5,n))
+l = rep(1/(0.5*10^5),2*n)
+
+niter = 1000
+pval = rep(0,niter)
+for(i in 1:niter){
+  x = rpois(2*n, s*l)
+  y = log(x/(s/median(s))+1)
+  pval[i] = t.test(y[1:100],y[101:200])$p.value
+}
+hist(pval)
+
+```
+
+## Briefly explore bias correction
+
+(Not sure this is 100% correct... needs checking)
+
+According to Taylor series expansion https://users.rcc.uchicago.edu/~aksarkar/singlecell-modes/transforms.html the bias should be V(x)/2(E(x) + 1)^2 where in the first
+simulation x is x/(1.8) or x/0.18 in the two groups (because this is s/median(s))
+
+
+```{r}
+(10/1.8^2) /(2*(10/1.8+1)^2) -  (1/0.18^2) / (2*(1/0.18+1)^2)
+```
+
+So if that is right, to second order, the difference in mean of y between two groups should be 0.32 in our first simulation...so try correcting for this....
+
+```{r}
+set.seed(1)
+n = 100
+s = c(rep(10^5,n), rep(10^4,n))
+l = rep(1/10^4,2*n)
+
+niter = 1000
+pval = rep(0,niter)
+for(i in 1:niter){
+  x = rpois(2*n, s*l)
+  y = log(x/(s/median(s))+1)
+  pval[i] = t.test(y[1:100],y[101:200]+0.32)$p.value
+}
+hist(pval)
+
+```
+
+
+
