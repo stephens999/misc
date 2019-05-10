@@ -55,7 +55,7 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 
 # Single cell data
 
-* [explore t test on log-transformed data](simple_transform_simulation.Rmd)
+* [explore t test on log-transformed data](simple_transform_simulation.html)
 
 [rmarkdown]: http://rmarkdown.rstudio.com/rmarkdown_websites.htm
 [rstudio]: https://www.rstudio.com/products/rstudio/download/preview/
