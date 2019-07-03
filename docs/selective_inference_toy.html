@@ -11,9 +11,8 @@
 
 <meta name="author" content="Matthew Stephens" />
 
-<meta name="date" content="2019-06-25" />
 
-<title>selective_inference_toy</title>
+<title>Selective inference for a toy example</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -27,8 +26,6 @@
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
-<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
-<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css">
@@ -387,19 +384,10 @@ div.tocify {
         <li>
   <a href="index.html">Home</a>
 </li>
-<li>
-  <a href="about.html">About</a>
-</li>
-<li>
-  <a href="license.html">License</a>
-</li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://github.com/stephens999/misc">
-    <span class="fa fa-github"></span>
-     
-  </a>
+  <a href="https://github.com/stephens999/misc">source</a>
 </li>
       </ul>
     </div><!--/.nav-collapse -->
@@ -417,9 +405,8 @@ div.section {
 
 
 
-<h1 class="title toc-ignore">selective_inference_toy</h1>
+<h1 class="title toc-ignore">Selective inference for a toy example</h1>
 <h4 class="author">Matthew Stephens</h4>
-<h4 class="date">2019-06-25</h4>
 
 </div>
 
@@ -444,7 +431,7 @@ div.section {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2019-06-25
+<strong>Last updated:</strong> 2019-07-03
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -487,12 +474,12 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed12345code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(12345)</code> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed1code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(1)</code> </a>
 </p>
 </div>
-<div id="strongSeedstrongcodesetseed12345code" class="panel-collapse collapse">
+<div id="strongSeedstrongcodesetseed1code" class="panel-collapse collapse">
 <div class="panel-body">
-<p>The command <code>set.seed(12345)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+<p>The command <code>set.seed(1)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
 </div>
 </div>
 </div>
@@ -535,145 +522,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree9bc324580dd8ffa828fa358af6a397991ef325c8targetblank9bc3245a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/9bc324580dd8ffa828fa358af6a397991ef325c8" target="_blank">9bc3245</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcompcarbomisctreef10e34a68ed477b06850dcd070674302c4cb08f2targetblankf10e34aa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/pcarbo/misc/tree/f10e34a68ed477b06850dcd070674302c4cb08f2" target="_blank">f10e34a</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree9bc324580dd8ffa828fa358af6a397991ef325c8targetblank9bc3245a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcompcarbomisctreef10e34a68ed477b06850dcd070674302c4cb08f2targetblankf10e34aa" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
 </p>
 <pre><code>
-Ignored files:
-    Ignored:    .DS_Store
-    Ignored:    .Rhistory
-    Ignored:    .Rproj.user/
-    Ignored:    analysis/.RData
-    Ignored:    analysis/.Rhistory
-    Ignored:    analysis/ALStruct_cache/
-    Ignored:    data/.Rhistory
-    Ignored:    data/pbmc/
-    Ignored:    docs/figure/.DS_Store
-
-Untracked files:
-    Untracked:  .dropbox
-    Untracked:  Icon
-    Untracked:  _workflowr.yml
-    Untracked:  analysis/GTEX-cogaps.Rmd
-    Untracked:  analysis/SPCAvRP.rmd
-    Untracked:  analysis/compare-transformed-models.Rmd
-    Untracked:  analysis/cormotif.Rmd
-    Untracked:  analysis/eQTL.perm.rand.pdf
-    Untracked:  analysis/flash_test_tree.Rmd
-    Untracked:  analysis/ieQTL.perm.rand.pdf
-    Untracked:  analysis/m6amash.Rmd
-    Untracked:  analysis/mash_bhat_z.Rmd
-    Untracked:  analysis/mash_ieqtl_permutations.Rmd
-    Untracked:  analysis/mixsqp.Rmd
-    Untracked:  analysis/normalize.Rmd
-    Untracked:  analysis/pbmc.Rmd
-    Untracked:  analysis/poisson_transform.Rmd
-    Untracked:  analysis/pseudodata.Rmd
-    Untracked:  analysis/sc_bimodal.Rmd
-    Untracked:  analysis/susie_en.Rmd
-    Untracked:  analysis/susie_z_investigate.Rmd
-    Untracked:  analysis/svd-timing.Rmd
-    Untracked:  analysis/test-figure/
-    Untracked:  analysis/test.Rpres
-    Untracked:  analysis/test.md
-    Untracked:  analysis/test_sparse.Rmd
-    Untracked:  analysis/z.txt
-    Untracked:  code/multivariate_testfuncs.R
-    Untracked:  data/4matthew/
-    Untracked:  data/4matthew2/
-    Untracked:  data/E-MTAB-2805.processed.1/
-    Untracked:  data/ENSG00000156738.Sim_Y2.RDS
-    Untracked:  data/GDS5363_full.soft.gz
-    Untracked:  data/GSE41265_allGenesTPM.txt
-    Untracked:  data/Muscle_Skeletal.ACTN3.pm1Mb.RDS
-    Untracked:  data/Thyroid.FMO2.pm1Mb.RDS
-    Untracked:  data/bmass.HaemgenRBC2016.MAF01.Vs2.MergedDataSources.200kRanSubset.ChrBPMAFMarkerZScores.vs1.txt.gz
-    Untracked:  data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt
-    Untracked:  data/bmass.HaemgenRBC2016.Vs2.PreviousSNPs.ZScores.hclust.vs1.txt
-    Untracked:  data/finemap_data/fmo2.sim/b.txt
-    Untracked:  data/finemap_data/fmo2.sim/dap_out.txt
-    Untracked:  data/finemap_data/fmo2.sim/dap_out2.txt
-    Untracked:  data/finemap_data/fmo2.sim/dap_out2_snp.txt
-    Untracked:  data/finemap_data/fmo2.sim/dap_out_snp.txt
-    Untracked:  data/finemap_data/fmo2.sim/data
-    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.config
-    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k
-    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.config
-    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.snp
-    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.ld
-    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.snp
-    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.z
-    Untracked:  data/finemap_data/fmo2.sim/pos.txt
-    Untracked:  data/logm.csv
-    Untracked:  data/m.cd.RDS
-    Untracked:  data/m.cdu.old.RDS
-    Untracked:  data/m.new.cd.RDS
-    Untracked:  data/m.old.cd.RDS
-    Untracked:  data/mainbib.bib.old
-    Untracked:  data/mat.csv
-    Untracked:  data/mat.txt
-    Untracked:  data/mat_new.csv
-    Untracked:  data/matrix_lik.rds
-    Untracked:  data/paintor_data/
-    Untracked:  data/temp.txt
-    Untracked:  data/y.txt
-    Untracked:  data/y_f.txt
-    Untracked:  data/zscore_jointLCLs_m6AQTLs_susie_eQTLpruned.rds
-    Untracked:  data/zscore_jointLCLs_random.rds
-    Untracked:  docs/figure/eigen.Rmd/
-    Untracked:  docs/figure/fmo2.sim.Rmd/
-    Untracked:  docs/figure/newVB.elbo.Rmd/
-    Untracked:  docs/figure/poisson_transform.Rmd/
-    Untracked:  docs/figure/rbc_zscore_mash2.Rmd/
-    Untracked:  docs/figure/rbc_zscore_mash2_analysis.Rmd/
-    Untracked:  docs/figure/rbc_zscores.Rmd/
-    Untracked:  docs/figure/susie_en.Rmd/
-    Untracked:  docs/trend_files/
-    Untracked:  docs/z.txt
-    Untracked:  explore_udi.R
-    Untracked:  output/fit.varbvs.RDS
-    Untracked:  output/glmnet.fit.RDS
-    Untracked:  output/test.bv.txt
-    Untracked:  output/test.gamma.txt
-    Untracked:  output/test.hyp.txt
-    Untracked:  output/test.log.txt
-    Untracked:  output/test.param.txt
-    Untracked:  output/test2.bv.txt
-    Untracked:  output/test2.gamma.txt
-    Untracked:  output/test2.hyp.txt
-    Untracked:  output/test2.log.txt
-    Untracked:  output/test2.param.txt
-    Untracked:  output/test3.bv.txt
-    Untracked:  output/test3.gamma.txt
-    Untracked:  output/test3.hyp.txt
-    Untracked:  output/test3.log.txt
-    Untracked:  output/test3.param.txt
-    Untracked:  output/test4.bv.txt
-    Untracked:  output/test4.gamma.txt
-    Untracked:  output/test4.hyp.txt
-    Untracked:  output/test4.log.txt
-    Untracked:  output/test4.param.txt
-    Untracked:  output/test5.bv.txt
-    Untracked:  output/test5.gamma.txt
-    Untracked:  output/test5.hyp.txt
-    Untracked:  output/test5.log.txt
-    Untracked:  output/test5.param.txt
-
-Unstaged changes:
-    Modified:   analysis/_site.yml
-    Deleted:    analysis/chunks.R
-    Modified:   analysis/eigen.Rmd
-    Modified:   analysis/fmo2.sim.Rmd
-    Modified:   analysis/newVB.Rmd
-    Modified:   analysis/selective_inference.Rmd
-    Modified:   analysis/simple_transform_simulation.Rmd
-    Modified:   analysis/wSVD.Rmd
-
+working directory clean
 </code></pre>
 <p>
 Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
@@ -716,7 +574,41 @@ Message
 Rmd
 </td>
 <td>
-<a href="https://github.com/stephens999/misc/blob/9bc324580dd8ffa828fa358af6a397991ef325c8/analysis/selective_inference_toy.Rmd" target="_blank">9bc3245</a>
+<a href="https://github.com/pcarbo/misc/blob/f10e34a68ed477b06850dcd070674302c4cb08f2/analysis/selective_inference_toy.Rmd" target="_blank">f10e34a</a>
+</td>
+<td>
+Peter Carbonetto
+</td>
+<td>
+2019-07-03
+</td>
+<td>
+wflow_publish(“selective_inference_toy.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/pcarbo/misc/b009ce4c85f75dc0c0d00e4ed7add114be7c7055/docs/selective_inference_toy.html" target="_blank">b009ce4</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2019-06-25
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/pcarbo/misc/blob/9bc324580dd8ffa828fa358af6a397991ef325c8/analysis/selective_inference_toy.Rmd" target="_blank">9bc3245</a>
 </td>
 <td>
 Matthew Stephens
@@ -737,164 +629,155 @@ workflowr::wflow_publish(“analysis/selective_inference_toy.Rmd”)
 </div>
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
-<p>The aim here is to run selective inference on the toy example from Wang et al (2018) [<a href="https://www.biorxiv.org/content/10.1101/501114v1" class="uri">https://www.biorxiv.org/content/10.1101/501114v1</a>]</p>
-<p>First load libraries:</p>
-<pre class="r"><code>library(selectiveInference)</code></pre>
-<pre><code>Loading required package: glmnet</code></pre>
-<pre><code>Loading required package: Matrix</code></pre>
-<pre><code>Loading required package: foreach</code></pre>
-<pre><code>Loaded glmnet 2.0-18</code></pre>
-<pre><code>Loading required package: intervals</code></pre>
-<pre><code>
-Attaching package: &#39;intervals&#39;</code></pre>
-<pre><code>The following object is masked from &#39;package:Matrix&#39;:
-
-    expand</code></pre>
-<pre><code>Loading required package: survival</code></pre>
-<p>Now simulate some data with <span class="math inline">\(x_1=x_2\)</span> and <span class="math inline">\(x_3=x_4\)</span> and effects at variables 1 and 3. (We do <span class="math inline">\(p=100\)</span> rather than <span class="math inline">\(p=1000\)</span> to reduce run-time)</p>
-<pre class="r"><code>set.seed(15)
-n= 500
-p = 100
-x = matrix(rnorm(n*p),nrow=n,ncol=p)
-x[,2] = x[,1] 
-x[,4] = x[,3]
-b = rep(0,p)
-b[1]= 1
-b[4] = 1
-y = x %*% b + rnorm(n)</code></pre>
-<p>Unfortunately the method won’t allow duplicate columns:</p>
-<pre class="r"><code># run forward stepwise,
-  try(fsfit &lt;- fs(x,y))</code></pre>
-<pre><code>Error in checkargs.xy(x = x, y = y) : x cannot have duplicate columns</code></pre>
-<pre class="r"><code>  try(larfit &lt;- lar(x,y))</code></pre>
-<pre><code>Error in checkargs.xy(x = x, y = y) : x cannot have duplicate columns</code></pre>
-<p>So we modify x to make it not quite identical</p>
-<pre class="r"><code>  x[,2] = x[,1] + rnorm(n,0,0.1) 
-  x[,4] = x[,3] + rnorm(n,0,0.1)
-  cor(x[,2],x[,1])</code></pre>
-<pre><code>[1] 0.9955977</code></pre>
-<pre class="r"><code>  cor(x[,4],x[,3])</code></pre>
-<pre><code>[1] 0.9952243</code></pre>
-<p>Now run the forward selection, and compute sequential p-values and confidence intervals</p>
-<pre class="r"><code>  fsfit &lt;- fs(x,y)
-  
-# compute sequential p-values and confidence intervals
-# (sigma estimated from full model)
-  out = fsInf(fsfit)
-  out</code></pre>
-<pre><code>
-Call:
-fsInf(obj = fsfit)
-
-Standard deviation of noise (specified or estimated) sigma = 0.995
-
-Sequential testing results with alpha = 0.100
- Step Var   Coef Z-score P-value LowConfPt UpConfPt LowTailArea UpTailArea
-    1   1  0.900  20.573   0.003     0.441    0.953       0.050      0.049
-    2   3  0.956  21.494   0.000     0.716    1.397       0.050      0.050
-    3  37  0.099   2.133   0.539    -0.439    0.156       0.050      0.050
-    4  45  0.083   1.817   0.911      -Inf    0.204       0.000      0.050
-    5   4 -0.838  -1.850   0.215      -Inf   10.125       0.000      0.050
-    6  46  0.077   1.747   0.715    -3.695    1.192       0.050      0.050
-    7  64 -0.077  -1.718   0.409    -3.906    2.666       0.050      0.050
-    8  79  0.076   1.678   0.542    -3.007    2.405       0.050      0.050
-    9  43  0.080   1.721   0.366    -1.354    2.373       0.050      0.050
-   10  68 -0.075  -1.669   0.456      -Inf      Inf       0.000      0.000
-   11  13  0.081   1.738   0.434      -Inf      Inf       0.000      0.000
-   12  61 -0.075  -1.588   0.102      -Inf    0.580       0.000      0.050
-   13  56 -0.064  -1.452   0.487    -3.159    3.055       0.050      0.050
-   14  84  0.058   1.332   0.901      -Inf    0.601       0.000      0.050
-   15  90  0.060   1.324   0.548    -3.950    3.120       0.050      0.050
-   16  65 -0.057  -1.284   0.298      -Inf      Inf       0.000      0.000
-   17  69 -0.056  -1.243   0.071      -Inf    0.613       0.000      0.050
-   18  74 -0.053  -1.177   0.998     4.469      Inf       0.010      0.000
-   19  18  0.052   1.194   0.084    -3.562      Inf       0.050      0.000
-   20  70 -0.047  -1.097   0.229      -Inf      Inf       0.000      0.000
-   21  49 -0.049  -1.075   0.092      -Inf    1.785       0.000      0.050
-   22  88  0.055   1.118   0.918      -Inf    1.226       0.000      0.050
-   23  25  0.049   1.055   0.060    -0.614      Inf       0.050      0.000
-   24  27 -0.047  -1.055   0.504      -Inf      Inf       0.000      0.000
-   25  96  0.051   1.120   0.861      -Inf      Inf       0.000      0.000
-   26  39  0.048   1.029   0.908      -Inf    3.127       0.000      0.050
-   27  40 -0.050  -1.041   0.005      -Inf   -4.787       0.000      0.011
-   28  17 -0.045  -0.968   0.190      -Inf    3.100       0.000      0.050
-   29  66 -0.041  -0.901   0.879    -2.066      Inf       0.050      0.000
-   30  85  0.042   0.916   0.874      -Inf      Inf       0.000      0.000
-   31   8 -0.044  -0.932   0.391      -Inf      Inf       0.000      0.000
-   32  22 -0.044  -0.933   0.144      -Inf    3.515       0.000      0.050
-   33  78  0.041   0.933   0.821      -Inf      Inf       0.000      0.000
-   34  28 -0.041  -0.882   0.789    -4.262      Inf       0.050      0.000
-   35   7  0.043   0.896   0.894      -Inf    2.807       0.000      0.050
-   36  26  0.044   0.905   0.620      -Inf      Inf       0.000      0.000
-   37  21 -0.041  -0.869   0.590      -Inf      Inf       0.000      0.000
-   38  71  0.043   0.940   0.194      -Inf      Inf       0.000      0.000
-   39  73  0.040   0.858   0.247      -Inf      Inf       0.000      0.000
-   40  50 -0.041  -0.867   0.963     4.773      Inf       0.048      0.000
-   41  99  0.041   0.876   0.022     4.638      Inf       0.033      0.000
-   42  59  0.036   0.790   0.079    -1.322      Inf       0.050      0.000
-   43  76  0.034   0.738   0.060    -0.458      Inf       0.050      0.000
-   44  62 -0.037  -0.781   0.760    -3.209      Inf       0.050      0.000
-   45  19  0.031   0.717   0.638      -Inf      Inf       0.000      0.000
-   46  36 -0.033  -0.711   0.705      -Inf      Inf       0.000      0.000
-   47   6  0.030   0.684   0.828      -Inf      Inf       0.000      0.000
-   48  34  0.034   0.725   0.041     1.281      Inf       0.050      0.000
-   49  57 -0.035  -0.740   0.915    -2.026      Inf       0.050      0.000
-   50  42 -0.034  -0.754   0.865    -4.424      Inf       0.050      0.000
-   51  14 -0.032  -0.692   0.212      -Inf    3.813       0.000      0.050
-   52  53  0.030   0.665   0.301      -Inf      Inf       0.000      0.000
-   53  83 -0.028  -0.627   0.704      -Inf      Inf       0.000      0.000
-   54  35  0.029   0.620   0.680      -Inf      Inf       0.000      0.000
-   55  12  0.027   0.594   0.850      -Inf    2.456       0.000      0.050
-   56   2 -0.285  -0.587   0.877      -Inf      Inf       0.000      0.000
-   57  38  0.031   0.617   0.632      -Inf      Inf       0.000      0.000
-   58  41 -0.026  -0.562   0.987     0.322      Inf       0.000      0.000
-   59  51  0.027   0.583   0.023    -0.330      Inf       0.000      0.000
-   60  91  0.030   0.644   0.943      -Inf    0.654       0.000      0.050
-   61  58  0.027   0.574   0.773      -Inf      Inf       0.000      0.000
-   62  97  0.029   0.558   0.002     5.116      Inf       0.004      0.000
-   63  87  0.025   0.523   0.552      -Inf      Inf       0.000      0.000
-   64   5  0.025   0.509   0.108    -2.311      Inf       0.050      0.000
-   65  63  0.022   0.485   0.489      -Inf      Inf       0.000      0.000
-   66  47  0.022   0.455   0.927      -Inf    2.634       0.000      0.050
-   67   9  0.021   0.459   0.642      -Inf      Inf       0.000      0.000
-   68  31  0.021   0.448   0.064    -1.444      Inf       0.050      0.000
-   69  89 -0.021  -0.426   0.721      -Inf      Inf       0.000      0.000
-   70  32 -0.022  -0.419   0.428      -Inf      Inf       0.000      0.000
-   71  86 -0.021  -0.422   0.188      -Inf      Inf       0.000      0.000
-   72  48 -0.020  -0.402   0.492      -Inf      Inf       0.000      0.000
-   73  20 -0.017  -0.360   0.163      -Inf      Inf       0.000      0.000
-   74  67 -0.018  -0.373   0.202      -Inf      Inf       0.000      0.000
-   75  44  0.017   0.348   0.281      -Inf      Inf       0.000      0.000
-   76  52  0.016   0.329   0.407    -3.741      Inf       0.050      0.000
-   77  11  0.015   0.309   0.697      -Inf      Inf       0.000      0.000
-   78  23  0.014   0.308   0.357      -Inf      Inf       0.000      0.000
-   79  94  0.014   0.313   0.402      -Inf      Inf       0.000      0.000
-   80  30  0.014   0.287   0.339      -Inf      Inf       0.000      0.000
-   81  95  0.013   0.264   0.269      -Inf      Inf       0.000      0.000
-   82  33  0.012   0.251   0.553      -Inf      Inf       0.000      0.000
-   83  15 -0.011  -0.226   0.534      -Inf      Inf       0.000      0.000
-   84  98  0.011   0.235   0.305      -Inf      Inf       0.000      0.000
-   85  72 -0.010  -0.205   0.119      -Inf    4.010       0.000      0.050
-   86 100  0.008   0.161   0.797      -Inf      Inf       0.000      0.000
-   87  81 -0.008  -0.161   0.107      -Inf    2.010       0.000      0.050
-   88  24  0.007   0.135   0.771      -Inf      Inf       0.000      0.000
-   89  10  0.006   0.123   0.440      -Inf      Inf       0.000      0.000
-   90  60  0.006   0.120   0.592      -Inf      Inf       0.000      0.000
-   91  75 -0.005  -0.113   0.153      -Inf    4.187       0.000      0.050
-   92  16 -0.004  -0.086   0.629      -Inf      Inf       0.000      0.000
-   93  54  0.004   0.078   0.996      -Inf   -5.340       0.000      0.004
-   94  29  0.004   0.077   0.842      -Inf      Inf       0.000      0.000
-   95  82  0.004   0.078   0.004     4.839      Inf       0.005      0.000
-   96  80  0.000  -0.008   0.880      -Inf      Inf       0.000      0.000
-   97  93  0.000   0.008   0.642      -Inf      Inf       0.000      0.000
-   98  77  0.000  -0.007   0.185      -Inf      Inf       0.000      0.000
-   99  55  0.000  -0.004   0.716      -Inf      Inf       0.000      0.000
-  100  92  0.000  -0.003   0.443      -Inf      Inf       0.000      0.000
-
-Estimated stopping point from ForwardStop rule = 2</code></pre>
+<p>Here we investigate “selective inference” in the toy example of <a href="https://www.biorxiv.org/content/10.1101/501114v1">Wang et al (2018)</a>.</p>
 </div>
-<div id="summary" class="section level1">
-<h1>Summary</h1>
+<div id="load-packages" class="section level2">
+<h2>Load packages</h2>
+<p>First, load the <a href="https://cran.r-project.org/package=selectiveInference">selective inference</a> package.</p>
+<pre class="r"><code>library(selectiveInference)</code></pre>
+</div>
+<div id="simulate-data" class="section level2">
+<h2>Simulate data</h2>
+<p>Now simulate some data with <span class="math inline">\(x_1 = x_2\)</span> and <span class="math inline">\(x_3 = x_4\)</span>, and with effects at variables 1 and 3. (We simulate <span class="math inline">\(p = 100\)</span> variables rather than <span class="math inline">\(p = 1000\)</span> so that the example runs faster.)</p>
+<pre class="r"><code>set.seed(15)
+n     &lt;- 500
+p     &lt;- 100
+x     &lt;- matrix(rnorm(n*p),n,p)
+x[,2] &lt;- x[,1] 
+x[,4] &lt;- x[,3]
+b     &lt;- rep(0,p)
+b[1]  &lt;- 1
+b[4]  &lt;- 1
+y     &lt;- drop(x %*% b + rnorm(n))</code></pre>
+<p>Unfortunately, the selective inference methods won’t allow duplicate columns.</p>
+<pre class="r"><code>try(fsfit &lt;- fs(x,y))
+try(larfit &lt;- lar(x,y))
+# Error in checkargs.xy(x = x, y = y) : x cannot have duplicate columns
+# Error in checkargs.xy(x = x, y = y) : x cannot have duplicate columns</code></pre>
+<p>So we modify <code>x</code> so that the identical columns aren’t quite identical.</p>
+<pre class="r"><code>x[,2] &lt;- x[,1] + rnorm(n,0,0.1) 
+x[,4] &lt;- x[,3] + rnorm(n,0,0.1)
+cor(x[,1],x[,2])
+cor(x[,3],x[,4])
+# [1] 0.9955977
+# [1] 0.9952243</code></pre>
+<p>Now run the forward selection again, computing sequential p-values and confidence intervals.</p>
+<pre class="r"><code>fsfit &lt;- fs(x,y)
+out   &lt;- fsInf(fsfit)
+out
+# 
+# Call:
+# fsInf(obj = fsfit)
+# 
+# Standard deviation of noise (specified or estimated) sigma = 0.995
+# 
+# Sequential testing results with alpha = 0.100
+#  Step Var   Coef Z-score P-value LowConfPt UpConfPt LowTailArea UpTailArea
+#     1   1  0.900  20.573   0.003     0.441    0.953       0.050      0.049
+#     2   3  0.956  21.494   0.000     0.716    1.397       0.050      0.050
+#     3  37  0.099   2.133   0.539    -0.439    0.156       0.050      0.050
+#     4  45  0.083   1.817   0.911      -Inf    0.204       0.000      0.050
+#     5   4 -0.838  -1.850   0.215      -Inf   10.125       0.000      0.050
+#     6  46  0.077   1.747   0.715    -3.695    1.192       0.050      0.050
+#     7  64 -0.077  -1.718   0.409    -3.906    2.666       0.050      0.050
+#     8  79  0.076   1.678   0.542    -3.007    2.405       0.050      0.050
+#     9  43  0.080   1.721   0.366    -1.354    2.373       0.050      0.050
+#    10  68 -0.075  -1.669   0.456      -Inf      Inf       0.000      0.000
+#    11  13  0.081   1.738   0.434      -Inf      Inf       0.000      0.000
+#    12  61 -0.075  -1.588   0.102      -Inf    0.580       0.000      0.050
+#    13  56 -0.064  -1.452   0.487    -3.159    3.055       0.050      0.050
+#    14  84  0.058   1.332   0.901      -Inf    0.601       0.000      0.050
+#    15  90  0.060   1.324   0.548    -3.950    3.120       0.050      0.050
+#    16  65 -0.057  -1.284   0.298      -Inf      Inf       0.000      0.000
+#    17  69 -0.056  -1.243   0.071      -Inf    0.613       0.000      0.050
+#    18  74 -0.053  -1.177   0.998     4.469      Inf       0.010      0.000
+#    19  18  0.052   1.194   0.084    -3.562      Inf       0.050      0.000
+#    20  70 -0.047  -1.097   0.229      -Inf      Inf       0.000      0.000
+#    21  49 -0.049  -1.075   0.092      -Inf    1.785       0.000      0.050
+#    22  88  0.055   1.118   0.918      -Inf    1.226       0.000      0.050
+#    23  25  0.049   1.055   0.060    -0.614      Inf       0.050      0.000
+#    24  27 -0.047  -1.055   0.504      -Inf      Inf       0.000      0.000
+#    25  96  0.051   1.120   0.861      -Inf      Inf       0.000      0.000
+#    26  39  0.048   1.029   0.908      -Inf    3.127       0.000      0.050
+#    27  40 -0.050  -1.041   0.005      -Inf   -4.787       0.000      0.011
+#    28  17 -0.045  -0.968   0.190      -Inf    3.100       0.000      0.050
+#    29  66 -0.041  -0.901   0.879    -2.066      Inf       0.050      0.000
+#    30  85  0.042   0.916   0.874      -Inf      Inf       0.000      0.000
+#    31   8 -0.044  -0.932   0.391      -Inf      Inf       0.000      0.000
+#    32  22 -0.044  -0.933   0.144      -Inf    3.515       0.000      0.050
+#    33  78  0.041   0.933   0.821      -Inf      Inf       0.000      0.000
+#    34  28 -0.041  -0.882   0.789    -4.262      Inf       0.050      0.000
+#    35   7  0.043   0.896   0.894      -Inf    2.807       0.000      0.050
+#    36  26  0.044   0.905   0.620      -Inf      Inf       0.000      0.000
+#    37  21 -0.041  -0.869   0.590      -Inf      Inf       0.000      0.000
+#    38  71  0.043   0.940   0.194      -Inf      Inf       0.000      0.000
+#    39  73  0.040   0.858   0.247      -Inf      Inf       0.000      0.000
+#    40  50 -0.041  -0.867   0.963     4.773      Inf       0.048      0.000
+#    41  99  0.041   0.876   0.022     4.638      Inf       0.033      0.000
+#    42  59  0.036   0.790   0.079    -1.322      Inf       0.050      0.000
+#    43  76  0.034   0.738   0.060    -0.458      Inf       0.050      0.000
+#    44  62 -0.037  -0.781   0.760    -3.209      Inf       0.050      0.000
+#    45  19  0.031   0.717   0.638      -Inf      Inf       0.000      0.000
+#    46  36 -0.033  -0.711   0.705      -Inf      Inf       0.000      0.000
+#    47   6  0.030   0.684   0.828      -Inf      Inf       0.000      0.000
+#    48  34  0.034   0.725   0.041     1.281      Inf       0.050      0.000
+#    49  57 -0.035  -0.740   0.915    -2.026      Inf       0.050      0.000
+#    50  42 -0.034  -0.754   0.865    -4.424      Inf       0.050      0.000
+#    51  14 -0.032  -0.692   0.212      -Inf    3.813       0.000      0.050
+#    52  53  0.030   0.665   0.301      -Inf      Inf       0.000      0.000
+#    53  83 -0.028  -0.627   0.704      -Inf      Inf       0.000      0.000
+#    54  35  0.029   0.620   0.680      -Inf      Inf       0.000      0.000
+#    55  12  0.027   0.594   0.850      -Inf    2.456       0.000      0.050
+#    56   2 -0.285  -0.587   0.877      -Inf      Inf       0.000      0.000
+#    57  38  0.031   0.617   0.632      -Inf      Inf       0.000      0.000
+#    58  41 -0.026  -0.562   0.987     0.322      Inf       0.000      0.000
+#    59  51  0.027   0.583   0.023    -0.330      Inf       0.000      0.000
+#    60  91  0.030   0.644   0.943      -Inf    0.654       0.000      0.050
+#    61  58  0.027   0.574   0.773      -Inf      Inf       0.000      0.000
+#    62  97  0.029   0.558   0.002     5.116      Inf       0.004      0.000
+#    63  87  0.025   0.523   0.552      -Inf      Inf       0.000      0.000
+#    64   5  0.025   0.509   0.108    -2.311      Inf       0.050      0.000
+#    65  63  0.022   0.485   0.489      -Inf      Inf       0.000      0.000
+#    66  47  0.022   0.455   0.927      -Inf    2.634       0.000      0.050
+#    67   9  0.021   0.459   0.642      -Inf      Inf       0.000      0.000
+#    68  31  0.021   0.448   0.064    -1.444      Inf       0.050      0.000
+#    69  89 -0.021  -0.426   0.721      -Inf      Inf       0.000      0.000
+#    70  32 -0.022  -0.419   0.428      -Inf      Inf       0.000      0.000
+#    71  86 -0.021  -0.422   0.188      -Inf      Inf       0.000      0.000
+#    72  48 -0.020  -0.402   0.492      -Inf      Inf       0.000      0.000
+#    73  20 -0.017  -0.360   0.163      -Inf      Inf       0.000      0.000
+#    74  67 -0.018  -0.373   0.202      -Inf      Inf       0.000      0.000
+#    75  44  0.017   0.348   0.281      -Inf      Inf       0.000      0.000
+#    76  52  0.016   0.329   0.407    -3.741      Inf       0.050      0.000
+#    77  11  0.015   0.309   0.697      -Inf      Inf       0.000      0.000
+#    78  23  0.014   0.308   0.357      -Inf      Inf       0.000      0.000
+#    79  94  0.014   0.313   0.402      -Inf      Inf       0.000      0.000
+#    80  30  0.014   0.287   0.339      -Inf      Inf       0.000      0.000
+#    81  95  0.013   0.264   0.269      -Inf      Inf       0.000      0.000
+#    82  33  0.012   0.251   0.553      -Inf      Inf       0.000      0.000
+#    83  15 -0.011  -0.226   0.534      -Inf      Inf       0.000      0.000
+#    84  98  0.011   0.235   0.305      -Inf      Inf       0.000      0.000
+#    85  72 -0.010  -0.205   0.119      -Inf    4.010       0.000      0.050
+#    86 100  0.008   0.161   0.797      -Inf      Inf       0.000      0.000
+#    87  81 -0.008  -0.161   0.107      -Inf    2.010       0.000      0.050
+#    88  24  0.007   0.135   0.771      -Inf      Inf       0.000      0.000
+#    89  10  0.006   0.123   0.440      -Inf      Inf       0.000      0.000
+#    90  60  0.006   0.120   0.592      -Inf      Inf       0.000      0.000
+#    91  75 -0.005  -0.113   0.153      -Inf    4.187       0.000      0.050
+#    92  16 -0.004  -0.086   0.629      -Inf      Inf       0.000      0.000
+#    93  54  0.004   0.078   0.996      -Inf   -5.340       0.000      0.004
+#    94  29  0.004   0.077   0.842      -Inf      Inf       0.000      0.000
+#    95  82  0.004   0.078   0.004     4.839      Inf       0.005      0.000
+#    96  80  0.000  -0.008   0.880      -Inf      Inf       0.000      0.000
+#    97  93  0.000   0.008   0.642      -Inf      Inf       0.000      0.000
+#    98  77  0.000  -0.007   0.185      -Inf      Inf       0.000      0.000
+#    99  55  0.000  -0.004   0.716      -Inf      Inf       0.000      0.000
+#   100  92  0.000  -0.003   0.443      -Inf      Inf       0.000      0.000
+# 
+# Estimated stopping point from ForwardStop rule = 2</code></pre>
+</div>
+<div id="summary" class="section level2">
+<h2>Summary</h2>
 <p>In this example, selective inference selected variables 1 and 3, each with very small <span class="math inline">\(p\)</span> values. Of course we know that variable 3 is a false selection, so it might seem bad that the p value is small. However you have to remember that the p value does not measure significance of the variable selection: it measures the significance of the coefficient of the selected variable, conditional on the selection event.</p>
 <p>Put another way, selective inference is not really trying to assess uncertainty in which variables should be selected, and is certainly not trying to produce inferences of the form <span class="math display">\[(b_1 \neq 0 \text{ OR } b_2 \neq 0) \text{ AND }  (b_3 \neq 0 \text{ OR } b_4 \neq 0)\]</span> which was the goal in Wang et al.</p>
 <br>
@@ -904,61 +787,39 @@ Estimated stopping point from ForwardStop rule = 2</code></pre>
 </button>
 </p>
 <div id="workflowr-sessioninfo" class="collapse">
-<pre class="r"><code>sessionInfo()</code></pre>
-<pre><code>R version 3.6.0 (2019-04-26)
-Platform: x86_64-apple-darwin15.6.0 (64-bit)
-Running under: macOS Mojave 10.14.4
-
-Matrix products: default
-BLAS:   /Library/Frameworks/R.framework/Versions/3.6/Resources/lib/libRblas.0.dylib
-LAPACK: /Library/Frameworks/R.framework/Versions/3.6/Resources/lib/libRlapack.dylib
-
-locale:
-[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
-
-attached base packages:
-[1] stats     graphics  grDevices utils     datasets  methods   base     
-
-other attached packages:
-[1] selectiveInference_1.2.4 survival_2.44-1.1       
-[3] intervals_0.15.1         glmnet_2.0-18           
-[5] foreach_1.4.4            Matrix_1.2-17           
-
-loaded via a namespace (and not attached):
- [1] Rcpp_1.0.1       knitr_1.23       whisker_0.3-2    magrittr_1.5    
- [5] workflowr_1.4.0  splines_3.6.0    lattice_0.20-38  stringr_1.4.0   
- [9] tools_3.6.0      grid_3.6.0       xfun_0.7         git2r_0.25.2    
-[13] htmltools_0.3.6  iterators_1.0.10 yaml_2.2.0       rprojroot_1.3-2 
-[17] digest_0.6.19    fs_1.3.1         codetools_0.2-16 glue_1.3.1      
-[21] evaluate_0.14    rmarkdown_1.13   stringi_1.4.3    compiler_3.6.0  
-[25] backports_1.1.4 </code></pre>
+<pre class="r"><code>sessionInfo()
+# R version 3.4.3 (2017-11-30)
+# Platform: x86_64-apple-darwin15.6.0 (64-bit)
+# Running under: macOS High Sierra 10.13.6
+# 
+# Matrix products: default
+# BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
+# LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
+# 
+# locale:
+# [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+# 
+# attached base packages:
+# [1] stats     graphics  grDevices utils     datasets  methods   base     
+# 
+# other attached packages:
+# [1] selectiveInference_1.2.4 survival_2.41-3         
+# [3] intervals_0.15.1         glmnet_2.0-16           
+# [5] foreach_1.4.4            Matrix_1.2-12           
+# 
+# loaded via a namespace (and not attached):
+#  [1] Rcpp_1.0.1        knitr_1.23        whisker_0.3-2    
+#  [4] magrittr_1.5      workflowr_1.4.0   splines_3.4.3    
+#  [7] lattice_0.20-35   stringr_1.4.0     tools_3.4.3      
+# [10] grid_3.4.3        xfun_0.7          git2r_0.25.2.9008
+# [13] htmltools_0.3.6   iterators_1.0.9   yaml_2.2.0       
+# [16] rprojroot_1.3-2   digest_0.6.18     fs_1.2.7         
+# [19] codetools_0.2-15  glue_1.3.1        evaluate_0.13    
+# [22] rmarkdown_1.13    stringi_1.4.3     compiler_3.4.3   
+# [25] backports_1.1.2</code></pre>
 </div>
 </div>
 
-<hr>
-<p>
-    
-</p>
-<hr>
-
-<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
-
-<!-- disqus
-  <div id="disqus_thread"></div>
-    <script type="text/javascript">
-        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
-        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
-
-        /* * * DON'T EDIT BELOW THIS LINE * * */
-        (function() {
-            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script>
-    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
--->
 
 <!-- Adjust MathJax settings so that all math formulae are shown using
 TeX fonts only; see
