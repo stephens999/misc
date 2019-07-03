@@ -1,17 +1,17 @@
 name: stephens999/misc
-output_dir: "../docs"
-include: [".nojekyll"]
-exclude: ["include"]
+output_dir: ../docs
+include: .nojekyll
+exclude: include
 navbar:
   title: misc
   left:
-    - text: "Home"
+    - text: Home
       href: index.html
   right:
     - text: source
       href: https://github.com/stephens999/misc
 output:
-  html_document:
+  workflowr::wflow_html:
     toc: true
     toc_float: true
     theme: cosmo
