@@ -522,10 +522,10 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcompcarbomisctree9fec801438afc00c9be4365cdfe88138250b414etargetblank9fec801a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/pcarbo/misc/tree/9fec801438afc00c9be4365cdfe88138250b414e" target="_blank">9fec801</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcompcarbomisctree30928240b5fa5a152424a3a91c428c8a8a035f37targetblank3092824a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/pcarbo/misc/tree/30928240b5fa5a152424a3a91c428c8a8a035f37" target="_blank">3092824</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcompcarbomisctree9fec801438afc00c9be4365cdfe88138250b414etargetblank9fec801a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcompcarbomisctree30928240b5fa5a152424a3a91c428c8a8a035f37targetblank3092824a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -569,6 +569,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/pcarbo/misc/blob/30928240b5fa5a152424a3a91c428c8a8a035f37/analysis/selective_inference_toy.Rmd" target="_blank">3092824</a>
+</td>
+<td>
+Peter Carbonetto
+</td>
+<td>
+2019-07-03
+</td>
+<td>
+wflow_publish(“selective_inference_toy.Rmd”, verbose = TRUE, view =
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/pcarbo/misc/3dc76c807035fdd79972c28393b6a3e92688ca5a/docs/selective_inference_toy.html" target="_blank">3dc76c8</a>
+</td>
+<td>
+Peter Carbonetto
+</td>
+<td>
+2019-07-03
+</td>
+<td>
+Polished up selective inference example a bit.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -816,8 +850,8 @@ print(out)
 <div id="summary" class="section level2">
 <h2>Summary</h2>
 <p>From the above output, we see that the selective inference method selected variables 1 and 3 with very small <em>p</em>-values. Of course, we know that variable 3 is a false selection, so it might seem bad that the <em>p</em>-value is small. However, you have to remember that <em>p</em>-values do not measure significance of variable selection—they measure the significance of the coefficient of the selected variable, <em>conditional on the selection event.</em></p>
-<p>Put another way, selective inference is not trying to assess uncertainty in which variables should be selected, and is certainly not trying to produce inferences of the form <span class="math display">\[(b_1 \neq 0 \text{OR}
-b_2 \neq 0) \text{AND} (b_3 \neq 0 \text{OR} b_4 \neq 0)\]</span>, which was the goal of <a href="https://www.biorxiv.org/content/10.1101/501114v1">Wang et al (2018)</a>.</p>
+<p>Put another way, selective inference is not trying to assess uncertainty in which variables should be selected, and is certainly not trying to produce inferences of the form <span class="math display">\[(b_1 \neq 0 \text{ OR }
+b_2 \neq 0) \text{ AND } (b_3 \neq 0 \text{ OR } b_4 \neq 0),\]</span> which was the goal of <a href="https://www.biorxiv.org/content/10.1101/501114v1">Wang et al (2018)</a>.</p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
