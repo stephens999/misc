@@ -1,6 +1,7 @@
 ---
 title: "Selective inference for a toy example"
 author: "Matthew Stephens"
+date: 2019-07-03
 output: workflowr::wflow_html
 editor_options:
   chunk_output_type: console
