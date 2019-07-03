@@ -522,10 +522,10 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcompcarbomisctreef10e34a68ed477b06850dcd070674302c4cb08f2targetblankf10e34aa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/pcarbo/misc/tree/f10e34a68ed477b06850dcd070674302c4cb08f2" target="_blank">f10e34a</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcompcarbomisctree9fec801438afc00c9be4365cdfe88138250b414etargetblank9fec801a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/pcarbo/misc/tree/9fec801438afc00c9be4365cdfe88138250b414e" target="_blank">9fec801</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcompcarbomisctreef10e34a68ed477b06850dcd070674302c4cb08f2targetblankf10e34aa" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcompcarbomisctree9fec801438afc00c9be4365cdfe88138250b414etargetblank9fec801a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -569,6 +569,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/pcarbo/misc/blob/9fec801438afc00c9be4365cdfe88138250b414e/analysis/selective_inference_toy.Rmd" target="_blank">9fec801</a>
+</td>
+<td>
+Peter Carbonetto
+</td>
+<td>
+2019-07-03
+</td>
+<td>
+wflow_publish(“selective_inference_toy.Rmd”, verbose = TRUE, view =
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/pcarbo/misc/3c564361fedf02f803eb6cd364344acf1cbfcd55/docs/selective_inference_toy.html" target="_blank">3c56436</a>
+</td>
+<td>
+Peter Carbonetto
+</td>
+<td>
+2019-07-03
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -649,6 +683,9 @@ b     &lt;- rep(0,p)
 b[1]  &lt;- 1
 b[4]  &lt;- 1
 y     &lt;- drop(x %*% b + rnorm(n))</code></pre>
+</div>
+<div id="run-selective-inference" class="section level2">
+<h2>Run selective inference</h2>
 <p>Unfortunately, the selective inference methods won’t allow duplicate columns.</p>
 <pre class="r"><code>try(fsfit &lt;- fs(x,y))
 try(larfit &lt;- lar(x,y))
@@ -661,10 +698,10 @@ cor(x[,1],x[,2])
 cor(x[,3],x[,4])
 # [1] 0.9955977
 # [1] 0.9952243</code></pre>
-<p>Now run the forward selection again, computing sequential p-values and confidence intervals.</p>
+<p>Now run the forward selection again, computing sequential <em>p</em>-values and confidence intervals.</p>
 <pre class="r"><code>fsfit &lt;- fs(x,y)
 out   &lt;- fsInf(fsfit)
-out
+print(out)
 # 
 # Call:
 # fsInf(obj = fsfit)
@@ -778,8 +815,9 @@ out
 </div>
 <div id="summary" class="section level2">
 <h2>Summary</h2>
-<p>In this example, selective inference selected variables 1 and 3, each with very small <span class="math inline">\(p\)</span> values. Of course we know that variable 3 is a false selection, so it might seem bad that the p value is small. However you have to remember that the p value does not measure significance of the variable selection: it measures the significance of the coefficient of the selected variable, conditional on the selection event.</p>
-<p>Put another way, selective inference is not really trying to assess uncertainty in which variables should be selected, and is certainly not trying to produce inferences of the form <span class="math display">\[(b_1 \neq 0 \text{ OR } b_2 \neq 0) \text{ AND }  (b_3 \neq 0 \text{ OR } b_4 \neq 0)\]</span> which was the goal in Wang et al.</p>
+<p>From the above output, we see that the selective inference method selected variables 1 and 3 with very small <em>p</em>-values. Of course, we know that variable 3 is a false selection, so it might seem bad that the <em>p</em>-value is small. However, you have to remember that <em>p</em>-values do not measure significance of variable selection—they measure the significance of the coefficient of the selected variable, <em>conditional on the selection event.</em></p>
+<p>Put another way, selective inference is not trying to assess uncertainty in which variables should be selected, and is certainly not trying to produce inferences of the form <span class="math display">\[(b_1 \neq 0 \text{OR}
+b_2 \neq 0) \text{AND} (b_3 \neq 0 \text{OR} b_4 \neq 0)\]</span>, which was the goal of <a href="https://www.biorxiv.org/content/10.1101/501114v1">Wang et al (2018)</a>.</p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
