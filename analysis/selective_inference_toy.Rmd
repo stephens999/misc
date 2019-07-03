@@ -82,8 +82,8 @@ measure the significance of the coefficient of the selected variable,
 
 Put another way, selective inference is not trying to assess
 uncertainty in which variables should be selected, and is certainly
-not trying to produce inferences of the form $$(b_1 \neq 0 \text{OR}
-b_2 \neq 0) \text{AND} (b_3 \neq 0 \text{OR} b_4 \neq 0)$$, which
+not trying to produce inferences of the form $$(b_1 \neq 0 \text{ OR }
+b_2 \neq 0) \text{ AND } (b_3 \neq 0 \text{ OR } b_4 \neq 0),$$ which
 was the goal of [Wang et al (2018)][wang-2018].
 
 [wang-2018]: https://www.biorxiv.org/content/10.1101/501114v1
