@@ -1,0 +1,71 @@
+---
+title: "hierinf_toyexample"
+author: "Matthew Stephens"
+date: "2019-07-15"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+The aim here is to illustrate in a very simple example why the hierarchical inference approach,
+e.g. as  implemented in `hierinf`, may select too many variables.
+
+Suppose we have three highly-correlated variables $x_1,x_2,x_3$, and that $x_2,x_3$ are most highly correlated. Then the hierchical clustering
+will put $x_2,x_3$ together first, and then join with $x_1$. As a consequence
+the hierarchical approach cannot select just $x_1$ and $x_2$ say, even
+if the data would support that selection (e.g.  because $x_1$ is the effect
+variable and $x_2$ is sufficiently correlated with $x_1$ to be difficult
+to distinguish from it, whereas $x_3$ is not).
+The hierarchical approach can  only choose to select $x_1$ alone or all 3. On the other hand SuSiE can select
+any pair of variables that is appropriate.
+
+
+# Illustration
+
+Here we provide a simple simulation that illustrates the idea.
+(Note that this is not deterministic.. so a different seed may
+produce a different result.)
+
+```{r}
+library("hierinf")
+library("mvtnorm")
+```
+
+First simulate some data with $(x_2,x_3)$ most highly correlated, and
+with $x_1$ being most correlated with $x_2$. Note that $x_1$ is the effect variable.
+```{r}
+set.seed(4)
+n = 10000 # chosen large to reduce the variation  among simulations, although different seeds can give different answers
+rho12 = 0.97
+rho13 = 0.92
+rho23 = 0.98
+Sigma = cbind(c(1,rho12,rho13),c(rho12,1,rho23),c(rho13,rho23,1))
+
+x = mvtnorm::rmvnorm(n, c(0,0,0),Sigma)
+b = c(0.07,0,0) # this was chosen such that there is usually some  uncertainty in the variable selection
+y = drop(x %*% b + rnorm(n))
+```
+
+Run `susie`:  
+```{r}
+s = susieR::susie(x,y)
+susieR::susie_get_cs(s)
+susieR::susie_get_pip(s)
+```
+
+Note that susie reports a CS with  just
+variables $(x_1,x_2)$. Essentially this is because, although $x_3$ is
+correlated with  $x_1$, it is sufficiently independent of $x_1$
+to not be confused with it ($x_3$ has very small PIP).
+
+This result is impossible for `hierinf` because it constrains
+itself by the hierarchical  structure (which does not "really" exist here - it
+is imposed by the method.) Here `hierinf` reports a significant cluster containing all 3  variables:
+```{r}
+colnames(x)<-1:3
+h = hierinf::test_hierarchy(x,y,alpha=0.01,dendr=cluster_var(x))
+h
+```
+
