@@ -49,6 +49,7 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 * [Connect new VB to single SNP Bayesian analysis](newVB.ss.html)
 * [selective inference on toy example](selective_inference_toy.html)
 * [selective inference with correlated variables](selective_inference.html)
+* [hierarchical inference example](hierinf_toyexample.html)
 
 # Depletion
 
