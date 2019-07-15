@@ -7,6 +7,7 @@
 <meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
 
@@ -22,8 +23,6 @@
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
-<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
-<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css">
@@ -246,18 +245,6 @@ $(document).ready(function () {
 }
 </style>
 
-<script>
-$(document).ready(function () {
-  window.buildTabsets("TOC");
-});
-
-$(document).ready(function () {
-  $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
-  });
-});
-</script>
-
 <!-- code folding -->
 
 
@@ -288,19 +275,10 @@ $(document).ready(function () {
         <li>
   <a href="index.html">Home</a>
 </li>
-<li>
-  <a href="about.html">About</a>
-</li>
-<li>
-  <a href="license.html">License</a>
-</li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://github.com/stephens999/misc">
-    <span class="fa fa-github"></span>
-     
-  </a>
+  <a href="https://github.com/stephens999/misc">source</a>
 </li>
       </ul>
     </div><!--/.nav-collapse -->
@@ -343,7 +321,7 @@ div.section {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2019-06-25
+<strong>Last updated:</strong> 2019-07-15
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 2 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -374,10 +352,10 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree0bfd90282cd4c8eca308d56a4b3b66919dc1d2c0targetblank0bfd902a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/0bfd90282cd4c8eca308d56a4b3b66919dc1d2c0" target="_blank">0bfd902</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree960db083328a0149cc3f5f05894096ddf374827etargetblank960db08a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/960db083328a0149cc3f5f05894096ddf374827e" target="_blank">960db08</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree0bfd90282cd4c8eca308d56a4b3b66919dc1d2c0targetblank0bfd902a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree960db083328a0149cc3f5f05894096ddf374827etargetblank960db08a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -397,18 +375,19 @@ Ignored files:
 Untracked files:
     Untracked:  .dropbox
     Untracked:  Icon
-    Untracked:  _workflowr.yml
     Untracked:  analysis/GTEX-cogaps.Rmd
     Untracked:  analysis/SPCAvRP.rmd
     Untracked:  analysis/compare-transformed-models.Rmd
     Untracked:  analysis/cormotif.Rmd
     Untracked:  analysis/eQTL.perm.rand.pdf
+    Untracked:  analysis/eb_prepilot.Rmd
     Untracked:  analysis/flash_test_tree.Rmd
     Untracked:  analysis/ieQTL.perm.rand.pdf
     Untracked:  analysis/m6amash.Rmd
     Untracked:  analysis/mash_bhat_z.Rmd
     Untracked:  analysis/mash_ieqtl_permutations.Rmd
     Untracked:  analysis/mixsqp.Rmd
+    Untracked:  analysis/nejm.Rmd
     Untracked:  analysis/normalize.Rmd
     Untracked:  analysis/pbmc.Rmd
     Untracked:  analysis/poisson_transform.Rmd
@@ -434,6 +413,7 @@ Untracked files:
     Untracked:  data/bmass.HaemgenRBC2016.MAF01.Vs2.MergedDataSources.200kRanSubset.ChrBPMAFMarkerZScores.vs1.txt.gz
     Untracked:  data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt
     Untracked:  data/bmass.HaemgenRBC2016.Vs2.PreviousSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/eb_prepilot/
     Untracked:  data/finemap_data/fmo2.sim/b.txt
     Untracked:  data/finemap_data/fmo2.sim/dap_out.txt
     Untracked:  data/finemap_data/fmo2.sim/dap_out2.txt
@@ -475,6 +455,7 @@ Untracked files:
     Untracked:  docs/trend_files/
     Untracked:  docs/z.txt
     Untracked:  explore_udi.R
+    Untracked:  output/fit.k10.rds
     Untracked:  output/fit.varbvs.RDS
     Untracked:  output/glmnet.fit.RDS
     Untracked:  output/test.bv.txt
@@ -502,16 +483,6 @@ Untracked files:
     Untracked:  output/test5.hyp.txt
     Untracked:  output/test5.log.txt
     Untracked:  output/test5.param.txt
-
-Unstaged changes:
-    Modified:   analysis/_site.yml
-    Deleted:    analysis/chunks.R
-    Modified:   analysis/eigen.Rmd
-    Modified:   analysis/fmo2.sim.Rmd
-    Modified:   analysis/newVB.Rmd
-    Modified:   analysis/selective_inference.Rmd
-    Modified:   analysis/simple_transform_simulation.Rmd
-    Modified:   analysis/wSVD.Rmd
 
 </code></pre>
 <p>
@@ -550,6 +521,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/960db083328a0149cc3f5f05894096ddf374827e/analysis/index.Rmd" target="_blank">960db08</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2019-07-15
+</td>
+<td>
+wflow_publish(“index.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/f0eac95bfbd6f342b51a25bbb2b1b668c0c70928/docs/index.html" target="_blank">f0eac95</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2019-06-25
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -884,7 +889,7 @@ html
 stephens999
 </td>
 <td>
-2017-12-09
+2017-12-10
 </td>
 <td>
 Build site.
@@ -901,7 +906,7 @@ Rmd
 stephens999
 </td>
 <td>
-2017-12-09
+2017-12-10
 </td>
 <td>
 workflowr::wflow_publish(“index.Rmd”)
@@ -1334,6 +1339,7 @@ Start workflowr project.
 <li><a href="newVB.ss.html">Connect new VB to single SNP Bayesian analysis</a></li>
 <li><a href="selective_inference_toy.html">selective inference on toy example</a></li>
 <li><a href="selective_inference.html">selective inference with correlated variables</a></li>
+<li><a href="hierinf_toyexample.html">hierarchical inference example</a></li>
 </ul>
 </div>
 <div id="depletion" class="section level1">
@@ -1349,30 +1355,6 @@ Start workflowr project.
 </ul>
 </div>
 
-<hr>
-<p>
-    
-</p>
-<hr>
-
-<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
-
-<!-- disqus
-  <div id="disqus_thread"></div>
-    <script type="text/javascript">
-        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
-        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
-
-        /* * * DON'T EDIT BELOW THIS LINE * * */
-        (function() {
-            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script>
-    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
--->
 
 <!-- Adjust MathJax settings so that all math formulae are shown using
 TeX fonts only; see
@@ -1402,6 +1384,23 @@ $(document).ready(function () {
 
 
 </script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>
