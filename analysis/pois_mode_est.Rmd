@@ -1,0 +1,34 @@
+---
+title: "pois_mode_est"
+author: "Matthew Stephens"
+date: "2019-09-30"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+library(ashr)
+```
+
+## Introduction
+
+Here I am going to look 
+at an example from Abhishek Sarkar where the Poisson mode estimation in ash did not work well. 
+
+Here I read in the data and run ash, plotting the fitted cdf and grid.
+
+```{r}
+d = readRDS("../data/pois-mode-est.Rds")
+hist(d$x)
+summary(d$s)
+res.ash = ash_pois(d$x,d$s,link="identity")
+res.ash$fitted_g
+plot(res.ash,xmin=0,xmax=1e-4)
+abline(v=res.ash$fitted_g$a,col=1)
+abline(v=res.ash$fitted_g$b,col=2)
+res.ash$loglik
+```
+
+
+
