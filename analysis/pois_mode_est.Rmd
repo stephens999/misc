@@ -16,7 +16,8 @@ library(ashr)
 Here I am going to look 
 at an example from Abhishek Sarkar where the Poisson mode estimation in ash did not work well. 
 
-Here I read in the data and run ash, plotting the fitted cdf and grid.
+Here I read in the data and run ash, plotting the fitted cdf and grid. After fixing
+the ashr code a bit the grid has improved....
 
 ```{r}
 d = readRDS("../data/pois-mode-est.Rds")
@@ -30,5 +31,9 @@ abline(v=res.ash$fitted_g$b,col=2)
 res.ash$loglik
 ```
 
+try ebpm:
+```{r, error=TRUE}
+res.ebpm = ebpm::ebpm_point_gamma(d$x,d$s)
+```
 
 
