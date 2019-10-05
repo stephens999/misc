@@ -34,9 +34,9 @@ for(i in 1:n){
     if(runif(1)<missprob[i]){X[i,j]=NA}
   }
 }
-res.p = primePCA(X, 1,trace.it=TRUE,center=FALSE)
+res.p = primePCA(X, 1,trace.it=FALSE,center=FALSE)
 res.s = softImpute(X,1)
-plot(res.s$v,res.p$V_cur,main="v from prime vs softimpute")
+plot(res.s$v,res.p$V_cur,main="v from primePCA vs softimpute")
 abline(a=0,b=1,col=2)
 ```
 
@@ -55,9 +55,9 @@ for(i in 1:n){
     if(runif(1)<missprob[i]){X[i,j]=NA}
   }
 }
-res.p = primePCA(X, 1,trace.it=TRUE,center=FALSE)
+res.p = primePCA(X, 1,trace.it=FALSE,center=FALSE)
 res.s = softImpute(X,1)
-plot(res.s$v,res.p$V_cur,main="v from prime vs softimpute")
+plot(res.s$v,res.p$V_cur,main="v from primePCA vs softimpute")
 abline(a=0,b=-1,col=2)
 ```
 
@@ -77,9 +77,9 @@ for(i in 1:n){
     if(runif(1)<missprob[i]){X[i,j]=NA}
   }
 }
-res.p = primePCA(X, 1,trace.it=TRUE,center=FALSE)
+res.p = primePCA(X, 1,trace.it=FALSE,center=FALSE)
 res.s = softImpute(X,1)
-plot(res.s$v,res.p$V_cur,main="v from prime vs softimpute")
+plot(res.s$v,res.p$V_cur,main="v from primePCA vs softimpute")
 abline(a=0,b=-1,col=2)
 cor(cbind(v,res.p$V_cur,res.s$v))
 ```
@@ -100,11 +100,11 @@ for(i in 1:n){
     if(runif(1)<missprob[i]){X[i,j]=NA}
   }
 }
-res.p = primePCA(X, 1,trace.it=TRUE,center=FALSE)
+res.p = primePCA(X, 1,trace.it=FALSE,center=FALSE)
 res.s = softImpute(X,1)
-plot(res.s$v,res.p$V_cur,main="v from prime vs softimpute")
+plot(res.s$v,res.p$V_cur,main="v from primePCA vs softimpute")
 abline(a=0,b=-1,col=2)
 cor(cbind(v,res.p$V_cur,res.s$v))
 ```
 
-Interestingly, the results from `trace.it=TRUE` in primePCA suggest it is maybe entering an infinite loop in this case. I guess that maybe this is probably because of changes in the rows selected, and indeed was able to avoid it by setting very large `thresh_sigma=1e100`. (In this case it appears to just filter out the rows with only one entry; in the other case it sometimes filters out one additional row).
+Interestingly, the results from `trace.it=FALSE` in primePCA suggest it is maybe entering an infinite loop in this case. I guess that maybe this is probably because of changes in the rows selected, and indeed was able to avoid it by setting very large `thresh_sigma=1e100`. (In this case it appears to just filter out the rows with only one entry; in the other case it sometimes filters out one additional row).
