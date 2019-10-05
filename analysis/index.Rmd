@@ -40,6 +40,7 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 
 * [Outline of EM algorithm for fitting weighted SVD](wSVD.html)
 * [Investigation of weighted SVD for Poisson data](plra.html)
+* [Brief experiment with primePCA](primepca.html)
 
 # Finemapping
 
