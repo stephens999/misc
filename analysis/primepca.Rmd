@@ -1,0 +1,110 @@
+---
+title: "primepca"
+author: "Matthew Stephens"
+date: "2019-10-05"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+I briefly experiment with primePCA package for PCA with missing data
+and compare its results with those from softImpute. To make the two comparable
+I run both with no centering (set `center=FALSE` in primePCA).
+
+```{r}
+library("primePCA")
+library("softImpute")
+```
+
+
+This first try is 50% missingness in every row, a rank 1 matrix:
+```{r}
+set.seed(123)
+n = 100
+p = 200
+missprob = rep(0.5,100) #make every row have 50% missing
+u = rnorm(n)
+v = rnorm(p)
+X = u %*% t(v) + rnorm(n*p)
+
+for(i in 1:n){
+  for(j in 1:p){
+    if(runif(1)<missprob[i]){X[i,j]=NA}
+  }
+}
+res.p = primePCA(X, 1,trace.it=TRUE,center=FALSE)
+res.s = softImpute(X,1)
+plot(res.s$v,res.p$V_cur,main="v from prime vs softimpute")
+abline(a=0,b=1,col=2)
+```
+
+This is the same but missingness varies by row (uniform on 0,1).
+```{r}
+set.seed(123)
+n = 100
+p = 200
+missprob = runif(n) #
+u = rnorm(n)
+v = rnorm(p)
+X = u %*% t(v) + rnorm(n*p)
+
+for(i in 1:n){
+  for(j in 1:p){
+    if(runif(1)<missprob[i]){X[i,j]=NA}
+  }
+}
+res.p = primePCA(X, 1,trace.it=TRUE,center=FALSE)
+res.s = softImpute(X,1)
+plot(res.s$v,res.p$V_cur,main="v from prime vs softimpute")
+abline(a=0,b=-1,col=2)
+```
+
+
+This example has higher missingness (0.8,1)
+```{r}
+set.seed(123)
+n = 100
+p = 200
+missprob = 0.8+ 0.2*runif(n) #at least 80% missing
+u = rnorm(n)
+v = rnorm(p)
+X = u %*% t(v) + rnorm(n*p)
+
+for(i in 1:n){
+  for(j in 1:p){
+    if(runif(1)<missprob[i]){X[i,j]=NA}
+  }
+}
+res.p = primePCA(X, 1,trace.it=TRUE,center=FALSE)
+res.s = softImpute(X,1)
+plot(res.s$v,res.p$V_cur,main="v from prime vs softimpute")
+abline(a=0,b=-1,col=2)
+cor(cbind(v,res.p$V_cur,res.s$v))
+```
+
+
+...and higher missingness again, (0.9,1). (I increased n so that every column has sufficient non-missing entries):
+```{r}
+set.seed(123)
+n = 1000
+p = 200
+missprob = 0.9+ 0.1*runif(n) #at least 90% missing
+u = rnorm(n)
+v = rnorm(p)
+X = u %*% t(v) + rnorm(n*p)
+
+for(i in 1:n){
+  for(j in 1:p){
+    if(runif(1)<missprob[i]){X[i,j]=NA}
+  }
+}
+res.p = primePCA(X, 1,trace.it=TRUE,center=FALSE)
+res.s = softImpute(X,1)
+plot(res.s$v,res.p$V_cur,main="v from prime vs softimpute")
+abline(a=0,b=-1,col=2)
+cor(cbind(v,res.p$V_cur,res.s$v))
+```
+
+Interestingly, the results from `trace.it=TRUE` in primePCA suggest it is maybe entering an infinite loop in this case. I guess that maybe this is probably because of changes in the rows selected, and indeed was able to avoid it by setting very large `thresh_sigma=1e100`. (In this case it appears to just filter out the rows with only one entry; in the other case it sometimes filters out one additional row).
