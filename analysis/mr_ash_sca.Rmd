@@ -1,0 +1,282 @@
+---
+title: "multiple regression with ash, parallel coordinate ascent"
+author: "Matthew Stephens"
+date: "2019-10-07"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+library("ashr")
+```
+
+## Introduction
+
+The idea here is to investigate a parallel approach to updating bhat in multiple regression with ash.
+
+The basic idea is that the optimal b should be the fixed point of the following iterations:
+1. r = (Y-Xb)
+2. bhat = b + d^{-1}X'r
+3. shat = sigma/sqrt(d)
+4. b = ash(bhat,shat)
+
+More accurately, I believe that 
+if b is a fixed point of this then it will also
+be a fixed point of the regular coordinate ascent (at least, something
+like this should be true.)
+
+```{r}
+mr_ash_parallel_ca = function(X,Y,b_init=NULL,max_iter=100,sigma=1,tol=1e-5){
+  if(is.null(b_init)){b_init = rep(0,ncol(X))}
+  b = b_init
+  d = Matrix::colSums(X * X)
+  for(i in 1:max_iter){
+    r = Y- X %*% b
+    bhat = as.vector(b + (1/d)*(t(X) %*% r))
+    s = sigma/sqrt(d)
+    b2 = get_pm(ash(bhat,s))
+    if(sum((b2-b)^2)<tol){break;}
+    b=b2
+  }
+  
+  print(paste0("niter = ",i))
+  return(b)
+}
+```
+
+A toy example to check:
+```{r}
+set.seed(123)
+n= 100
+p=10
+X = matrix(rnorm(n*p),ncol=p,nrow=n)
+btrue = rnorm(p)
+Y = X %*% btrue + rnorm(n)
+b_init=rep(0,p)
+b = mr_ash_parallel_ca(X,Y)
+plot(btrue,b)
+```
+
+And a sparse example
+```{r}
+btrue[1:5]=0
+Y = X %*% btrue + rnorm(n)
+b_init=rep(0,p)
+b = mr_ash_parallel_ca(X,Y)
+plot(btrue,b)
+```
+
+Now try example with X duplicated. As might have been anticipated, it fails to converge and returns a ridiculous solution - likely going off to infinity.
+```{r}
+set.seed(123)
+n= 100
+p=10
+X = matrix(rnorm(n*p),ncol=p,nrow=n)
+X = cbind(X ,X)
+btrue = rnorm(2*p)
+
+Y = X %*% btrue + rnorm(n)
+b_init=rep(0,p)
+b = mr_ash_parallel_ca(X,Y)
+plot(btrue,b)
+plot(b[1:10],b[11:20])
+```
+
+
+Try same thing initializing from truth - it still diverges.
+```{r}
+b = mr_ash_parallel_ca(X,Y,b_init = btrue)
+plot(btrue,b)
+```
+
+
+## Fix g
+
+Check if it still goes badly wrong with fixed g...
+```{r}
+mr_ash_parallel_ca_fix = function(X,Y,b_init=NULL,max_iter=100,sigma=1,tol=1e-5){
+  if(is.null(b_init)){b_init = rep(0,ncol(X))}
+  b = b_init
+  d = Matrix::colSums(X * X)
+  for(i in 1:max_iter){
+    r = Y- X %*% b
+    bhat = as.vector(b + (1/d)*(t(X) %*% r))
+    s = sigma/sqrt(d)
+    b2 = get_pm(ash(bhat,s,g=normalmix(1,0,1),fixg=TRUE))
+    if(sum((b2-b)^2)<tol){break;}
+    b=b2
+  }
+  
+  print(paste0("niter = ",i))
+  return(b)
+}
+```
+
+And indeed it does. Note that the fitted values do not match Y at all...
+```{r}
+b = mr_ash_parallel_ca_fix(X,Y,b_init = btrue)
+plot(btrue,b)
+plot(Y,X %*% btrue)
+plot(Y,X %*% b)
+```
+
+## Rescaling
+
+Next I tried rescaling the fitted values and prior each iteration
+by a constant c.
+This might seem ad hoc, but I think something like this can be justfied as scaling both the prior and the posterior approximation
+(although results later suggest I might have the details wrong...)
+```{r}
+mr_ash_parallel_ca_rescale = function(X,Y,b_init=NULL,max_iter=100,sigma=1,tol=1e-5){
+  if(is.null(b_init)){b_init = rep(0,ncol(X))}
+  b = b_init
+  d = Matrix::colSums(X * X)
+  c  = 1
+  for(i in 1:max_iter){
+    r = Y- X %*% b
+    bhat = as.vector(b + (1/d)*(t(X) %*% r))
+    s = sigma/sqrt(d)
+    b2 = get_pm(ash(bhat,s,g=normalmix(1,0,c),fixg=TRUE))
+    fitted =  X %*% b2
+    c = (1/sum(fitted^2)) * sum(fitted*Y) # regress Y on fitted values
+    b2 = c*b2
+    if(sum((b2-b)^2)<tol){break;}
+    b=b2
+    print(paste0("MSE:",mean((fitted-Y)^2),"; mean(b^2):",mean(b^2),"; c:",c))
+  }
+  
+  print(paste0("niter = ",i))
+  return(b)
+}
+```
+
+In this example, rescaling definitely stabilizes the estimates...but does not converge. Interestingly it seems to flip between two solutions....
+(I got it to print out the mean squared residuals each iteration.)
+```{r}
+b = mr_ash_parallel_ca_rescale(X,Y,b_init = btrue,max_iter = 100)
+plot(btrue,b)
+plot(Y,X %*% btrue)
+plot(Y,X %*% b)
+b_collapse = b[1:10]+b[11:20]
+btrue_collapse = btrue[1:10]+btrue[11:20]
+plot(b_collapse,btrue_collapse)
+```
+
+
+# coordinate ascent
+
+I decided to code up the simple coordinate ascent for comparison
+```{r}
+mr_ash_ca_fix = function(X,Y,b_init=NULL,max_iter=100,sigma=1,tol=1e-3,rescale=FALSE){
+  if(is.null(b_init)){b_init = rep(0,ncol(X))}
+  b = b_init
+  p = ncol(X)
+  d = Matrix::colSums(X * X)
+  c = 1
+  for(i in 1:max_iter){
+    err = 0
+    for(j in 1:p){
+      r = Y- X[,-j] %*% b[-j]
+      bhat = (1/d[j])*sum(X[,j]* r)
+      s = sigma/sqrt(d[j])
+      bj_new = get_pm(ash(bhat,s,g=normalmix(1,0,c),fixg=TRUE))
+      err = err + (b[j]-bj_new)^2
+      b[j] = bj_new
+    }
+    if(rescale){
+      fitted = X %*% b
+      c = (1/sum(fitted^2)) * sum(fitted*Y) # regress Y on fitted values
+      b = c*b
+    }
+    if(err<tol){break;}
+  }
+  
+  print(paste0("niter = ",i))
+  return(b)
+}
+```
+
+```{r}
+b = mr_ash_ca_fix(X,Y,b_init = btrue,max_iter = 100)
+b_r = mr_ash_ca_fix(X,Y,b_init = btrue,max_iter = 100,rescale=TRUE)
+plot(btrue,b)
+```
+
+
+# Comparison with ridge regression
+
+Because I fix the prior to N(0,1) this should be equivalent to ridge regression. Let's try it.
+
+```{r}
+S = diag(2*p) + t(X) %*% X
+bhat_rr = solve(S, t(X) %*% Y)
+plot(bhat_rr[1:10]+bhat_rr[11:20],btrue_collapse)
+plot(bhat_rr,b)
+
+b = mr_ash_ca_fix(X,Y,b_init = bhat_rr,max_iter = 100)
+
+```
+
+So initializing from RR indeed stays in the same place.
+But initializing from truth does not give
+RR solution. This is presumably because convergence is
+glacially slow due to very strong correlation.
+
+Let's try an uncorreled case:
+```{r}
+set.seed(123)
+n= 100
+p=10
+X = matrix(rnorm(n*p),ncol=p,nrow=n)
+btrue = rnorm(p)
+Y = X %*% btrue + rnorm(n)
+b_init=rep(0,p)
+b = mr_ash_ca_fix(X,Y)
+S = diag(p) + t(X) %*% X
+bhat_rr = solve(S, t(X) %*% Y)
+plot(bhat_rr,b)
+
+b_rescale = mr_ash_ca_fix(X,Y,rescale=TRUE)
+```
+
+It is not clear the rescaling is working as expected.
+Perhaps I have the details wrong.
+
+
+# trend filtering example
+
+This example the X will be highly correlated, but not completely so.
+It is designed to be challenging but easy to visualize what is going on.
+```{r}
+set.seed(100)
+n = 100
+p = n
+X = matrix(0,nrow=n,ncol=n)
+for(i in 1:n){
+  X[i:n,i] = 1:(n-i+1)
+}
+btrue = rep(0,n)
+btrue[40] = 8
+btrue[41] = -8
+Y = X %*% btrue + rnorm(n)
+plot(Y)
+lines(X %*% btrue)
+
+bhat_ca = mr_ash_ca_fix(X,Y,max_iter = 100)
+lines(X %*% bhat_ca,col=2)
+
+# ridge
+S = diag(p) + t(X) %*% X
+bhat_rr = solve(S, t(X) %*% Y)
+lines(X %*% bhat_rr,col=3)
+```
+
+
+Parallel version goes crazy:
+```{r}
+bhat_pca = mr_ash_parallel_ca_fix(X,Y,max_iter= 10) 
+plot(X %*% bhat_pca,col=4)
+```
+
+
