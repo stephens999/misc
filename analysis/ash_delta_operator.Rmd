@@ -1,0 +1,46 @@
+---
+title: "ash_delta_operator"
+author: "Matthew Stephens"
+date: "2019-10-07"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+Consider the posterior mean of ash in the case with constant standard errors (say 1) as a shrinkage operator $s(x;g)$ where the operator
+obviously depends on $g$. 
+
+Now define $\delta(x)$ to be the value (or a value, if not uniquely defined) such that
+$s(x+\delta(x)) = x$. The motivation is that if you add $\delta(x)$
+to $x$ and shrink, you get back to x.
+
+That is, $\delta(x)= s^{-1}(x)-x$. 
+
+For soft-thresholding $s(x) = (x-c)_+$, and $\delta(x) = 0$ for $x<c$
+and $\delta(x) = c$ for $x>c$ works. 
+
+Here I look at what the form of $\delta(x)$ looks like for ash.
+I'm particularly interested in whether $\delta$ is increasing
+because if it is I think I can approximate ash solutions to linear regression using a linear combination of lasso solutions.
+
+```{r}
+library(ashr)
+k=10 # number of mixture components in ash prior, g
+maxsd = 10 # maximum sd in g
+g = normalmix(rep(1/k,k),rep(0,k),(maxsd/(2^k)) * 2^(1:k))
+x = seq(0,10,length=100)
+x.a = ashr::ash.workhorse(x,1,g=g,fixg=TRUE)
+plot(x,get_pm(x.a))
+abline(a=0,b=1)
+```
+
+Now plot delta directly.
+```{r}
+z = get_pm(x.a) #so s^{-1}(z)=x, so delta(z) = x-z
+plot(z,x-z)
+```
+
+So delta is not increasing. 
+
