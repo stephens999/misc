@@ -26,76 +26,14 @@ if b is a fixed point of this then it will also
 be a fixed point of the regular coordinate ascent (at least, something
 like this should be true.)
 
+To start with we fix g to N(0,1) to keep thing simple....
+
+(Note that the rescaling step was supposed to allow
+scaling prior and posterior by some constant, but results
+suggest I may not have the details right here. Ignore this for now.)
+
 ```{r}
-mr_ash_parallel_ca = function(X,Y,b_init=NULL,max_iter=100,sigma=1,tol=1e-5){
-  if(is.null(b_init)){b_init = rep(0,ncol(X))}
-  b = b_init
-  d = Matrix::colSums(X * X)
-  for(i in 1:max_iter){
-    r = Y- X %*% b
-    bhat = as.vector(b + (1/d)*(t(X) %*% r))
-    s = sigma/sqrt(d)
-    b2 = get_pm(ash(bhat,s))
-    if(sum((b2-b)^2)<tol){break;}
-    b=b2
-  }
-  
-  print(paste0("niter = ",i))
-  return(b)
-}
-```
-
-A toy example to check:
-```{r}
-set.seed(123)
-n= 100
-p=10
-X = matrix(rnorm(n*p),ncol=p,nrow=n)
-btrue = rnorm(p)
-Y = X %*% btrue + rnorm(n)
-b_init=rep(0,p)
-b = mr_ash_parallel_ca(X,Y)
-plot(btrue,b)
-```
-
-And a sparse example
-```{r}
-btrue[1:5]=0
-Y = X %*% btrue + rnorm(n)
-b_init=rep(0,p)
-b = mr_ash_parallel_ca(X,Y)
-plot(btrue,b)
-```
-
-Now try example with X duplicated. As might have been anticipated, it fails to converge and returns a ridiculous solution - likely going off to infinity.
-```{r}
-set.seed(123)
-n= 100
-p=10
-X = matrix(rnorm(n*p),ncol=p,nrow=n)
-X = cbind(X ,X)
-btrue = rnorm(2*p)
-
-Y = X %*% btrue + rnorm(n)
-b_init=rep(0,p)
-b = mr_ash_parallel_ca(X,Y)
-plot(btrue,b)
-plot(b[1:10],b[11:20])
-```
-
-
-Try same thing initializing from truth - it still diverges.
-```{r}
-b = mr_ash_parallel_ca(X,Y,b_init = btrue)
-plot(btrue,b)
-```
-
-
-## Fix g
-
-Check if it still goes badly wrong with fixed g...
-```{r}
-mr_ash_parallel_ca_fix = function(X,Y,b_init=NULL,max_iter=100,sigma=1,tol=1e-5){
+mr_ash_parallel_ca_fix = function(X,Y,b_init=NULL,max_iter=100,sigma=1,tol=1e-5,rescale=FALSE){
   if(is.null(b_init)){b_init = rep(0,ncol(X))}
   b = b_init
   d = Matrix::colSums(X * X)
@@ -106,88 +44,42 @@ mr_ash_parallel_ca_fix = function(X,Y,b_init=NULL,max_iter=100,sigma=1,tol=1e-5)
     b2 = get_pm(ash(bhat,s,g=normalmix(1,0,1),fixg=TRUE))
     if(sum((b2-b)^2)<tol){break;}
     b=b2
+    
+    if(rescale){
+      fitted = X %*% b  
+      c = (1/sum(fitted^2)) * sum(fitted*Y) # regress Y on fitted values
+      b = c*b
+    }
+    
   }
   
   print(paste0("niter = ",i))
   return(b)
 }
-```
 
-And indeed it does. Note that the fitted values do not match Y at all...
-```{r}
-b = mr_ash_parallel_ca_fix(X,Y,b_init = btrue)
-plot(btrue,b)
-plot(Y,X %*% btrue)
-plot(Y,X %*% b)
-```
-
-## Rescaling
-
-Next I tried rescaling the fitted values and prior each iteration
-by a constant c.
-This might seem ad hoc, but I think something like this can be justfied as scaling both the prior and the posterior approximation
-(although results later suggest I might have the details wrong...)
-```{r}
-mr_ash_parallel_ca_rescale = function(X,Y,b_init=NULL,max_iter=100,sigma=1,tol=1e-5){
-  if(is.null(b_init)){b_init = rep(0,ncol(X))}
-  b = b_init
-  d = Matrix::colSums(X * X)
-  c  = 1
-  for(i in 1:max_iter){
-    r = Y- X %*% b
-    bhat = as.vector(b + (1/d)*(t(X) %*% r))
-    s = sigma/sqrt(d)
-    b2 = get_pm(ash(bhat,s,g=normalmix(1,0,c),fixg=TRUE))
-    fitted =  X %*% b2
-    c = (1/sum(fitted^2)) * sum(fitted*Y) # regress Y on fitted values
-    b2 = c*b2
-    if(sum((b2-b)^2)<tol){break;}
-    b=b2
-    print(paste0("MSE:",mean((fitted-Y)^2),"; mean(b^2):",mean(b^2),"; c:",c))
-  }
-  
-  print(paste0("niter = ",i))
-  return(b)
-}
-```
-
-In this example, rescaling definitely stabilizes the estimates...but does not converge. Interestingly it seems to flip between two solutions....
-(I got it to print out the mean squared residuals each iteration.)
-```{r}
-b = mr_ash_parallel_ca_rescale(X,Y,b_init = btrue,max_iter = 100)
-plot(btrue,b)
-plot(Y,X %*% btrue)
-plot(Y,X %*% b)
-b_collapse = b[1:10]+b[11:20]
-btrue_collapse = btrue[1:10]+btrue[11:20]
-plot(b_collapse,btrue_collapse)
-```
-
-
-# coordinate ascent
-
-I decided to code up the simple coordinate ascent for comparison
-```{r}
 mr_ash_ca_fix = function(X,Y,b_init=NULL,max_iter=100,sigma=1,tol=1e-3,rescale=FALSE){
   if(is.null(b_init)){b_init = rep(0,ncol(X))}
   b = b_init
   p = ncol(X)
   d = Matrix::colSums(X * X)
   c = 1
+  r = Y - X %*%  b
   for(i in 1:max_iter){
     err = 0
     for(j in 1:p){
-      r = Y- X[,-j] %*% b[-j]
+      r = r + b[j]*X[,j] 
       bhat = (1/d[j])*sum(X[,j]* r)
       s = sigma/sqrt(d[j])
       bj_new = get_pm(ash(bhat,s,g=normalmix(1,0,c),fixg=TRUE))
       err = err + (b[j]-bj_new)^2
       b[j] = bj_new
+      r = r - b[j]*X[,j] # recompute residuals
     }
     if(rescale){
-      fitted = X %*% b
+      fitted = Y - r  #so fitted = Xb
       c = (1/sum(fitted^2)) * sum(fitted*Y) # regress Y on fitted values
       b = c*b
+      r = Y - c * fitted
     }
     if(err<tol){break;}
   }
@@ -195,35 +87,20 @@ mr_ash_ca_fix = function(X,Y,b_init=NULL,max_iter=100,sigma=1,tol=1e-3,rescale=F
   print(paste0("niter = ",i))
   return(b)
 }
-```
-
-```{r}
-b = mr_ash_ca_fix(X,Y,b_init = btrue,max_iter = 100)
-b_r = mr_ash_ca_fix(X,Y,b_init = btrue,max_iter = 100,rescale=TRUE)
-plot(btrue,b)
-```
 
 
-# Comparison with ridge regression
 
-Because I fix the prior to N(0,1) this should be equivalent to ridge regression. Let's try it.
+ridge = function(X,Y,sigma=1){
+  p = ncol(X)
+  S = sigma^2*diag(p) + t(X) %*% X
+  bhat = solve(S, t(X) %*% Y)
+  return(bhat)
+}
 
-```{r}
-S = diag(2*p) + t(X) %*% X
-bhat_rr = solve(S, t(X) %*% Y)
-plot(bhat_rr[1:10]+bhat_rr[11:20],btrue_collapse)
-plot(bhat_rr,b)
-
-b = mr_ash_ca_fix(X,Y,b_init = bhat_rr,max_iter = 100)
 
 ```
 
-So initializing from RR indeed stays in the same place.
-But initializing from truth does not give
-RR solution. This is presumably because convergence is
-glacially slow due to very strong correlation.
-
-Let's try an uncorreled case:
+A toy example to check:
 ```{r}
 set.seed(123)
 n= 100
@@ -231,17 +108,93 @@ p=10
 X = matrix(rnorm(n*p),ncol=p,nrow=n)
 btrue = rnorm(p)
 Y = X %*% btrue + rnorm(n)
-b_init=rep(0,p)
-b = mr_ash_ca_fix(X,Y)
-S = diag(p) + t(X) %*% X
-bhat_rr = solve(S, t(X) %*% Y)
-plot(bhat_rr,b)
 
-b_rescale = mr_ash_ca_fix(X,Y,rescale=TRUE)
+b.pca = mr_ash_parallel_ca_fix(X,Y)
+b.ca = mr_ash_ca_fix(X,Y)
+b.ridge = ridge(X,Y)
+plot(btrue,b.ca)
+points(btrue,b.pca,col=2,pch=2)
+points(btrue,b.ridge,col=3,pch=3)
 ```
 
-It is not clear the rescaling is working as expected.
-Perhaps I have the details wrong.
+And a sparse example
+```{r}
+btrue[1:5]=0
+Y = X %*% btrue + rnorm(n)
+b.pca = mr_ash_parallel_ca_fix(X,Y)
+b.ca = mr_ash_ca_fix(X,Y)
+b.ridge = ridge(X,Y)
+plot(btrue,b.ca)
+points(btrue,b.pca,col=2,pch=2)
+points(btrue,b.ridge,col=3,pch=3)
+```
+
+Now try example with X duplicated. As might have been anticipated, it fails to converge and returns a ridiculous solution that seems to be diverging off to +-infinity.
+```{r}
+set.seed(123)
+n= 100
+p=10
+X = matrix(rnorm(n*p),ncol=p,nrow=n)
+X = cbind(X ,X)
+btrue = rnorm(2*p)
+Y = X %*% btrue + rnorm(n)
+
+b.pca = mr_ash_parallel_ca_fix(X,Y)
+b.ca = mr_ash_ca_fix(X,Y)
+b.ridge = ridge(X,Y)
+plot(btrue,b.ca)
+points(btrue,b.pca,col=2,pch=2)
+points(btrue,b.ridge,col=3,pch=3)
+print(b.pca)
+```
+
+
+Try same thing initializing from truth - it still diverges.
+```{r}
+b.pca = mr_ash_parallel_ca_fix(X,Y,b_init = btrue)
+plot(btrue,b.pca)
+```
+
+Note that the fitted values do not fit Y at all for the parallel case. The others do.
+```{r}
+plot(Y,X %*% b.pca)
+plot(Y,X %*% b.ca, col=, pch=2, main="fitted values for ridge and CA")
+points(Y,X %*% b.ridge, col=3,pch=3)
+```
+
+
+
+See if CA matches ridge with more stringent convergence tolerance:
+```{r}
+b.ca = mr_ash_ca_fix(X,Y,tol = 1e-8,max_iter=1000)
+plot(btrue,b.ca)
+points(btrue,b.ridge,col=3,pch=3)
+```
+
+
+## Rescaling
+
+Next I tried rescaling the fitted values and prior each iteration
+by a constant c.
+This might seem ad hoc, but I think something like this can be justified as scaling both the prior and the posterior approximation
+(although results later suggest I might have the details wrong...)
+
+In this example, rescaling definitely stabilizes the estimates...
+```{r}
+b.pca = mr_ash_parallel_ca_fix(X,Y,b_init = btrue,max_iter = 100,rescale=TRUE)
+plot(Y,X %*% b.pca)
+points(Y,X %*% b.ca, col=2, pch=2)
+points(Y,X %*% b.ridge, col=3,pch=3)
+```
+
+I poked around  and found that in fact it was flipping between two different solutions. Here I run it for 99 and 98 iterations to illustrate.
+```{r}
+b.pca.99= mr_ash_parallel_ca_fix(X,Y,b_init = btrue,max_iter = 99,rescale=TRUE)
+b.pca.98= mr_ash_parallel_ca_fix(X,Y,b_init = btrue,max_iter = 98,rescale=TRUE)
+
+plot(b.pca,b.pca.98)
+plot(b.pca,b.pca.99)
+```
 
 
 # trend filtering example
@@ -262,21 +215,30 @@ btrue[41] = -8
 Y = X %*% btrue + rnorm(n)
 plot(Y)
 lines(X %*% btrue)
+```
 
-bhat_ca = mr_ash_ca_fix(X,Y,max_iter = 100)
+The ridge solution is much better than ca, presumably due to very slow convergence.
+(The solution looks better with 1000 iterations, but has still not converged; not shown
+here to keep runtime down...)
+```{r}
+bhat_ca = mr_ash_ca_fix(X,Y,max_iter = 100,tol=1-8)
+bhat_r = ridge(X,Y)
+plot(Y)
 lines(X %*% bhat_ca,col=2)
-
-# ridge
-S = diag(p) + t(X) %*% X
-bhat_rr = solve(S, t(X) %*% Y)
-lines(X %*% bhat_rr,col=3)
+lines(X %*% bhat_r, col=3)
 ```
 
 
-Parallel version goes crazy:
+
+
+Parallel version goes crazy; again rescaling helps stabilize but not really working.
 ```{r}
 bhat_pca = mr_ash_parallel_ca_fix(X,Y,max_iter= 10) 
 plot(X %*% bhat_pca,col=4)
+
+bhat_pca = mr_ash_parallel_ca_fix(X,Y,max_iter= 100, rescale=TRUE) 
+plot(Y)
+lines(X %*% bhat_pca,col=4)
 ```
 
 
