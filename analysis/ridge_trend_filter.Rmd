@@ -1,0 +1,75 @@
+---
+title: "ridge_trend_filter"
+author: "Matthew Stephens"
+date: "2019-10-12"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+One of the key challenges we face is convergence of VB approaches to local optima. In
+some applications -- particularly non-parametric regression -- we have found that estimating the residual variance accurately first can
+be helpful/necessary. For example, in `susie_trend_filter` we use the MAD estimate to get
+a good estimate of the residual variance first.
+
+The idea here is to look at whether ridge regression could be useful for estimating
+the residual variance in a trend filtering application. Note that ridge regression (not necessarily mle - usually methods of moments) is
+widely used in heritability estimation, and has some theoretical support as well as
+empirically performing well. I'm also curious how
+this relates to using the MAD estimate, and whether the MAD estimate idea can be
+extended to other non-trend-filtering applications.
+
+First a function to  compute the ridge log-likelihood.
+If $b_j \sim N(0,s_b^2)$ then $Y \sim N(0, s^2 I_n + s_b^2(XX'))$.
+```{r}
+ridge_log_lik = function(X,Y,s,sb){
+  p = ncol(X)
+  n = nrow(X)
+  S = s^2 * diag(n) + sb^2*(X %*% t(X))
+  mvtnorm::dmvnorm(as.vector(Y),sigma=S,log=TRUE)
+}
+
+```
+
+Simulate some data from a trend filter model:
+```{r}
+set.seed(100)
+n = 100
+p = n
+X = matrix(0,nrow=n,ncol=n)
+for(i in 1:n){
+  X[i:n,i] = 1:(n-i+1)
+}
+btrue = rep(0,n)
+btrue[40] = 8
+btrue[41] = -8
+Y = X %*% btrue + rnorm(n)
+plot(Y)
+lines(X %*% btrue)
+```
+
+
+```{r}
+xx = 20
+s = seq(0,2,length=xx)
+sb = seq(0.01,0.4,length=xx)
+ll = rep(0,xx)
+for(j in  1:length(sb)){
+  for(i in 1:length(s)){
+    ll[i] = ridge_log_lik(X,Y,s=s[i],sb=sb[j])
+  }
+  plot(s,ll,ylim=c(max(ll)-10,max(ll)),type="l",main=paste0("sb=",sb[j]))
+}
+```
+
+Look at the inverse of covariance matrix S (here use small s, so approximately s=XX')
+```{r}
+s = 0.01
+sb = 1
+S = s^2 * diag(n) + sb^2*(X %*% t(X))
+invS = solve(S)
+plot(invS[1,])
+```
+
