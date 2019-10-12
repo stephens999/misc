@@ -15,6 +15,13 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 * [NPMLE with larger n=100000](ash_npmle_big.html)
 * [Examine the delta operator for ash](ash_delta_operator.html)
 
+# Mr Ash
+
+* [coordinate ascent and parallel version](mr_ash_sca.html)
+* [Ridge regression for trend filtering](ridge_trend_filter.html)
+
+
+
 # Mash
 
 * [Initial mash analysis of RBC z scores](rbc_zscore_mash.html)
