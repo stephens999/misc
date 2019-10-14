@@ -1,0 +1,151 @@
+---
+title: "minque"
+author: "Matthew Stephens"
+date: "2019-10-13"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+Looking at the  method of moments ideas summarized in Zhou (AoAS, 2018?).
+The following implements this for just one variance component, for any pair of matrices A1 and A2.
+Note that to simplify things we don't center or scale X or Y here, and only apply it to data
+where X is simulated as mean 0 and variance 1. Not sure if this matters.
+```{r}
+# compute  trace of A %*% B
+trAB = function(A,B){
+  sum(A * t(B))
+}
+# compute  trace of A
+trA = function(A){sum(diag(A))}
+
+# returns estimates of sigma^2_g = p\sigma^2b and sigma^2_e (residual variance)
+# by solving moment equations for Y'A1Y and Y'A2Y
+mom =  function(X,Y,A1,A2){
+  p = ncol(X)
+  K = (1/p) * X %*% t(X)
+  A = cbind(c(trAB(A1,K),trAB(A2,K)), 
+            c(trA(A1),trA(A2)))
+  b = c(t(Y) %*% A1 %*% Y, t(Y) %*% A2 %*% Y)
+  x = solve(A,b)
+  return(x)
+}
+```
+
+Here is a simple simulation study to check, and compare the naive strategy with $H=I$ with
+a strategy with H set to be "optimal" (ie H = sg^2 K + se^2 I)
+```{r}
+set.seed(100)
+n = 100
+p = 50
+niter=100
+sg2 = 1 # sigma^2g, p times variance of elements of b
+se2 = 1 # sigma^2_e, error variance
+vg = ve = rep(0,niter) # store empirical variance of Xb and e
+res = res2 = matrix(0,nrow=niter,ncol=2)
+for(i in 1:niter){
+  X = matrix(rnorm(n*p),nrow=n,ncol=p)
+  btrue = rnorm(p,sd=sqrt(sg2/p))
+  e = rnorm(n,sd = sqrt(se2))
+  Y = X %*% btrue + e
+  vg[i]= var(X %*% btrue)
+  ve[i] = var(e)
+  
+  K = (1/p) * X %*% t(X)
+  
+  A1 = K
+  A2 = diag(n)
+  res[i,] = mom(X,Y,A1,A2)
+  
+  H  = sg2 * K + se2 * diag(n)
+  Hinv = solve(H)
+  A1 = Hinv %*% K %*% Hinv
+  A2 = Hinv %*% Hinv
+  res2[i,] = mom(X,Y,A1,A2)
+}
+
+plot(vg,res[,1])
+plot(ve,res[,2])
+
+plot(vg,res2[,1])
+plot(ve,res2[,2])
+
+#Errors for vg
+mean((vg-res[,1])^2)
+mean((vg-res2[,1])^2)
+
+#Errors for ve
+mean((ve-res[,2])^2)
+mean((ve-res2[,2])^2)
+
+```
+
+Both seem to work ok....and reassuringly the "optimal" has lower error.
+
+
+## Apply to trend filtering
+
+Now I try to apply this to trend filtering.
+
+First simulate data. Note that I standardize X here even though i don't want to (not really trend filtering any more...), maybe later look at whether we can change this.
+```{r}
+set.seed(100)
+n = 100
+p = n
+X = matrix(0,nrow=n,ncol=n)
+for(i in 1:n){
+  X[i:n,i] = 1:(n-i+1)
+}
+
+X = scale(X,center=TRUE,scale=FALSE)
+d = colMeans(X^2)
+X = scale(X)
+
+btrue = rep(0,n)
+btrue[50] = 8 * sqrt(d[50])
+btrue[51] = -8 * sqrt(d[51])
+Y = X %*% btrue + rnorm(n)
+
+Y = Y-mean(Y)
+plot(Y)
+lines(X %*% btrue)
+sg2 = as.numeric(var(X %*% btrue))
+se2 = 1
+sg2
+```
+
+
+Try using the naive strategy... pretty bad!
+```{r}
+K = (1/p) * X %*% t(X)
+A1 = K
+A2 = diag(n)
+mom(X,Y,A1,A2)
+```
+
+Try using the "optimal"
+```{r}
+H  = sg2 * K + se2 * diag(n)
+Hinv = solve(H)
+A1 = Hinv %*% K %*% Hinv
+A2 = Hinv %*% Hinv
+mom(X,Y,A1,A2)
+```
+
+
+Try inverse of K:
+```{r}
+svd.pseudoinv = function(s,tol=1e-8){
+  dd = ifelse(s$d<tol,0,1/s$d)
+  return(s$v %*% diag(dd) %*% t(s$u))
+}
+A1 = svd.pseudoinv(svd(K))
+A2 = diag(n)
+mom(X,Y,A1,A2)
+```
+
+
+So the estimates are much better using the inverse of K in this case....
+
