@@ -1,0 +1,105 @@
+---
+title: "softimpute_convergence_problem"
+author: "Matthew Stephens"
+date: "2019-10-18"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+Here I investigate an example sent to me by Ziwei Zhu, where softimpute (lambda=0)
+seems to perform poorly, but primePCA does not. My results suggest that this
+seems to be an issue with the initialization of softimpute being less good
+than the initialization used by primePCA.
+
+
+```{r}
+library(primePCA)
+library(softImpute)
+```
+
+Here is the example:
+```{r}
+l2norm <- function(x){ return(sqrt(sum(x^2)))}
+set.seed(123)
+n = 1000
+p = 200
+missprob = rep(.95,n)
+u = rnorm(n)
+v = rnorm(p)
+X = 2*u %*% t(v) + rnorm(n*p)
+
+for(i in 1:n){
+  for(j in 1:p){
+    if(runif(1)<missprob[i]){X[i,j]=NA}
+  }
+}
+res.p = primePCA(X, 1,trace.it=FALSE,center=FALSE,thresh_sigma=100)
+res.s = softImpute(X,1,maxit=1000)
+plot(res.s$v,res.p$V_cur,main="v from primePCA vs softimpute",xlab="softimpute",ylab="primePCA")
+```
+
+We can see that softImpute gives three points that are outlying, which ruins its squared
+error performance.
+
+## Increase convergence tolerance stringency
+
+Increasing stringency of tolerance seems to improve things, but convergence is clearly slow...
+```{r}
+res.s = softImpute(X,1,maxit=1000,thresh=1e-8)
+plot(res.s$v,res.p$V_cur,main="v from primePCA vs softimpute",xlab="softimpute",ylab="primePCA")
+```
+
+## Changing initialization
+
+I suspect differences in initialization could be responsible. Let's take a look.
+
+First try softImpute from a different initialization: I use svd of the filled X matrix, filling NA with 0s:
+```{r}
+Xfill = X
+Xfill[is.na(X)]=0
+Xfill.svd=svd(Xfill,1)
+
+res.s.warm = softImpute(X,1,maxit =1000, warm.start = Xfill.svd)
+plot(res.s.warm$v,res.p$V_cur,main="v from primePCA vs softimpute with svd-initialization",xlab="softimpute (svd init)",ylab="primePCA")
+```
+
+Now I try running primePCA using the (same random) 
+initialization used by softImpute (Note: softImpute actually
+initializes u - essentially randomly -- and not v; thus by running 1 iteration of softimpute 
+we get effectively obtain  its initial value for v.) 
+
+Note that to make sure I get the same random initialization as 
+above I have to run the same code again...
+```{r}
+set.seed(123)
+n = 1000
+p = 200
+missprob = rep(.95,n)
+u = rnorm(n)
+v = rnorm(p)
+X = 2*u %*% t(v) + rnorm(n*p)
+
+for(i in 1:n){
+  for(j in 1:p){
+    if(runif(1)<missprob[i]){X[i,j]=NA}
+  }
+}
+res.p = primePCA(X, 1,trace.it=FALSE,center=FALSE,thresh_sigma=100)
+res.s.1 = softImpute(X,1,maxit=1)
+```
+
+
+We call this a "cold start"; from this cold start primePCA runs the full 1000 iterations
+and produces a result qualitatively similar to  softImpute.
+```{r}
+V_init = cbind(res.s.1$v)
+res.p.cold = primePCA(X,1,trace.it=FALSE,center=FALSE,thresh_sigma=100,V_init = V_init) # runs the full 1000 iterations
+plot(res.p.cold$V_cur, res.p$V_cur, main="v from primePCA: cold start vs regular",xlab="primePCA (cold start)",ylab="primePCA (default)")
+```
+
+
+
+
