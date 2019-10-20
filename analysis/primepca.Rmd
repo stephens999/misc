@@ -108,3 +108,10 @@ cor(cbind(v,res.p$V_cur,res.s$v))
 ```
 
 Interestingly, the results from `trace.it=FALSE` in primePCA suggest it is maybe entering an infinite loop in this case. I guess that maybe this is probably because of changes in the rows selected, and indeed was able to avoid it by setting very large `thresh_sigma=1e100`. (In this case it appears to just filter out the rows with only one entry; in the other case it sometimes filters out one additional row).
+
+
+
+
+
+
+
