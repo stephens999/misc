@@ -321,7 +321,7 @@ div.section {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2019-10-18
+<strong>Last updated:</strong> 2019-10-21
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 2 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -352,10 +352,10 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreeb2b61c3d8e072057c17bfbd91dd9bd8ed37de5f7targetblankb2b61c3a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/b2b61c3d8e072057c17bfbd91dd9bd8ed37de5f7" target="_blank">b2b61c3</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree904e2c55ed47dc0cb3846d14fa42d58d6e496debtargetblank904e2c5a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/904e2c55ed47dc0cb3846d14fa42d58d6e496deb" target="_blank">904e2c5</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreeb2b61c3d8e072057c17bfbd91dd9bd8ed37de5f7targetblankb2b61c3a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree904e2c55ed47dc0cb3846d14fa42d58d6e496debtargetblank904e2c5a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -368,7 +368,6 @@ Ignored files:
     Ignored:    analysis/.RData
     Ignored:    analysis/.Rhistory
     Ignored:    analysis/ALStruct_cache/
-    Ignored:    analysis/figure/
     Ignored:    data/.Rhistory
     Ignored:    data/pbmc/
     Ignored:    docs/figure/.DS_Store
@@ -491,7 +490,6 @@ Untracked files:
 
 Unstaged changes:
     Modified:   analysis/minque.Rmd
-    Modified:   analysis/primepca.Rmd
 
 </code></pre>
 <p>
@@ -530,6 +528,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/904e2c55ed47dc0cb3846d14fa42d58d6e496deb/analysis/index.Rmd" target="_blank">904e2c5</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2019-10-21
+</td>
+<td>
+workflowr::wflow_publish(“index.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/b18efff7e7bb7d83ba9133c59aa731877cb01631/docs/index.html" target="_blank">b18efff</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2019-10-18
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -1435,6 +1467,7 @@ Start workflowr project.
 <ul>
 <li><a href="mr_ash_sca.html">coordinate ascent and parallel version</a></li>
 <li><a href="ridge_trend_filter.html">Ridge regression for trend filtering</a></li>
+<li><a href="ridge_conjugate_gradient.html">Ridge regression via conjugate gradient</a></li>
 </ul>
 </div>
 <div id="mash" class="section level1">
