@@ -19,6 +19,8 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 
 * [coordinate ascent and parallel version](mr_ash_sca.html)
 * [Ridge regression for trend filtering](ridge_trend_filter.html)
+* [Ridge regression via conjugate gradient](ridge_conjugate_gradient.html)
+
 
 
 
