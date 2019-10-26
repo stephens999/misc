@@ -395,7 +395,7 @@ div.section {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2019-10-12
+<strong>Last updated:</strong> 2019-10-25
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -486,10 +486,10 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreeb80c99a792ce7fca540e6a4bcfaed09b10d736eftargetblankb80c99aa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/b80c99a792ce7fca540e6a4bcfaed09b10d736ef" target="_blank">b80c99a</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreeb839048e9174fe14444d65393c21a01ef86cd19btargetblankb839048a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/b839048e9174fe14444d65393c21a01ef86cd19b" target="_blank">b839048</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreeb80c99a792ce7fca540e6a4bcfaed09b10d736eftargetblankb80c99aa" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreeb839048e9174fe14444d65393c21a01ef86cd19btargetblankb839048a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -514,6 +514,7 @@ Untracked files:
     Untracked:  analysis/SPCAvRP.rmd
     Untracked:  analysis/compare-transformed-models.Rmd
     Untracked:  analysis/cormotif.Rmd
+    Untracked:  analysis/cp_ash.Rmd
     Untracked:  analysis/eQTL.perm.rand.pdf
     Untracked:  analysis/eb_prepilot.Rmd
     Untracked:  analysis/flash_test_tree.Rmd
@@ -527,6 +528,7 @@ Untracked files:
     Untracked:  analysis/pbmc.Rmd
     Untracked:  analysis/poisson_transform.Rmd
     Untracked:  analysis/pseudodata.Rmd
+    Untracked:  analysis/ridge_iterative_splitting.Rmd
     Untracked:  analysis/sc_bimodal.Rmd
     Untracked:  analysis/susie_en.Rmd
     Untracked:  analysis/susie_z_investigate.Rmd
@@ -581,6 +583,7 @@ Untracked files:
     Untracked:  data/y_f.txt
     Untracked:  data/zscore_jointLCLs_m6AQTLs_susie_eQTLpruned.rds
     Untracked:  data/zscore_jointLCLs_random.rds
+    Untracked:  docs/figure/cp_ash.Rmd/
     Untracked:  docs/figure/eigen.Rmd/
     Untracked:  docs/figure/fmo2.sim.Rmd/
     Untracked:  docs/figure/newVB.elbo.Rmd/
@@ -588,6 +591,7 @@ Untracked files:
     Untracked:  docs/figure/rbc_zscore_mash2.Rmd/
     Untracked:  docs/figure/rbc_zscore_mash2_analysis.Rmd/
     Untracked:  docs/figure/rbc_zscores.Rmd/
+    Untracked:  docs/figure/ridge_iterative_splitting.Rmd/
     Untracked:  docs/figure/susie_en.Rmd/
     Untracked:  docs/figure/test.Rmd/
     Untracked:  docs/trend_files/
@@ -621,6 +625,9 @@ Untracked files:
     Untracked:  output/test5.hyp.txt
     Untracked:  output/test5.log.txt
     Untracked:  output/test5.param.txt
+
+Unstaged changes:
+    Modified:   analysis/minque.Rmd
 
 </code></pre>
 <p>
@@ -659,6 +666,23 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/21577d7ce385c89e80370675eb8a0d84ded5fca9/docs/mr_ash_sca.html" target="_blank">21577d7</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2019-10-12
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -729,17 +753,20 @@ workflowr::wflow_publish(“mr_ash_sca.Rmd”)
   if(is.null(b_init)){b_init = rep(0,ncol(X))}
   b = b_init
   d = Matrix::colSums(X * X)
+  c = 1
   for(i in 1:max_iter){
     r = Y- X %*% b
     bhat = as.vector(b + (1/d)*(t(X) %*% r))
     s = sigma/sqrt(d)
-    b2 = get_pm(ash(bhat,s,g=normalmix(1,0,1),fixg=TRUE))
-    if(sum((b2-b)^2)&lt;tol){break;}
-    b=b2
+    bhat.ash = ash(bhat,s,g=normalmix(1,0,c),fixg=TRUE)
+    bnew = get_pm(bhat.ash)
+    if(sum((bnew-b)^2)&lt;tol){break;}
+    b=bnew
     
     if(rescale){
-      fitted = X %*% b  
-      c = (1/sum(fitted^2)) * sum(fitted*Y) # regress Y on fitted values
+      fitted = X %*% b
+      v = get_psd(bhat.ash)^2
+      c = sum(fitted*Y)/(sum(fitted^2) + sum(d*v)) # regress Y on fitted values
       b = c*b
     }
     
@@ -756,20 +783,23 @@ mr_ash_ca_fix = function(X,Y,b_init=NULL,max_iter=100,sigma=1,tol=1e-3,rescale=F
   d = Matrix::colSums(X * X)
   c = 1
   r = Y - X %*%  b
+  v = rep(0,p) # vector of variances for rescaling
   for(i in 1:max_iter){
     err = 0
     for(j in 1:p){
       r = r + b[j]*X[,j] 
       bhat = (1/d[j])*sum(X[,j]* r)
       s = sigma/sqrt(d[j])
-      bj_new = get_pm(ash(bhat,s,g=normalmix(1,0,c),fixg=TRUE))
+      bhat.ash = ash(bhat,s,g=normalmix(1,0,c),fixg=TRUE)
+      bj_new = get_pm(bhat.ash)
+      v[j] = get_psd(bhat.ash)^2 # store variances
       err = err + (b[j]-bj_new)^2
       b[j] = bj_new
       r = r - b[j]*X[,j] # recompute residuals
     }
     if(rescale){
-      fitted = Y - r  #so fitted = Xb
-      c = (1/sum(fitted^2)) * sum(fitted*Y) # regress Y on fitted values
+      fitted = Y - r # so fitted = Xb
+      c = sum(fitted*Y)/(sum(fitted^2) + sum(d*v)) # regress Y on fitted values
       b = c*b
       r = Y - c * fitted
     }
@@ -829,6 +859,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/21577d7ce385c89e80370675eb8a0d84ded5fca9/docs/figure/mr_ash_sca.Rmd/unnamed-chunk-3-1.png" target="_blank">21577d7</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2019-10-12
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/721b34f8d7f4507b1f283358e9bc87bb55e5e0a1/docs/figure/mr_ash_sca.Rmd/unnamed-chunk-3-1.png" target="_blank">721b34f</a>
 </td>
 <td>
@@ -876,6 +917,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/21577d7ce385c89e80370675eb8a0d84ded5fca9/docs/figure/mr_ash_sca.Rmd/unnamed-chunk-4-1.png" target="_blank">21577d7</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2019-10-12
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/stephens999/misc/blob/721b34f8d7f4507b1f283358e9bc87bb55e5e0a1/docs/figure/mr_ash_sca.Rmd/unnamed-chunk-4-1.png" target="_blank">721b34f</a>
@@ -933,6 +985,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/21577d7ce385c89e80370675eb8a0d84ded5fca9/docs/figure/mr_ash_sca.Rmd/unnamed-chunk-5-1.png" target="_blank">21577d7</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2019-10-12
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/721b34f8d7f4507b1f283358e9bc87bb55e5e0a1/docs/figure/mr_ash_sca.Rmd/unnamed-chunk-5-1.png" target="_blank">721b34f</a>
 </td>
 <td>
@@ -980,6 +1043,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/21577d7ce385c89e80370675eb8a0d84ded5fca9/docs/figure/mr_ash_sca.Rmd/unnamed-chunk-6-1.png" target="_blank">21577d7</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2019-10-12
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/721b34f8d7f4507b1f283358e9bc87bb55e5e0a1/docs/figure/mr_ash_sca.Rmd/unnamed-chunk-6-1.png" target="_blank">721b34f</a>
 </td>
 <td>
@@ -996,9 +1070,83 @@ Matthew Stephens
 <p>Note that the fitted values do not fit Y at all for the parallel case. The others do.</p>
 <pre class="r"><code>plot(Y,X %*% b.pca)</code></pre>
 <p><img src="figure/mr_ash_sca.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-7-1">
+Past versions of unnamed-chunk-7-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-7-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/21577d7ce385c89e80370675eb8a0d84ded5fca9/docs/figure/mr_ash_sca.Rmd/unnamed-chunk-7-1.png" target="_blank">21577d7</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2019-10-12
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>plot(Y,X %*% b.ca, col=, pch=2, main=&quot;fitted values for ridge and CA&quot;)
 points(Y,X %*% b.ridge, col=3,pch=3)</code></pre>
 <p><img src="figure/mr_ash_sca.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-7-2">
+Past versions of unnamed-chunk-7-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-7-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/21577d7ce385c89e80370675eb8a0d84ded5fca9/docs/figure/mr_ash_sca.Rmd/unnamed-chunk-7-2.png" target="_blank">21577d7</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2019-10-12
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>See if CA matches ridge with more stringent convergence tolerance:</p>
 <pre class="r"><code>b.ca = mr_ash_ca_fix(X,Y,tol = 1e-8,max_iter=1000)</code></pre>
 <pre><code>[1] &quot;niter = 370&quot;</code></pre>
@@ -1029,6 +1177,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/21577d7ce385c89e80370675eb8a0d84ded5fca9/docs/figure/mr_ash_sca.Rmd/unnamed-chunk-8-1.png" target="_blank">21577d7</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2019-10-12
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/721b34f8d7f4507b1f283358e9bc87bb55e5e0a1/docs/figure/mr_ash_sca.Rmd/unnamed-chunk-8-1.png" target="_blank">721b34f</a>
 </td>
 <td>
@@ -1053,6 +1212,43 @@ Matthew Stephens
 points(Y,X %*% b.ca, col=2, pch=2)
 points(Y,X %*% b.ridge, col=3,pch=3)</code></pre>
 <p><img src="figure/mr_ash_sca.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-1">
+Past versions of unnamed-chunk-9-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/21577d7ce385c89e80370675eb8a0d84ded5fca9/docs/figure/mr_ash_sca.Rmd/unnamed-chunk-9-1.png" target="_blank">21577d7</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2019-10-12
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>I poked around and found that in fact it was flipping between two different solutions. Here I run it for 99 and 98 iterations to illustrate.</p>
 <pre class="r"><code>b.pca.99= mr_ash_parallel_ca_fix(X,Y,b_init = btrue,max_iter = 99,rescale=TRUE)</code></pre>
 <pre><code>[1] &quot;niter = 99&quot;</code></pre>
@@ -1082,6 +1278,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/21577d7ce385c89e80370675eb8a0d84ded5fca9/docs/figure/mr_ash_sca.Rmd/unnamed-chunk-10-1.png" target="_blank">21577d7</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2019-10-12
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/stephens999/misc/blob/721b34f8d7f4507b1f283358e9bc87bb55e5e0a1/docs/figure/mr_ash_sca.Rmd/unnamed-chunk-10-1.png" target="_blank">721b34f</a>
@@ -1123,6 +1330,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/21577d7ce385c89e80370675eb8a0d84ded5fca9/docs/figure/mr_ash_sca.Rmd/unnamed-chunk-10-2.png" target="_blank">21577d7</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2019-10-12
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/721b34f8d7f4507b1f283358e9bc87bb55e5e0a1/docs/figure/mr_ash_sca.Rmd/unnamed-chunk-10-2.png" target="_blank">721b34f</a>
 </td>
 <td>
@@ -1154,6 +1372,43 @@ Y = X %*% btrue + rnorm(n)
 plot(Y)
 lines(X %*% btrue)</code></pre>
 <p><img src="figure/mr_ash_sca.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-1">
+Past versions of unnamed-chunk-11-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-11-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/21577d7ce385c89e80370675eb8a0d84ded5fca9/docs/figure/mr_ash_sca.Rmd/unnamed-chunk-11-1.png" target="_blank">21577d7</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2019-10-12
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>The ridge solution is much better than ca, presumably due to very slow convergence. (The solution looks better with 1000 iterations, but has still not converged; not shown here to keep runtime down…)</p>
 <pre class="r"><code>bhat_ca = mr_ash_ca_fix(X,Y,max_iter = 100,tol=1-8)</code></pre>
 <pre><code>[1] &quot;niter = 100&quot;</code></pre>
@@ -1184,6 +1439,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/21577d7ce385c89e80370675eb8a0d84ded5fca9/docs/figure/mr_ash_sca.Rmd/unnamed-chunk-12-1.png" target="_blank">21577d7</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2019-10-12
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/stephens999/misc/blob/721b34f8d7f4507b1f283358e9bc87bb55e5e0a1/docs/figure/mr_ash_sca.Rmd/unnamed-chunk-12-1.png" target="_blank">721b34f</a>
@@ -1228,6 +1494,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/21577d7ce385c89e80370675eb8a0d84ded5fca9/docs/figure/mr_ash_sca.Rmd/unnamed-chunk-13-1.png" target="_blank">21577d7</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2019-10-12
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/721b34f8d7f4507b1f283358e9bc87bb55e5e0a1/docs/figure/mr_ash_sca.Rmd/unnamed-chunk-13-1.png" target="_blank">721b34f</a>
 </td>
 <td>
@@ -1268,6 +1545,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/21577d7ce385c89e80370675eb8a0d84ded5fca9/docs/figure/mr_ash_sca.Rmd/unnamed-chunk-13-2.png" target="_blank">21577d7</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2019-10-12
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/stephens999/misc/blob/721b34f8d7f4507b1f283358e9bc87bb55e5e0a1/docs/figure/mr_ash_sca.Rmd/unnamed-chunk-13-2.png" target="_blank">721b34f</a>
