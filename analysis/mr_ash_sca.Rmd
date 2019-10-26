@@ -37,17 +37,20 @@ mr_ash_parallel_ca_fix = function(X,Y,b_init=NULL,max_iter=100,sigma=1,tol=1e-5,
   if(is.null(b_init)){b_init = rep(0,ncol(X))}
   b = b_init
   d = Matrix::colSums(X * X)
+  c = 1
   for(i in 1:max_iter){
     r = Y- X %*% b
     bhat = as.vector(b + (1/d)*(t(X) %*% r))
     s = sigma/sqrt(d)
-    b2 = get_pm(ash(bhat,s,g=normalmix(1,0,1),fixg=TRUE))
-    if(sum((b2-b)^2)<tol){break;}
-    b=b2
+    bhat.ash = ash(bhat,s,g=normalmix(1,0,c),fixg=TRUE)
+    bnew = get_pm(bhat.ash)
+    if(sum((bnew-b)^2)<tol){break;}
+    b=bnew
     
     if(rescale){
-      fitted = X %*% b  
-      c = (1/sum(fitted^2)) * sum(fitted*Y) # regress Y on fitted values
+      fitted = X %*% b
+      v = get_psd(bhat.ash)^2
+      c = sum(fitted*Y)/(sum(fitted^2) + sum(d*v)) # regress Y on fitted values
       b = c*b
     }
     
@@ -64,20 +67,23 @@ mr_ash_ca_fix = function(X,Y,b_init=NULL,max_iter=100,sigma=1,tol=1e-3,rescale=F
   d = Matrix::colSums(X * X)
   c = 1
   r = Y - X %*%  b
+  v = rep(0,p) # vector of variances for rescaling
   for(i in 1:max_iter){
     err = 0
     for(j in 1:p){
       r = r + b[j]*X[,j] 
       bhat = (1/d[j])*sum(X[,j]* r)
       s = sigma/sqrt(d[j])
-      bj_new = get_pm(ash(bhat,s,g=normalmix(1,0,c),fixg=TRUE))
+      bhat.ash = ash(bhat,s,g=normalmix(1,0,c),fixg=TRUE)
+      bj_new = get_pm(bhat.ash)
+      v[j] = get_psd(bhat.ash)^2 # store variances
       err = err + (b[j]-bj_new)^2
       b[j] = bj_new
       r = r - b[j]*X[,j] # recompute residuals
     }
     if(rescale){
-      fitted = Y - r  #so fitted = Xb
-      c = (1/sum(fitted^2)) * sum(fitted*Y) # regress Y on fitted values
+      fitted = Y - r # so fitted = Xb
+      c = sum(fitted*Y)/(sum(fitted^2) + sum(d*v)) # regress Y on fitted values
       b = c*b
       r = Y - c * fitted
     }
