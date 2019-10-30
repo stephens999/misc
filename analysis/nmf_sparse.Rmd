@@ -1,0 +1,174 @@
+---
+title: "Try NMF on some simple sparse examples"
+author: "Matthew Stephens"
+date: "2019-10-30"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+library("fastTopics")
+library("NNLM") 
+```
+
+## Introduction
+
+The goal is to do some simple simulations where the factors are sparse
+and look at the sparsity of the solutions from regular (unpenalized) nmf.
+
+We simulate data with 3 factors with a "block-like"" structure.
+```{r}
+
+set.seed(123)
+n = 99
+p = 300
+k= 3
+L = matrix(0, nrow=n, ncol=k)
+F = matrix(0, nrow=p, ncol=k)
+
+L[1:(n/3),1] = 1
+L[((n/3)+1):(2*n/3),2] = 1
+L[((2*n/3)+1):n,3] = 1
+  
+F[1:(p/3),1] = 1+10*runif(p/3)
+F[((p/3)+1):(2*p/3),2] = 1+10*runif(p/3)
+F[((2*p/3)+1):p,3] = 1+10*runif(p/3)
+
+lambda = L %*% t(F)
+X = matrix(rpois(n=length(lambda),lambda),nrow=n)
+image(X)
+```
+
+Now run the methods, and compute the Poisson log-likelihoods.
+```{r}
+fit_lee = NNLM::nnmf(A = X, k = 3, loss = "mkl", method = "lee", max.iter = 10000)
+## scd
+fit_scd = NNLM::nnmf(A = X, k = 3, loss = "mkl", method = "scd", max.iter = 10000)
+
+k=3
+fit0 <- list(F = matrix(runif(p*k),p,k),
+             L = matrix(runif(n*k),n,k))
+
+fit_sqp = altsqp(X,fit0,numiter = 20)
+sum(dpois(X, fit_sqp$L %*% t(fit_sqp$F),log=TRUE))
+sum(dpois(X, fit_lee$W %*% fit_lee$H,log=TRUE))
+sum(dpois(X, fit_scd$W %*% fit_scd$H,log=TRUE))
+```
+
+So all three find the same solution. 
+
+Let's look at a factor/loading: the results are highly sparse.
+```{r}
+plot(fit_sqp$L[,1],main="estimated loadings 1")
+plot(fit_sqp$L[,2],main="estimated loadings 2")
+plot(fit_sqp$L[,3],main="estimated loadings 3")
+```
+
+
+## Add a dense fourth factor
+
+Now I add a fourth factor that is dense.
+Note that we can make the problem much harder
+by making the 4th (dense) factor have larger PVE (increase `mfac` in the code).
+That may be useful for comparing methods on a harder problem...
+```{r}
+set.seed(123)
+n = 99
+p = 300
+k= 4
+mfac = 2 # controls PVE of dense factor
+L = matrix(0, nrow=n, ncol=k)
+F = matrix(0, nrow=p, ncol=k)
+
+L[1:(n/3),1] = 1
+L[((n/3)+1):(2*n/3),2] = 1
+L[((2*n/3)+1):n,3] = 1
+L[,4] = 1+mfac*runif(n)
+
+F[1:(p/3),1] = 1+10*runif(p/3)
+F[((p/3)+1):(2*p/3),2] = 1+10*runif(p/3)
+F[((2*p/3)+1):p,3] = 1+10*runif(p/3)
+F[,4]= 1+mfac*runif(p)
+
+lambda = L %*% t(F)
+X = matrix(rpois(n=length(lambda),lambda),nrow=n)
+image(X)
+```
+
+Run the methods. I also run altsqp initialized from the truth to check if it affects the result.
+```{r}
+fit_lee = NNLM::nnmf(A = X, k = 4, loss = "mkl", method = "lee", max.iter = 10000)
+## scd
+fit_scd = NNLM::nnmf(A = X, k = 4, loss = "mkl", method = "scd", max.iter = 10000)
+
+fit0 <- list(F = matrix(runif(p*k),p,k),
+             L = matrix(runif(n*k),n,k))
+
+fit_sqp = altsqp(X,fit0,numiter = 50,verbose = FALSE)
+
+# also fit initialized from truth
+fit_true <- list(F = F,L = L)
+fit_sqp2 = altsqp(X,fit_true,numiter = 20)
+
+sum(dpois(X, fit_lee$W %*% fit_lee$H,log=TRUE))
+sum(dpois(X, fit_scd$W %*% fit_scd$H,log=TRUE))
+sum(dpois(X, fit_sqp$L %*% t(fit_sqp$F),log=TRUE))
+sum(dpois(X, fit_sqp2$L %*% t(fit_sqp2$F),log=TRUE))
+
+sum(dpois(X, L %*% t(F),log=TRUE))
+```
+
+
+Here `scd` finds the highest log-likelihood. All the methods find a solution
+whose loglikelihood exceeds the oracle.
+
+Look at the loadings, we see that the sparse loadings are a bit "messy".
+```{r}
+for(i in 1:k){
+  plot(fit_scd$W[,i],main=paste0("estimated loadings ",i))
+}
+```
+
+
+## Try L1 penalty
+
+
+Here we try adding an L1 penalty to induce sparsity. It does not really seem to achieve this goal. I am not entirely sure why - there  may be something more to understand here.
+
+First fit with penalty =1,10,100. We see the loadings are not really sparse.
+
+```{r}
+fit_scd_L1.1 = NNLM::nnmf(A = X, k = 4, loss = "mkl", method = "scd", max.iter = 10000, alpha=c(0,0,1))
+fit_scd_L1.10 = NNLM::nnmf(A = X, k = 4, loss = "mkl", method = "scd", max.iter = 10000, alpha=c(0,0,10))
+fit_scd_L1.100 = NNLM::nnmf(A = X, k = 4, loss = "mkl", method = "scd", max.iter = 10000, alpha=c(0,0,100))
+
+for(i in 1:k){
+  plot(fit_scd_L1.1$W[,i],main=paste0("L1 penalty = 1: estimated loadings ",i))
+}
+
+for(i in 1:k){
+  plot(fit_scd_L1.1$W[,i],main=paste0("L1 penalty = 10: estimated loadings ",i))
+}
+
+for(i in 1:k){
+  plot(fit_scd_L1.100$H[i,],main=paste0("L1 penalty = 100: estimated loadings ",i))
+}
+```
+
+Now we compute a goodness of fit to the true lambda (KL). We see the fit gets worse with penalty increase.
+
+```{r}
+# compute goodness of fit to true lambda
+KL = function(true,est){
+  sum(ifelse(true==0,0,true * log(true/est)) + est - true)
+}
+get_WH= function(fit){fit$W %*% fit$H}
+
+KL(lambda,get_WH(fit_scd))
+KL(lambda,get_WH(fit_scd_L1.1))
+KL(lambda,get_WH(fit_scd_L1.10))
+KL(lambda,get_WH(fit_scd_L1.100))
+```
+
+
