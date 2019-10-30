@@ -45,6 +45,10 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 
 * [Method of moments for EbayesThresh ](ebayes.mm.html)
 
+# NMF
+
+* [Try NMF on a simple simulation with sparse factors](nmf_sparse.html)
+
 # Weighted SVD 
 
 * [Outline of EM algorithm for fitting weighted SVD](wSVD.html)
