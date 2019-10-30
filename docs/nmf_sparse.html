@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Matthew Stephens" />
+
+<meta name="date" content="2019-10-30" />
+
+<title>Try NMF on some simple sparse examples</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">misc</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/stephens999/misc">source</a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Try NMF on some simple sparse examples</h1>
+<h4 class="author">Matthew Stephens</h4>
+<h4 class="date">2019-10-30</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2019-10-30
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>misc/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.4.0). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed1code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(1)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed1code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(1)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreef3a844874edb490e548a90ddaede41f15d3f7f18targetblankf3a8448a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/f3a844874edb490e548a90ddaede41f15d3f7f18" target="_blank">f3a8448</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreef3a844874edb490e548a90ddaede41f15d3f7f18targetblankf3a8448a" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.RData
+    Ignored:    analysis/.Rhistory
+    Ignored:    analysis/ALStruct_cache/
+    Ignored:    data/.Rhistory
+    Ignored:    data/pbmc/
+    Ignored:    docs/figure/.DS_Store
+
+Untracked files:
+    Untracked:  .dropbox
+    Untracked:  Icon
+    Untracked:  analysis/GTEX-cogaps.Rmd
+    Untracked:  analysis/PACS.Rmd
+    Untracked:  analysis/SPCAvRP.rmd
+    Untracked:  analysis/compare-transformed-models.Rmd
+    Untracked:  analysis/cormotif.Rmd
+    Untracked:  analysis/cp_ash.Rmd
+    Untracked:  analysis/eQTL.perm.rand.pdf
+    Untracked:  analysis/eb_prepilot.Rmd
+    Untracked:  analysis/flash_test_tree.Rmd
+    Untracked:  analysis/ieQTL.perm.rand.pdf
+    Untracked:  analysis/m6amash.Rmd
+    Untracked:  analysis/mash_bhat_z.Rmd
+    Untracked:  analysis/mash_ieqtl_permutations.Rmd
+    Untracked:  analysis/mixsqp.Rmd
+    Untracked:  analysis/mr_ash_modular.Rmd
+    Untracked:  analysis/mr_ash_parameterization.Rmd
+    Untracked:  analysis/nejm.Rmd
+    Untracked:  analysis/normalize.Rmd
+    Untracked:  analysis/pbmc.Rmd
+    Untracked:  analysis/poisson_transform.Rmd
+    Untracked:  analysis/pseudodata.Rmd
+    Untracked:  analysis/ridge_iterative_splitting.Rmd
+    Untracked:  analysis/sc_bimodal.Rmd
+    Untracked:  analysis/susie_en.Rmd
+    Untracked:  analysis/susie_z_investigate.Rmd
+    Untracked:  analysis/svd-timing.Rmd
+    Untracked:  analysis/temp.Rmd
+    Untracked:  analysis/test-figure/
+    Untracked:  analysis/test.Rmd
+    Untracked:  analysis/test.Rpres
+    Untracked:  analysis/test.md
+    Untracked:  analysis/test_sparse.Rmd
+    Untracked:  analysis/z.txt
+    Untracked:  code/multivariate_testfuncs.R
+    Untracked:  data/4matthew/
+    Untracked:  data/4matthew2/
+    Untracked:  data/E-MTAB-2805.processed.1/
+    Untracked:  data/ENSG00000156738.Sim_Y2.RDS
+    Untracked:  data/GDS5363_full.soft.gz
+    Untracked:  data/GSE41265_allGenesTPM.txt
+    Untracked:  data/Muscle_Skeletal.ACTN3.pm1Mb.RDS
+    Untracked:  data/Thyroid.FMO2.pm1Mb.RDS
+    Untracked:  data/bmass.HaemgenRBC2016.MAF01.Vs2.MergedDataSources.200kRanSubset.ChrBPMAFMarkerZScores.vs1.txt.gz
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.PreviousSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/eb_prepilot/
+    Untracked:  data/finemap_data/fmo2.sim/b.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/data
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.ld
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.z
+    Untracked:  data/finemap_data/fmo2.sim/pos.txt
+    Untracked:  data/logm.csv
+    Untracked:  data/m.cd.RDS
+    Untracked:  data/m.cdu.old.RDS
+    Untracked:  data/m.new.cd.RDS
+    Untracked:  data/m.old.cd.RDS
+    Untracked:  data/mainbib.bib.old
+    Untracked:  data/mat.csv
+    Untracked:  data/mat.txt
+    Untracked:  data/mat_new.csv
+    Untracked:  data/matrix_lik.rds
+    Untracked:  data/paintor_data/
+    Untracked:  data/temp.txt
+    Untracked:  data/y.txt
+    Untracked:  data/y_f.txt
+    Untracked:  data/zscore_jointLCLs_m6AQTLs_susie_eQTLpruned.rds
+    Untracked:  data/zscore_jointLCLs_random.rds
+    Untracked:  docs/figure/cp_ash.Rmd/
+    Untracked:  docs/figure/eigen.Rmd/
+    Untracked:  docs/figure/fmo2.sim.Rmd/
+    Untracked:  docs/figure/mr_ash_modular.Rmd/
+    Untracked:  docs/figure/newVB.elbo.Rmd/
+    Untracked:  docs/figure/poisson_transform.Rmd/
+    Untracked:  docs/figure/rbc_zscore_mash2.Rmd/
+    Untracked:  docs/figure/rbc_zscore_mash2_analysis.Rmd/
+    Untracked:  docs/figure/rbc_zscores.Rmd/
+    Untracked:  docs/figure/ridge_iterative_splitting.Rmd/
+    Untracked:  docs/figure/susie_en.Rmd/
+    Untracked:  docs/figure/test.Rmd/
+    Untracked:  docs/trend_files/
+    Untracked:  docs/z.txt
+    Untracked:  explore_udi.R
+    Untracked:  output/fit.k10.rds
+    Untracked:  output/fit.varbvs.RDS
+    Untracked:  output/glmnet.fit.RDS
+    Untracked:  output/test.bv.txt
+    Untracked:  output/test.gamma.txt
+    Untracked:  output/test.hyp.txt
+    Untracked:  output/test.log.txt
+    Untracked:  output/test.param.txt
+    Untracked:  output/test2.bv.txt
+    Untracked:  output/test2.gamma.txt
+    Untracked:  output/test2.hyp.txt
+    Untracked:  output/test2.log.txt
+    Untracked:  output/test2.param.txt
+    Untracked:  output/test3.bv.txt
+    Untracked:  output/test3.gamma.txt
+    Untracked:  output/test3.hyp.txt
+    Untracked:  output/test3.log.txt
+    Untracked:  output/test3.param.txt
+    Untracked:  output/test4.bv.txt
+    Untracked:  output/test4.gamma.txt
+    Untracked:  output/test4.hyp.txt
+    Untracked:  output/test4.log.txt
+    Untracked:  output/test4.param.txt
+    Untracked:  output/test5.bv.txt
+    Untracked:  output/test5.gamma.txt
+    Untracked:  output/test5.hyp.txt
+    Untracked:  output/test5.log.txt
+    Untracked:  output/test5.param.txt
+
+Unstaged changes:
+    Modified:   analysis/index.Rmd
+    Modified:   analysis/minque.Rmd
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the R Markdown and HTML files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view them.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/f3a844874edb490e548a90ddaede41f15d3f7f18/analysis/nmf_sparse.Rmd" target="_blank">f3a8448</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2019-10-30
+</td>
+<td>
+wflow_publish(“nmf_sparse.Rmd”)
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<pre class="r"><code>library(&quot;fastTopics&quot;)
+library(&quot;NNLM&quot;) </code></pre>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>The goal is to do some simple simulations where the factors are sparse and look at the sparsity of the solutions from regular (unpenalized) nmf.</p>
+<p>We simulate data with 3 factors with a “block-like”&quot; structure.</p>
+<pre class="r"><code>set.seed(123)
+n = 99
+p = 300
+k= 3
+L = matrix(0, nrow=n, ncol=k)
+F = matrix(0, nrow=p, ncol=k)
+
+L[1:(n/3),1] = 1
+L[((n/3)+1):(2*n/3),2] = 1
+L[((2*n/3)+1):n,3] = 1
+  
+F[1:(p/3),1] = 1+10*runif(p/3)
+F[((p/3)+1):(2*p/3),2] = 1+10*runif(p/3)
+F[((2*p/3)+1):p,3] = 1+10*runif(p/3)
+
+lambda = L %*% t(F)
+X = matrix(rpois(n=length(lambda),lambda),nrow=n)
+image(X)</code></pre>
+<p><img src="figure/nmf_sparse.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Now run the methods, and compute the Poisson log-likelihoods.</p>
+<pre class="r"><code>fit_lee = NNLM::nnmf(A = X, k = 3, loss = &quot;mkl&quot;, method = &quot;lee&quot;, max.iter = 10000)
+## scd
+fit_scd = NNLM::nnmf(A = X, k = 3, loss = &quot;mkl&quot;, method = &quot;scd&quot;, max.iter = 10000)
+
+k=3
+fit0 &lt;- list(F = matrix(runif(p*k),p,k),
+             L = matrix(runif(n*k),n,k))
+
+fit_sqp = altsqp(X,fit0,numiter = 20)</code></pre>
+<pre><code>Running 20 EM/SQP updates (fastTopics version 0.1-78)
+Extrapolation is not active.
+Data are 99 x 300 matrix with 32.2% nonzero proportion.
+Optimization settings used:
+  + numem:   1   + beta.init:        0.50  + activesetconvtol: 1.00e-10
+  + numsqp:  4   + beta.increase:    1.10  + suffdecr:         1.00e-02
+  + e: 1.00e-15  + beta.reduce:      0.75  + stepsizereduce:   7.50e-01
+                 + betamax.increase: 1.05  + minstepsize:      1.00e-10
+                                           + zerothreshold:    1.00e-10
+                                           + zerosearchdir:    1.00e-15
+iter objective (cost fn) mean.diff    beta
+   1 -8.094360852546e+03 3.313e+00 0.0e+00
+   2 -5.413875561606e+04 6.587e+00 0.0e+00
+   3 -5.413875561606e+04 0.000e+00 0.0e+00
+   4 -5.413875561606e+04 0.000e+00 0.0e+00
+   5 -5.413875561606e+04 0.000e+00 0.0e+00
+   6 -5.413875561606e+04 0.000e+00 0.0e+00
+   7 -5.413875561606e+04 0.000e+00 0.0e+00
+   8 -5.413875561606e+04 0.000e+00 0.0e+00
+   9 -5.413875561606e+04 0.000e+00 0.0e+00
+  10 -5.413875561606e+04 0.000e+00 0.0e+00
+  11 -5.413875561606e+04 0.000e+00 0.0e+00
+  12 -5.413875561606e+04 0.000e+00 0.0e+00
+  13 -5.413875561606e+04 0.000e+00 0.0e+00
+  14 -5.413875561606e+04 0.000e+00 0.0e+00
+  15 -5.413875561606e+04 0.000e+00 0.0e+00
+  16 -5.413875561606e+04 0.000e+00 0.0e+00
+  17 -5.413875561606e+04 0.000e+00 0.0e+00
+  18 -5.413875561606e+04 0.000e+00 0.0e+00
+  19 -5.413875561606e+04 0.000e+00 0.0e+00
+  20 -5.413875561606e+04 0.000e+00 0.0e+00</code></pre>
+<pre class="r"><code>sum(dpois(X, fit_sqp$L %*% t(fit_sqp$F),log=TRUE))</code></pre>
+<pre><code>[1] -21749.2</code></pre>
+<pre class="r"><code>sum(dpois(X, fit_lee$W %*% fit_lee$H,log=TRUE))</code></pre>
+<pre><code>[1] -21749.2</code></pre>
+<pre class="r"><code>sum(dpois(X, fit_scd$W %*% fit_scd$H,log=TRUE))</code></pre>
+<pre><code>[1] -21749.2</code></pre>
+<p>So all three find the same solution.</p>
+<p>Let’s look at a factor/loading: the results are highly sparse.</p>
+<pre class="r"><code>plot(fit_sqp$L[,1],main=&quot;estimated loadings 1&quot;)</code></pre>
+<p><img src="figure/nmf_sparse.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(fit_sqp$L[,2],main=&quot;estimated loadings 2&quot;)</code></pre>
+<p><img src="figure/nmf_sparse.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(fit_sqp$L[,3],main=&quot;estimated loadings 3&quot;)</code></pre>
+<p><img src="figure/nmf_sparse.Rmd/unnamed-chunk-4-3.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="add-a-dense-fourth-factor" class="section level2">
+<h2>Add a dense fourth factor</h2>
+<p>Now I add a fourth factor that is dense. Note that we can make the problem much harder by making the 4th (dense) factor have larger PVE (increase <code>mfac</code> in the code). That may be useful for comparing methods on a harder problem…</p>
+<pre class="r"><code>set.seed(123)
+n = 99
+p = 300
+k= 4
+mfac = 2 # controls PVE of dense factor
+L = matrix(0, nrow=n, ncol=k)
+F = matrix(0, nrow=p, ncol=k)
+
+L[1:(n/3),1] = 1
+L[((n/3)+1):(2*n/3),2] = 1
+L[((2*n/3)+1):n,3] = 1
+L[,4] = 1+mfac*runif(n)
+
+F[1:(p/3),1] = 1+10*runif(p/3)
+F[((p/3)+1):(2*p/3),2] = 1+10*runif(p/3)
+F[((2*p/3)+1):p,3] = 1+10*runif(p/3)
+F[,4]= 1+mfac*runif(p)
+
+lambda = L %*% t(F)
+X = matrix(rpois(n=length(lambda),lambda),nrow=n)
+image(X)</code></pre>
+<p><img src="figure/nmf_sparse.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Run the methods. I also run altsqp initialized from the truth to check if it affects the result.</p>
+<pre class="r"><code>fit_lee = NNLM::nnmf(A = X, k = 4, loss = &quot;mkl&quot;, method = &quot;lee&quot;, max.iter = 10000)
+## scd
+fit_scd = NNLM::nnmf(A = X, k = 4, loss = &quot;mkl&quot;, method = &quot;scd&quot;, max.iter = 10000)
+
+fit0 &lt;- list(F = matrix(runif(p*k),p,k),
+             L = matrix(runif(n*k),n,k))
+
+fit_sqp = altsqp(X,fit0,numiter = 50,verbose = FALSE)
+
+# also fit initialized from truth
+fit_true &lt;- list(F = F,L = L)
+fit_sqp2 = altsqp(X,fit_true,numiter = 20)</code></pre>
+<pre><code>Running 20 EM/SQP updates (fastTopics version 0.1-78)
+Extrapolation is not active.
+Data are 99 x 300 matrix with 96.8% nonzero proportion.
+Optimization settings used:
+  + numem:   1   + beta.init:        0.50  + activesetconvtol: 1.00e-10
+  + numsqp:  4   + beta.increase:    1.10  + suffdecr:         1.00e-02
+  + e: 1.00e-15  + beta.reduce:      0.75  + stepsizereduce:   7.50e-01
+                 + betamax.increase: 1.05  + minstepsize:      1.00e-10
+                                           + zerothreshold:    1.00e-10
+                                           + zerosearchdir:    1.00e-15
+iter objective (cost fn) mean.diff    beta
+   1 -1.699007460488e+05 2.617e-01 0.0e+00
+   2 -1.699933343975e+05 1.243e-02 0.0e+00
+   3 -1.700263498206e+05 3.218e-03 0.0e+00
+   4 -1.700444090203e+05 1.462e-03 0.0e+00
+   5 -1.700561833421e+05 8.370e-04 0.0e+00
+   6 -1.700643725657e+05 5.229e-04 0.0e+00
+   7 -1.700703067306e+05 3.454e-04 0.0e+00
+   8 -1.700747398206e+05 2.270e-04 0.0e+00
+   9 -1.700782111181e+05 1.562e-04 0.0e+00
+  10 -1.700810446626e+05 1.134e-04 0.0e+00
+  11 -1.700834123143e+05 8.706e-05 0.0e+00
+  12 -1.700854138313e+05 6.820e-05 0.0e+00
+  13 -1.700871178434e+05 5.390e-05 0.0e+00
+  14 -1.700885759998e+05 4.409e-05 0.0e+00
+  15 -1.700898226973e+05 3.643e-05 0.0e+00
+  16 -1.700908897079e+05 3.051e-05 0.0e+00
+  17 -1.700918047383e+05 2.510e-05 0.0e+00
+  18 -1.700925924331e+05 2.058e-05 0.0e+00
+  19 -1.700932750151e+05 1.678e-05 0.0e+00
+  20 -1.700938730579e+05 1.389e-05 0.0e+00</code></pre>
+<pre class="r"><code>sum(dpois(X, fit_lee$W %*% fit_lee$H,log=TRUE))</code></pre>
+<pre><code>[1] -64324.04</code></pre>
+<pre class="r"><code>sum(dpois(X, fit_scd$W %*% fit_scd$H,log=TRUE))</code></pre>
+<pre><code>[1] -64255.48</code></pre>
+<pre class="r"><code>sum(dpois(X, fit_sqp$L %*% t(fit_sqp$F),log=TRUE))</code></pre>
+<pre><code>[1] -64258.08</code></pre>
+<pre class="r"><code>sum(dpois(X, fit_sqp2$L %*% t(fit_sqp2$F),log=TRUE))</code></pre>
+<pre><code>[1] -64261.33</code></pre>
+<pre class="r"><code>sum(dpois(X, L %*% t(F),log=TRUE))</code></pre>
+<pre><code>[1] -65129.25</code></pre>
+<p>Here <code>scd</code> finds the highest log-likelihood. All the methods find a solution whose loglikelihood exceeds the oracle.</p>
+<p>Look at the loadings, we see that the sparse loadings are a bit “messy”.</p>
+<pre class="r"><code>for(i in 1:k){
+  plot(fit_scd$W[,i],main=paste0(&quot;estimated loadings &quot;,i))
+}</code></pre>
+<p><img src="figure/nmf_sparse.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/nmf_sparse.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/nmf_sparse.Rmd/unnamed-chunk-7-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/nmf_sparse.Rmd/unnamed-chunk-7-4.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="try-l1-penalty" class="section level2">
+<h2>Try L1 penalty</h2>
+<p>Here we try adding an L1 penalty to induce sparsity. It does not really seem to achieve this goal. I am not entirely sure why - there may be something more to understand here.</p>
+<p>First fit with penalty =1,10,100. We see the loadings are not really sparse.</p>
+<pre class="r"><code>fit_scd_L1.1 = NNLM::nnmf(A = X, k = 4, loss = &quot;mkl&quot;, method = &quot;scd&quot;, max.iter = 10000, alpha=c(0,0,1))
+fit_scd_L1.10 = NNLM::nnmf(A = X, k = 4, loss = &quot;mkl&quot;, method = &quot;scd&quot;, max.iter = 10000, alpha=c(0,0,10))
+fit_scd_L1.100 = NNLM::nnmf(A = X, k = 4, loss = &quot;mkl&quot;, method = &quot;scd&quot;, max.iter = 10000, alpha=c(0,0,100))
+
+for(i in 1:k){
+  plot(fit_scd_L1.1$W[,i],main=paste0(&quot;L1 penalty = 1: estimated loadings &quot;,i))
+}</code></pre>
+<p><img src="figure/nmf_sparse.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/nmf_sparse.Rmd/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/nmf_sparse.Rmd/unnamed-chunk-8-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/nmf_sparse.Rmd/unnamed-chunk-8-4.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>for(i in 1:k){
+  plot(fit_scd_L1.1$W[,i],main=paste0(&quot;L1 penalty = 10: estimated loadings &quot;,i))
+}</code></pre>
+<p><img src="figure/nmf_sparse.Rmd/unnamed-chunk-8-5.png" width="672" style="display: block; margin: auto;" /><img src="figure/nmf_sparse.Rmd/unnamed-chunk-8-6.png" width="672" style="display: block; margin: auto;" /><img src="figure/nmf_sparse.Rmd/unnamed-chunk-8-7.png" width="672" style="display: block; margin: auto;" /><img src="figure/nmf_sparse.Rmd/unnamed-chunk-8-8.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>for(i in 1:k){
+  plot(fit_scd_L1.100$H[i,],main=paste0(&quot;L1 penalty = 100: estimated loadings &quot;,i))
+}</code></pre>
+<p><img src="figure/nmf_sparse.Rmd/unnamed-chunk-8-9.png" width="672" style="display: block; margin: auto;" /><img src="figure/nmf_sparse.Rmd/unnamed-chunk-8-10.png" width="672" style="display: block; margin: auto;" /><img src="figure/nmf_sparse.Rmd/unnamed-chunk-8-11.png" width="672" style="display: block; margin: auto;" /><img src="figure/nmf_sparse.Rmd/unnamed-chunk-8-12.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Now we compute a goodness of fit to the true lambda (KL). We see the fit gets worse with penalty increase.</p>
+<pre class="r"><code># compute goodness of fit to true lambda
+KL = function(true,est){
+  sum(ifelse(true==0,0,true * log(true/est)) + est - true)
+}
+get_WH= function(fit){fit$W %*% fit$H}
+
+KL(lambda,get_WH(fit_scd))</code></pre>
+<pre><code>[1] 967.4376</code></pre>
+<pre class="r"><code>KL(lambda,get_WH(fit_scd_L1.1))</code></pre>
+<pre><code>[1] 968.8217</code></pre>
+<pre class="r"><code>KL(lambda,get_WH(fit_scd_L1.10))</code></pre>
+<pre><code>[1] 968.9655</code></pre>
+<pre class="r"><code>KL(lambda,get_WH(fit_scd_L1.100))</code></pre>
+<pre><code>[1] 966.257</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.6.0 (2019-04-26)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS Mojave 10.14.4
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/3.6/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.6/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] NNLM_0.4.3        fastTopics_0.1-78
+
+loaded via a namespace (and not attached):
+ [1] workflowr_1.4.0    Rcpp_1.0.2         lattice_0.20-38   
+ [4] digest_0.6.20      rprojroot_1.3-2    grid_3.6.0        
+ [7] backports_1.1.4    git2r_0.26.1       magrittr_1.5      
+[10] evaluate_0.14      RcppParallel_4.4.4 stringi_1.4.3     
+[13] fs_1.3.1           whisker_0.3-2      Matrix_1.2-17     
+[16] rmarkdown_1.14     tools_3.6.0        stringr_1.4.0     
+[19] glue_1.3.1         parallel_3.6.0     xfun_0.8          
+[22] yaml_2.2.0         compiler_3.6.0     htmltools_0.3.6   
+[25] knitr_1.23        </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
