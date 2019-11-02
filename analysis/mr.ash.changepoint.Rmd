@@ -1,0 +1,98 @@
+---
+title: "mr.ash.changepoint"
+author: "Matthew Stephens"
+date: "2019-11-01"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+library("mr.ash.alpha")
+library("glmnet")
+library("genlasso")
+```
+
+## Introduction
+
+I'm going to try the current version of `mr.ash.alpha` on a changepoint problem for my own interest.
+
+## Single changepoint
+
+First simulate data:
+```{r}
+set.seed(100)
+n = 100
+p = n
+X = matrix(0,nrow=n,ncol=n)
+for(i in 1:n){
+  X[i:n,i] = 1
+}
+
+btrue = rep(0,n)
+btrue[50] = 8 
+Y = X %*% btrue + rnorm(n)
+plot(Y)
+lines(X %*% btrue)
+```
+
+This works great out of the box:
+```{r}
+fit.ma = mr.ash(X,Y)
+plot(Y)
+lines(X %*% btrue,lwd=1)
+lines(predict(fit.ma,X),col=2,lwd=2)
+
+fit.glmnet = glmnet(X,Y)
+fit.glmnet.cv = glmnet::cv.glmnet(X,Y)
+lines(predict(fit.glmnet.cv,X),col=3,lwd=2)
+
+fit.genlasso = trendfilter(Y,ord=0)
+fit.genlasso.cv = cv.trendfilter(fit.genlasso)
+lines(fit.genlasso$fit[,which(fit.genlasso.cv$lambda==fit.genlasso.cv$lambda.min)],lwd=2,col=4)
+```
+
+
+
+
+## Double changepoint
+
+Now we do a harder case, similar to the Susie paper:
+```{r}
+btrue[52] = -8 
+Y = X %*% btrue + rnorm(n,0,0.1)
+plot(Y)
+lines(X %*% btrue)
+```
+
+```{r}
+fit.ma = mr.ash(X,Y)
+plot(Y)
+lines(predict(fit.ma,X),col=2)
+
+fit.glmnet = glmnet(X,Y)
+fit.glmnet.cv = glmnet::cv.glmnet(X,Y)
+lines(predict(fit.glmnet.cv,X),col=3,lwd=2)
+
+fit.genlasso = trendfilter(Y,ord=0)
+fit.genlasso.cv = cv.trendfilter(fit.genlasso)
+lines(fit.genlasso$fit[,which(fit.genlasso.cv$lambda==fit.genlasso.cv$lambda.min)],lwd=2,col=4)
+```
+
+It is interesting that glmnet and genlasso give quite different answers. Also it looks
+like in this case `mr.ash` is converging to local optima. (the change is a bit too early...)
+
+Here we try warmstart from genlasso solution, but find it gives NaN.
+
+```{r}
+b.genlasso  = fit.genlasso$beta[,which(fit.genlasso.cv$lambda==fit.genlasso.cv$lambda.min)]
+
+plot(Y)
+lines(b.genlasso)
+
+fit.ma.warm = mr.ash(X,Y,beta.init = b.genlasso)
+lines(predict(fit.ma.warm,X),col=2)
+predict(fit.ma.warm,X)
+```
+
+
