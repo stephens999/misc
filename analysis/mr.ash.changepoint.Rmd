@@ -79,10 +79,12 @@ fit.genlasso.cv = cv.trendfilter(fit.genlasso)
 lines(fit.genlasso$fit[,which(fit.genlasso.cv$lambda==fit.genlasso.cv$lambda.min)],lwd=2,col=4)
 ```
 
-It is interesting that glmnet and genlasso give quite different answers. Also it looks
-like in this case `mr.ash` is converging to local optima. (the change is a bit too early...)
+It is interesting that glmnet and genlasso give quite different answers. Clearly `glmnet` is entirely missing the changepoint. If you zoom in you will see that `genlasso` is overfitting - it is not just getting the single changepoint but fitting the data everywhere! 
 
-Here we try warmstart from genlasso solution, but find it gives NaN.
+Also it looks like in this case `mr.ash` is converging to local optima. (the change is a bit too early...)
+Here we try warmstarts of `mr.ash` from genlasso solution, and from truth.
+However, both give NaN as answers. Not sure why.
+
 
 ```{r}
 b.genlasso  = fit.genlasso$beta[,which(fit.genlasso.cv$lambda==fit.genlasso.cv$lambda.min)]
@@ -91,8 +93,15 @@ plot(Y)
 lines(b.genlasso)
 
 fit.ma.warm = mr.ash(X,Y,beta.init = b.genlasso)
-lines(predict(fit.ma.warm,X),col=2)
+fit.ma.warm2 = mr.ash(X,Y,beta.init = btrue)
+
+
 predict(fit.ma.warm,X)
+predict(fit.ma.warm2,X)
 ```
+
+
+
+
 
 
