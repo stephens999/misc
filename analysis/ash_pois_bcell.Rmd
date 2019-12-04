@@ -1,0 +1,35 @@
+---
+title: "ash_pois_bcell"
+author: "Matthew Stephens"
+date: "2019-12-04"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+library("ashr")
+library("ebpm")
+```
+
+## Introduction
+
+The goal here is to look at some examples where `ash_pois` may not fit the data well (data
+provided by A Sarkar).
+
+Read in the data and extract data for first gene:
+```{r}
+b_data= readRDS("../data/b-cell-data.Rds")
+gene_names = unique(b_data$gene)
+b_data1 = b_data[b_data$gene == gene_names[1],]
+hist(b_data1$count/b_data1$size, main="observed expression values across cells")
+```
+
+Now fit ash and point gamma:
+```{r}
+b1_ash = ash_pois(b_data1$count, b_data1$size)
+b1_pg = ebpm_point_gamma(b_data1$count, b_data1$size)
+b1_ash$loglik
+b1_pg$log_likelihood
+```
+
