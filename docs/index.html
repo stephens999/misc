@@ -321,7 +321,7 @@ div.section {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2019-11-02
+<strong>Last updated:</strong> 2019-12-04
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 2 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -331,7 +331,7 @@ div.section {
 </p>
 <p>
 This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
-  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.4.0). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.5.0). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
 </p>
 <hr>
 </div>
@@ -352,10 +352,10 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree503bea480e5f3ee93880d2b7a5ff61bbd55cefb8targetblank503bea4a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/503bea480e5f3ee93880d2b7a5ff61bbd55cefb8" target="_blank">503bea4</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree74acef931c6af68c73c930ae63ee213bd19539datargetblank74acef9a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/74acef931c6af68c73c930ae63ee213bd19539da" target="_blank">74acef9</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree503bea480e5f3ee93880d2b7a5ff61bbd55cefb8targetblank503bea4a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree74acef931c6af68c73c930ae63ee213bd19539datargetblank74acef9a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -370,11 +370,11 @@ Ignored files:
     Ignored:    analysis/ALStruct_cache/
     Ignored:    data/.Rhistory
     Ignored:    data/pbmc/
-    Ignored:    docs/figure/.DS_Store
 
 Untracked files:
     Untracked:  .dropbox
     Untracked:  Icon
+    Untracked:  analysis/GHstan.Rmd
     Untracked:  analysis/GTEX-cogaps.Rmd
     Untracked:  analysis/PACS.Rmd
     Untracked:  analysis/SPCAvRP.rmd
@@ -383,6 +383,7 @@ Untracked files:
     Untracked:  analysis/cp_ash.Rmd
     Untracked:  analysis/eQTL.perm.rand.pdf
     Untracked:  analysis/eb_prepilot.Rmd
+    Untracked:  analysis/ebpmf1.Rmd
     Untracked:  analysis/flash_test_tree.Rmd
     Untracked:  analysis/ieQTL.perm.rand.pdf
     Untracked:  analysis/m6amash.Rmd
@@ -396,8 +397,10 @@ Untracked files:
     Untracked:  analysis/pbmc.Rmd
     Untracked:  analysis/poisson_transform.Rmd
     Untracked:  analysis/pseudodata.Rmd
+    Untracked:  analysis/qrnotes.txt
     Untracked:  analysis/ridge_iterative_splitting.Rmd
     Untracked:  analysis/sc_bimodal.Rmd
+    Untracked:  analysis/shrinkage_comparisons_changepoints.Rmd
     Untracked:  analysis/susie_en.Rmd
     Untracked:  analysis/susie_z_investigate.Rmd
     Untracked:  analysis/svd-timing.Rmd
@@ -406,9 +409,11 @@ Untracked files:
     Untracked:  analysis/test.Rmd
     Untracked:  analysis/test.Rpres
     Untracked:  analysis/test.md
+    Untracked:  analysis/test_qr.R
     Untracked:  analysis/test_sparse.Rmd
     Untracked:  analysis/z.txt
     Untracked:  code/multivariate_testfuncs.R
+    Untracked:  code/rqb.hacked.R
     Untracked:  data/4matthew/
     Untracked:  data/4matthew2/
     Untracked:  data/E-MTAB-2805.processed.1/
@@ -451,20 +456,6 @@ Untracked files:
     Untracked:  data/y_f.txt
     Untracked:  data/zscore_jointLCLs_m6AQTLs_susie_eQTLpruned.rds
     Untracked:  data/zscore_jointLCLs_random.rds
-    Untracked:  docs/figure/cp_ash.Rmd/
-    Untracked:  docs/figure/eigen.Rmd/
-    Untracked:  docs/figure/fmo2.sim.Rmd/
-    Untracked:  docs/figure/mr_ash_modular.Rmd/
-    Untracked:  docs/figure/newVB.elbo.Rmd/
-    Untracked:  docs/figure/poisson_transform.Rmd/
-    Untracked:  docs/figure/rbc_zscore_mash2.Rmd/
-    Untracked:  docs/figure/rbc_zscore_mash2_analysis.Rmd/
-    Untracked:  docs/figure/rbc_zscores.Rmd/
-    Untracked:  docs/figure/ridge_iterative_splitting.Rmd/
-    Untracked:  docs/figure/susie_en.Rmd/
-    Untracked:  docs/figure/test.Rmd/
-    Untracked:  docs/trend_files/
-    Untracked:  docs/z.txt
     Untracked:  explore_udi.R
     Untracked:  output/fit.k10.rds
     Untracked:  output/fit.varbvs.RDS
@@ -496,6 +487,8 @@ Untracked files:
     Untracked:  output/test5.param.txt
 
 Unstaged changes:
+    Modified:   analysis/ash_delta_operator.Rmd
+    Modified:   analysis/ash_pois_bcell.Rmd
     Modified:   analysis/minque.Rmd
 
 </code></pre>
@@ -535,6 +528,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/74acef931c6af68c73c930ae63ee213bd19539da/analysis/index.Rmd" target="_blank">74acef9</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2019-12-04
+</td>
+<td>
+workflowr::wflow_publish(“index.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/c193a6c50cb00c8b126ed394a20fbcfbbf93e62b/docs/index.html" target="_blank">c193a6c</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2019-11-02
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -669,6 +696,23 @@ Matthew Stephens
 </td>
 <td>
 Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/35852bd6f662100ffd6c260ea3eae498fb5d9134/analysis/index.Rmd" target="_blank">35852bd</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2019-10-12
+</td>
+<td>
+wflow_publish(“index.Rmd”)
 </td>
 </tr>
 <tr>
@@ -1535,6 +1579,7 @@ Start workflowr project.
 <li><a href="ash_pi0_largern.html">Null simulations with larger n=13500</a></li>
 <li><a href="ash_npmle_big.html">NPMLE with larger n=100000</a></li>
 <li><a href="ash_delta_operator.html">Examine the delta operator for ash</a></li>
+<li><a href="ash_pois_bcell.html">Ash on poisson data</a></li>
 </ul>
 </div>
 <div id="mr-ash" class="section level1">
