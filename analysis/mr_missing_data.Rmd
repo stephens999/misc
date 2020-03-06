@@ -1,0 +1,95 @@
+---
+title: "mr_missing_data"
+author: "Matthew Stephens"
+date: "2020-03-06"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+The idea here is to look at multiple regression with missing data.
+
+## Pseudo-data approach
+
+Youxin Zou suggested we take a pseudo-data approach to fitting 
+multivariate multiple regression (MMR). This approach unifies the full-data and
+summary data approaches, and could also deal with missing data. So I wanted
+to start by checking it out.
+
+The basic MMR model can be written 
+$$Y \sim MN(Xb, I, V)$$
+where $MN$ denotes the matrix normal distribution.
+
+It follows that:
+$$X'Y \sim MN(X'Xb, X'X, V)$$
+Now assume $X$ has SVD $X=UDV'$, so $R=X'X$ has eigendecomposition $R=UD^2U'$.
+Define transform $T = D^{-1} U'$.
+Then 
+
+$$TX'Y = D^{-1}U'UDV'Y = V'Y$$
+$$TX'Xb = D^{-1}U'UD^2U'b = DU'b$$
+$$TX'XT' = D^{-1}U'UD^2U'UD^{-1} = I$$
+
+So $$V'Y \sim MN(DU'b,I,V)$$
+
+So we can fit the MMR model by using a regression model to outcome 
+$$\tilde{Y} := V'Y$$
+and covariate
+$$\tilde{X} :=  DU'$$
+
+With no missing data $X'Y$ is sufficient for $b$,so we should get exactly the same results (even from a Bayesian approach, because the likelihood for $b$ is the same in each case). 
+
+Let's try this out via simulation in the univariate case (no missingness).
+
+```{r}
+library(susieR)
+n= 100
+p = 100
+X = matrix(rnorm(n*p),nrow=n,ncol=p)
+b = rep(0,p)
+b[1] = 2
+b[3] = 2
+Y = X %*% b + rnorm(n)
+Y.s = susieR::susie(X,Y,10,standardize = FALSE,intercept=FALSE)
+
+## pseduo data
+X.svd = svd(t(X))
+U = X.svd$u
+D = X.svd$d 
+V = X.svd$v
+Ytilde = t(V) %*% Y
+Xtilde = diag(D) %*% t(U)
+Y.stilde = susieR::susie(Xtilde,Ytilde,10,standardize = FALSE, intercept =FALSE)
+
+all.equal(susie_get_pip(Y.s),susie_get_pip(Y.stilde))
+```
+
+Try the singular case:
+```{r}
+set.seed(1)
+n= 20
+p = 100
+X = matrix(rnorm(n*p),nrow=n,ncol=p)
+b = rep(0,p)
+b[1] = 2
+b[3] = 2
+Y = X %*% b + rnorm(n)
+Y.s = susieR::susie(X,Y,10,standardize = FALSE,intercept=FALSE)
+
+# Y.s = susieR::susie(X,Y,10,standardize = FALSE,intercept=FALSE,estimate_prior_variance=FALSE, scaled_prior_variance = 1/sd(Y)^2)
+
+## pseduo data
+X.svd = svd(t(X))
+U = X.svd$u
+D = X.svd$d 
+V = X.svd$v
+Ytilde = t(V) %*% Y
+Xtilde = diag(D) %*% t(U)
+Y.stilde = susieR::susie(Xtilde,Ytilde,10,standardize = FALSE, intercept =FALSE)
+
+all.equal(susie_get_pip(Y.s),susie_get_pip(Y.stilde))
+
+
+```
