@@ -68,6 +68,10 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 * [selective inference with correlated variables](selective_inference.html)
 * [hierarchical inference example](hierinf_toyexample.html)
 
+# Missing Data in regression
+
+* [Pseudo-data idea](mr_missing_data.html)
+
 # Depletion
 
 * [Using ash for depletion](ash-depletion.html)
