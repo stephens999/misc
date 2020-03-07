@@ -1,0 +1,121 @@
+---
+title: "Multiple regression with missing data (2)"
+author: "Matthew Stephens"
+date: "2020-03-06"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+The idea here is to look at multiple regression with missing data, following up
+on the idea to use a [pseudo-data approach](mr_missing_data.html).
+
+
+## Summary
+
+Let $\gamma_{ir}$ be an indicator for whether $Y_{ir}$ is non-missing (so 0 indicates missing),
+and $n_{rs}$ denote the number of non-missing observations in both $r$ and $s$:
+$$n_{rs} = \sum_i \gamma_{ir}\gamma_{is}.$$
+
+Let $W$ denote the anologue of $(1/n)X'Y$ in the full data case, based on the non-missing
+entries of $Y$. That is,
+$$W_{jr} := (1/n_{rr}) \sum_i X_{ij}Y_{ir}\gamma_{ir}$$
+Let $R$ denote the empirical covariance matrix of the covariates:
+$$R:=(1/n)X'X$$
+
+
+Let $X'X^{(r,s)}$ denote the matrix $X'X$ computed using only those individuals $i$ for which both
+$r$ and $s$ are non-missing ($\gamma_{ir}\gamma_{is} = 1$):
+
+$$(X'X)^{(r,s)}_{jk} := \sum_{i} \gamma_{ir}\gamma_{is} X_{ij} X_{ik}$$
+
+
+Let $\tilde{V}$ denote the matrix 
+$$\tilde{V}_{rs}:= V_{rs}n_{rs}/(n_{rr}n_{ss}).$$
+
+We propose to make the following approximations:
+
+A1: Treat the matrix $W$ as approximate sufficient statistic, and do inference based on $L(b) = p(W|b)$.
+
+A2: $X'X^{(r,s)} \approx n_{rs} R$.
+
+
+With these approximations it can be shown that:
+
+$$W \sim MN(Rb, R, \tilde{V})$$
+And we can use a transformation $T$ such that $TRT' = I$ to give:
+$$TW \sim MN(TRb, I, \tilde{V})$$
+
+So we can solve the problem by fitting a MMR with outcome $TW$ and covariates $TR$.
+
+In the special case with no missing data this procedure will be exact.
+
+
+## Multiple Multivariate Regression with missing data
+
+### The full data case
+
+We have an MMR with $n$ observations in $r$ conditions and $r$ covariates.
+$$Y_{n \times r} = X_{n \times p} b_{p \times r} + E_{n \times r$$
+We allow that the covariances of the residuals may be correlated (covariance matrix $V$), so the rows of $E_{i\cdot} \sim N(0,V)$. Assume for now that $V$ is known.
+
+This model can be rewritten in terms of the matrix normal distribution:
+$$Y \sim MN( Xb , I, V)$$.
+The log-likelihood for $b$ is (up to a constant):
+$$l(b) = -0.5 \text{tr}[V^{-1}(Y-Xb)'(Y-Xb)]$$
+
+Ignoring terms that don't depend on $b$ we get
+$$l(b) = -0.5 \text{tr}[V^{-1}(b'X'Xb - 2Y'Xb)] + \text{const}$$
+so we can see that the summary data $Y'X$ (or equivalently its transpose, $X'Y$) is a sufficient statistic for $b$ (assuming $X$ or $X'X$ are known).
+
+
+### Lack of sufficiency of $W$ with missing data
+
+Let $\gamma_{ir}$ be an indicator for whether $Y_{ir}$ is non-missing (so 0 indicates missing).
+
+Now define $W$ to be $X'Y$ computed using only the non-missing
+entries of $Y$:
+$$W_{jr} = \sum_i X_{ij}Y_{ir}\gamma_{ir}$$
+
+*A first observation: O1* In the presence of missing data, $W$ is not sufficient for $b$ (even if $\gamma,X$ are known).
+
+[An exception: if every row of $Y$ contains only one non-missing entry then $W$ is sufficient]
+
+As an aside, we have *Observation O2*: the way we compute the single-effect regression Bayes factors in susieR exploits this sufficiency, so they are not "valid" (ie not the actual correct BFs) in the presence of missing data.
+
+The following simple example illustrates why $W$ is not sufficient. Consider the case with $r=2$ and
+$Y1,Y2$ are completely correlated ($V=11'$), and let $X$ be a column vector of all $1$s,
+so we are just estimating the two means, which we will call $(\mu_1,\mu_2)$.
+
+Suppose the first observation is $(Y_1,Y_2) = (0,0)$.
+This tells us that $\mu_1 = \mu_2$ (because the complete correlation implies that $Y_1-Y_2$ is a constant and equal to $\mu_1-\mu_2$).
+
+Now suppose we have a bunch of other observations where sometimes $Y_1$ is missing, sometimes $Y_2$ is missing, and sometimes both are observed (in which case we will know they are equal).
+Since we know $\mu_1=\mu_2$ from the first observation, and the $Y$s are completely correlated,
+we know $Y_1=Y_2$ with probability 1,  so 
+we can perfectly impute all the missing data. The mles are then easily computed
+based on these imputed data. But we can't do this imputation if we only know the marginal
+sums of the observed $Y_1$ and observed $Y_2$.
+
+
+This leads to a first *Approximation A1*: do inference for $b$ based on $L(b):=p(W|b)$.
+That is, pretend we have only observed $W$ and not $Y$. Because $W$ is not sufficient,
+this will lose some efficiency. But it should still provide reasonable inference
+and will simplify things.
+
+
+
+### The distribution of $W$
+
+
+TBD
+
+
+
+
+
+
+
+
