@@ -71,6 +71,7 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 # Missing Data in regression
 
 * [Pseudo-data idea](mr_missing_data.html)
+* [Approximate Inference with missing data](mr_missing_data2.html)
 
 # Depletion
 
