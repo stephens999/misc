@@ -1,0 +1,75 @@
+---
+title: "Sparse version of the structure/admixture model"
+author: "Matthew Stephens"
+date: "2020-03-12"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+The structure/admixture model is a model for multinomial genotype data,
+originally introduced and fit by MCMC in the "Structure" paper (Pritchard, Stephens and Donnelly; 2000),
+and subsequently fit by maximum likelihood in the "Admixture" paper (Alexander et al).
+
+The basic idea of the model is to model each sample $i$
+as having some degree of membership $q_{i1},\dots,q_{iK}$ in each of $K$ populations, with allele frequencies $p_k$.
+
+Here we explore the possibility to regularize this model by introducing the idea that the
+allele frequencies $p_k$ are similar -- or even identical -- for most populations $k$ at most sites $l$.
+
+## Model
+
+We consider the haploid version of the model, where each indidividual $i$ has one observation at each locus $l$. 
+
+Notationally, it is helpful to represent the data in each individual at each locus as indicator
+vectors: $X_{il\cdot}= X_{il1},\dots,X_{ilJ}$ where $X_{ilj}=1$ if individual $i$ is of type $j$ at locus $l$, and $X_{ilj}=0$ otherwise. 
+
+Then the admixture model is
+$$X_{ilj} \sim \text{Mult}(1;\pi_{il\cdot})$$
+$$\pi_{ilj} = \sum_k q_{ik} p_{klj}$$
+
+where Mult(n,$\pi$) denotes a (discrete) categorical distribution on $1,...,J$ with probabilities $\pi=(\pi_1,\dots,\pi_J)$, $i$ indexes individuals, $l$ indexes sites (loci), and $j$ indexes alleles.
+
+Writing it this way, one can see the connection with factor models, or ``low-rank" models,
+which sum over a small number of factors $k=1,\dots,K$. The model for $\pi_{ilj}$ is "low rank".
+
+For computation it is helpful to introduce latent variables to
+indicate the population of origin of each individual at each locus.
+Let
+$$Z_{il\cdot} \sim \text{Mult}(1; q_{i1},\dots,q_{iK}).$$
+So $Z_{il\cdot}$ is a binary indicator vector (length $K$), with $Z_{ilk}=1$ 
+indicating that the population of origin of individual $i$ at locus $l$ is $k$.
+We can then write
+$$X_{il\cdot} | p \sim \sum_k Z_{ilk} \text{Mult}(1; p_{kl\cdot})$$
+
+## Modification
+
+Now we introduce a prior to allow that the $p_k$ may be similar to one another at many loci/sites.
+This is similar to the idea of the ``correlated allele frequencies model" in Pritchard et al, but
+with more of a focus on sparsity (meaning exact or almost-exact
+equality of the allele frequencies for different $k$) and an eye on potential maximimum likelihood approach.
+
+The proposed prior is:
+$$p_{kl\cdot} | \alpha, \mu \sim \text{Dir}(\alpha_{kl} \mu_{l\cdot})$$
+where $\alpha_{kl}$ is a scalar that controls how similar $p_k$ is to the mean $\mu_{l\cdot}$ at locus $l$,
+and $\mu_{l\cdot}$ is the mean of the Dirichlet prior. Intuitively $\mu_{l\cdot}$ represents
+the allele frequencies at locus $l$, that are shared across populations. The idea of
+a separate $\alpha$ for each $k,l$ seems related to the so-called "automatic relevance determination prior", and also the Sparse Factor Analysis method of [Engelhardt and Stephens](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1001117).
+
+In the limit $\alpha_{kl} \rightarrow \infty$ the $p_{kl\cdot} = \mu_{kl\cdot}$ with probability 1.
+
+Under this prior the distribution on the $X$s becomes a mixture of Dirichlet-Multinomials:
+$$X_{il\cdot} | \alpha, \mu \sim \sum_k Z_{ilk} \text{Dir-Mult}(1; \alpha_{kl}\mu_{kl\cdot}).$$
+
+
+I suspect there is an EM algorithm for fitting this model, which here means estimating
+$\alpha,\mu,q$. The estimated $\mu$ should be approximately the site-specific marginal frequencies,
+and $alpha_{kl}$ will be small when the factors $k$ deviate from this mean at locus $l$.
+I found [this paper](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0030126)
+on fitting mixtures of Dirichlet multinomials by EM, which seems relevant here.
+Indeed, the above is basically extending theis mixture model to the "grade of membership" idea,
+but with the addition of more parameters $\alpha$.
+
+We may want to put a hyper-prior on $\alpha$ that encourages it to be big at most loci in most factors...
