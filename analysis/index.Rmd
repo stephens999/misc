@@ -51,6 +51,10 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 
 * [Try NMF on a simple simulation with sparse factors](nmf_sparse.html)
 
+# Multinomial factor models
+
+* [Possible version of structure/admixture with sparsity via ARD-like prior](sparse_structure.html)
+
 # Weighted SVD 
 
 * [Outline of EM algorithm for fitting weighted SVD](wSVD.html)
