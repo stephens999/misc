@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Matthew Stephens" />
+
+<meta name="date" content="2020-03-12" />
+
+<title>Sparse version of the structure/admixture model</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">misc</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/stephens999/misc">source</a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Sparse version of the structure/admixture model</h1>
+<h4 class="author">Matthew Stephens</h4>
+<h4 class="date">2020-03-12</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2020-03-12
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 2 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>misc/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.0.9000). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreefbcb572bc0b04376d1052018ec259738acf24a2dtargetblankfbcb572a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/fbcb572bc0b04376d1052018ec259738acf24a2d" target="_blank">fbcb572</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreefbcb572bc0b04376d1052018ec259738acf24a2dtargetblankfbcb572a" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/fbcb572bc0b04376d1052018ec259738acf24a2d" target="_blank">fbcb572</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.RData
+    Ignored:    analysis/.Rhistory
+    Ignored:    analysis/ALStruct_cache/
+    Ignored:    data/.Rhistory
+    Ignored:    data/pbmc/
+
+Untracked files:
+    Untracked:  .dropbox
+    Untracked:  Icon
+    Untracked:  analysis/GHstan.Rmd
+    Untracked:  analysis/GTEX-cogaps.Rmd
+    Untracked:  analysis/PACS.Rmd
+    Untracked:  analysis/SPCAvRP.rmd
+    Untracked:  analysis/compare-transformed-models.Rmd
+    Untracked:  analysis/cormotif.Rmd
+    Untracked:  analysis/cp_ash.Rmd
+    Untracked:  analysis/eQTL.perm.rand.pdf
+    Untracked:  analysis/eb_prepilot.Rmd
+    Untracked:  analysis/ebpmf1.Rmd
+    Untracked:  analysis/flash_test_tree.Rmd
+    Untracked:  analysis/ieQTL.perm.rand.pdf
+    Untracked:  analysis/m6amash.Rmd
+    Untracked:  analysis/mash_bhat_z.Rmd
+    Untracked:  analysis/mash_ieqtl_permutations.Rmd
+    Untracked:  analysis/mixsqp.Rmd
+    Untracked:  analysis/mr_ash_modular.Rmd
+    Untracked:  analysis/mr_ash_parameterization.Rmd
+    Untracked:  analysis/nejm.Rmd
+    Untracked:  analysis/normalize.Rmd
+    Untracked:  analysis/pbmc.Rmd
+    Untracked:  analysis/poisson_transform.Rmd
+    Untracked:  analysis/pseudodata.Rmd
+    Untracked:  analysis/qrnotes.txt
+    Untracked:  analysis/ridge_iterative_splitting.Rmd
+    Untracked:  analysis/sc_bimodal.Rmd
+    Untracked:  analysis/shrinkage_comparisons_changepoints.Rmd
+    Untracked:  analysis/susie_en.Rmd
+    Untracked:  analysis/susie_z_investigate.Rmd
+    Untracked:  analysis/svd-timing.Rmd
+    Untracked:  analysis/temp.Rmd
+    Untracked:  analysis/test-figure/
+    Untracked:  analysis/test.Rmd
+    Untracked:  analysis/test.Rpres
+    Untracked:  analysis/test.md
+    Untracked:  analysis/test_qr.R
+    Untracked:  analysis/test_sparse.Rmd
+    Untracked:  analysis/z.txt
+    Untracked:  code/multivariate_testfuncs.R
+    Untracked:  code/rqb.hacked.R
+    Untracked:  data/4matthew/
+    Untracked:  data/4matthew2/
+    Untracked:  data/E-MTAB-2805.processed.1/
+    Untracked:  data/ENSG00000156738.Sim_Y2.RDS
+    Untracked:  data/GDS5363_full.soft.gz
+    Untracked:  data/GSE41265_allGenesTPM.txt
+    Untracked:  data/Muscle_Skeletal.ACTN3.pm1Mb.RDS
+    Untracked:  data/Thyroid.FMO2.pm1Mb.RDS
+    Untracked:  data/bmass.HaemgenRBC2016.MAF01.Vs2.MergedDataSources.200kRanSubset.ChrBPMAFMarkerZScores.vs1.txt.gz
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.PreviousSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/eb_prepilot/
+    Untracked:  data/finemap_data/fmo2.sim/b.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/data
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.ld
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.z
+    Untracked:  data/finemap_data/fmo2.sim/pos.txt
+    Untracked:  data/logm.csv
+    Untracked:  data/m.cd.RDS
+    Untracked:  data/m.cdu.old.RDS
+    Untracked:  data/m.new.cd.RDS
+    Untracked:  data/m.old.cd.RDS
+    Untracked:  data/mainbib.bib.old
+    Untracked:  data/mat.csv
+    Untracked:  data/mat.txt
+    Untracked:  data/mat_new.csv
+    Untracked:  data/matrix_lik.rds
+    Untracked:  data/paintor_data/
+    Untracked:  data/temp.txt
+    Untracked:  data/y.txt
+    Untracked:  data/y_f.txt
+    Untracked:  data/zscore_jointLCLs_m6AQTLs_susie_eQTLpruned.rds
+    Untracked:  data/zscore_jointLCLs_random.rds
+    Untracked:  explore_udi.R
+    Untracked:  output/fit.k10.rds
+    Untracked:  output/fit.varbvs.RDS
+    Untracked:  output/glmnet.fit.RDS
+    Untracked:  output/test.bv.txt
+    Untracked:  output/test.gamma.txt
+    Untracked:  output/test.hyp.txt
+    Untracked:  output/test.log.txt
+    Untracked:  output/test.param.txt
+    Untracked:  output/test2.bv.txt
+    Untracked:  output/test2.gamma.txt
+    Untracked:  output/test2.hyp.txt
+    Untracked:  output/test2.log.txt
+    Untracked:  output/test2.param.txt
+    Untracked:  output/test3.bv.txt
+    Untracked:  output/test3.gamma.txt
+    Untracked:  output/test3.hyp.txt
+    Untracked:  output/test3.log.txt
+    Untracked:  output/test3.param.txt
+    Untracked:  output/test4.bv.txt
+    Untracked:  output/test4.gamma.txt
+    Untracked:  output/test4.hyp.txt
+    Untracked:  output/test4.log.txt
+    Untracked:  output/test4.param.txt
+    Untracked:  output/test5.bv.txt
+    Untracked:  output/test5.gamma.txt
+    Untracked:  output/test5.hyp.txt
+    Untracked:  output/test5.log.txt
+    Untracked:  output/test5.param.txt
+
+Unstaged changes:
+    Modified:   analysis/ash_delta_operator.Rmd
+    Modified:   analysis/ash_pois_bcell.Rmd
+    Modified:   analysis/minque.Rmd
+    Modified:   analysis/mr_missing_data.Rmd
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/sparse_structure.Rmd</code>) and HTML (<code>docs/sparse_structure.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/fbcb572bc0b04376d1052018ec259738acf24a2d/analysis/sparse_structure.Rmd" target="_blank">fbcb572</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-03-12
+</td>
+<td>
+workflowr::wflow_publish(“sparse_structure.Rmd”)
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>The structure/admixture model is a model for multinomial genotype data, originally introduced and fit by MCMC in the “Structure” paper (Pritchard, Stephens and Donnelly; 2000), and subsequently fit by maximum likelihood in the “Admixture” paper (Alexander et al).</p>
+<p>The basic idea of the model is to model each sample <span class="math inline">\(i\)</span> as having some degree of membership <span class="math inline">\(q_{i1},\dots,q_{iK}\)</span> in each of <span class="math inline">\(K\)</span> populations, with allele frequencies <span class="math inline">\(p_k\)</span>.</p>
+<p>Here we explore the possibility to regularize this model by introducing the idea that the allele frequencies <span class="math inline">\(p_k\)</span> are similar – or even identical – for most populations <span class="math inline">\(k\)</span> at most sites <span class="math inline">\(l\)</span>.</p>
+</div>
+<div id="model" class="section level2">
+<h2>Model</h2>
+<p>We consider the haploid version of the model, where each indidividual <span class="math inline">\(i\)</span> has one observation at each locus <span class="math inline">\(l\)</span>.</p>
+<p>Notationally, it is helpful to represent the data in each individual at each locus as indicator vectors: <span class="math inline">\(X_{il\cdot}= X_{il1},\dots,X_{ilJ}\)</span> where <span class="math inline">\(X_{ilj}=1\)</span> if individual <span class="math inline">\(i\)</span> is of type <span class="math inline">\(j\)</span> at locus <span class="math inline">\(l\)</span>, and <span class="math inline">\(X_{ilj}=0\)</span> otherwise.</p>
+<p>Then the admixture model is <span class="math display">\[X_{ilj} \sim \text{Mult}(1;\pi_{il\cdot})\]</span> <span class="math display">\[\pi_{ilj} = \sum_k q_{ik} p_{klj}\]</span></p>
+<p>where Mult(n,<span class="math inline">\(\pi\)</span>) denotes a (discrete) categorical distribution on <span class="math inline">\(1,...,J\)</span> with probabilities <span class="math inline">\(\pi=(\pi_1,\dots,\pi_J)\)</span>, <span class="math inline">\(i\)</span> indexes individuals, <span class="math inline">\(l\)</span> indexes sites (loci), and <span class="math inline">\(j\)</span> indexes alleles.</p>
+<p>Writing it this way, one can see the connection with factor models, or ``low-rank&quot; models, which sum over a small number of factors <span class="math inline">\(k=1,\dots,K\)</span>. The model for <span class="math inline">\(\pi_{ilj}\)</span> is “low rank”.</p>
+<p>For computation it is helpful to introduce latent variables to indicate the population of origin of each individual at each locus. Let <span class="math display">\[Z_{il\cdot} \sim \text{Mult}(1; q_{i1},\dots,q_{iK}).\]</span> So <span class="math inline">\(Z_{il\cdot}\)</span> is a binary indicator vector (length <span class="math inline">\(K\)</span>), with <span class="math inline">\(Z_{ilk}=1\)</span> indicating that the population of origin of individual <span class="math inline">\(i\)</span> at locus <span class="math inline">\(l\)</span> is <span class="math inline">\(k\)</span>. We can then write <span class="math display">\[X_{il\cdot} | p \sim \sum_k Z_{ilk} \text{Mult}(1; p_{kl\cdot})\]</span></p>
+</div>
+<div id="modification" class="section level2">
+<h2>Modification</h2>
+<p>Now we introduce a prior to allow that the <span class="math inline">\(p_k\)</span> may be similar to one another at many loci/sites. This is similar to the idea of the ``correlated allele frequencies model&quot; in Pritchard et al, but with more of a focus on sparsity (meaning exact or almost-exact equality of the allele frequencies for different <span class="math inline">\(k\)</span>) and an eye on potential maximimum likelihood approach.</p>
+<p>The proposed prior is: <span class="math display">\[p_{kl\cdot} | \alpha, \mu \sim \text{Dir}(\alpha_{kl} \mu_{l\cdot})\]</span> where <span class="math inline">\(\alpha_{kl}\)</span> is a scalar that controls how similar <span class="math inline">\(p_k\)</span> is to the mean <span class="math inline">\(\mu_{l\cdot}\)</span> at locus <span class="math inline">\(l\)</span>, and <span class="math inline">\(\mu_{l\cdot}\)</span> is the mean of the Dirichlet prior. Intuitively <span class="math inline">\(\mu_{l\cdot}\)</span> represents the allele frequencies at locus <span class="math inline">\(l\)</span>, that are shared across populations. The idea of a separate <span class="math inline">\(\alpha\)</span> for each <span class="math inline">\(k,l\)</span> seems related to the so-called “automatic relevance determination prior”, and also the Sparse Factor Analysis method of <a href="https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1001117">Engelhardt and Stephens</a>.</p>
+<p>In the limit <span class="math inline">\(\alpha_{kl} \rightarrow \infty\)</span> the <span class="math inline">\(p_{kl\cdot} = \mu_{kl\cdot}\)</span> with probability 1.</p>
+<p>Under this prior the distribution on the <span class="math inline">\(X\)</span>s becomes a mixture of Dirichlet-Multinomials: <span class="math display">\[X_{il\cdot} | \alpha, \mu \sim \sum_k Z_{ilk} \text{Dir-Mult}(1; \alpha_{kl}\mu_{kl\cdot}).\]</span></p>
+<p>I suspect there is an EM algorithm for fitting this model, which here means estimating <span class="math inline">\(\alpha,\mu,q\)</span>. The estimated <span class="math inline">\(\mu\)</span> should be approximately the site-specific marginal frequencies, and <span class="math inline">\(alpha_{kl}\)</span> will be small when the factors <span class="math inline">\(k\)</span> deviate from this mean at locus <span class="math inline">\(l\)</span>. I found <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0030126">this paper</a> on fitting mixtures of Dirichlet multinomials by EM, which seems relevant here. Indeed, the above is basically extending theis mixture model to the “grade of membership” idea, but with the addition of more parameters <span class="math inline">\(\alpha\)</span>.</p>
+<p>We may want to put a hyper-prior on <span class="math inline">\(\alpha\)</span> that encourages it to be big at most loci in most factors…</p>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
