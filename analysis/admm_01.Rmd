@@ -1,0 +1,388 @@
+---
+title: "admm_01"
+author: "Matthew Stephens"
+date: "2020-04-30"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+I wanted to teach myself something about ADMM (alternating direction method of multipliers)
+optimization. So I'm going to begin by implementing this for lasso. I'll make use
+of the terrific lecture notes from [Ryan Tibshirani](https://www.stat.cmu.edu/~ryantibs/convexopt/)
+
+I'll compare with the glmnet results so we will need that library.
+```{r}
+library(glmnet)
+```
+
+
+## Lasso and ADMM 
+
+We can write the Lasso problem as:
+$$\min f(x) + g(x)$$
+where $f(x) = (1/2\sigma^2) ||y-Ax||_2^2$ and $g(x) = \lambda \sum_j |x_j|$.
+(Usually we assume the residal variance $\sigma^2=1$ or, equivalently, scale $\lambda$ appropriately.)
+
+Here $A$ denotes the regression design matrix, and $x$ the regression coefficients.
+Here for reference is code implementing that objective function:
+```{r}
+obj_lasso = function(x,y,A,lambda, residual_variance=1){
+  (1/(2*residual_variance)) * sum((y- A %*% x)^2) + lambda* sum(abs(x))
+}
+```
+
+
+The idea of ``splitting" can be used to rewrite this problem as:
+$$\min f(x) + g(z) \qquad \text{ subject to } x=z.$$
+
+The ADMM steps, also equivalent to Douglas--Rachford, are given 
+in [these lecture notes](https://www.stat.cmu.edu/~ryantibs/convexopt/lectures/admm.pdf) as:
+
+$$x \leftarrow \text{prox}_{f,1/\rho} (z-w)$$
+$$z \leftarrow \text{prox}_{g,1/\rho}(x+w)$$
+
+$$w \leftarrow w + x - z$$
+
+
+where the proximal operator is defined as
+
+$$\text{prox}_{h,t}(x) := \arg \min_z [ (1/2t) ||x-z||_2^2 + h(z)]$$
+
+
+## Proximal operators
+
+So to implement this we need to proximal operators for $g$ and $f$.
+
+For $g(x)= \lambda \sum_j |x_j|$ the proximal operator $\text{prox}_{g,t}(x)$ 
+is soft=thresholding with parameter $\lambda t$ applied element-wise.
+
+```{r}
+soft_thresh = function(x,lambda){
+  z = abs(x)-lambda
+  sign(x) * ifelse(z>0, z, 0)
+}
+x = seq(-10,10,length=100)
+plot(x,soft_thresh(x,2),main="soft thresholding operator for lambda=2")
+abline(a=0,b=1)
+
+prox_l1 = function(x,t,lambda){
+  soft_thresh(x,lambda*t)
+}
+```
+
+For $f(z) = (1/2\sigma^2) ||y - Az||_2^2$ the proximal operator evaluated at $x$ is the posterior mode with prior $z \sim N(\mu_0= x,\sigma_0^2 = t)$. 
+
+$$\hat{b} := [A'A + (\sigma^2/\sigma_0^2) I_p]^{-1}(A'y + (\sigma^2/\sigma^2_0) \mu_0)$$
+
+
+```{r}
+# returns posterior mean for "ridge regression" (normal prior);
+# Note that allows for non-zero prior mean -- ridge regression is usually 0 prior mean
+ridge = function(y,A,prior_variance,prior_mean=rep(0,ncol(A)),residual_variance=1){
+  n = length(y)
+  p = ncol(A)
+  L = chol(t(A) %*% A + (residual_variance/prior_variance)*diag(p))
+  b = backsolve(L, t(A) %*% y + (residual_variance/prior_variance)*prior_mean, transpose=TRUE)
+  b = backsolve(L, b)
+  #b = chol2inv(L) %*% (t(A) %*% y + (residual_variance/prior_variance)*prior_mean)
+  return(b)
+}
+prox_regression = function(x, t, y, A, residual_variance=1){
+  ridge(y,A,prior_variance = t,prior_mean = x,residual_variance)
+}
+```
+
+I did a quick simulation to check the ridge code:
+```{r}
+ n = 1000
+ p = 20
+ A = matrix(rnorm(n*p),nrow=n)
+ b = c(rnorm(p/2),rep(0,p/2))
+ y = A %*% b + rnorm(n)
+ 
+ bhat = ridge(y,A,1) 
+ plot(b,bhat)
+ abline(a=0,b=1)
+ 
+ # try shrinking strongly...
+ bhat = ridge(y,A,1e-4) 
+ plot(b,bhat)
+ abline(a=0,b=1)
+```
+
+## ADMM
+
+Now we can easily implement admm:
+
+```{r}
+admm_fn = function(y,A,rho,lambda,prox_f=prox_regression, prox_g = prox_l1, obj_fn = obj_lasso, niter=1000, z_init=NULL){
+  p = ncol(A)
+  x = matrix(0,nrow=niter+1,ncol=p)
+  z = x
+  w = x
+
+  if(!is.null(z_init)){
+    z[1,] = z_init
+  }
+  obj_x = rep(0,niter+1)
+  obj_z = rep(0,niter+1)
+  obj_x[1] = obj_fn(x[1,],y,A,lambda)
+  obj_z[1] = obj_fn(z[1,],y,A,lambda)
+  
+  for(i in 1:niter){
+    x[i+1,] = prox_f(z[i,] - w[i,],1/rho,y,A)
+    z[i+1,] = prox_g(x[i+1,] + w[i,],1/rho,lambda)
+    w[i+1,] = w[i,] + x[i+1,] - z[i+1,]
+    obj_x[i+1] = obj_fn(x[i+1,],y,A,lambda) 
+    obj_z[i+1] = obj_fn(z[i+1,],y,A,lambda)
+  }
+  return(list(x=x,z=z,w=w,obj_x=obj_x, obj_z=obj_z))
+}
+```
+
+
+Now run and compare with glmnet. 
+Note that in glmnet to get the same results I need to divide $\lambda$ by $n$ because it scales the rss by $n$ in $f$. Also glmnet scales y, so we need to scale y to get comparable results.
+
+I tried a range of $\rho$ values from 1 to $10^4$. Within the 1000 iterations it converges OK for all
+but the smallest $\rho$.
+```{r}
+y = y/sum(y^2)
+lambda = 100
+nrho = 5
+rho = 10^(0:(nrho-1))
+
+y.admm = list()
+for(i in 1:nrho){
+  y.admm[[i]] = admm_fn(y,A,rho=rho[i],lambda=lambda)
+}
+  
+plot(y.admm[[nrho]]$obj_x,type="n")
+for(i in 1:nrho){
+  lines(y.admm[[i]]$obj_x,col=i)
+}
+
+y.glmnet = glmnet(A,y,lambda=lambda/length(y),standarize=FALSE,intercept=FALSE)
+
+abline(h=obj_lasso(coef(y.glmnet)[-1], y,A,lambda),col=2,lwd=2)
+
+for(i in 1:nrho){
+  print(obj_lasso(y.admm[[i]]$x[1001,],y,A,lambda))
+}
+obj_lasso(coef(y.glmnet)[-1], y,A,lambda)
+
+```
+
+
+
+## Trend filtering
+
+Try a harder example: trend filtering. I use this example as I know it is particularly tricky for non-convex methods. (And also for convex, because $X$ is poorly conditioned; as we will see, glmnet
+struggles here.) Also it is nice to visualize.
+
+First simulate data:
+```{r}
+set.seed(100)
+n = 100
+p = n
+X = matrix(0,nrow=n,ncol=n)
+for(i in 1:n){
+  X[i:n,i] = 1:(n-i+1)
+}
+btrue = rep(0,n)
+btrue[40] = 8
+btrue[41] = -8
+Y = X %*% btrue + 0.1*rnorm(n)
+
+norm = mean(Y^2) # normalize Y because it makes it easier to compare with glmnet
+Y = Y/norm
+btrue = btrue/norm
+plot(Y)
+lines(X %*% btrue)
+```
+
+
+Now run ADMM for 5 different $\rho$ and glmnet. 
+```{r}
+y = Y
+A = X
+niter = 1000
+lambda = 0.01
+nrho = 5
+rho = 10^((0:(nrho-1))-1)
+
+y.admm = list()
+for(i in 1:nrho){
+  y.admm[[i]] = admm_fn(y,A,rho=rho[i],lambda=lambda,niter= niter)
+}
+  
+
+plot(y.admm[[1]]$obj_x,type="n",ylim=c(0,0.01))
+for(i in 1:nrho){
+  lines(y.admm[[i]]$obj_x,col=i)
+}
+
+y.glmnet = glmnet(A,y,lambda=lambda/length(y),standarize=FALSE,intercept=FALSE,tol=1e-10)
+
+abline(h=obj_lasso(coef(y.glmnet)[-1], y,A,lambda),col=2,lwd=2)
+
+for(i in 1:nrho){
+  print(obj_lasso(y.admm[[i]]$x[1001,],y,A,lambda))
+}
+obj_lasso(coef(y.glmnet)[-1], y,A,lambda)
+
+obj_lasso(btrue,y,A,lambda)
+```
+
+We see that ADMM converges well except for large $\rho$. But
+glmnet does not converge to a good answer here.
+
+
+Plot the fitted values as a sanity check:
+```{r}
+plot(y,main="fitted; green=glmnet, black = large rho, red= small rho")
+lines(A %*% y.admm[[5]]$x[niter+1,])
+lines(A %*% y.admm[[1]]$x[niter+1,],col=2)
+lines(A %*% coef(y.glmnet)[-1],col=3)
+```
+
+### Process over time
+
+To get some intuition I plot how the iterations proceed over time (first 25 iterations only).
+First for the smallest $\rho$. Red is $z$ and green is $x$.
+```{r}
+par(mfrow=c(5,5))
+par(mar=rep(1.5,4))
+for(i in 1:25){
+  plot(y,main = paste0("Iteration",i))
+  lines(A %*% y.admm[[1]]$x[i,],col=3,lwd=2)  
+  lines(A %*% y.admm[[1]]$z[i,],col=2)
+}
+
+```
+
+Now an intermediate $\rho$:
+```{r}
+par(mfrow=c(5,5))
+par(mar=rep(1.5,4))
+for(i in 1:25){
+  plot(y,main = paste0("Iteration",i))
+  lines(A %*% y.admm[[3]]$x[i,],col=3,lwd=2)  
+  lines(A %*% y.admm[[3]]$z[i,],col=2)
+}
+
+```
+
+Now for the largest $\rho$:
+```{r}
+par(mfrow=c(5,5))
+par(mar=rep(1.5,4))
+for(i in 1:25){
+  plot(y)
+  lines(A %*% y.admm[[5]]$x[i,],lwd=2)  
+  lines(A %*% y.admm[[5]]$z[i,],col=2)
+}
+```
+
+So for large $\rho$ we have very strong requirement that $x$ and $z$ are close together.
+This slows convergence because they can't move much each iteration.
+
+
+## L0 version
+
+Now I wanted to try replacing soft-thresholding with hard-thresholding. Note that
+as far as I know there are no convergence guarantees for this non-convex  case.
+
+```{r}
+hard_thresh = function(x,lambda){
+  ifelse(abs(x)>lambda, x, 0)
+}
+prox_l0 = function(x,t,lambda){
+  hard_thresh(x,lambda*t)
+}
+obj_l0 = function(x,y,A,lambda, residual_variance=1){
+  (1/(2*residual_variance)) * sum((y- A %*% x)^2) + lambda* (sum(x>0)+sum(x<0))
+}
+
+  
+nrho = 5
+rho = 10^((0:(nrho-1))-1)
+lambda = .1
+
+y.admm.l0 = list()
+for(i in 1:nrho){
+  y.admm.l0[[i]] = admm_fn(y,A,rho=rho[i],lambda=lambda,prox_g = prox_l0, obj_fn = obj_l0)
+}
+  
+plot(y.admm.l0[[1]]$obj_z,main="objective fn, small rho")
+plot(y.admm.l0[[5]]$obj_z,main="objective fn, large rho")
+
+for(i in 1:nrho){
+  print(obj_l0(y.admm.l0[[i]]$z[1001,],y,A,lambda))
+}
+obj_l0(btrue,y,A,lambda)
+# try initializing from truth?
+#y.admm.l0.true = admm_fn(Y,X,rho,lambda,prox_g = prox_l0, obj_fn = obj_l0,z_init = btrue)
+#plot(y.admm.l0.true$obj_z)
+#obj_l0(y.admm.l0.true$z[1001,],Y,X,100)
+```
+
+So (with 1000 iterations) it converges to OK solution if rho is chosen just right in the middle...
+
+How the iterations proceed for rho very small:
+```{r}
+par(mfrow=c(5,5))
+par(mar=rep(1.5,4))
+for(i in 1:25){
+  plot(y,main = paste0("Iteration",i),ylim=c(-1,1))
+  lines(A %*% y.admm.l0[[1]]$x[i,],col=3,lwd=2)  
+  lines(A %*% y.admm.l0[[1]]$z[i,],col=2)
+}
+```
+
+How the iterations proceed for intermediate rho:
+```{r}
+par(mfrow=c(5,5))
+par(mar=rep(1.5,4))
+for(i in 1:25){
+  plot(y,main = paste0("Iteration",i),ylim=c(-1,1))
+  lines(A %*% y.admm.l0[[3]]$x[i,],col=3,lwd=2)  
+  lines(A %*% y.admm.l0[[3]]$z[i,],col=2)
+}
+```
+
+How the iterations proceed for rho very big:
+```{r}
+par(mfrow=c(5,5))
+par(mar=rep(1.5,4))
+for(i in 1:25){
+  plot(y,main = paste0("Iteration",i),ylim=c(-1,1))
+  lines(A %*% y.admm.l0[[5]]$x[i,],col=3,lwd=2)  
+  lines(A %*% y.admm.l0[[5]]$z[i,],col=2)
+}
+```
+
+## Addendum
+
+This version was a more direct implementation from Tibshirani's notes; I used it for debugging.
+```{r}
+admm_fn2 = function(y,A,rho, lambda,niter=1000){
+  p = ncol(A)
+  x = z = w = rep(0,p)
+  obj = rep(0,niter)
+  for(i in 1:niter){
+    inv = chol2inv(chol( t(A) %*% A + rho*diag(p) ))
+    x = inv %*% (t(A) %*% y + rho*(z-w))
+    z = soft_thresh(x+w,lambda/rho)
+    w = w + x - z
+    obj[i] = obj_lasso(x,y,A,lambda)
+  }
+  return(list(x=x,z=z,w=w,obj=obj))
+}
+
+
+```
+
