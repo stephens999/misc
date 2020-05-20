@@ -1,0 +1,227 @@
+---
+title: "mr.ash_ridge"
+author: "Matthew Stephens"
+date: "2020-05-19"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+library("mr.ash.alpha")
+```
+
+## Introduction
+
+My idea here is to experiment with a new model
+$$y=Xb + e$$
+where $b_j = (b_1)_j (b_2)_j$.
+My initial idea was to have elements of $b_1$ having ridge (normal) prior and elements of $b_2$ having ash prior. However, it turns out to be interesting, perhaps
+even more interesting, to use ridge priors for both, and to further extend to $b_j \prod_k (b_k)_j$.
+
+In any case the motivation is that we can do variational approximation $q(b_1)\prod q_j(b_2j)$ 
+where $q(b_1)$ does not factorize - it is a full approximation on all $p$
+(which is tractible due to the normal prior). So it can capture dependence among $b$ values.
+
+In the non-sparse case we would expect the EB estimation of ash prior to end
+up fitting a normal, so in that case $b_j$ will be a product of two normals. 
+So this model does not include ridge regression as a special case.
+
+However, a product of two normals actually has quite an interesting shape:
+```{r}
+hist(rnorm(10000)*rnorm(10000),nclass=100)
+```
+This is perhaps not a bad "null" non-sparse model in itself. 
+
+## Fitting
+
+I think we can do the regular variational thing for this model,
+but for now to get something working quickly I'm going to do a simple
+2-stage procedure: fit ridge regression on it's own to estimate $b_1$, and then fit
+ash to $y=(XB_1) b_2+e$
+where $B_1$ is the diagonal matrix with estimated $b_1$ on it's diagonal.
+
+We will try a challenging trend-filtering example (challenging partly as it has highly correlated covariates):
+```{r}
+set.seed(100)
+sd = 1
+n = 100
+p = n
+X = matrix(0,nrow=n,ncol=n)
+for(i in 1:n){
+  X[i:n,i] = 1:(n-i+1)
+}
+btrue = rep(0,n)
+btrue[40] = 8
+btrue[41] = -8
+Y = X %*% btrue + sd*rnorm(n)
+
+plot(Y)
+lines(X %*% btrue)
+```
+
+First a function to  compute the ridge posterior
+If $b_j \sim N(0,s_b^2)$ then $Y \sim N(0, s^2 I_n + s_b^2(XX'))$.
+```{r}
+ridge = function(y,A,prior_variance,prior_mean=rep(0,ncol(A)),residual_variance=1){
+  n = length(y)
+  p = ncol(A)
+  L = chol(t(A) %*% A + (residual_variance/prior_variance)*diag(p))
+  b = backsolve(L, t(A) %*% y + (residual_variance/prior_variance)*prior_mean, transpose=TRUE)
+  b = backsolve(L, b)
+  #b = chol2inv(L) %*% (t(A) %*% y + (residual_variance/prior_variance)*prior_mean)
+  return(b)
+}
+```
+
+Plot the ridge fit- looks OK ish.
+```{r}
+plot(Y)
+b_ridge = ridge(Y,X,10)
+lines(X %*% b_ridge)
+```
+
+Apply mr.ash regularly - it does poorly, perhaps (in part) because initialization with glmnet is not very good here.
+```{r}
+fit.mrash = mr.ash(X,Y,standardize=FALSE)
+plot(Y)
+lines(X %*% fit.mrash$beta,col=2)
+```
+
+Try initializing to the ridge fit:
+```{r}
+fit.mrash = mr.ash(X,Y,standardize=FALSE,beta.init = b_ridge)
+plot(Y)
+lines(X %*% fit.mrash$beta,col=3)
+```
+
+Now apply mr.ash with $X$ scaled by the ridge fit, as suggested above, initializing at 1.
+```{r}
+X_scale = t(t(X) * as.vector(b_ridge))
+fit.mrash = mr.ash(X_scale,Y,standardize=FALSE,beta.init = rep(1,100),sigma2=1,update.sigma=FALSE)
+plot(Y)
+lines(X %*% (as.vector(b_ridge)*fit.mrash$beta),col=4)
+```
+
+It didn't really change much, which is a bit disappointing. Try iterating: 
+```{r}
+X_scale = t(t(X) * as.vector(fit.mrash$beta))
+b_ridge = ridge(Y,X_scale,1,1)
+X_scale = t(t(X) * as.vector(b_ridge))
+fit.mrash = mr.ash(X_scale,Y,standardize=FALSE,beta.init = rep(1,100))
+
+plot(Y)
+lines(X %*% (as.vector(b_ridge)*fit.mrash$beta),col=4)
+```
+
+# Iterative ridge regression
+
+So that initial try didn't work as well as I hoped. There
+is probably more investigation to be done, but I tried something different,
+based on $b_j \prod_k (b_k)_j$ where each $b_k$ has a ridge prior,
+so $b_j$ is a product of gaussians.
+
+Note that product of gaussians becomes
+sparser and longer tailed the more you use:
+
+```{r}
+hist(rnorm(1000)*rnorm(1000)*rnorm(1000)*rnorm(1000),nclass=100)
+```
+
+
+So iteration is a way of using ridge regression to induce sparsity... 
+
+Here I try iterating 3 times, and you can see the fit becomes gradually "sparser"
+(sparse solutions are piecewise linear in this basis). 
+(Note: throughout I fix the ridge prior variance to 1,
+which is not necessarily optimal...)
+```{r}
+b_curr = ridge(Y,X,1)
+par(mfrow=c(2,3))
+plot(Y,main=paste0("iteration ",1))
+lines(X %*% b_curr,col=2,lwd=2)
+
+for(i in 2:6){
+  X_scale = t(t(X) * as.vector(b_curr))
+  b_ridge = ridge(Y,X_scale,1)
+  b_curr = b_curr*b_ridge
+  plot(Y,main=paste0("iteration ",i))
+  lines(X %*% b_curr,col=2,lwd=2)
+}
+```
+
+Try another example
+```{r}
+set.seed(100)
+sd = 1
+n = 100
+p = n
+X = matrix(0,nrow=n,ncol=n)
+for(i in 1:n){
+  X[i:n,i] = 1:(n-i+1)
+}
+btrue = rep(0,n)
+btrue[20] = .3
+btrue[41] = -.4
+btrue[60]= .6
+Y = X %*% btrue + sd*rnorm(n)
+```
+
+
+
+```{r}
+b_curr = ridge(Y,X,1)
+par(mfrow=c(2,3))
+plot(Y,main=paste0("iteration ",1))
+lines(X %*% b_curr,col=2,lwd=2)
+
+for(i in 2:6){
+  X_scale = t(t(X) * as.vector(b_curr))
+  b_ridge = ridge(Y,X_scale,1)
+  b_curr = b_curr*b_ridge
+  plot(Y,main=paste0("iteration ",i))
+  lines(X %*% b_curr,col=2,lwd=2)
+}
+```
+
+# A non-sparse example
+
+The above examples are both sparse. We try a non-sparse example here.
+```{r}
+set.seed(100)
+sd = 1
+n = 100
+p = n
+X = matrix(0,nrow=n,ncol=n)
+for(i in 1:n){
+  X[i:n,i] = 1:(n-i+1)
+}
+btrue = rep(0,n)
+btrue = rnorm(n,0,0.01)
+Y = X %*% btrue + sd*rnorm(n)
+```
+
+```{r}
+b_curr = ridge(Y,X,1)
+par(mfrow=c(2,3))
+plot(Y,main=paste0("iteration ",1))
+lines(X %*% b_curr,col=2,lwd=2)
+
+for(i in 2:6){
+  X_scale = t(t(X) * as.vector(b_curr))
+  b_ridge = ridge(Y,X_scale,1)
+  b_curr = b_curr*b_ridge
+  plot(Y,main=paste0("iteration ",i))
+  lines(X %*% b_curr,col=2,lwd=2)
+}
+```
+
+# Summary
+
+I found these results pretty interesting and promising, although very preliminary.
+Things to do: work out the proper variational approximation, and learn
+ridge mean and variance by EB. (Note if we allow mean=1 in ridge prior,
+the it can learn mean=1, variance=0 and the fitting process can stop...)
+
+
+
