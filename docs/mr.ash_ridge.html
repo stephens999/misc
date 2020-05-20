@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Matthew Stephens" />
+
+<meta name="date" content="2020-05-19" />
+
+<title>mr.ash_ridge</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">misc</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/stephens999/misc">source</a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">mr.ash_ridge</h1>
+<h4 class="author">Matthew Stephens</h4>
+<h4 class="date">2020-05-19</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2020-05-20
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>misc/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.1). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed1code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(1)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed1code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(1)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree090e35dfb5358906bc7d3ab182771e330dbd4082targetblank090e35da"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/090e35dfb5358906bc7d3ab182771e330dbd4082" target="_blank">090e35d</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree090e35dfb5358906bc7d3ab182771e330dbd4082targetblank090e35da" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/090e35dfb5358906bc7d3ab182771e330dbd4082" target="_blank">090e35d</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.RData
+    Ignored:    analysis/.Rhistory
+    Ignored:    analysis/ALStruct_cache/
+    Ignored:    data/.Rhistory
+    Ignored:    data/pbmc/
+
+Untracked files:
+    Untracked:  .dropbox
+    Untracked:  Icon
+    Untracked:  analysis/GHstan.Rmd
+    Untracked:  analysis/GTEX-cogaps.Rmd
+    Untracked:  analysis/PACS.Rmd
+    Untracked:  analysis/SPCAvRP.rmd
+    Untracked:  analysis/admm_02.Rmd
+    Untracked:  analysis/admm_03.Rmd
+    Untracked:  analysis/compare-transformed-models.Rmd
+    Untracked:  analysis/cormotif.Rmd
+    Untracked:  analysis/cp_ash.Rmd
+    Untracked:  analysis/eQTL.perm.rand.pdf
+    Untracked:  analysis/eb_prepilot.Rmd
+    Untracked:  analysis/eb_var.Rmd
+    Untracked:  analysis/ebpmf1.Rmd
+    Untracked:  analysis/flash_test_tree.Rmd
+    Untracked:  analysis/ieQTL.perm.rand.pdf
+    Untracked:  analysis/m6amash.Rmd
+    Untracked:  analysis/mash_bhat_z.Rmd
+    Untracked:  analysis/mash_ieqtl_permutations.Rmd
+    Untracked:  analysis/mixsqp.Rmd
+    Untracked:  analysis/mr_ash_modular.Rmd
+    Untracked:  analysis/mr_ash_parameterization.Rmd
+    Untracked:  analysis/mr_ash_pen.Rmd
+    Untracked:  analysis/nejm.Rmd
+    Untracked:  analysis/normalize.Rmd
+    Untracked:  analysis/pbmc.Rmd
+    Untracked:  analysis/poisson_transform.Rmd
+    Untracked:  analysis/pseudodata.Rmd
+    Untracked:  analysis/qrnotes.txt
+    Untracked:  analysis/ridge_iterative_splitting.Rmd
+    Untracked:  analysis/sc_bimodal.Rmd
+    Untracked:  analysis/shrinkage_comparisons_changepoints.Rmd
+    Untracked:  analysis/susie_en.Rmd
+    Untracked:  analysis/susie_z_investigate.Rmd
+    Untracked:  analysis/svd-timing.Rmd
+    Untracked:  analysis/temp.Rmd
+    Untracked:  analysis/test-figure/
+    Untracked:  analysis/test.Rmd
+    Untracked:  analysis/test.Rpres
+    Untracked:  analysis/test.md
+    Untracked:  analysis/test_qr.R
+    Untracked:  analysis/test_sparse.Rmd
+    Untracked:  analysis/z.txt
+    Untracked:  code/multivariate_testfuncs.R
+    Untracked:  code/rqb.hacked.R
+    Untracked:  data/4matthew/
+    Untracked:  data/4matthew2/
+    Untracked:  data/E-MTAB-2805.processed.1/
+    Untracked:  data/ENSG00000156738.Sim_Y2.RDS
+    Untracked:  data/GDS5363_full.soft.gz
+    Untracked:  data/GSE41265_allGenesTPM.txt
+    Untracked:  data/Muscle_Skeletal.ACTN3.pm1Mb.RDS
+    Untracked:  data/Thyroid.FMO2.pm1Mb.RDS
+    Untracked:  data/bmass.HaemgenRBC2016.MAF01.Vs2.MergedDataSources.200kRanSubset.ChrBPMAFMarkerZScores.vs1.txt.gz
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.PreviousSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/eb_prepilot/
+    Untracked:  data/finemap_data/fmo2.sim/b.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/data
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.ld
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.z
+    Untracked:  data/finemap_data/fmo2.sim/pos.txt
+    Untracked:  data/logm.csv
+    Untracked:  data/m.cd.RDS
+    Untracked:  data/m.cdu.old.RDS
+    Untracked:  data/m.new.cd.RDS
+    Untracked:  data/m.old.cd.RDS
+    Untracked:  data/mainbib.bib.old
+    Untracked:  data/mat.csv
+    Untracked:  data/mat.txt
+    Untracked:  data/mat_new.csv
+    Untracked:  data/matrix_lik.rds
+    Untracked:  data/paintor_data/
+    Untracked:  data/temp.txt
+    Untracked:  data/y.txt
+    Untracked:  data/y_f.txt
+    Untracked:  data/zscore_jointLCLs_m6AQTLs_susie_eQTLpruned.rds
+    Untracked:  data/zscore_jointLCLs_random.rds
+    Untracked:  explore_udi.R
+    Untracked:  output/fit.k10.rds
+    Untracked:  output/fit.varbvs.RDS
+    Untracked:  output/glmnet.fit.RDS
+    Untracked:  output/test.bv.txt
+    Untracked:  output/test.gamma.txt
+    Untracked:  output/test.hyp.txt
+    Untracked:  output/test.log.txt
+    Untracked:  output/test.param.txt
+    Untracked:  output/test2.bv.txt
+    Untracked:  output/test2.gamma.txt
+    Untracked:  output/test2.hyp.txt
+    Untracked:  output/test2.log.txt
+    Untracked:  output/test2.param.txt
+    Untracked:  output/test3.bv.txt
+    Untracked:  output/test3.gamma.txt
+    Untracked:  output/test3.hyp.txt
+    Untracked:  output/test3.log.txt
+    Untracked:  output/test3.param.txt
+    Untracked:  output/test4.bv.txt
+    Untracked:  output/test4.gamma.txt
+    Untracked:  output/test4.hyp.txt
+    Untracked:  output/test4.log.txt
+    Untracked:  output/test4.param.txt
+    Untracked:  output/test5.bv.txt
+    Untracked:  output/test5.gamma.txt
+    Untracked:  output/test5.hyp.txt
+    Untracked:  output/test5.log.txt
+    Untracked:  output/test5.param.txt
+
+Unstaged changes:
+    Modified:   analysis/ash_delta_operator.Rmd
+    Modified:   analysis/ash_pois_bcell.Rmd
+    Modified:   analysis/minque.Rmd
+    Modified:   analysis/mr_missing_data.Rmd
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/mr.ash_ridge.Rmd</code>) and HTML (<code>docs/mr.ash_ridge.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/090e35dfb5358906bc7d3ab182771e330dbd4082/analysis/mr.ash_ridge.Rmd" target="_blank">090e35d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-20
+</td>
+<td>
+wflow_publish(“mr.ash_ridge.Rmd”)
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<pre class="r"><code>library(&quot;mr.ash.alpha&quot;)</code></pre>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>My idea here is to experiment with a new model <span class="math display">\[y=Xb + e\]</span> where <span class="math inline">\(b_j = (b_1)_j (b_2)_j\)</span>. My initial idea was to have elements of <span class="math inline">\(b_1\)</span> having ridge (normal) prior and elements of <span class="math inline">\(b_2\)</span> having ash prior. However, it turns out to be interesting, perhaps even more interesting, to use ridge priors for both, and to further extend to <span class="math inline">\(b_j \prod_k (b_k)_j\)</span>.</p>
+<p>In any case the motivation is that we can do variational approximation <span class="math inline">\(q(b_1)\prod q_j(b_2j)\)</span> where <span class="math inline">\(q(b_1)\)</span> does not factorize - it is a full approximation on all <span class="math inline">\(p\)</span> (which is tractible due to the normal prior). So it can capture dependence among <span class="math inline">\(b\)</span> values.</p>
+<p>In the non-sparse case we would expect the EB estimation of ash prior to end up fitting a normal, so in that case <span class="math inline">\(b_j\)</span> will be a product of two normals. So this model does not include ridge regression as a special case.</p>
+<p>However, a product of two normals actually has quite an interesting shape:</p>
+<pre class="r"><code>hist(rnorm(10000)*rnorm(10000),nclass=100)</code></pre>
+<p><img src="figure/mr.ash_ridge.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /> This is perhaps not a bad “null” non-sparse model in itself.</p>
+</div>
+<div id="fitting" class="section level2">
+<h2>Fitting</h2>
+<p>I think we can do the regular variational thing for this model, but for now to get something working quickly I’m going to do a simple 2-stage procedure: fit ridge regression on it’s own to estimate <span class="math inline">\(b_1\)</span>, and then fit ash to <span class="math inline">\(y=(XB_1) b_2+e\)</span> where <span class="math inline">\(B_1\)</span> is the diagonal matrix with estimated <span class="math inline">\(b_1\)</span> on it’s diagonal.</p>
+<p>We will try a challenging trend-filtering example (challenging partly as it has highly correlated covariates):</p>
+<pre class="r"><code>set.seed(100)
+sd = 1
+n = 100
+p = n
+X = matrix(0,nrow=n,ncol=n)
+for(i in 1:n){
+  X[i:n,i] = 1:(n-i+1)
+}
+btrue = rep(0,n)
+btrue[40] = 8
+btrue[41] = -8
+Y = X %*% btrue + sd*rnorm(n)
+
+plot(Y)
+lines(X %*% btrue)</code></pre>
+<p><img src="figure/mr.ash_ridge.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>First a function to compute the ridge posterior If <span class="math inline">\(b_j \sim N(0,s_b^2)\)</span> then <span class="math inline">\(Y \sim N(0, s^2 I_n + s_b^2(XX&#39;))\)</span>.</p>
+<pre class="r"><code>ridge = function(y,A,prior_variance,prior_mean=rep(0,ncol(A)),residual_variance=1){
+  n = length(y)
+  p = ncol(A)
+  L = chol(t(A) %*% A + (residual_variance/prior_variance)*diag(p))
+  b = backsolve(L, t(A) %*% y + (residual_variance/prior_variance)*prior_mean, transpose=TRUE)
+  b = backsolve(L, b)
+  #b = chol2inv(L) %*% (t(A) %*% y + (residual_variance/prior_variance)*prior_mean)
+  return(b)
+}</code></pre>
+<p>Plot the ridge fit- looks OK ish.</p>
+<pre class="r"><code>plot(Y)
+b_ridge = ridge(Y,X,10)
+lines(X %*% b_ridge)</code></pre>
+<p><img src="figure/mr.ash_ridge.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Apply mr.ash regularly - it does poorly, perhaps (in part) because initialization with glmnet is not very good here.</p>
+<pre class="r"><code>fit.mrash = mr.ash(X,Y,standardize=FALSE)
+plot(Y)
+lines(X %*% fit.mrash$beta,col=2)</code></pre>
+<p><img src="figure/mr.ash_ridge.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Try initializing to the ridge fit:</p>
+<pre class="r"><code>fit.mrash = mr.ash(X,Y,standardize=FALSE,beta.init = b_ridge)
+plot(Y)
+lines(X %*% fit.mrash$beta,col=3)</code></pre>
+<p><img src="figure/mr.ash_ridge.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Now apply mr.ash with <span class="math inline">\(X\)</span> scaled by the ridge fit, as suggested above, initializing at 1.</p>
+<pre class="r"><code>X_scale = t(t(X) * as.vector(b_ridge))
+fit.mrash = mr.ash(X_scale,Y,standardize=FALSE,beta.init = rep(1,100),sigma2=1,update.sigma=FALSE)
+plot(Y)
+lines(X %*% (as.vector(b_ridge)*fit.mrash$beta),col=4)</code></pre>
+<p><img src="figure/mr.ash_ridge.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>It didn’t really change much, which is a bit disappointing. Try iterating:</p>
+<pre class="r"><code>X_scale = t(t(X) * as.vector(fit.mrash$beta))
+b_ridge = ridge(Y,X_scale,1,1)
+X_scale = t(t(X) * as.vector(b_ridge))
+fit.mrash = mr.ash(X_scale,Y,standardize=FALSE,beta.init = rep(1,100))
+
+plot(Y)
+lines(X %*% (as.vector(b_ridge)*fit.mrash$beta),col=4)</code></pre>
+<p><img src="figure/mr.ash_ridge.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="iterative-ridge-regression" class="section level1">
+<h1>Iterative ridge regression</h1>
+<p>So that initial try didn’t work as well as I hoped. There is probably more investigation to be done, but I tried something different, based on <span class="math inline">\(b_j \prod_k (b_k)_j\)</span> where each <span class="math inline">\(b_k\)</span> has a ridge prior, so <span class="math inline">\(b_j\)</span> is a product of gaussians.</p>
+<p>Note that product of gaussians becomes sparser and longer tailed the more you use:</p>
+<pre class="r"><code>hist(rnorm(1000)*rnorm(1000)*rnorm(1000)*rnorm(1000),nclass=100)</code></pre>
+<p><img src="figure/mr.ash_ridge.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>So iteration is a way of using ridge regression to induce sparsity…</p>
+<p>Here I try iterating 3 times, and you can see the fit becomes gradually “sparser” (sparse solutions are piecewise linear in this basis). (Note: throughout I fix the ridge prior variance to 1, which is not necessarily optimal…)</p>
+<pre class="r"><code>b_curr = ridge(Y,X,1)
+par(mfrow=c(2,3))
+plot(Y,main=paste0(&quot;iteration &quot;,1))
+lines(X %*% b_curr,col=2,lwd=2)
+
+for(i in 2:6){
+  X_scale = t(t(X) * as.vector(b_curr))
+  b_ridge = ridge(Y,X_scale,1)
+  b_curr = b_curr*b_ridge
+  plot(Y,main=paste0(&quot;iteration &quot;,i))
+  lines(X %*% b_curr,col=2,lwd=2)
+}</code></pre>
+<p><img src="figure/mr.ash_ridge.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Try another example</p>
+<pre class="r"><code>set.seed(100)
+sd = 1
+n = 100
+p = n
+X = matrix(0,nrow=n,ncol=n)
+for(i in 1:n){
+  X[i:n,i] = 1:(n-i+1)
+}
+btrue = rep(0,n)
+btrue[20] = .3
+btrue[41] = -.4
+btrue[60]= .6
+Y = X %*% btrue + sd*rnorm(n)</code></pre>
+<pre class="r"><code>b_curr = ridge(Y,X,1)
+par(mfrow=c(2,3))
+plot(Y,main=paste0(&quot;iteration &quot;,1))
+lines(X %*% b_curr,col=2,lwd=2)
+
+for(i in 2:6){
+  X_scale = t(t(X) * as.vector(b_curr))
+  b_ridge = ridge(Y,X_scale,1)
+  b_curr = b_curr*b_ridge
+  plot(Y,main=paste0(&quot;iteration &quot;,i))
+  lines(X %*% b_curr,col=2,lwd=2)
+}</code></pre>
+<p><img src="figure/mr.ash_ridge.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="a-non-sparse-example" class="section level1">
+<h1>A non-sparse example</h1>
+<p>The above examples are both sparse. We try a non-sparse example here.</p>
+<pre class="r"><code>set.seed(100)
+sd = 1
+n = 100
+p = n
+X = matrix(0,nrow=n,ncol=n)
+for(i in 1:n){
+  X[i:n,i] = 1:(n-i+1)
+}
+btrue = rep(0,n)
+btrue = rnorm(n,0,0.01)
+Y = X %*% btrue + sd*rnorm(n)</code></pre>
+<pre class="r"><code>b_curr = ridge(Y,X,1)
+par(mfrow=c(2,3))
+plot(Y,main=paste0(&quot;iteration &quot;,1))
+lines(X %*% b_curr,col=2,lwd=2)
+
+for(i in 2:6){
+  X_scale = t(t(X) * as.vector(b_curr))
+  b_ridge = ridge(Y,X_scale,1)
+  b_curr = b_curr*b_ridge
+  plot(Y,main=paste0(&quot;iteration &quot;,i))
+  lines(X %*% b_curr,col=2,lwd=2)
+}</code></pre>
+<p><img src="figure/mr.ash_ridge.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="summary" class="section level1">
+<h1>Summary</h1>
+<p>I found these results pretty interesting and promising, although very preliminary. Things to do: work out the proper variational approximation, and learn ridge mean and variance by EB. (Note if we allow mean=1 in ridge prior, the it can learn mean=1, variance=0 and the fitting process can stop…)</p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.6.0 (2019-04-26)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS Mojave 10.14.6
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/3.6/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.6/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] mr.ash.alpha_0.1-7
+
+loaded via a namespace (and not attached):
+ [1] workflowr_1.6.1 Rcpp_1.0.4.6    lattice_0.20-40 rprojroot_1.3-2
+ [5] digest_0.6.25   later_1.0.0     grid_3.6.0      R6_2.4.1       
+ [9] backports_1.1.5 git2r_0.26.1    magrittr_1.5    evaluate_0.14  
+[13] stringi_1.4.6   rlang_0.4.5     fs_1.3.2        promises_1.1.0 
+[17] whisker_0.4     Matrix_1.2-18   rmarkdown_2.1   tools_3.6.0    
+[21] stringr_1.4.0   glue_1.4.0      httpuv_1.5.2    xfun_0.12      
+[25] yaml_2.2.1      compiler_3.6.0  htmltools_0.4.0 knitr_1.28     </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
