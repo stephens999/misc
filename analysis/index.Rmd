@@ -25,6 +25,7 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 * [mr.ash.alpha applied to changepoint problems](mr.ash.changepoint.html)
 * [teach myself ADMM (L1 and L0)](admm_01.html)
 
+* [combining mr.ash and ridge regression/iterative ridge regression](mr.ash_ridge.html)
 
 
 # Mash
