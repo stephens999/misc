@@ -215,7 +215,7 @@ lines(X %*% btrue)
 fit.eb = eb_ridge(Y,X,mu=0)
 plot(Y)
 lines(X %*% fit.eb$post_mean)
-par(mfcol=c(3,3))
+par(mfcol=c(3,3),  mai=rep(0.2,4))
 Xnew=X
 for(i in 1:9){
   Xnew = t(t(Xnew)*as.vector(fit.eb$post_mean))
@@ -243,7 +243,7 @@ lines(X %*% btrue)
 fit.eb = eb_ridge(Y,X,mu=0,s2=0.2)
 plot(Y)
 lines(X %*% fit.eb$post_mean)
-par(mfcol=c(3,3))
+par(mfcol=c(3,3),  mai=rep(0.2,4))
 Xnew=X
 for(i in 1:9){
   Xnew = t(t(Xnew)*as.vector(fit.eb$post_mean))
@@ -266,7 +266,7 @@ lines(X %*% btrue)
 fit.eb = eb_ridge(Y,X,s2=0.2)
 plot(Y)
 lines(X %*% fit.eb$post_mean)
-par(mfcol=c(3,3))
+par(mfcol=c(3,3),  mai=rep(0.2,4))
 Xnew=X
 for(i in 1:9){
   Xnew = t(t(Xnew)*as.vector(fit.eb$post_mean))
