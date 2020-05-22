@@ -89,16 +89,23 @@ X.svd = svd(X)
 # z is V't
 # par is (log(sb),mu) which are both scalars
 
-compute_w_mu_s2 = function(sb,x,shat,z){
+
+# set mu=0 or s2 to fix it
+compute_w_mu_s2 = function(sb,x,shat,z,mu=NULL,s2 = NULL){
   w = 1/(sb^2 + shat^2) # inverse variance weights
-  mu = sum(w*z*x)/sum(z^2*w) # this is mle of mu
-  s2 = mean(w*(x-mu*z)^2) #this is the mle of s2
+  if(is.null(mu)){
+    mu = sum(w*z*x)/sum(z^2*w) # this is mle of mu
+  }
+  if(is.null(s2)){
+    s2 = mean(w*(x-mu*z)^2) #this is the mle of s2
+  }
   return(list(w=w,mu=mu,s2=s2))
 }
 
-neg_loglik = function(par,x,shat,z){
+#set mu=0 to fix it
+neg_loglik = function(par,x,shat,z,mu=NULL, s2=NULL){
     sb= exp(par[1])
-    aux = compute_w_mu_s2(sb,x,shat,z)
+    aux = compute_w_mu_s2(sb,x,shat,z,mu,s2)
     var_x = aux$s2/aux$w
     return(0.5 *(sum(log(aux$s2/aux$w) + aux$w*(x-aux$mu*z)^2/aux$s2)))
 }
@@ -139,10 +146,10 @@ optim(par=0,fn=neg_loglik,x=TT,shat=shat,z=z,method="Brent",lower=-5,upper=5)
 
 So we can wrap this up in a function
 ```{r}
-ebnm_normal_unknown_s = function(x,shat,z){
-  fit = optim(par=0,fn=neg_loglik,x=x,shat=shat,z=z,method="Brent",lower=-5,upper=5)
+ebnm_normal_unknown_s = function(x,shat,z,mu=NULL,s2=NULL){
+  fit = optim(par=0,fn=neg_loglik,x=x,shat=shat,z=z,mu=mu,s2=s2,method="Brent",lower=-5,upper=5)
   sb = exp(fit$par)
-  aux = compute_w_mu_s2(sb,x,shat,z)
+  aux = compute_w_mu_s2(sb,x,shat,z,mu,s2)
   return(list(sb=sb, s = sqrt(aux$s2), mu = aux$mu, loglik = -fit$value))  
 }
 fit = ebnm_normal_unknown_s(TT,shat,z)
@@ -162,6 +169,115 @@ lines(X %*% btrue)
 lines(X %*% post_mean,col=2)
 
 ```
+
+
+## Iterative ridge
+
+Try the iterative approach
+
+```{r}
+eb_ridge = function(y,X,mu=NULL,s2=NULL){
+  X.svd = svd(X)
+  TT = (t(X.svd$u) %*% Y)/X.svd$d # what i called T above
+  z = colSums(X.svd$v)  
+  shat = 1/X.svd$d
+  fit = ebnm_normal_unknown_s(TT,shat,z,mu,s2)
+  
+  shrink = fit$sb^2 * X.svd$d^2
+  shrink = shrink/(1+shrink)
+
+  post_mean = X.svd$v %*% (shrink*(TT-fit$mu*colSums(X.svd$v))) + fit$mu
+  return(list(fit=fit,post_mean=post_mean))
+}
+
+fit.eb = eb_ridge(Y,X)
+Xnew = t(t(X)*as.vector(fit.eb$post_mean))
+plot(Y)
+lines(Xnew %*% rep(1,100))
+fit.eb2 = eb_ridge(Y,Xnew)
+lines(Xnew %*% fit.eb2$post_mean,col=2)
+fit.eb2$fit
+exp(-5)
+```
+
+So it seems to have worked - the second set is converging to the limits
+of the search space for sb.
+
+Try a sparser case:
+```{r}
+set.seed(1)
+btrue = rep(0,100)
+btrue[50] = 5
+Y = X %*% btrue + 0.2*rnorm(n)
+plot(Y)
+lines(X %*% btrue)
+
+fit.eb = eb_ridge(Y,X,mu=0)
+plot(Y)
+lines(X %*% fit.eb$post_mean)
+#par(mfcol=c(3,3))
+Xnew=X
+for(i in 1:9){
+  Xnew = t(t(Xnew)*as.vector(fit.eb$post_mean))
+  fit.eb = eb_ridge(Y,Xnew,mu=0)
+  plot(Y)
+  lines(Xnew %*% fit.eb$post_mean,col=i)
+}
+```
+
+
+So it seems that even with mu=0 we get "overfitting". This should
+probably have been expected.
+
+
+
+Try fixing s2
+```{r}
+set.seed(1)
+btrue = rep(0,100)
+btrue[50] = 5
+Y = X %*% btrue + 0.2*rnorm(n)
+plot(Y)
+lines(X %*% btrue)
+
+fit.eb = eb_ridge(Y,X,mu=0,s2=0.2)
+plot(Y)
+lines(X %*% fit.eb$post_mean)
+#par(mfcol=c(3,3))
+Xnew=X
+for(i in 1:9){
+  Xnew = t(t(Xnew)*as.vector(fit.eb$post_mean))
+  fit.eb = eb_ridge(Y,Xnew,mu=0,s2=0.2)
+  plot(Y)
+  lines(Xnew %*% fit.eb$post_mean,col=i)
+}
+```
+
+
+Try fixing s2 but not mu
+```{r}
+set.seed(1)
+btrue = rep(0,100)
+btrue[50] = 5
+Y = X %*% btrue + 0.2*rnorm(n)
+plot(Y)
+lines(X %*% btrue)
+
+fit.eb = eb_ridge(Y,X,s2=0.2)
+plot(Y)
+lines(X %*% fit.eb$post_mean)
+#par(mfcol=c(3,3))
+Xnew=X
+for(i in 1:9){
+  Xnew = t(t(Xnew)*as.vector(fit.eb$post_mean))
+  fit.eb = eb_ridge(Y,Xnew,s2=0.2)
+  plot(Y)
+  lines(Xnew %*% fit.eb$post_mean,col=i)
+}
+```
+
+so just based on this it seems varying mu converges to a less sparse solution;
+probably a worse solution but not clear.
 
 
 ## Unused Stuff
