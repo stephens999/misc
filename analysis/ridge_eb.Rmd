@@ -42,63 +42,80 @@ and $x_+ := X1_p$ are the row-sums of $X$.
 Here we have changed from mean $s\mu$ to $\mu$...
 
 If $Y=Xb+E$ and $X=UDV'$ then
-$$W:=D^{-1}U'Y \sim N(\mu V'1_p, s^2(s_b^2I+D^{-2})).$$
+$$T:=D^{-1}U'Y \sim N(\mu V'1_p, s^2(s_b^2I+D^{-2})).$$
 And we can do inference for $\mu,s,s_b$ under this transformed model.
 
 It is easy to show the mle for $s$ is:
-$$\hat{s^2} = (1/k) \sum_j (w_j-\mu z_j)^2/(s^2_b+d_j^{-2})$$
-where $k$ is the length of $W$ and $z_j = (V'1_p)_j$.
+$$\hat{s^2} = (1/k) \sum_j w_j(T_j-\mu z_j)^2$$
+where $w_j=1/(s^2_b+d_j^{-2})$ are the invere-variance weights,
+$k$ is the length of $T$ and $z_j = (V'1_p)_j$.
 
-So we can do a 2-d optimization in $\mu,s_b$. 
+And the mle for $\mu$ is 
+$$\hat{\mu} = \sum_j w_j T_j z_j / \sum_j z_j^2 w_j$$.
+
+
 ```{r}
+set.seed(1)
 n = 100
 p = 100
 s = 1
-sb = .01
-mu= -.1
+sb = 1
+mu= 0
 
 X = matrix(0,nrow=n,ncol=n)
 for(i in 1:n){
-  X[i:n,i] = 1:(n-i+1)
+  X[i:n,i] = 1 #1:(n-i+1)
 }
 btrue = mu+rnorm(n,sd=sb*s)
+#X = scale(X)
+#t(t(X)/sqrt(colSums(X^2)))
+
 Y = X %*% btrue + rnorm(n)
 plot(Y)
+lines(X %*% btrue)
 
 #X = matrix(rnorm(n*p),nrow=n,ncol=p)
 
 X.svd = svd(X)
 
-# fit the model X_j \sim  N(0,s^2(sb^2+shat^2_j))
-# estimate sn and s
+# fit the model X_j \sim  N(mu z_j,s^2(sb^2+shat^2_j))
+# estimate sb (from which mle's of mu and s2 are easy)
 # it is like ebnm with N(0,s^2 sb^2) prior and s^2 shat^2_j error
 # but with s^2 unknown
 # x is vector of observations
 # shat is vector of corresponding standard errors (up to constant s)
 
-# this is negative log-likelihood evaluated at mle for s
+# this is negative log-likelihood evaluated at mle for s,mu
 # z is V't
 # par is (log(sb),mu) which are both scalars
+
+compute_w_mu_s2 = function(sb,x,shat,z){
+  w = 1/(sb^2 + shat^2) # inverse variance weights
+  mu = sum(w*z*x)/sum(z^2*w) # this is mle of mu
+  s2 = mean(w*(x-mu*z)^2) #this is the mle of s2
+  return(list(w=w,mu=mu,s2=s2))
+}
+
 neg_loglik = function(par,x,shat,z){
     sb= exp(par[1])
-    mu = par[2]
-    var_x_over_s = sb^2 + shat^2
-    s2 = mean((x-mu*z)^2/var_x_over_s) #this is the mle of s
-    var_x = s2 * var_x_over_s
-    return(0.5 *(sum(log(var_x) + (x-mu*z)^2/var_x)))
+    aux = compute_w_mu_s2(sb,x,shat,z)
+    var_x = aux$s2/aux$w
+    return(0.5 *(sum(log(aux$s2/aux$w) + aux$w*(x-aux$mu*z)^2/aux$s2)))
 }
 
 
 xx = (t(X.svd$u) %*% Y)/X.svd$d
 z = colSums(X.svd$v)
 shat = 1/X.svd$d
+lsb = seq(-10,10,length=100)
+ll = rep(0,100)
+for(i in 1:length(lsb)){
+  ll[i] = neg_loglik(lsb[i],xx,shat,z)
+}
+plot(lsb,ll)
 
-neg_loglik(c(0,0),xx,shat,z)
-neg_loglik(c(0.1,0),xx,shat,z)
-neg_loglik(c(1,0),xx,shat,z)
-neg_loglik(c(log(sb),mu),xx,shat,z)
-
-optim(par=c(0,2),fn=neg_loglik,x=xx,shat=shat,z=z)
+optim(par=0,fn=neg_loglik,x=xx,shat=shat,z=z)
+optim(par=0,fn=neg_loglik,x=xx,shat=shat,z=z,method="Brent",lower=-5,upper=5)
 
 
 # # this is wrong.. it is partial derivative with respect to sb, keeping s fixed
@@ -116,11 +133,20 @@ optim(par=c(0,2),fn=neg_loglik,x=xx,shat=shat,z=z)
 # 
 # 
 # 
-# ebnm_normal_unknown_s = function(x,shat){
-#   log_lik_grad
-# }
+# 
 ```
 
+
+So we can wrap this up in a function
+```{r}
+ebnm_normal_unknown_s = function(x,shat,z){
+  fit = optim(par=0,fn=neg_loglik,x=xx,shat=shat,z=z,method="Brent",lower=-5,upper=5)
+  sb = exp(fit$par)
+  aux = compute_w_mu_s2(sb,x,shat,z)
+  return(list(sb=sb, s = sqrt(aux$s2), mu = aux$mu, loglik = -fit$value))  
+}
+ebnm_normal_unknown_s(xx,shat,z)
+```
 
 
 
