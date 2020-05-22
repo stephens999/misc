@@ -492,16 +492,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree29bd03a084ce34243e86ac44b4d1415a351219fbtargetblank29bd03aa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/29bd03a084ce34243e86ac44b4d1415a351219fb" target="_blank">29bd03a</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreec25e0c5f9ef34d443d2104a44b6e1b5db4959178targetblankc25e0c5a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/c25e0c5f9ef34d443d2104a44b6e1b5db4959178" target="_blank">c25e0c5</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree29bd03a084ce34243e86ac44b4d1415a351219fbtargetblank29bd03aa" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreec25e0c5f9ef34d443d2104a44b6e1b5db4959178targetblankc25e0c5a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/29bd03a084ce34243e86ac44b4d1415a351219fb" target="_blank">29bd03a</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/c25e0c5f9ef34d443d2104a44b6e1b5db4959178" target="_blank">c25e0c5</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -684,6 +684,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/c25e0c5f9ef34d443d2104a44b6e1b5db4959178/analysis/ridge_eb.Rmd" target="_blank">c25e0c5</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-22
+</td>
+<td>
+workflowr::wflow_publish(“ridge_eb.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/5e6cd75593007f1d6e13cb78de217d4bc4794ee3/docs/ridge_eb.html" target="_blank">5e6cd75</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-22
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/29bd03a084ce34243e86ac44b4d1415a351219fb/analysis/ridge_eb.Rmd" target="_blank">29bd03a</a>
 </td>
 <td>
@@ -832,6 +866,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/5e6cd75593007f1d6e13cb78de217d4bc4794ee3/docs/figure/ridge_eb.Rmd/unnamed-chunk-1-1.png" target="_blank">5e6cd75</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-22
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/87861b065d62055c32efc308019ccdb891d02fd1/docs/figure/ridge_eb.Rmd/unnamed-chunk-1-1.png" target="_blank">87861b0</a>
 </td>
 <td>
@@ -871,16 +916,23 @@ X.svd = svd(X)
 # z is V&#39;t
 # par is (log(sb),mu) which are both scalars
 
-compute_w_mu_s2 = function(sb,x,shat,z){
+
+# set mu=0 or s2 to fix it
+compute_w_mu_s2 = function(sb,x,shat,z,mu=NULL,s2 = NULL){
   w = 1/(sb^2 + shat^2) # inverse variance weights
-  mu = sum(w*z*x)/sum(z^2*w) # this is mle of mu
-  s2 = mean(w*(x-mu*z)^2) #this is the mle of s2
+  if(is.null(mu)){
+    mu = sum(w*z*x)/sum(z^2*w) # this is mle of mu
+  }
+  if(is.null(s2)){
+    s2 = mean(w*(x-mu*z)^2) #this is the mle of s2
+  }
   return(list(w=w,mu=mu,s2=s2))
 }
 
-neg_loglik = function(par,x,shat,z){
+#set mu=0 to fix it
+neg_loglik = function(par,x,shat,z,mu=NULL, s2=NULL){
     sb= exp(par[1])
-    aux = compute_w_mu_s2(sb,x,shat,z)
+    aux = compute_w_mu_s2(sb,x,shat,z,mu,s2)
     var_x = aux$s2/aux$w
     return(0.5 *(sum(log(aux$s2/aux$w) + aux$w*(x-aux$mu*z)^2/aux$s2)))
 }
@@ -984,10 +1036,10 @@ NULL</code></pre>
 # 
 # </code></pre>
 <p>So we can wrap this up in a function</p>
-<pre class="r"><code>ebnm_normal_unknown_s = function(x,shat,z){
-  fit = optim(par=0,fn=neg_loglik,x=x,shat=shat,z=z,method=&quot;Brent&quot;,lower=-5,upper=5)
+<pre class="r"><code>ebnm_normal_unknown_s = function(x,shat,z,mu=NULL,s2=NULL){
+  fit = optim(par=0,fn=neg_loglik,x=x,shat=shat,z=z,mu=mu,s2=s2,method=&quot;Brent&quot;,lower=-5,upper=5)
   sb = exp(fit$par)
-  aux = compute_w_mu_s2(sb,x,shat,z)
+  aux = compute_w_mu_s2(sb,x,shat,z,mu,s2)
   return(list(sb=sb, s = sqrt(aux$s2), mu = aux$mu, loglik = -fit$value))  
 }
 fit = ebnm_normal_unknown_s(TT,shat,z)</code></pre>
@@ -1003,6 +1055,148 @@ plot(Y)
 lines(X %*% btrue)
 lines(X %*% post_mean,col=2)</code></pre>
 <p><img src="figure/ridge_eb.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-1">
+Past versions of unnamed-chunk-3-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-3-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/5e6cd75593007f1d6e13cb78de217d4bc4794ee3/docs/figure/ridge_eb.Rmd/unnamed-chunk-3-1.png" target="_blank">5e6cd75</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="iterative-ridge" class="section level2">
+<h2>Iterative ridge</h2>
+<p>Try the iterative approach</p>
+<pre class="r"><code>eb_ridge = function(y,X,mu=NULL,s2=NULL){
+  X.svd = svd(X)
+  TT = (t(X.svd$u) %*% Y)/X.svd$d # what i called T above
+  z = colSums(X.svd$v)  
+  shat = 1/X.svd$d
+  fit = ebnm_normal_unknown_s(TT,shat,z,mu,s2)
+  
+  shrink = fit$sb^2 * X.svd$d^2
+  shrink = shrink/(1+shrink)
+
+  post_mean = X.svd$v %*% (shrink*(TT-fit$mu*colSums(X.svd$v))) + fit$mu
+  return(list(fit=fit,post_mean=post_mean))
+}
+
+fit.eb = eb_ridge(Y,X)
+Xnew = t(t(X)*as.vector(fit.eb$post_mean))
+plot(Y)
+lines(Xnew %*% rep(1,100))
+fit.eb2 = eb_ridge(Y,Xnew)
+lines(Xnew %*% fit.eb2$post_mean,col=2)</code></pre>
+<p><img src="figure/ridge_eb.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>fit.eb2$fit</code></pre>
+<pre><code>$sb
+[1] 0.006737948
+
+$s
+[1] 0.8851011
+
+$mu
+[1] 1.002635
+
+$loglik
+[1] -169.9399</code></pre>
+<pre class="r"><code>exp(-5)</code></pre>
+<pre><code>[1] 0.006737947</code></pre>
+<p>So it seems to have worked - the second set is converging to the limits of the search space for sb.</p>
+<p>Try a sparser case:</p>
+<pre class="r"><code>set.seed(1)
+btrue = rep(0,100)
+btrue[50] = 5
+Y = X %*% btrue + 0.2*rnorm(n)
+plot(Y)
+lines(X %*% btrue)</code></pre>
+<p><img src="figure/ridge_eb.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>fit.eb = eb_ridge(Y,X,mu=0)
+plot(Y)
+lines(X %*% fit.eb$post_mean)</code></pre>
+<p><img src="figure/ridge_eb.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#par(mfcol=c(3,3))
+Xnew=X
+for(i in 1:9){
+  Xnew = t(t(Xnew)*as.vector(fit.eb$post_mean))
+  fit.eb = eb_ridge(Y,Xnew,mu=0)
+  plot(Y)
+  lines(Xnew %*% fit.eb$post_mean,col=i)
+}</code></pre>
+<p><img src="figure/ridge_eb.Rmd/unnamed-chunk-5-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/ridge_eb.Rmd/unnamed-chunk-5-4.png" width="672" style="display: block; margin: auto;" /><img src="figure/ridge_eb.Rmd/unnamed-chunk-5-5.png" width="672" style="display: block; margin: auto;" /><img src="figure/ridge_eb.Rmd/unnamed-chunk-5-6.png" width="672" style="display: block; margin: auto;" /><img src="figure/ridge_eb.Rmd/unnamed-chunk-5-7.png" width="672" style="display: block; margin: auto;" /><img src="figure/ridge_eb.Rmd/unnamed-chunk-5-8.png" width="672" style="display: block; margin: auto;" /><img src="figure/ridge_eb.Rmd/unnamed-chunk-5-9.png" width="672" style="display: block; margin: auto;" /><img src="figure/ridge_eb.Rmd/unnamed-chunk-5-10.png" width="672" style="display: block; margin: auto;" /><img src="figure/ridge_eb.Rmd/unnamed-chunk-5-11.png" width="672" style="display: block; margin: auto;" /></p>
+<p>So it seems that even with mu=0 we get “overfitting”. This should probably have been expected.</p>
+<p>Try fixing s2</p>
+<pre class="r"><code>set.seed(1)
+btrue = rep(0,100)
+btrue[50] = 5
+Y = X %*% btrue + 0.2*rnorm(n)
+plot(Y)
+lines(X %*% btrue)</code></pre>
+<p><img src="figure/ridge_eb.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>fit.eb = eb_ridge(Y,X,mu=0,s2=0.2)
+plot(Y)
+lines(X %*% fit.eb$post_mean)</code></pre>
+<p><img src="figure/ridge_eb.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#par(mfcol=c(3,3))
+Xnew=X
+for(i in 1:9){
+  Xnew = t(t(Xnew)*as.vector(fit.eb$post_mean))
+  fit.eb = eb_ridge(Y,Xnew,mu=0,s2=0.2)
+  plot(Y)
+  lines(Xnew %*% fit.eb$post_mean,col=i)
+}</code></pre>
+<p><img src="figure/ridge_eb.Rmd/unnamed-chunk-6-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/ridge_eb.Rmd/unnamed-chunk-6-4.png" width="672" style="display: block; margin: auto;" /><img src="figure/ridge_eb.Rmd/unnamed-chunk-6-5.png" width="672" style="display: block; margin: auto;" /><img src="figure/ridge_eb.Rmd/unnamed-chunk-6-6.png" width="672" style="display: block; margin: auto;" /><img src="figure/ridge_eb.Rmd/unnamed-chunk-6-7.png" width="672" style="display: block; margin: auto;" /><img src="figure/ridge_eb.Rmd/unnamed-chunk-6-8.png" width="672" style="display: block; margin: auto;" /><img src="figure/ridge_eb.Rmd/unnamed-chunk-6-9.png" width="672" style="display: block; margin: auto;" /><img src="figure/ridge_eb.Rmd/unnamed-chunk-6-10.png" width="672" style="display: block; margin: auto;" /><img src="figure/ridge_eb.Rmd/unnamed-chunk-6-11.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Try fixing s2 but not mu</p>
+<pre class="r"><code>set.seed(1)
+btrue = rep(0,100)
+btrue[50] = 5
+Y = X %*% btrue + 0.2*rnorm(n)
+plot(Y)
+lines(X %*% btrue)</code></pre>
+<p><img src="figure/ridge_eb.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>fit.eb = eb_ridge(Y,X,s2=0.2)
+plot(Y)
+lines(X %*% fit.eb$post_mean)</code></pre>
+<p><img src="figure/ridge_eb.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#par(mfcol=c(3,3))
+Xnew=X
+for(i in 1:9){
+  Xnew = t(t(Xnew)*as.vector(fit.eb$post_mean))
+  fit.eb = eb_ridge(Y,Xnew,s2=0.2)
+  plot(Y)
+  lines(Xnew %*% fit.eb$post_mean,col=i)
+}</code></pre>
+<p><img src="figure/ridge_eb.Rmd/unnamed-chunk-7-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/ridge_eb.Rmd/unnamed-chunk-7-4.png" width="672" style="display: block; margin: auto;" /><img src="figure/ridge_eb.Rmd/unnamed-chunk-7-5.png" width="672" style="display: block; margin: auto;" /><img src="figure/ridge_eb.Rmd/unnamed-chunk-7-6.png" width="672" style="display: block; margin: auto;" /><img src="figure/ridge_eb.Rmd/unnamed-chunk-7-7.png" width="672" style="display: block; margin: auto;" /><img src="figure/ridge_eb.Rmd/unnamed-chunk-7-8.png" width="672" style="display: block; margin: auto;" /><img src="figure/ridge_eb.Rmd/unnamed-chunk-7-9.png" width="672" style="display: block; margin: auto;" /><img src="figure/ridge_eb.Rmd/unnamed-chunk-7-10.png" width="672" style="display: block; margin: auto;" /><img src="figure/ridge_eb.Rmd/unnamed-chunk-7-11.png" width="672" style="display: block; margin: auto;" /></p>
+<p>so just based on this it seems varying mu converges to a less sparse solution; probably a worse solution but not clear.</p>
+</div>
 <div id="unused-stuff" class="section level2">
 <h2>Unused Stuff</h2>
 <p>The rest of this is old text that may be wrong…</p>
