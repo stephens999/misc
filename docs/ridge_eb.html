@@ -492,16 +492,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreea417edd2bfe6c1ac3528db1c673150ecf1e3ac75targetblanka417edda"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/a417edd2bfe6c1ac3528db1c673150ecf1e3ac75" target="_blank">a417edd</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreeef084847e54ec2d9171f61f3e1aab68877e5876atargetblankef08484a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/ef084847e54ec2d9171f61f3e1aab68877e5876a" target="_blank">ef08484</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreea417edd2bfe6c1ac3528db1c673150ecf1e3ac75targetblanka417edda" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreeef084847e54ec2d9171f61f3e1aab68877e5876atargetblankef08484a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/a417edd2bfe6c1ac3528db1c673150ecf1e3ac75" target="_blank">a417edd</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/ef084847e54ec2d9171f61f3e1aab68877e5876a" target="_blank">ef08484</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -684,6 +684,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/ef084847e54ec2d9171f61f3e1aab68877e5876a/analysis/ridge_eb.Rmd" target="_blank">ef08484</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-22
+</td>
+<td>
+workflowr::wflow_publish(“ridge_eb.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/f806e31d7f604b4470c49a068d2d3f005265bba3/docs/ridge_eb.html" target="_blank">f806e31</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-22
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/a417edd2bfe6c1ac3528db1c673150ecf1e3ac75/analysis/ridge_eb.Rmd" target="_blank">a417edd</a>
 </td>
 <td>
@@ -718,69 +752,133 @@ workflowr::wflow_publish(“ridge_eb.Rmd”)
 <div id="estimating-hyperparameters" class="section level2">
 <h2>Estimating hyperparameters</h2>
 <p>Here we have changed from mean <span class="math inline">\(s\mu\)</span> to <span class="math inline">\(\mu\)</span>…</p>
-<p>If <span class="math inline">\(Y=Xb+E\)</span> and <span class="math inline">\(X=UDV&#39;\)</span> then <span class="math display">\[W:=D^{-1}U&#39;Y \sim N(\mu V&#39;1_p, s^2(s_b^2I+D^{-2})).\]</span> And we can do inference for <span class="math inline">\(\mu,s,s_b\)</span> under this transformed model.</p>
-<p>It is easy to show the mle for <span class="math inline">\(s\)</span> is: <span class="math display">\[\hat{s^2} = (1/k) \sum_j (w_j-\mu z_j)^2/(s^2_b+d_j^{-2})\]</span> where <span class="math inline">\(k\)</span> is the length of <span class="math inline">\(W\)</span> and <span class="math inline">\(z_j = (V&#39;1_p)_j\)</span>.</p>
-<p>So we can do a 2-d optimization in <span class="math inline">\(\mu,s_b\)</span>.</p>
-<pre class="r"><code>n = 100
+<p>If <span class="math inline">\(Y=Xb+E\)</span> and <span class="math inline">\(X=UDV&#39;\)</span> then <span class="math display">\[T:=D^{-1}U&#39;Y \sim N(\mu V&#39;1_p, s^2(s_b^2I+D^{-2})).\]</span> And we can do inference for <span class="math inline">\(\mu,s,s_b\)</span> under this transformed model.</p>
+<p>It is easy to show the mle for <span class="math inline">\(s\)</span> is: <span class="math display">\[\hat{s^2} = (1/k) \sum_j w_j(T_j-\mu z_j)^2\]</span> where <span class="math inline">\(w_j=1/(s^2_b+d_j^{-2})\)</span> are the invere-variance weights, <span class="math inline">\(k\)</span> is the length of <span class="math inline">\(T\)</span> and <span class="math inline">\(z_j = (V&#39;1_p)_j\)</span>.</p>
+<p>And the mle for <span class="math inline">\(\mu\)</span> is <span class="math display">\[\hat{\mu} = \sum_j w_j T_j z_j / \sum_j z_j^2 w_j\]</span>.</p>
+<pre class="r"><code>set.seed(1)
+n = 100
 p = 100
 s = 1
-sb = .01
-mu= -.1
+sb = 1
+mu= 0
 
 X = matrix(0,nrow=n,ncol=n)
 for(i in 1:n){
-  X[i:n,i] = 1:(n-i+1)
+  X[i:n,i] = 1 #1:(n-i+1)
 }
 btrue = mu+rnorm(n,sd=sb*s)
+#X = scale(X)
+#t(t(X)/sqrt(colSums(X^2)))
+
 Y = X %*% btrue + rnorm(n)
-plot(Y)</code></pre>
+plot(Y)
+lines(X %*% btrue)</code></pre>
 <p><img src="figure/ridge_eb.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-1">
+Past versions of unnamed-chunk-1-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/f806e31d7f604b4470c49a068d2d3f005265bba3/docs/figure/ridge_eb.Rmd/unnamed-chunk-1-1.png" target="_blank">f806e31</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>#X = matrix(rnorm(n*p),nrow=n,ncol=p)
 
 X.svd = svd(X)
 
-# fit the model X_j \sim  N(0,s^2(sb^2+shat^2_j))
-# estimate sn and s
+# fit the model X_j \sim  N(mu z_j,s^2(sb^2+shat^2_j))
+# estimate sb (from which mle&#39;s of mu and s2 are easy)
 # it is like ebnm with N(0,s^2 sb^2) prior and s^2 shat^2_j error
 # but with s^2 unknown
 # x is vector of observations
 # shat is vector of corresponding standard errors (up to constant s)
 
-# this is negative log-likelihood evaluated at mle for s
+# this is negative log-likelihood evaluated at mle for s,mu
 # z is V&#39;t
 # par is (log(sb),mu) which are both scalars
+
+compute_w_mu_s2 = function(sb,x,shat,z){
+  w = 1/(sb^2 + shat^2) # inverse variance weights
+  mu = sum(w*z*x)/sum(z^2*w) # this is mle of mu
+  s2 = mean(w*(x-mu*z)^2) #this is the mle of s2
+  return(list(w=w,mu=mu,s2=s2))
+}
+
 neg_loglik = function(par,x,shat,z){
     sb= exp(par[1])
-    mu = par[2]
-    var_x_over_s = sb^2 + shat^2
-    s2 = mean((x-mu*z)^2/var_x_over_s) #this is the mle of s
-    var_x = s2 * var_x_over_s
-    return(0.5 *(sum(log(var_x) + (x-mu*z)^2/var_x)))
+    aux = compute_w_mu_s2(sb,x,shat,z)
+    var_x = aux$s2/aux$w
+    return(0.5 *(sum(log(aux$s2/aux$w) + aux$w*(x-aux$mu*z)^2/aux$s2)))
 }
 
 
 xx = (t(X.svd$u) %*% Y)/X.svd$d
 z = colSums(X.svd$v)
 shat = 1/X.svd$d
-
-neg_loglik(c(0,0),xx,shat,z)</code></pre>
-<pre><code>[1] 97.176</code></pre>
-<pre class="r"><code>neg_loglik(c(0.1,0),xx,shat,z)</code></pre>
-<pre><code>[1] 99.40092</code></pre>
-<pre class="r"><code>neg_loglik(c(1,0),xx,shat,z)</code></pre>
-<pre><code>[1] 120.8013</code></pre>
-<pre class="r"><code>neg_loglik(c(log(sb),mu),xx,shat,z)</code></pre>
-<pre><code>[1] 49.43489</code></pre>
-<pre class="r"><code>optim(par=c(0,2),fn=neg_loglik,x=xx,shat=shat,z=z)</code></pre>
+lsb = seq(-10,10,length=100)
+ll = rep(0,100)
+for(i in 1:length(lsb)){
+  ll[i] = neg_loglik(lsb[i],xx,shat,z)
+}
+plot(lsb,ll)</code></pre>
+<p><img src="figure/ridge_eb.Rmd/unnamed-chunk-1-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>optim(par=0,fn=neg_loglik,x=xx,shat=shat,z=z)</code></pre>
+<pre><code>Warning in optim(par = 0, fn = neg_loglik, x = xx, shat = shat, z = z): one-dimensional optimization by Nelder-Mead is unreliable:
+use &quot;Brent&quot; or optimize() directly</code></pre>
 <pre><code>$par
-[1] -12.77093227  -0.09885169
+[1] -0.3148438
 
 $value
-[1] 46.16084
+[1] 94.4877
 
 $counts
 function gradient 
-     309       NA 
+      22       NA 
+
+$convergence
+[1] 0
+
+$message
+NULL</code></pre>
+<pre class="r"><code>optim(par=0,fn=neg_loglik,x=xx,shat=shat,z=z,method=&quot;Brent&quot;,lower=-5,upper=5)</code></pre>
+<pre><code>$par
+[1] -0.314567
+
+$value
+[1] 94.48769
+
+$counts
+function gradient 
+      NA       NA 
 
 $convergence
 [1] 0
@@ -802,9 +900,26 @@ NULL</code></pre>
 # 
 # 
 # 
-# ebnm_normal_unknown_s = function(x,shat){
-#   log_lik_grad
-# }</code></pre>
+# </code></pre>
+<p>So we can wrap this up in a function</p>
+<pre class="r"><code>ebnm_normal_unknown_s = function(x,shat,z){
+  fit = optim(par=0,fn=neg_loglik,x=xx,shat=shat,z=z,method=&quot;Brent&quot;,lower=-5,upper=5)
+  sb = exp(fit$par)
+  aux = compute_w_mu_s2(sb,x,shat,z)
+  return(list(sb=sb, s = sqrt(aux$s2), mu = aux$mu, loglik = -fit$value))  
+}
+ebnm_normal_unknown_s(xx,shat,z)</code></pre>
+<pre><code>$sb
+[1] 0.730105
+
+$s
+[1] 1.093598
+
+$mu
+[1] 0.1144156
+
+$loglik
+[1] -94.48769</code></pre>
 <p>Looking at the terms that depend on <span class="math inline">\(\mu\)</span>: <span class="math display">\[l(\mu) = -0.5s^2\mu^2 x_+&#39; \Sigma^{-1}x_+ + s \mu x_+&#39; \Sigma^{-1}y \]</span> Differentiating, setting to 0, we can write <span class="math display">\[l&#39;(\mu) = -s^2 \mu tr(\Sigma^{-1}x_+ x&#39;_+) + str(\Sigma^{-1}yx&#39;_+) \]</span></p>
 </div>
 <div id="log-likelihood-for-b" class="section level2">
