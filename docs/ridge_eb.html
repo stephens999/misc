@@ -492,16 +492,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreeef084847e54ec2d9171f61f3e1aab68877e5876atargetblankef08484a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/ef084847e54ec2d9171f61f3e1aab68877e5876a" target="_blank">ef08484</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree29bd03a084ce34243e86ac44b4d1415a351219fbtargetblank29bd03aa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/29bd03a084ce34243e86ac44b4d1415a351219fb" target="_blank">29bd03a</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreeef084847e54ec2d9171f61f3e1aab68877e5876atargetblankef08484a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree29bd03a084ce34243e86ac44b4d1415a351219fbtargetblank29bd03aa" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/ef084847e54ec2d9171f61f3e1aab68877e5876a" target="_blank">ef08484</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/29bd03a084ce34243e86ac44b4d1415a351219fb" target="_blank">29bd03a</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -684,6 +684,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/29bd03a084ce34243e86ac44b4d1415a351219fb/analysis/ridge_eb.Rmd" target="_blank">29bd03a</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-22
+</td>
+<td>
+workflowr::wflow_publish(“ridge_eb.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/87861b065d62055c32efc308019ccdb891d02fd1/docs/ridge_eb.html" target="_blank">87861b0</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-22
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/ef084847e54ec2d9171f61f3e1aab68877e5876a/analysis/ridge_eb.Rmd" target="_blank">ef08484</a>
 </td>
 <td>
@@ -760,7 +794,7 @@ n = 100
 p = 100
 s = 1
 sb = 1
-mu= 0
+mu= .1
 
 X = matrix(0,nrow=n,ncol=n)
 for(i in 1:n){
@@ -796,6 +830,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/87861b065d62055c32efc308019ccdb891d02fd1/docs/figure/ridge_eb.Rmd/unnamed-chunk-1-1.png" target="_blank">87861b0</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-22
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/stephens999/misc/blob/f806e31d7f604b4470c49a068d2d3f005265bba3/docs/figure/ridge_eb.Rmd/unnamed-chunk-1-1.png" target="_blank">f806e31</a>
@@ -841,18 +886,55 @@ neg_loglik = function(par,x,shat,z){
 }
 
 
-xx = (t(X.svd$u) %*% Y)/X.svd$d
+TT = (t(X.svd$u) %*% Y)/X.svd$d # what i called T above
 z = colSums(X.svd$v)
 shat = 1/X.svd$d
 lsb = seq(-10,10,length=100)
 ll = rep(0,100)
 for(i in 1:length(lsb)){
-  ll[i] = neg_loglik(lsb[i],xx,shat,z)
+  ll[i] = neg_loglik(lsb[i],TT,shat,z)
 }
 plot(lsb,ll)</code></pre>
 <p><img src="figure/ridge_eb.Rmd/unnamed-chunk-1-2.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>optim(par=0,fn=neg_loglik,x=xx,shat=shat,z=z)</code></pre>
-<pre><code>Warning in optim(par = 0, fn = neg_loglik, x = xx, shat = shat, z = z): one-dimensional optimization by Nelder-Mead is unreliable:
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-2">
+Past versions of unnamed-chunk-1-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/87861b065d62055c32efc308019ccdb891d02fd1/docs/figure/ridge_eb.Rmd/unnamed-chunk-1-2.png" target="_blank">87861b0</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>optim(par=0,fn=neg_loglik,x=TT,shat=shat,z=z)</code></pre>
+<pre><code>Warning in optim(par = 0, fn = neg_loglik, x = TT, shat = shat, z = z): one-dimensional optimization by Nelder-Mead is unreliable:
 use &quot;Brent&quot; or optimize() directly</code></pre>
 <pre><code>$par
 [1] -0.3148438
@@ -869,7 +951,7 @@ $convergence
 
 $message
 NULL</code></pre>
-<pre class="r"><code>optim(par=0,fn=neg_loglik,x=xx,shat=shat,z=z,method=&quot;Brent&quot;,lower=-5,upper=5)</code></pre>
+<pre class="r"><code>optim(par=0,fn=neg_loglik,x=TT,shat=shat,z=z,method=&quot;Brent&quot;,lower=-5,upper=5)</code></pre>
 <pre><code>$par
 [1] -0.314567
 
@@ -903,23 +985,27 @@ NULL</code></pre>
 # </code></pre>
 <p>So we can wrap this up in a function</p>
 <pre class="r"><code>ebnm_normal_unknown_s = function(x,shat,z){
-  fit = optim(par=0,fn=neg_loglik,x=xx,shat=shat,z=z,method=&quot;Brent&quot;,lower=-5,upper=5)
+  fit = optim(par=0,fn=neg_loglik,x=x,shat=shat,z=z,method=&quot;Brent&quot;,lower=-5,upper=5)
   sb = exp(fit$par)
   aux = compute_w_mu_s2(sb,x,shat,z)
   return(list(sb=sb, s = sqrt(aux$s2), mu = aux$mu, loglik = -fit$value))  
 }
-ebnm_normal_unknown_s(xx,shat,z)</code></pre>
-<pre><code>$sb
-[1] 0.730105
+fit = ebnm_normal_unknown_s(TT,shat,z)</code></pre>
+</div>
+<div id="posterior-mean-for-b" class="section level1">
+<h1>Posterior mean for <span class="math inline">\(b\)</span></h1>
+<p>The posterior mean, in the case <span class="math inline">\(\mu=0\)</span> can be shown to b: <span class="math display">\[E(b) = V diag(s_b^2 d_j^2/(1+s_b^2 d_j^2)) (T-\mu V&#39;1_p) + \mu V&#39;1_p\]</span></p>
+<pre class="r"><code>shrink = fit$sb^2 * X.svd$d^2
+shrink = shrink/(1+shrink)
 
-$s
-[1] 1.093598
-
-$mu
-[1] 0.1144156
-
-$loglik
-[1] -94.48769</code></pre>
+post_mean = X.svd$v %*% (shrink*(TT-fit$mu*colSums(X.svd$v))) + fit$mu
+plot(Y)
+lines(X %*% btrue)
+lines(X %*% post_mean,col=2)</code></pre>
+<p><img src="figure/ridge_eb.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<div id="unused-stuff" class="section level2">
+<h2>Unused Stuff</h2>
+<p>The rest of this is old text that may be wrong…</p>
 <p>Looking at the terms that depend on <span class="math inline">\(\mu\)</span>: <span class="math display">\[l(\mu) = -0.5s^2\mu^2 x_+&#39; \Sigma^{-1}x_+ + s \mu x_+&#39; \Sigma^{-1}y \]</span> Differentiating, setting to 0, we can write <span class="math display">\[l&#39;(\mu) = -s^2 \mu tr(\Sigma^{-1}x_+ x&#39;_+) + str(\Sigma^{-1}yx&#39;_+) \]</span></p>
 </div>
 <div id="log-likelihood-for-b" class="section level2">
@@ -930,6 +1016,7 @@ $loglik
 <h2>Posterior mean and variance</h2>
 <p>The posterior precision is prior precision plus the likelihood-based precision. So posterior variance satisfies <span class="math display">\[Var(b|Y) = [1/(s_b^2s^2) I_p+ (1/s^2)(X&#39;X)]^{-1}\]</span> <span class="math display">\[Var(b|Y) = s^2 s_b^2 (I_p+ s_b^2(X&#39;X))^{-1}\]</span> The posterior mean for <span class="math inline">\(b\)</span> is: <span class="math display">\[\bar{b} = (X&#39;X + (1/s^2_b) I_p)^{-1}(X&#39;y + (1/s_b^2) s\mu 1_p)\]</span> or if we write <span class="math inline">\(V\)</span> for <span class="math inline">\(\Var(b|Y)\)</span> then <span class="math display">\[\bar{b} = (1/s^2) V(X&#39;y+(1/s_b^2)s\mu1_p)\]</span></p>
 <p>Alternatively, if we write in terms of <span class="math inline">\(b/s\)</span> we get <span class="math display">\[Var(b/s|Y) = s_b^2 (I_p+ s_b^2(X&#39;X))^{-1}\]</span> <span class="math display">\[E(b/s|Y) = (X&#39;X + (1/s^2_b) I_p)^{-1}(X&#39;(y/s) + (1/s_b^2) \mu 1_p)\]</span></p>
+</div>
 </div>
 <div id="expectation-of-bxxb" class="section level1">
 <h1>Expectation of <span class="math inline">\(b&#39;X&#39;Xb\)</span></h1>
