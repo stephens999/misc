@@ -401,7 +401,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2020-05-22
+<strong>Last updated:</strong> 2020-05-26
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -492,16 +492,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree0180b7940615bebbeaf87761bf87f103638d41b4targetblank0180b79a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/0180b7940615bebbeaf87761bf87f103638d41b4" target="_blank">0180b79</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreedae43f3b73c808d7f065f34ced7fea545a058dabtargetblankdae43f3a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/dae43f3b73c808d7f065f34ced7fea545a058dab" target="_blank">dae43f3</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree0180b7940615bebbeaf87761bf87f103638d41b4targetblank0180b79a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreedae43f3b73c808d7f065f34ced7fea545a058dabtargetblankdae43f3a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/0180b7940615bebbeaf87761bf87f103638d41b4" target="_blank">0180b79</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/dae43f3b73c808d7f065f34ced7fea545a058dab" target="_blank">dae43f3</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -679,6 +679,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/dae43f3b73c808d7f065f34ced7fea545a058dab/analysis/ridge_eb.Rmd" target="_blank">dae43f3</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-26
+</td>
+<td>
+workflowr::wflow_publish(“ridge_eb.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/7370159815f403edea15183adf8f2466bbcd1318/docs/ridge_eb.html" target="_blank">7370159</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-22
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -878,16 +912,15 @@ workflowr::wflow_publish(“ridge_eb.Rmd”)
 <p>My goal here is to develop some methods for doing EB analysis for ridge regression.</p>
 <p>The model is <span class="math display">\[y = Xb + e\]</span> where <span class="math inline">\(y,e\)</span> are <span class="math inline">\(n-\)</span>vectors, <span class="math inline">\(b\)</span> a <span class="math inline">\(p\)</span>-vector and <span class="math inline">\(X\)</span> an <span class="math inline">\(n \times p\)</span> matrix. Let <span class="math inline">\(s\)</span> denote the residual standard error, so <span class="math display">\[e \sim N(0,s^2 I_n).\]</span></p>
 <p>As a reminder, assuming <span class="math inline">\(X&#39;X\)</span> is invertible, the OLS estimator <span class="math inline">\(\hat{b}=(X&#39;X)^{-1}X&#39;y\)</span> satisfies <span class="math display">\[\hat{b} \sim N(b, s^2 (X&#39;X)^{-1})\]</span></p>
-<p>Assume the prior is <span class="math display">\[b \sim N(s\mu 1_p,s_b^2 s^2 I_p)\]</span> where <span class="math inline">\(1_p\)</span> is the <span class="math inline">\(p\)</span>-vector of all ones and <span class="math inline">\(\mu\)</span> is a scalar. (So we allow <span class="math inline">\(b\)</span> to have non-zero mean, for reasons I won’t go into here, and we scale the prior by <span class="math inline">\(s\)</span>.)</p>
+<p>Assume the prior is <span class="math display">\[b \sim N(\mu 1_p,s_b^2 s^2 I_p)\]</span> where <span class="math inline">\(1_p\)</span> is the <span class="math inline">\(p\)</span>-vector of all ones and <span class="math inline">\(\mu\)</span> is a scalar. So we allow <span class="math inline">\(b\)</span> to have non-zero mean, for reasons I won’t go into here, and we scale the prior variance by <span class="math inline">\(s\)</span>. (Note: we could also consider scaling the prior mean by <span class="math inline">\(s\)</span>, so mean <span class="math inline">\(s \mu\)</span>, but I have not done that here.)</p>
 </div>
 <div id="marginal-likelihood" class="section level2">
 <h2>Marginal likelihood</h2>
-<p>Putting these together we have <span class="math display">\[ y | \mu, s_b^2, s^2 \sim N(s\mu X1_p, s^2(s_b^2XX&#39;+I_n))\]</span></p>
-<p>Thus, marginalizing out <span class="math inline">\(b\)</span>, the log-likelihood for <span class="math inline">\(\mu, s_b,s\)</span> is <span class="math display">\[l(\mu,s_b,s) = -0.5 \log(|2\pi \Sigma|) - 0.5 (y-s\mu x_+)&#39;\Sigma^{-1}(y-s\mu x_+)\]</span> where <span class="math display">\[\Sigma = s^2(s_b^2 XX&#39; + I_n)\]</span> and <span class="math inline">\(x_+ := X1_p\)</span> are the row-sums of <span class="math inline">\(X\)</span>.</p>
+<p>Putting these together we have <span class="math display">\[ y | \mu, s_b^2, s^2 \sim N(\mu X1_p, s^2(s_b^2XX&#39;+I_n))\]</span></p>
+<p>Thus, marginalizing out <span class="math inline">\(b\)</span>, the log-likelihood for <span class="math inline">\(\mu, s_b,s\)</span> is <span class="math display">\[l(\mu,s_b,s) = -0.5 \log(|2\pi \Sigma|) - 0.5 (y-\mu x_+)&#39;\Sigma^{-1}(y-\mu x_+)\]</span> where <span class="math display">\[\Sigma = s^2(s_b^2 XX&#39; + I_n)\]</span> and <span class="math inline">\(x_+ := X1_p\)</span> are the row-sums of <span class="math inline">\(X\)</span>.</p>
 </div>
 <div id="estimating-hyperparameters" class="section level2">
 <h2>Estimating hyperparameters</h2>
-<p>Here we have changed from mean <span class="math inline">\(s\mu\)</span> to <span class="math inline">\(\mu\)</span>…</p>
 <p>If <span class="math inline">\(Y=Xb+E\)</span> and <span class="math inline">\(X=UDV&#39;\)</span> then <span class="math display">\[T:=D^{-1}U&#39;Y \sim N(\mu V&#39;1_p, s^2(s_b^2I+D^{-2})).\]</span> And we can do inference for <span class="math inline">\(\mu,s,s_b\)</span> under this transformed model.</p>
 <p>It is easy to show the mle for <span class="math inline">\(s\)</span> is: <span class="math display">\[\hat{s^2} = (1/k) \sum_j w_j(T_j-\mu z_j)^2\]</span> where <span class="math inline">\(w_j=1/(s^2_b+d_j^{-2})\)</span> are the invere-variance weights, <span class="math inline">\(k\)</span> is the length of <span class="math inline">\(T\)</span> and <span class="math inline">\(z_j = (V&#39;1_p)_j\)</span>.</p>
 <p>And the mle for <span class="math inline">\(\mu\)</span> is <span class="math display">\[\hat{\mu} = \sum_j w_j T_j z_j / \sum_j z_j^2 w_j\]</span>.</p>
@@ -1114,7 +1147,7 @@ fit = ebnm_normal_unknown_s(TT,shat,z)</code></pre>
 </div>
 <div id="posterior-mean-for-b" class="section level1">
 <h1>Posterior mean for <span class="math inline">\(b\)</span></h1>
-<p>The posterior mean, in the case <span class="math inline">\(\mu=0\)</span> can be shown to b: <span class="math display">\[E(b) = V diag(s_b^2 d_j^2/(1+s_b^2 d_j^2)) (T-\mu V&#39;1_p) + \mu V&#39;1_p\]</span></p>
+<p>The posterior mean can be shown to be: <span class="math display">\[E(b) = V diag(s_b^2 d_j^2/(1+s_b^2 d_j^2)) (T-\mu V&#39;1_p) + \mu 1_p\]</span></p>
 <pre class="r"><code>shrink = fit$sb^2 * X.svd$d^2
 shrink = shrink/(1+shrink)
 
@@ -1355,6 +1388,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/7370159815f403edea15183adf8f2466bbcd1318/docs/figure/ridge_eb.Rmd/unnamed-chunk-5-3.png" target="_blank">7370159</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-22
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/d2376b6422fbb2e5fd737253e44f69504796f923/docs/figure/ridge_eb.Rmd/unnamed-chunk-5-3.png" target="_blank">d2376b6</a>
 </td>
 <td>
@@ -1379,8 +1423,8 @@ Matthew Stephens
 </table>
 </div>
 </div>
-<p>So it seems that even with mu=0 we get “overfitting”. This should probably have been expected.</p>
-<p>Try fixing s2</p>
+<p>So it seems that even with <span class="math inline">\(\mu=0\)</span> we get “overfitting”. This should probably have been expected.</p>
+<p>Try fixing s2 (with <span class="math inline">\(\mu=0\)</span>)</p>
 <pre class="r"><code>set.seed(1)
 btrue = rep(0,100)
 btrue[50] = 5
@@ -1499,6 +1543,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/7370159815f403edea15183adf8f2466bbcd1318/docs/figure/ridge_eb.Rmd/unnamed-chunk-6-3.png" target="_blank">7370159</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-22
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/d2376b6422fbb2e5fd737253e44f69504796f923/docs/figure/ridge_eb.Rmd/unnamed-chunk-6-3.png" target="_blank">d2376b6</a>
 </td>
 <td>
@@ -1523,7 +1578,7 @@ Matthew Stephens
 </table>
 </div>
 </div>
-<p>Try fixing s2 but not mu</p>
+<p>Try fixing s2 but not <span class="math inline">\(\mu=0\)</span>:</p>
 <pre class="r"><code>set.seed(1)
 btrue = rep(0,100)
 btrue[50] = 5
@@ -1642,6 +1697,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/7370159815f403edea15183adf8f2466bbcd1318/docs/figure/ridge_eb.Rmd/unnamed-chunk-7-3.png" target="_blank">7370159</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-22
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/d2376b6422fbb2e5fd737253e44f69504796f923/docs/figure/ridge_eb.Rmd/unnamed-chunk-7-3.png" target="_blank">d2376b6</a>
 </td>
 <td>
@@ -1666,12 +1732,12 @@ Matthew Stephens
 </table>
 </div>
 </div>
-<p>so just based on this it seems varying mu converges to a less sparse solution; probably a worse solution but not clear.</p>
+<p>so just based on this it seems varying mu converges to a less sparse solution; probably a worse solution but not entirely clear.</p>
 </div>
 <div id="unused-stuff" class="section level2">
 <h2>Unused Stuff</h2>
 <p>The rest of this is old text that may be wrong…</p>
-<p>Looking at the terms that depend on <span class="math inline">\(\mu\)</span>: <span class="math display">\[l(\mu) = -0.5s^2\mu^2 x_+&#39; \Sigma^{-1}x_+ + s \mu x_+&#39; \Sigma^{-1}y \]</span> Differentiating, setting to 0, we can write <span class="math display">\[l&#39;(\mu) = -s^2 \mu tr(\Sigma^{-1}x_+ x&#39;_+) + str(\Sigma^{-1}yx&#39;_+) \]</span></p>
+<p>Looking at the terms that depend on <span class="math inline">\(\mu\)</span>: <span class="math display">\[l(\mu) = -0.5\mu^2 x_+&#39; \Sigma^{-1}x_+ + \mu x_+&#39; \Sigma^{-1}y \]</span> Differentiating, setting to 0, we can write <span class="math display">\[l&#39;(\mu) = - \mu tr(\Sigma^{-1}x_+ x&#39;_+) + tr(\Sigma^{-1}yx&#39;_+) \]</span></p>
 </div>
 <div id="log-likelihood-for-b" class="section level2">
 <h2>log-likelihood for <span class="math inline">\(b\)</span></h2>
@@ -1679,8 +1745,8 @@ Matthew Stephens
 </div>
 <div id="posterior-mean-and-variance" class="section level2">
 <h2>Posterior mean and variance</h2>
-<p>The posterior precision is prior precision plus the likelihood-based precision. So posterior variance satisfies <span class="math display">\[Var(b|Y) = [1/(s_b^2s^2) I_p+ (1/s^2)(X&#39;X)]^{-1}\]</span> <span class="math display">\[Var(b|Y) = s^2 s_b^2 (I_p+ s_b^2(X&#39;X))^{-1}\]</span> The posterior mean for <span class="math inline">\(b\)</span> is: <span class="math display">\[\bar{b} = (X&#39;X + (1/s^2_b) I_p)^{-1}(X&#39;y + (1/s_b^2) s\mu 1_p)\]</span> or if we write <span class="math inline">\(V\)</span> for <span class="math inline">\(\Var(b|Y)\)</span> then <span class="math display">\[\bar{b} = (1/s^2) V(X&#39;y+(1/s_b^2)s\mu1_p)\]</span></p>
-<p>Alternatively, if we write in terms of <span class="math inline">\(b/s\)</span> we get <span class="math display">\[Var(b/s|Y) = s_b^2 (I_p+ s_b^2(X&#39;X))^{-1}\]</span> <span class="math display">\[E(b/s|Y) = (X&#39;X + (1/s^2_b) I_p)^{-1}(X&#39;(y/s) + (1/s_b^2) \mu 1_p)\]</span></p>
+<p>The posterior precision is prior precision plus the likelihood-based precision. So posterior variance satisfies <span class="math display">\[Var(b|Y) = [1/(s_b^2s^2) I_p+ (1/s^2)(X&#39;X)]^{-1}\]</span> <span class="math display">\[Var(b|Y) = s^2 s_b^2 (I_p+ s_b^2(X&#39;X))^{-1}\]</span> The posterior mean for <span class="math inline">\(b\)</span> is: <span class="math display">\[\bar{b} = (X&#39;X + (1/s^2_b) I_p)^{-1}(X&#39;y + (1/s_b^2) \mu 1_p)\]</span></p>
+<p>Alternatively, if we write in terms of <span class="math inline">\(b/s\)</span> we get <span class="math display">\[Var(b/s|Y) = s_b^2 (I_p+ s_b^2(X&#39;X))^{-1}\]</span> <span class="math display">\[E(b/s|Y) = (X&#39;X + (1/s^2_b) I_p)^{-1}(X&#39;(y/s) + (1/s_b^2) (\mu/s) 1_p)\]</span></p>
 </div>
 </div>
 <div id="expectation-of-bxxb" class="section level1">
