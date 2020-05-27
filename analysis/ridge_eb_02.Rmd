@@ -1,0 +1,313 @@
+---
+title: "ridge_eb_02"
+author: "Matthew Stephens"
+date: "2020-05-26"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+The goal here, following on from (ridge_eb.html) is to look at
+ iterative ridge more carefully using a variational approach.
+ 
+The model is
+$$Y = s_b Xb + e$$
+where $e \sim N(0,s^2)$. So $s$ is the residual variance,
+and $s_b$ controls/reflects the signal to noise ratio.
+
+
+We assume $b= B_1 \dots B_k 1$.
+where the $B_k$ are diagonal matrices $B_k=diag(b_k)$ and 
+$$b_k \sim N(0, I_p)$$.
+That is, $b$ is formed by elementwise multiplication of vectors that have
+ridge (ie normal) priors.
+
+
+## Evidence lower bound
+
+The evidence lower bound is:
+
+$$F(q,s,s_b)= E_q \log p(y | s_b,s,b) - \sum_k KL(q_k, g_k)$$
+where $g_k $ denotes the $N(0,I_p)$ prior for $b_k$.
+
+So we have:
+$$F(q,s,s_b) = -(n/2) \log(2\pi s^2) -(1/2s^2) E_q ||y- s_b Xb||^2 + \sum_k E_{q_k} [\log g_k/q_k]$$
+$$F(q,s,s_b) = -(n/2) \log(2\pi s^2) -(1/2s^2) (y'y - 2s_b y'X \bar{b} + s_b^2 tr [X'XE(bb')] + \sum_k E_{q_k} [\log g_k/q_k] $$
+
+## Update for $s,s_b$
+
+It is easy to maximize $F$ with respect to $s,s_b$.
+
+Differentiating with respect to $s^2$ and setting to 0 gives:
+$$\hat{s}^2 = (1/n)(y'y - 2s_b y'X\bar{b} + s_b^2 tr(X'XE(bb')))$$
+```{r}
+calc_s2hat = function(y,X,XtX,EB,EB2,sb2){
+  n = length(y)
+  XB = calc_XB(EB,X)
+  Xb = rowSums(XB)
+  BXtXB = calc_BXtXB(EB2,XtX)
+
+  s2hat = as.numeric((1/n)* (t(y) %*% y - 2*sqrt(sb2)*sum(y*Xb) + sb2 * sum(BXtXB)))
+  
+}
+```
+
+Differentiating with respect to $s_b$ and setting to 0 gives:
+$$\hat{s}_b = y'X\bar{b}/tr[X'XE(bb')]$$
+$$\hat{s}_b^2 = [y'X\bar{b}/tr[X'XE(bb')]]^2$$
+```{r}
+calc_sb2hat = function(y,X,XtX,EB,EB2){
+  XB = calc_XB(EB,X)
+  BXtXB = calc_BXtXB(EB2,XtX)
+  Xb = rowSums(XB)
+  return(as.numeric((t(y) %*% Xb)/sum(BXtXB))^2)
+}
+```
+
+
+
+## Updating $q_k$
+
+Now consider updating $q_k$, the variational posterior on $b_k$. 
+For notational simplicity we will write
+$b = B b_k$ where $B=B_1...B_{k-1}$ and $b_k$ is to be updated.
+Let $\bar{B}$ denote the expectation of $B$.
+Let $\bar$
+$$F(q,s,s_b) = -(n/2) \log(2\pi s^2) -(1/2s^2) [y'y - 2s_b y'X\bar{B}b_k  + s_b^2 b_k'E(BX'XB)b_k ] - \sum_k KL_k $$
+The posterior mean and variance for $q_k$ ($\mu_1,\Sigma_1$) satisfy:
+$$\Sigma_1^{-1} = (s_b^2/s^2) E(BX'XB) +I_p$$
+
+$$\Sigma_1^{-1} \mu_1 = (s_b/s^2) y'X\bar{B}$$
+
+
+## Implement
+
+To implement I initially tried storing running values for $X\bar{B}$ and $E(BX'XB)$,
+and then remove the $k$th effect from these when we need to. However, I had problems
+dividing by 0 when removing 0 elements... so I just compute them every iteration here.
+
+```{r}
+calc_XB = function(EB,X){
+  if(nrow(EB)==0){ # special case
+    return(X)
+  } else {
+    B = apply(EB,2,prod)
+    return(X %*% diag(B))      
+  }
+}
+
+calc_BXtXB = function(EB2,XtX){
+  if(nrow(EB2)==0){ # special case
+    return(XtX)
+  } else {
+    B2 = matrix(apply(EB2,2,prod),ncol=ncol(XtX))
+    return(XtX*B2)    
+  }
+}
+
+
+
+
+#K is number of Bs to multiply together
+iterative_ridge=function(y,X,sb2,s2,K=2,niter=10,update.s2= FALSE, update.sb2=FALSE, EB_init = NULL){
+  p = ncol(X)
+#hold first and second moments of B
+  
+  EB = matrix(1,nrow=K,ncol=p)
+  EB2 = matrix(1,nrow=K,ncol=p*p)
+  if(!is.null(EB_init)){
+    nk = nrow(EB_init$EB) # initialize the first nk components using the supplied initialization
+    EB[1:nk,] = EB_init$EB
+    EB2[1:nk,] = EB_init$EB2
+  }
+  XtX = t(X) %*% X
+
+  for(i in 1:niter){
+    for(k in 1:K){
+        
+        XB_without_k = calc_XB(EB[-k,,drop=FALSE],X)
+        BXtXB_without_k = calc_BXtXB(EB2[-k,,drop=FALSE],XtX)
+      
+        Sigma1 = chol2inv(chol((sb2/s2) * BXtXB_without_k + diag(p)))
+        mu1 = as.vector((sqrt(sb2)/s2) *(Sigma1 %*% (t(XB_without_k) %*% y)))
+        
+        EB[k,] = mu1
+        EB2[k,] = as.vector(outer(mu1,mu1) + Sigma1)
+    }
+    if(update.sb2){
+      sb2 = calc_sb2hat(y,X,XtX,EB,EB2)
+    }
+    if(update.s2){
+      s2 = calc_s2hat(y,X,XtX,EB,EB2,sb2)
+    }
+  }
+  return(list(bhat = apply(EB,2,prod), EB=EB,EB2=EB2,sb2 = sb2,s2=s2))
+}
+
+```
+
+
+Try on toy example - as we can see, it gets sparser as $K$ increases.
+```{r}
+set.seed(1)
+n=1000
+p=20
+X = matrix(rnorm(n*p),nrow=n,ncol=p)
+X = X %*% diag(1/sqrt(colSums(X^2)))
+
+b = rnorm(p)
+sb2 = 25
+s2 = 1
+
+y = sqrt(sb2)* X %*% b + sqrt(s2) * rnorm(n)
+
+y.fit = iterative_ridge(y,X,sb2,s2,1,1)
+plot(y.fit$bhat,b)
+
+y.fit = iterative_ridge(y,X,sb2,s2,1,10)
+plot(y.fit$bhat,b)
+
+y.fit = iterative_ridge(y,X,sb2,s2,2,10)
+plot(y.fit$bhat,b)
+
+y.fit = iterative_ridge(y,X,sb2,s2,5,10)
+plot(y.fit$bhat,b)
+
+```
+
+# Trendfiltering
+
+Try my usual challenge:
+```{r}
+set.seed(100)
+sd = 1
+n = 100
+p = n
+X = matrix(0,nrow=n,ncol=n)
+for(i in 1:n){
+  X[i:n,i] = 1:(n-i+1)
+}
+btrue = rep(0,n)
+btrue[40] = 8
+btrue[41] = -8
+y = X %*% btrue + sd*rnorm(n)
+
+plot(y)
+lines(X %*% btrue)
+```
+
+
+Regular ridge:
+```{r}
+y.fit = iterative_ridge(y,X,sb2=1,s2=1,1,1)
+plot(y)
+lines(X %*% y.fit$bhat)
+```
+
+Iterative ridge, K=2
+```{r}
+y.fit = iterative_ridge(y,X,sb2=1,s2=1,2,10)
+plot(y)
+lines(X %*% y.fit$bhat)
+```
+
+Iterative ridge, K=3
+```{r}
+y.fit = iterative_ridge(y,X,sb2=1,s2=1,3,10)
+plot(y)
+lines(X %*% y.fit$bhat)
+```
+
+
+Iterative ridge, K=10
+```{r}
+y.fit = iterative_ridge(y,X,sb2=1,s2=1,10,10)
+plot(y)
+lines(X %*% y.fit$bhat)
+```
+
+
+
+#Estimating sb2, s2
+
+Iterative ridge, K=1, updating sb2
+```{r}
+y.fit = iterative_ridge(y,X,sb2=1,s2=1,1,10,update.s2=FALSE,update.sb2=TRUE)
+plot(y)
+lines(sqrt(y.fit$sb2) *  X %*% y.fit$bhat)
+```
+
+Iterative ridge, K=1, updating sb2 more iterations
+```{r}
+y.fit = iterative_ridge(y,X,sb2=1,s2=1,1,100,update.s2=FALSE,update.sb2=TRUE)
+plot(y)
+lines(sqrt(y.fit$sb2) * X %*% y.fit$bhat)
+```
+
+Iterative ridge, K=1, updating sb2 more iterations...
+```{r}
+y.fit.K1 = iterative_ridge(y,X,sb2=1,s2=1,1,1000,update.s2=FALSE,update.sb2=TRUE)
+plot(y)
+lines(sqrt(y.fit$sb2) * X %*% y.fit$bhat)
+```
+
+Convergence is very slow.... but seems to make some sense.
+
+
+Iterative ridge, K=2, updating sb2,s2 
+```{r}
+y.fit = iterative_ridge(y,X,sb2=1,s2=1,2,100,update.s2=TRUE,update.sb2=TRUE)
+plot(y)
+lines(sqrt(y.fit$sb2) * X %*% y.fit$bhat)
+```
+
+Iterative ridge, K=2, initializing at K=1 but no update of s
+```{r}
+y.fit = iterative_ridge(y,X,sb2=y.fit.K1$sb2,s2=y.fit.K1$s2,2,100,update.s2=FALSE,update.sb2=FALSE,EB_init = y.fit.K1)
+plot(y)
+lines(sqrt(y.fit$sb2) * X %*% y.fit$bhat)
+```
+
+Iterative ridge, K=2, initializing at K=1 and updating
+```{r}
+y.fit = iterative_ridge(y,X,sb2=y.fit.K1$sb2,s2=y.fit.K1$s2,2,100,update.s2=TRUE,update.sb2=TRUE,EB_init = y.fit.K1)
+plot(y)
+lines(sqrt(y.fit$sb2) * X %*% y.fit$bhat)
+```
+
+Iterative ridge, K=2, initializing at K=1 and updating s2 only
+```{r}
+y.fit = iterative_ridge(y,X,sb2=y.fit.K1$sb2,s2=y.fit.K1$s2,2,100,update.s2=TRUE,update.sb2=FALSE,EB_init = y.fit.K1)
+plot(y)
+lines(sqrt(y.fit$sb2) * X %*% y.fit$bhat)
+```
+
+Iterative ridge, K=2, initializing at K=1 and updating sb2 only
+```{r}
+y.fit = iterative_ridge(y,X,sb2=y.fit.K1$sb2,s2=y.fit.K1$s2,2,100,update.s2=FALSE,update.sb2=TRUE,EB_init = y.fit.K1)
+plot(y)
+lines(sqrt(y.fit$sb2) * X %*% y.fit$bhat)
+```
+
+
+
+
+
+Iterative ridge, K=3, updating s2, sb2
+```{r}
+y.fit = iterative_ridge(y,X,sb2=1,s2=1,3,10,update.s2=TRUE,update.sb2=TRUE)
+plot(y)
+lines(X %*% y.fit$bhat)
+```
+
+
+Iterative ridge, K=2, updating s2, sb2
+```{r}
+y.fit = iterative_ridge(y,X,sb2=1,s2=1,2,100,update.s2=FALSE,update.sb2=TRUE)
+plot(y)
+lines(X %*% y.fit$bhat)
+```
+
+
