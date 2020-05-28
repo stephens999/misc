@@ -111,9 +111,16 @@ calc_BXtXB = function(EB2,XtX){
 
 
 #K is number of Bs to multiply together
-iterative_ridge=function(y,X,sb2,s2,K=2,niter=10,update.s2= FALSE, update.sb2=FALSE, EB_init = NULL){
+iterative_ridge=function(y,X,sb2=NULL,s2=NULL,K=2,niter=10,update.s2= FALSE, update.sb2=FALSE, EB_init = NULL){
   p = ncol(X)
 #hold first and second moments of B
+  
+  if((is.null(sb2) + is.null(EB_init))!=1){
+    stop("must supply exactly one of sb2 and EB_init")
+  }
+  if((is.null(s2) + is.null(EB_init))!=1){
+    stop("must supply exactly one of s2 and EB_init")
+  }
   
   EB = matrix(1,nrow=K,ncol=p)
   EB2 = matrix(1,nrow=K,ncol=p*p)
@@ -121,6 +128,8 @@ iterative_ridge=function(y,X,sb2,s2,K=2,niter=10,update.s2= FALSE, update.sb2=FA
     nk = nrow(EB_init$EB) # initialize the first nk components using the supplied initialization
     EB[1:nk,] = EB_init$EB
     EB2[1:nk,] = EB_init$EB2
+    sb2 = EB_init$sb2
+    s2 = EB_init$s2
   }
   XtX = t(X) %*% X
 
@@ -248,9 +257,9 @@ lines(sqrt(y.fit$sb2) * X %*% y.fit$bhat)
 
 Iterative ridge, K=1, updating sb2 more iterations...
 ```{r}
-y.fit.K1 = iterative_ridge(y,X,sb2=1,s2=1,1,1000,update.s2=FALSE,update.sb2=TRUE)
+y.fit.K1.1000 = iterative_ridge(y,X,sb2=1,s2=1,1,1000,update.s2=FALSE,update.sb2=TRUE)
 plot(y)
-lines(sqrt(y.fit$sb2) * X %*% y.fit$bhat)
+lines(sqrt(y.fit.K1.1000$sb2) * X %*% y.fit.K1.1000$bhat)
 ```
 
 Convergence is very slow.... but seems to make some sense.
@@ -265,28 +274,28 @@ lines(sqrt(y.fit$sb2) * X %*% y.fit$bhat)
 
 Iterative ridge, K=2, initializing at K=1 but no update of s
 ```{r}
-y.fit = iterative_ridge(y,X,sb2=y.fit.K1$sb2,s2=y.fit.K1$s2,2,100,update.s2=FALSE,update.sb2=FALSE,EB_init = y.fit.K1)
+y.fit = iterative_ridge(y,X,K=2,niter=100,update.s2=FALSE,update.sb2=FALSE,EB_init = y.fit.K1.1000)
 plot(y)
 lines(sqrt(y.fit$sb2) * X %*% y.fit$bhat)
 ```
 
 Iterative ridge, K=2, initializing at K=1 and updating
 ```{r}
-y.fit = iterative_ridge(y,X,sb2=y.fit.K1$sb2,s2=y.fit.K1$s2,2,100,update.s2=TRUE,update.sb2=TRUE,EB_init = y.fit.K1)
+y.fit = iterative_ridge(y,X,K=2,niter=100,update.s2=TRUE,update.sb2=TRUE,EB_init = y.fit.K1.1000)
 plot(y)
 lines(sqrt(y.fit$sb2) * X %*% y.fit$bhat)
 ```
 
 Iterative ridge, K=2, initializing at K=1 and updating s2 only
 ```{r}
-y.fit = iterative_ridge(y,X,sb2=y.fit.K1$sb2,s2=y.fit.K1$s2,2,100,update.s2=TRUE,update.sb2=FALSE,EB_init = y.fit.K1)
+y.fit = iterative_ridge(y,X,K=2,niter=100,update.s2=TRUE,update.sb2=FALSE,EB_init = y.fit.K1.1000)
 plot(y)
 lines(sqrt(y.fit$sb2) * X %*% y.fit$bhat)
 ```
 
 Iterative ridge, K=2, initializing at K=1 and updating sb2 only
 ```{r}
-y.fit = iterative_ridge(y,X,sb2=y.fit.K1$sb2,s2=y.fit.K1$s2,2,100,update.s2=FALSE,update.sb2=TRUE,EB_init = y.fit.K1)
+y.fit = iterative_ridge(y,X,K=2,niter=100,update.s2=FALSE,update.sb2=TRUE,EB_init = y.fit.K1.1000)
 plot(y)
 lines(sqrt(y.fit$sb2) * X %*% y.fit$bhat)
 ```
@@ -299,15 +308,25 @@ Iterative ridge, K=3, updating s2, sb2
 ```{r}
 y.fit = iterative_ridge(y,X,sb2=1,s2=1,3,10,update.s2=TRUE,update.sb2=TRUE)
 plot(y)
-lines(X %*% y.fit$bhat)
+lines(sqrt(y.fit$sb2)*X %*% y.fit$bhat)
 ```
 
 
-Iterative ridge, K=2, updating s2, sb2
-```{r}
-y.fit = iterative_ridge(y,X,sb2=1,s2=1,2,100,update.s2=FALSE,update.sb2=TRUE)
-plot(y)
-lines(X %*% y.fit$bhat)
-```
+## Thoughts
+
+1. I should understand better the slow convergence. It seems
+that working with the scaled parameterization may be hurting me. 
+I checked the result from different fitted $sb,s$ for $K=1$ and the
+fitted residuals are very similar (or highly correlated) but the
+fitted b values are almost uncorrelated. It suggests we might work
+better by optimizing over the fitted values.
+
+2. The iterative approach is quite sensitive to estimation of hyperparameters.
+Basically, even if we start it somewhere good from K=1, the K=2 solution can move
+somewhere bad. I suspect that this may be because, in the augmented parameter space,
+the B estimates are completely different. I am thinking it is better
+to move to a situation where each fit builds on the previous one in a greedy kind
+of way. ie. $y=XB_1(I+B_2)+e$.
+
 
 
