@@ -401,7 +401,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2020-05-27
+<strong>Last updated:</strong> 2020-05-28
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -492,16 +492,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree5a724c63d799dbd6a5877046165e196f783c3c16targetblank5a724c6a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/5a724c63d799dbd6a5877046165e196f783c3c16" target="_blank">5a724c6</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreefdf9a70c318e346c28ad9b8bf37a4bac11b732c7targetblankfdf9a70a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/fdf9a70c318e346c28ad9b8bf37a4bac11b732c7" target="_blank">fdf9a70</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree5a724c63d799dbd6a5877046165e196f783c3c16targetblank5a724c6a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreefdf9a70c318e346c28ad9b8bf37a4bac11b732c7targetblankfdf9a70a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/5a724c63d799dbd6a5877046165e196f783c3c16" target="_blank">5a724c6</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/fdf9a70c318e346c28ad9b8bf37a4bac11b732c7" target="_blank">fdf9a70</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -685,6 +685,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/fdf9a70c318e346c28ad9b8bf37a4bac11b732c7/analysis/ridge_eb_02.Rmd" target="_blank">fdf9a70</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-28
+</td>
+<td>
+workflowr::wflow_publish(“analysis/ridge_eb_02.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/aa5fc0f349461839975550d7aa649813c4e2878c/docs/ridge_eb_02.html" target="_blank">aa5fc0f</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-27
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/5a724c63d799dbd6a5877046165e196f783c3c16/analysis/ridge_eb_02.Rmd" target="_blank">5a724c6</a>
 </td>
 <td>
@@ -767,9 +801,16 @@ calc_BXtXB = function(EB2,XtX){
 
 
 #K is number of Bs to multiply together
-iterative_ridge=function(y,X,sb2,s2,K=2,niter=10,update.s2= FALSE, update.sb2=FALSE, EB_init = NULL){
+iterative_ridge=function(y,X,sb2=NULL,s2=NULL,K=2,niter=10,update.s2= FALSE, update.sb2=FALSE, EB_init = NULL){
   p = ncol(X)
 #hold first and second moments of B
+  
+  if((is.null(sb2) + is.null(EB_init))!=1){
+    stop(&quot;must supply exactly one of sb2 and EB_init&quot;)
+  }
+  if((is.null(s2) + is.null(EB_init))!=1){
+    stop(&quot;must supply exactly one of s2 and EB_init&quot;)
+  }
   
   EB = matrix(1,nrow=K,ncol=p)
   EB2 = matrix(1,nrow=K,ncol=p*p)
@@ -777,6 +818,8 @@ iterative_ridge=function(y,X,sb2,s2,K=2,niter=10,update.s2= FALSE, update.sb2=FA
     nk = nrow(EB_init$EB) # initialize the first nk components using the supplied initialization
     EB[1:nk,] = EB_init$EB
     EB2[1:nk,] = EB_init$EB2
+    sb2 = EB_init$sb2
+    s2 = EB_init$s2
   }
   XtX = t(X) %*% X
 
@@ -820,12 +863,123 @@ plot(y.fit$bhat,b)
 y.fit = iterative_ridge(y,X,sb2,s2,1,10)
 plot(y.fit$bhat,b)</code></pre>
 <p><img src="figure/ridge_eb_02.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-1">
+Past versions of unnamed-chunk-4-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/aa5fc0f349461839975550d7aa649813c4e2878c/docs/figure/ridge_eb_02.Rmd/unnamed-chunk-4-1.png" target="_blank">aa5fc0f</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>y.fit = iterative_ridge(y,X,sb2,s2,2,10)
 plot(y.fit$bhat,b)</code></pre>
 <p><img src="figure/ridge_eb_02.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-2">
+Past versions of unnamed-chunk-4-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/aa5fc0f349461839975550d7aa649813c4e2878c/docs/figure/ridge_eb_02.Rmd/unnamed-chunk-4-2.png" target="_blank">aa5fc0f</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>y.fit = iterative_ridge(y,X,sb2,s2,5,10)
 plot(y.fit$bhat,b)</code></pre>
 <p><img src="figure/ridge_eb_02.Rmd/unnamed-chunk-4-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-3">
+Past versions of unnamed-chunk-4-3.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/aa5fc0f349461839975550d7aa649813c4e2878c/docs/figure/ridge_eb_02.Rmd/unnamed-chunk-4-3.png" target="_blank">aa5fc0f</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="trendfiltering" class="section level1">
 <h1>Trendfiltering</h1>
@@ -846,26 +1000,211 @@ y = X %*% btrue + sd*rnorm(n)
 plot(y)
 lines(X %*% btrue)</code></pre>
 <p><img src="figure/ridge_eb_02.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-1">
+Past versions of unnamed-chunk-5-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/aa5fc0f349461839975550d7aa649813c4e2878c/docs/figure/ridge_eb_02.Rmd/unnamed-chunk-5-1.png" target="_blank">aa5fc0f</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Regular ridge:</p>
 <pre class="r"><code>y.fit = iterative_ridge(y,X,sb2=1,s2=1,1,1)
 plot(y)
 lines(X %*% y.fit$bhat)</code></pre>
 <p><img src="figure/ridge_eb_02.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-1">
+Past versions of unnamed-chunk-6-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/aa5fc0f349461839975550d7aa649813c4e2878c/docs/figure/ridge_eb_02.Rmd/unnamed-chunk-6-1.png" target="_blank">aa5fc0f</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Iterative ridge, K=2</p>
 <pre class="r"><code>y.fit = iterative_ridge(y,X,sb2=1,s2=1,2,10)
 plot(y)
 lines(X %*% y.fit$bhat)</code></pre>
 <p><img src="figure/ridge_eb_02.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-7-1">
+Past versions of unnamed-chunk-7-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-7-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/aa5fc0f349461839975550d7aa649813c4e2878c/docs/figure/ridge_eb_02.Rmd/unnamed-chunk-7-1.png" target="_blank">aa5fc0f</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Iterative ridge, K=3</p>
 <pre class="r"><code>y.fit = iterative_ridge(y,X,sb2=1,s2=1,3,10)
 plot(y)
 lines(X %*% y.fit$bhat)</code></pre>
 <p><img src="figure/ridge_eb_02.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-1">
+Past versions of unnamed-chunk-8-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-8-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/aa5fc0f349461839975550d7aa649813c4e2878c/docs/figure/ridge_eb_02.Rmd/unnamed-chunk-8-1.png" target="_blank">aa5fc0f</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Iterative ridge, K=10</p>
 <pre class="r"><code>y.fit = iterative_ridge(y,X,sb2=1,s2=1,10,10)
 plot(y)
 lines(X %*% y.fit$bhat)</code></pre>
 <p><img src="figure/ridge_eb_02.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-1">
+Past versions of unnamed-chunk-9-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/aa5fc0f349461839975550d7aa649813c4e2878c/docs/figure/ridge_eb_02.Rmd/unnamed-chunk-9-1.png" target="_blank">aa5fc0f</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="estimating-sb2-s2" class="section level1">
 <h1>Estimating sb2, s2</h1>
@@ -874,52 +1213,386 @@ lines(X %*% y.fit$bhat)</code></pre>
 plot(y)
 lines(sqrt(y.fit$sb2) *  X %*% y.fit$bhat)</code></pre>
 <p><img src="figure/ridge_eb_02.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-10-1">
+Past versions of unnamed-chunk-10-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-10-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/aa5fc0f349461839975550d7aa649813c4e2878c/docs/figure/ridge_eb_02.Rmd/unnamed-chunk-10-1.png" target="_blank">aa5fc0f</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Iterative ridge, K=1, updating sb2 more iterations</p>
 <pre class="r"><code>y.fit = iterative_ridge(y,X,sb2=1,s2=1,1,100,update.s2=FALSE,update.sb2=TRUE)
 plot(y)
 lines(sqrt(y.fit$sb2) * X %*% y.fit$bhat)</code></pre>
 <p><img src="figure/ridge_eb_02.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-1">
+Past versions of unnamed-chunk-11-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-11-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/aa5fc0f349461839975550d7aa649813c4e2878c/docs/figure/ridge_eb_02.Rmd/unnamed-chunk-11-1.png" target="_blank">aa5fc0f</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Iterative ridge, K=1, updating sb2 more iterations…</p>
-<pre class="r"><code>y.fit.K1 = iterative_ridge(y,X,sb2=1,s2=1,1,1000,update.s2=FALSE,update.sb2=TRUE)
+<pre class="r"><code>y.fit.K1.1000 = iterative_ridge(y,X,sb2=1,s2=1,1,1000,update.s2=FALSE,update.sb2=TRUE)
 plot(y)
-lines(sqrt(y.fit$sb2) * X %*% y.fit$bhat)</code></pre>
+lines(sqrt(y.fit.K1.1000$sb2) * X %*% y.fit.K1.1000$bhat)</code></pre>
 <p><img src="figure/ridge_eb_02.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-1">
+Past versions of unnamed-chunk-12-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/aa5fc0f349461839975550d7aa649813c4e2878c/docs/figure/ridge_eb_02.Rmd/unnamed-chunk-12-1.png" target="_blank">aa5fc0f</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Convergence is very slow…. but seems to make some sense.</p>
 <p>Iterative ridge, K=2, updating sb2,s2</p>
 <pre class="r"><code>y.fit = iterative_ridge(y,X,sb2=1,s2=1,2,100,update.s2=TRUE,update.sb2=TRUE)
 plot(y)
 lines(sqrt(y.fit$sb2) * X %*% y.fit$bhat)</code></pre>
 <p><img src="figure/ridge_eb_02.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-13-1">
+Past versions of unnamed-chunk-13-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-13-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/aa5fc0f349461839975550d7aa649813c4e2878c/docs/figure/ridge_eb_02.Rmd/unnamed-chunk-13-1.png" target="_blank">aa5fc0f</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Iterative ridge, K=2, initializing at K=1 but no update of s</p>
-<pre class="r"><code>y.fit = iterative_ridge(y,X,sb2=y.fit.K1$sb2,s2=y.fit.K1$s2,2,100,update.s2=FALSE,update.sb2=FALSE,EB_init = y.fit.K1)
+<pre class="r"><code>y.fit = iterative_ridge(y,X,K=2,niter=100,update.s2=FALSE,update.sb2=FALSE,EB_init = y.fit.K1.1000)
 plot(y)
 lines(sqrt(y.fit$sb2) * X %*% y.fit$bhat)</code></pre>
 <p><img src="figure/ridge_eb_02.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-14-1">
+Past versions of unnamed-chunk-14-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-14-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/aa5fc0f349461839975550d7aa649813c4e2878c/docs/figure/ridge_eb_02.Rmd/unnamed-chunk-14-1.png" target="_blank">aa5fc0f</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Iterative ridge, K=2, initializing at K=1 and updating</p>
-<pre class="r"><code>y.fit = iterative_ridge(y,X,sb2=y.fit.K1$sb2,s2=y.fit.K1$s2,2,100,update.s2=TRUE,update.sb2=TRUE,EB_init = y.fit.K1)
+<pre class="r"><code>y.fit = iterative_ridge(y,X,K=2,niter=100,update.s2=TRUE,update.sb2=TRUE,EB_init = y.fit.K1.1000)
 plot(y)
 lines(sqrt(y.fit$sb2) * X %*% y.fit$bhat)</code></pre>
 <p><img src="figure/ridge_eb_02.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-15-1">
+Past versions of unnamed-chunk-15-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-15-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/aa5fc0f349461839975550d7aa649813c4e2878c/docs/figure/ridge_eb_02.Rmd/unnamed-chunk-15-1.png" target="_blank">aa5fc0f</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Iterative ridge, K=2, initializing at K=1 and updating s2 only</p>
-<pre class="r"><code>y.fit = iterative_ridge(y,X,sb2=y.fit.K1$sb2,s2=y.fit.K1$s2,2,100,update.s2=TRUE,update.sb2=FALSE,EB_init = y.fit.K1)
+<pre class="r"><code>y.fit = iterative_ridge(y,X,K=2,niter=100,update.s2=TRUE,update.sb2=FALSE,EB_init = y.fit.K1.1000)
 plot(y)
 lines(sqrt(y.fit$sb2) * X %*% y.fit$bhat)</code></pre>
 <p><img src="figure/ridge_eb_02.Rmd/unnamed-chunk-16-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-16-1">
+Past versions of unnamed-chunk-16-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-16-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/aa5fc0f349461839975550d7aa649813c4e2878c/docs/figure/ridge_eb_02.Rmd/unnamed-chunk-16-1.png" target="_blank">aa5fc0f</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Iterative ridge, K=2, initializing at K=1 and updating sb2 only</p>
-<pre class="r"><code>y.fit = iterative_ridge(y,X,sb2=y.fit.K1$sb2,s2=y.fit.K1$s2,2,100,update.s2=FALSE,update.sb2=TRUE,EB_init = y.fit.K1)
+<pre class="r"><code>y.fit = iterative_ridge(y,X,K=2,niter=100,update.s2=FALSE,update.sb2=TRUE,EB_init = y.fit.K1.1000)
 plot(y)
 lines(sqrt(y.fit$sb2) * X %*% y.fit$bhat)</code></pre>
 <p><img src="figure/ridge_eb_02.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-17-1">
+Past versions of unnamed-chunk-17-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-17-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/aa5fc0f349461839975550d7aa649813c4e2878c/docs/figure/ridge_eb_02.Rmd/unnamed-chunk-17-1.png" target="_blank">aa5fc0f</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Iterative ridge, K=3, updating s2, sb2</p>
 <pre class="r"><code>y.fit = iterative_ridge(y,X,sb2=1,s2=1,3,10,update.s2=TRUE,update.sb2=TRUE)
 plot(y)
-lines(X %*% y.fit$bhat)</code></pre>
+lines(sqrt(y.fit$sb2)*X %*% y.fit$bhat)</code></pre>
 <p><img src="figure/ridge_eb_02.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Iterative ridge, K=2, updating s2, sb2</p>
-<pre class="r"><code>y.fit = iterative_ridge(y,X,sb2=1,s2=1,2,100,update.s2=FALSE,update.sb2=TRUE)
-plot(y)
-lines(X %*% y.fit$bhat)</code></pre>
-<p><img src="figure/ridge_eb_02.Rmd/unnamed-chunk-19-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-18-1">
+Past versions of unnamed-chunk-18-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-18-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/aa5fc0f349461839975550d7aa649813c4e2878c/docs/figure/ridge_eb_02.Rmd/unnamed-chunk-18-1.png" target="_blank">aa5fc0f</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="thoughts" class="section level2">
+<h2>Thoughts</h2>
+<ol style="list-style-type: decimal">
+<li><p>I should understand better the slow convergence. It seems that working with the scaled parameterization may be hurting me. I checked the result from different fitted <span class="math inline">\(sb,s\)</span> for <span class="math inline">\(K=1\)</span> and the fitted residuals are very similar (or highly correlated) but the fitted b values are almost uncorrelated. It suggests we might work better by optimizing over the fitted values.</p></li>
+<li><p>The iterative approach is quite sensitive to estimation of hyperparameters. Basically, even if we start it somewhere good from K=1, the K=2 solution can move somewhere bad. I suspect that this may be because, in the augmented parameter space, the B estimates are completely different. I am thinking it is better to move to a situation where each fit builds on the previous one in a greedy kind of way. ie. <span class="math inline">\(y=XB_1(I+B_2)+e\)</span>.</p></li>
+</ol>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -950,6 +1623,7 @@ loaded via a namespace (and not attached):
 [17] tools_3.6.0     stringr_1.4.0   glue_1.4.0      httpuv_1.5.2   
 [21] xfun_0.12       yaml_2.2.1      compiler_3.6.0  htmltools_0.4.0
 [25] knitr_1.28     </code></pre>
+</div>
 </div>
 </div>
 
