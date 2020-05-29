@@ -492,16 +492,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree4d19a87b7eee928323df2f34c764ab96ac76c5dftargetblank4d19a87a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/4d19a87b7eee928323df2f34c764ab96ac76c5df" target="_blank">4d19a87</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreedbe83274724fa11cdff3be7ef420946cb0b44251targetblankdbe8327a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/dbe83274724fa11cdff3be7ef420946cb0b44251" target="_blank">dbe8327</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree4d19a87b7eee928323df2f34c764ab96ac76c5dftargetblank4d19a87a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreedbe83274724fa11cdff3be7ef420946cb0b44251targetblankdbe8327a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/4d19a87b7eee928323df2f34c764ab96ac76c5df" target="_blank">4d19a87</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/dbe83274724fa11cdff3be7ef420946cb0b44251" target="_blank">dbe8327</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -685,6 +685,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/dbe83274724fa11cdff3be7ef420946cb0b44251/analysis/ridge_em.Rmd" target="_blank">dbe8327</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-29
+</td>
+<td>
+workflowr::wflow_publish(“ridge_em.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/b637a050d870dab83d717338a0fb928b687cfa2c/docs/ridge_em.html" target="_blank">b637a05</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-29
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/4d19a87b7eee928323df2f34c764ab96ac76c5df/analysis/ridge_em.Rmd" target="_blank">4d19a87</a>
 </td>
 <td>
@@ -706,7 +740,7 @@ workflowr::wflow_publish(“ridge_em.Rmd”)
 </div>
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
-<p>Here I am going to experiment with EM algorithm for estimating parameters of ridge regression in different parameterizations.</p>
+<p>Here I am going to experiment with EM algorithm for estimating parameters of ridge regression in different parameterizations. Derivations of EM updates are <a href="../docs/EM_Ridge.pdf">here</a> The ones implemented here are 1,2, and 5 in that document. The others are a little more complex so I did not implement them yet.</p>
 </div>
 <div id="simple-parameterization" class="section level2">
 <h2>Simple parameterization</h2>
@@ -736,7 +770,7 @@ workflowr::wflow_publish(“ridge_em.Rmd”)
 </div>
 <div id="scaled-parameterization" class="section level2">
 <h2>Scaled parameterization</h2>
-<p>In this parameterization I take the <span class="math inline">\(s_b\)</span> out of the prior and put it <span class="math display">\[y \sim N(s_b Xb,s^2)\]</span> <span class="math display">\[b \sim N(0,I)\]</span></p>
+<p>In this parameterization I take the <span class="math inline">\(s_b\)</span> out of the prior and put it <span class="math display">\[y \sim N(s_b Xb,s^2)\]</span> <span class="math display">\[b \sim N(0,I)\]</span>.</p>
 <pre class="r"><code>ridge_em2 = function(y,X, s2,sb2, niter=10){
   XtX = t(X) %*% X
   Xty = t(X) %*% y
@@ -750,16 +784,50 @@ workflowr::wflow_publish(“ridge_em.Rmd”)
     SigmaY = sb2 *(X %*% t(X)) + diag(s2,n)
     loglik[i] = mvtnorm::dmvnorm(as.vector(y),sigma = SigmaY,log=TRUE)
     
-    Sigma1 = s2*V  # posterior variance of b
-    mu1 = as.vector(V %*% Xty) # posterior mean of b
+    Sigma1 = (s2/sb2)*V  # posterior variance of b
+    mu1 = (sqrt(sb2)/s2)*as.vector(Sigma1 %*% Xty) # posterior mean of b
     
   
-    s2 = as.vector((yty + sum(diag(XtX %*% (mu1 %*% t(mu1) + Sigma1)))- 2*sum(Xty*mu1))/n)
-    sb2 = sb2*sum(mu1*Xty)/sum(diag(XtX %*% (mu1 %*% t(mu1) + Sigma1)))
+    s2 = as.vector((yty + sb2*sum(diag(XtX %*% (mu1 %*% t(mu1) + Sigma1)))- 2*sqrt(sb2)*sum(Xty*mu1))/n)
+    sb2 = (sum(mu1*Xty)/sum(diag(XtX %*% (mu1 %*% t(mu1) + Sigma1))))^2
    
   }
-  return(list(s2=s2,sb2=sb2,loglik=loglik,postmean=mu1))
+  return(list(s2=s2,sb2=sb2,loglik=loglik,postmean=mu1*sqrt(sb2)))
 }</code></pre>
+</div>
+<div id="a-hybridredundant-parameterization" class="section level2">
+<h2>A hybrid/redundant parameterization</h2>
+<p>Motivated by initial observations that 1 and 2 can converge well in different settings I implemented a hybrid of the two:</p>
+<p><span class="math display">\[y \sim N(s_b Xb,s^2)\]</span> <span class="math display">\[b \sim N(0,\lambda^2).\]</span> Note that there is a redundancy/non-identifiability here as the likelihood depends only on <span class="math inline">\(s_b^2 \lambda^2\)</span>. The hope is to get the best of both worlds…</p>
+<pre class="r"><code>ridge_em3 = function(y,X, s2, sb2, l2, niter=10){
+  XtX = t(X) %*% X
+  Xty = t(X) %*% y
+  yty = t(y) %*% y
+  n = length(y)
+  p = ncol(X)
+  loglik = rep(0,niter)
+  for(i in 1:niter){
+    V = chol2inv(chol(XtX+ diag(s2/(sb2*l2),p))) 
+    
+    SigmaY = l2*sb2 *(X %*% t(X)) + diag(s2,n)
+    loglik[i] = mvtnorm::dmvnorm(as.vector(y),sigma = SigmaY,log=TRUE)
+    
+    Sigma1 = (s2/sb2)*V  # posterior variance of b
+    mu1 = (1/sqrt(sb2))*as.vector(V %*% Xty) # posterior mean of b
+    
+    s2 = as.vector((yty + sb2*sum(diag(XtX %*% (mu1 %*% t(mu1) + Sigma1)))- 2*sqrt(sb2)*sum(Xty*mu1))/n)
+    sb2 = (sum(mu1*Xty)/sum(diag(XtX %*% (mu1 %*% t(mu1) + Sigma1))))^2
+    
+    l2 = mean(mu1^2+diag(Sigma1))
+   
+  }
+  return(list(s2=s2,sb2=sb2,l2=l2,loglik=loglik,postmean=mu1*sqrt(sb2)))
+}</code></pre>
+</div>
+<div id="simple-simulations" class="section level2">
+<h2>Simple Simulations</h2>
+<p>This is a simple simulation with independent design matrix I used while debugging.</p>
+<p>High signal:</p>
 <pre class="r"><code>set.seed(100)
 sd = 1
 n = 100
@@ -770,16 +838,157 @@ y = X %*% btrue + sd*rnorm(n)
 
 plot(y)
 lines(X %*% btrue)</code></pre>
-<p><img src="figure/ridge_em.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>y.em1 = ridge_em1(y,X,1,1)
-y.em2 = ridge_em2(y,X,1,1)
+<p><img src="figure/ridge_em.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-1">
+Past versions of unnamed-chunk-4-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/b637a050d870dab83d717338a0fb928b687cfa2c/docs/figure/ridge_em.Rmd/unnamed-chunk-4-1.png" target="_blank">b637a05</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>y.em1 = ridge_em1(y,X,1,1,100)
+y.em2 = ridge_em2(y,X,1,1,100)
+y.em3 = ridge_em3(y,X,1,1,1,100)
 
-plot_loglik = function(y.em1,y.em2){
+plot_loglik = function(y.em1,y.em2,y.em3=NULL){
   plot(y.em1$loglik,ylim=c(min(y.em1$loglik),max(c(y.em1$loglik,y.em2$loglik))),type=&quot;l&quot;,xlim=c(0,max(length(y.em2$loglik),length(y.em1$loglik))))
 lines(y.em2$loglik,col=2)
+if(!is.null(y.em3)){
+  lines(y.em3$loglik,col=3)
 }
-plot_loglik(y.em1,y.em2)</code></pre>
-<p><img src="figure/ridge_em.Rmd/unnamed-chunk-3-2.png" width="672" style="display: block; margin: auto;" /></p>
+}
+plot_loglik(y.em1,y.em2,y.em3)</code></pre>
+<p><img src="figure/ridge_em.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-2">
+Past versions of unnamed-chunk-4-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/b637a050d870dab83d717338a0fb928b687cfa2c/docs/figure/ridge_em.Rmd/unnamed-chunk-4-2.png" target="_blank">b637a05</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Same again with no signal:</p>
+<pre class="r"><code>btrue = rep(0,n)
+y = X %*% btrue + sd*rnorm(n)
+
+plot(y)
+lines(X %*% btrue)</code></pre>
+<p><img src="figure/ridge_em.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-1">
+Past versions of unnamed-chunk-5-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/b637a050d870dab83d717338a0fb928b687cfa2c/docs/figure/ridge_em.Rmd/unnamed-chunk-5-1.png" target="_blank">b637a05</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>y.em1 = ridge_em1(y,X,1,1,100)
+y.em2 = ridge_em2(y,X,1,1,100)
+y.em3 = ridge_em3(y,X,1,1,1,100)
+
+plot_loglik = function(y.em1,y.em2,y.em3=NULL){
+  plot(y.em1$loglik,ylim=c(min(y.em1$loglik),max(c(y.em1$loglik,y.em2$loglik))),type=&quot;l&quot;,xlim=c(0,max(length(y.em2$loglik),length(y.em1$loglik))))
+lines(y.em2$loglik,col=2)
+if(!is.null(y.em3)){
+  lines(y.em3$loglik,col=3)
+}
+}
+plot_loglik(y.em1,y.em2,y.em3)</code></pre>
+<p><img src="figure/ridge_em.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="trendfiltering-simulations" class="section level2">
+<h2>Trendfiltering Simulations</h2>
+<p>This is more challenging example (in that the design matrix is correlated)</p>
+<div id="high-signal" class="section level3">
+<h3>High Signal</h3>
 <pre class="r"><code>set.seed(100)
 sd = 1
 n = 100
@@ -797,46 +1006,166 @@ plot(y)
 lines(X %*% btrue)
 
 y.em1 = ridge_em1(y,X,1,1,100)
-lines(X %*% y.em1$postmean,col=2)
+lines(X %*% y.em1$postmean,col=1)
 
 y.em2 = ridge_em2(y,X,1,1,100)
-lines(X %*% y.em2$postmean,col=2)</code></pre>
-<p><img src="figure/ridge_em.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>plot_loglik(y.em1,y.em2)</code></pre>
-<p><img src="figure/ridge_em.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+lines(X %*% y.em2$postmean,col=2)
+
+y.em3 = ridge_em3(y,X,1,1,1,100)
+lines(X %*% y.em3$postmean,col=3)</code></pre>
+<p><img src="figure/ridge_em.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-1">
+Past versions of unnamed-chunk-6-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/b637a050d870dab83d717338a0fb928b687cfa2c/docs/figure/ridge_em.Rmd/unnamed-chunk-6-1.png" target="_blank">b637a05</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Look at the likelihoods:</p>
+<pre class="r"><code>plot_loglik(y.em1,y.em2,y.em3)</code></pre>
+<p><img src="figure/ridge_em.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-7-1">
+Past versions of unnamed-chunk-7-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-7-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/b637a050d870dab83d717338a0fb928b687cfa2c/docs/figure/ridge_em.Rmd/unnamed-chunk-7-1.png" target="_blank">b637a05</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Run the second one longer and check it:</p>
 <pre class="r"><code>y.em2 = ridge_em2(y,X,1,1,1000)
-plot_loglik(y.em1,y.em2)</code></pre>
-<p><img src="figure/ridge_em.Rmd/unnamed-chunk-4-3.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>y.em2$sb2</code></pre>
-<pre><code>[1] 0.0360063</code></pre>
-<pre class="r"><code>y.em2$s2</code></pre>
-<pre><code>[1] 1.551487</code></pre>
+plot_loglik(y.em1,y.em2,y.em3)</code></pre>
+<p><img src="figure/ridge_em.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-1">
+Past versions of unnamed-chunk-8-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-8-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/b637a050d870dab83d717338a0fb928b687cfa2c/docs/figure/ridge_em.Rmd/unnamed-chunk-8-1.png" target="_blank">b637a05</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-05-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>y.em1$sb2</code></pre>
 <pre><code>[1] 0.02203472</code></pre>
+<pre class="r"><code>y.em2$sb2</code></pre>
+<pre><code>[1] 0.02305205</code></pre>
+<pre class="r"><code>y.em3$sb2*y.em3$l2</code></pre>
+<pre><code>[1] 0.02189396</code></pre>
+<pre class="r"><code>y.em1$s2</code></pre>
+<pre><code>[1] 1.612878</code></pre>
 <pre class="r"><code>y.em2$s2</code></pre>
-<pre><code>[1] 1.551487</code></pre>
+<pre><code>[1] 1.60691</code></pre>
+<pre class="r"><code>y.em3$s2</code></pre>
+<pre><code>[1] 1.613796</code></pre>
 <p>Try starting <span class="math inline">\(s\)</span> in wrong place</p>
 <pre class="r"><code>y.em1 = ridge_em1(y,X,10,1,100)
 y.em2 = ridge_em2(y,X,10,1,100)
 
 plot_loglik(y.em1,y.em2)</code></pre>
-<p><img src="figure/ridge_em.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/ridge_em.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Try starting <span class="math inline">\(s2\)</span> in wrong place</p>
 <pre class="r"><code>y.em1 = ridge_em1(y,X,1,10,100)
 y.em2 = ridge_em2(y,X,1,10,100)
 
 plot_loglik(y.em1,y.em2)</code></pre>
-<p><img src="figure/ridge_em.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/ridge_em.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Try starting <span class="math inline">\(s2\)</span> in wrong place</p>
 <pre class="r"><code>y.em1 = ridge_em1(y,X,.1,10,100)
 y.em2 = ridge_em2(y,X,.1,10,100)
 
 plot_loglik(y.em1,y.em2)</code></pre>
-<p><img src="figure/ridge_em.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/ridge_em.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
-<div id="low-signal-case" class="section level1">
-<h1>Low signal case</h1>
-<p>Try low-signal case – the convergence issues are reversed!</p>
+<div id="no-signal-case" class="section level3">
+<h3>No signal case</h3>
+<p>Try no signal case – the convergence issues are reversed!</p>
 <pre class="r"><code>sd = 1
 n = 100
 p = n
@@ -852,13 +1181,21 @@ plot(y)
 lines(X %*% btrue)
 
 y.em1 = ridge_em1(y,X,1,1,100)
-lines(X %*% y.em1$postmean,col=2)
+lines(X %*% y.em1$postmean,col=1)
 
 y.em2 = ridge_em2(y,X,1,1,100)
-lines(X %*% y.em2$postmean,col=2)</code></pre>
-<p><img src="figure/ridge_em.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>plot_loglik(y.em1,y.em2)</code></pre>
-<p><img src="figure/ridge_em.Rmd/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /></p>
+lines(X %*% y.em2$postmean,col=2)
+
+y.em3 = ridge_em3(y,X,1,1,1,100)
+lines(X %*% y.em3$postmean,col=3)</code></pre>
+<p><img src="figure/ridge_em.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>The EM2 and EM3 converge faster here:</p>
+<pre class="r"><code>plot_loglik(y.em1,y.em2,y.em3)</code></pre>
+<p><img src="figure/ridge_em.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Try starting the expanded algorithm from very large lambda… it still seems to work.</p>
+<pre class="r"><code>y.em3b = ridge_em3(y,X,1,1,100,100)
+plot_loglik(y.em1,y.em2,y.em3b)</code></pre>
+<p><img src="figure/ridge_em.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -889,6 +1226,7 @@ loaded via a namespace (and not attached):
 [17] rmarkdown_2.1   tools_3.6.0     stringr_1.4.0   glue_1.4.0     
 [21] httpuv_1.5.2    xfun_0.12       yaml_2.2.1      compiler_3.6.0 
 [25] htmltools_0.4.0 knitr_1.28     </code></pre>
+</div>
 </div>
 </div>
 
