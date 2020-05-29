@@ -1,0 +1,197 @@
+---
+title: "ridge_em"
+author: "Matthew Stephens"
+date: "2020-05-29"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+Here I am going to experiment with EM algorithm for estimating parameters 
+of ridge regression in different parameterizations.
+
+## Simple parameterization
+
+$$y \sim N(Xb,s^2)$$
+$$b \sim N(0,s_b^2I)$$
+
+
+```{r}
+
+ridge_em1 = function(y,X, s2,sb2, niter=10){
+  XtX = t(X) %*% X
+  Xty = t(X) %*% y
+  yty = t(y) %*% y
+  n = length(y)
+  p = ncol(X)
+  loglik = rep(0,niter)
+  for(i in 1:niter){
+    V = chol2inv(chol(XtX+ diag(s2/sb2,p))) 
+    
+    SigmaY = sb2 *(X %*% t(X)) + diag(s2,n)
+    loglik[i] = mvtnorm::dmvnorm(as.vector(y),sigma = SigmaY,log=TRUE)
+    
+    Sigma1 = s2*V  # posterior variance of b
+    mu1 = as.vector(V %*% Xty) # posterior mean of b
+    
+    s2 = as.vector((yty + sum(diag(XtX %*% (mu1 %*% t(mu1) + Sigma1)))- 2*sum(Xty*mu1))/n)
+    sb2 = mean(mu1^2+diag(Sigma1))
+   
+  }
+  return(list(s2=s2,sb2=sb2,loglik=loglik,postmean=mu1))
+}
+```
+
+## Scaled parameterization
+
+In this parameterization I take the $s_b$ out of the prior and put it 
+$$y \sim N(s_b Xb,s^2)$$
+$$b \sim N(0,I)$$
+
+
+```{r}
+
+ridge_em2 = function(y,X, s2,sb2, niter=10){
+  XtX = t(X) %*% X
+  Xty = t(X) %*% y
+  yty = t(y) %*% y
+  n = length(y)
+  p = ncol(X)
+  loglik = rep(0,niter)
+  for(i in 1:niter){
+    V = chol2inv(chol(XtX+ diag(s2/sb2,p))) 
+    
+    SigmaY = sb2 *(X %*% t(X)) + diag(s2,n)
+    loglik[i] = mvtnorm::dmvnorm(as.vector(y),sigma = SigmaY,log=TRUE)
+    
+    Sigma1 = s2*V  # posterior variance of b
+    mu1 = as.vector(V %*% Xty) # posterior mean of b
+    
+  
+    s2 = as.vector((yty + sum(diag(XtX %*% (mu1 %*% t(mu1) + Sigma1)))- 2*sum(Xty*mu1))/n)
+    sb2 = sb2*sum(mu1*Xty)/sum(diag(XtX %*% (mu1 %*% t(mu1) + Sigma1)))
+   
+  }
+  return(list(s2=s2,sb2=sb2,loglik=loglik,postmean=mu1))
+}
+```
+
+
+
+
+
+```{r}
+set.seed(100)
+sd = 1
+n = 100
+p = n
+X = matrix(rnorm(n*p),ncol=n)
+btrue = rnorm(n)
+y = X %*% btrue + sd*rnorm(n)
+
+plot(y)
+lines(X %*% btrue)
+y.em1 = ridge_em1(y,X,1,1)
+y.em2 = ridge_em2(y,X,1,1)
+
+plot_loglik = function(y.em1,y.em2){
+  plot(y.em1$loglik,ylim=c(min(y.em1$loglik),max(c(y.em1$loglik,y.em2$loglik))),type="l",xlim=c(0,max(length(y.em2$loglik),length(y.em1$loglik))))
+lines(y.em2$loglik,col=2)
+}
+plot_loglik(y.em1,y.em2)
+
+```
+
+
+```{r}
+set.seed(100)
+sd = 1
+n = 100
+p = n
+X = matrix(0,nrow=n,ncol=n)
+for(i in 1:n){
+  X[i:n,i] = 1:(n-i+1)
+}
+btrue = rep(0,n)
+btrue[40] = 8
+btrue[41] = -8
+y = X %*% btrue + sd*rnorm(n)
+
+plot(y)
+lines(X %*% btrue)
+
+y.em1 = ridge_em1(y,X,1,1,100)
+lines(X %*% y.em1$postmean,col=2)
+
+y.em2 = ridge_em2(y,X,1,1,100)
+lines(X %*% y.em2$postmean,col=2)
+
+
+plot_loglik(y.em1,y.em2)
+
+y.em2 = ridge_em2(y,X,1,1,1000)
+plot_loglik(y.em1,y.em2)
+
+y.em2$sb2
+y.em2$s2
+
+y.em1$sb2
+y.em2$s2
+```
+
+
+Try starting $s$ in wrong place
+```{r}
+y.em1 = ridge_em1(y,X,10,1,100)
+y.em2 = ridge_em2(y,X,10,1,100)
+
+plot_loglik(y.em1,y.em2)
+```
+
+
+Try starting $s2$ in wrong place
+```{r}
+y.em1 = ridge_em1(y,X,1,10,100)
+y.em2 = ridge_em2(y,X,1,10,100)
+
+plot_loglik(y.em1,y.em2)
+```
+
+Try starting $s2$ in wrong place
+```{r}
+y.em1 = ridge_em1(y,X,.1,10,100)
+y.em2 = ridge_em2(y,X,.1,10,100)
+
+plot_loglik(y.em1,y.em2)
+```
+
+# Low signal case
+
+Try low-signal case -- the convergence issues are reversed!
+```{r}
+sd = 1
+n = 100
+p = n
+X = matrix(0,nrow=n,ncol=n)
+for(i in 1:n){
+  X[i:n,i] = 1:(n-i+1)
+}
+btrue = rep(0,n)
+
+y = X %*% btrue + sd*rnorm(n)
+
+plot(y)
+lines(X %*% btrue)
+
+y.em1 = ridge_em1(y,X,1,1,100)
+lines(X %*% y.em1$postmean,col=2)
+
+y.em2 = ridge_em2(y,X,1,1,100)
+lines(X %*% y.em2$postmean,col=2)
+
+plot_loglik(y.em1,y.em2)
+```
+
+
