@@ -11,15 +11,16 @@ editor_options:
 
 Here I am going to experiment with EM algorithm for estimating parameters 
 of ridge regression in different parameterizations.
+Derivations of EM updates are [here](../docs/EM_Ridge.pdf)
+The ones implemented here are 1,2, and 5 in that document. 
+The others are a little more complex so I did not implement them yet.
 
 ## Simple parameterization
 
 $$y \sim N(Xb,s^2)$$
 $$b \sim N(0,s_b^2I)$$
 
-
 ```{r}
-
 ridge_em1 = function(y,X, s2,sb2, niter=10){
   XtX = t(X) %*% X
   Xty = t(X) %*% y
@@ -48,8 +49,7 @@ ridge_em1 = function(y,X, s2,sb2, niter=10){
 
 In this parameterization I take the $s_b$ out of the prior and put it 
 $$y \sim N(s_b Xb,s^2)$$
-$$b \sim N(0,I)$$
-
+$$b \sim N(0,I)$$.
 
 ```{r}
 
@@ -66,22 +66,64 @@ ridge_em2 = function(y,X, s2,sb2, niter=10){
     SigmaY = sb2 *(X %*% t(X)) + diag(s2,n)
     loglik[i] = mvtnorm::dmvnorm(as.vector(y),sigma = SigmaY,log=TRUE)
     
-    Sigma1 = s2*V  # posterior variance of b
-    mu1 = as.vector(V %*% Xty) # posterior mean of b
+    Sigma1 = (s2/sb2)*V  # posterior variance of b
+    mu1 = (sqrt(sb2)/s2)*as.vector(Sigma1 %*% Xty) # posterior mean of b
     
   
-    s2 = as.vector((yty + sum(diag(XtX %*% (mu1 %*% t(mu1) + Sigma1)))- 2*sum(Xty*mu1))/n)
-    sb2 = sb2*sum(mu1*Xty)/sum(diag(XtX %*% (mu1 %*% t(mu1) + Sigma1)))
+    s2 = as.vector((yty + sb2*sum(diag(XtX %*% (mu1 %*% t(mu1) + Sigma1)))- 2*sqrt(sb2)*sum(Xty*mu1))/n)
+    sb2 = (sum(mu1*Xty)/sum(diag(XtX %*% (mu1 %*% t(mu1) + Sigma1))))^2
    
   }
-  return(list(s2=s2,sb2=sb2,loglik=loglik,postmean=mu1))
+  return(list(s2=s2,sb2=sb2,loglik=loglik,postmean=mu1*sqrt(sb2)))
 }
 ```
 
 
+## A hybrid/redundant parameterization
+
+Motivated by initial observations that 1 and 2 can converge
+well in different settings I implemented a hybrid of the two:
+
+$$y \sim N(s_b Xb,s^2)$$
+$$b \sim N(0,\lambda^2).$$ 
+Note that there is a redundancy/non-identifiability here as the likelihood depends
+only on $s_b^2 \lambda^2$. The hope is to get the
+best of both worlds...
 
 
 
+```{r}
+ridge_em3 = function(y,X, s2, sb2, l2, niter=10){
+  XtX = t(X) %*% X
+  Xty = t(X) %*% y
+  yty = t(y) %*% y
+  n = length(y)
+  p = ncol(X)
+  loglik = rep(0,niter)
+  for(i in 1:niter){
+    V = chol2inv(chol(XtX+ diag(s2/(sb2*l2),p))) 
+    
+    SigmaY = l2*sb2 *(X %*% t(X)) + diag(s2,n)
+    loglik[i] = mvtnorm::dmvnorm(as.vector(y),sigma = SigmaY,log=TRUE)
+    
+    Sigma1 = (s2/sb2)*V  # posterior variance of b
+    mu1 = (1/sqrt(sb2))*as.vector(V %*% Xty) # posterior mean of b
+    
+    s2 = as.vector((yty + sb2*sum(diag(XtX %*% (mu1 %*% t(mu1) + Sigma1)))- 2*sqrt(sb2)*sum(Xty*mu1))/n)
+    sb2 = (sum(mu1*Xty)/sum(diag(XtX %*% (mu1 %*% t(mu1) + Sigma1))))^2
+    
+    l2 = mean(mu1^2+diag(Sigma1))
+   
+  }
+  return(list(s2=s2,sb2=sb2,l2=l2,loglik=loglik,postmean=mu1*sqrt(sb2)))
+}
+```
+
+## Simple Simulations
+
+This is a simple simulation with independent design matrix I used while debugging.
+
+High signal:
 ```{r}
 set.seed(100)
 sd = 1
@@ -93,17 +135,48 @@ y = X %*% btrue + sd*rnorm(n)
 
 plot(y)
 lines(X %*% btrue)
-y.em1 = ridge_em1(y,X,1,1)
-y.em2 = ridge_em2(y,X,1,1)
+y.em1 = ridge_em1(y,X,1,1,100)
+y.em2 = ridge_em2(y,X,1,1,100)
+y.em3 = ridge_em3(y,X,1,1,1,100)
 
-plot_loglik = function(y.em1,y.em2){
+plot_loglik = function(y.em1,y.em2,y.em3=NULL){
   plot(y.em1$loglik,ylim=c(min(y.em1$loglik),max(c(y.em1$loglik,y.em2$loglik))),type="l",xlim=c(0,max(length(y.em2$loglik),length(y.em1$loglik))))
 lines(y.em2$loglik,col=2)
+if(!is.null(y.em3)){
+  lines(y.em3$loglik,col=3)
 }
-plot_loglik(y.em1,y.em2)
+}
+plot_loglik(y.em1,y.em2,y.em3)
 
 ```
 
+Same again with no signal:
+```{r}
+btrue = rep(0,n)
+y = X %*% btrue + sd*rnorm(n)
+
+plot(y)
+lines(X %*% btrue)
+y.em1 = ridge_em1(y,X,1,1,100)
+y.em2 = ridge_em2(y,X,1,1,100)
+y.em3 = ridge_em3(y,X,1,1,1,100)
+
+plot_loglik = function(y.em1,y.em2,y.em3=NULL){
+  plot(y.em1$loglik,ylim=c(min(y.em1$loglik),max(c(y.em1$loglik,y.em2$loglik))),type="l",xlim=c(0,max(length(y.em2$loglik),length(y.em1$loglik))))
+lines(y.em2$loglik,col=2)
+if(!is.null(y.em3)){
+  lines(y.em3$loglik,col=3)
+}
+}
+plot_loglik(y.em1,y.em2,y.em3)
+
+```
+
+## Trendfiltering Simulations
+
+This is more challenging example (in that the design matrix is correlated)
+
+### High Signal
 
 ```{r}
 set.seed(100)
@@ -123,22 +196,35 @@ plot(y)
 lines(X %*% btrue)
 
 y.em1 = ridge_em1(y,X,1,1,100)
-lines(X %*% y.em1$postmean,col=2)
+lines(X %*% y.em1$postmean,col=1)
 
 y.em2 = ridge_em2(y,X,1,1,100)
 lines(X %*% y.em2$postmean,col=2)
 
+y.em3 = ridge_em3(y,X,1,1,1,100)
+lines(X %*% y.em3$postmean,col=3)
 
-plot_loglik(y.em1,y.em2)
+```
 
+
+Look at the likelihoods:
+```{r}
+plot_loglik(y.em1,y.em2,y.em3)
+```
+
+Run the second one longer and check it:
+```{r}
 y.em2 = ridge_em2(y,X,1,1,1000)
-plot_loglik(y.em1,y.em2)
-
-y.em2$sb2
-y.em2$s2
+plot_loglik(y.em1,y.em2,y.em3)
 
 y.em1$sb2
+y.em2$sb2
+y.em3$sb2*y.em3$l2
+
+
+y.em1$s2
 y.em2$s2
+y.em3$s2
 ```
 
 
@@ -167,9 +253,9 @@ y.em2 = ridge_em2(y,X,.1,10,100)
 plot_loglik(y.em1,y.em2)
 ```
 
-# Low signal case
+### No signal case
 
-Try low-signal case -- the convergence issues are reversed!
+Try no signal case -- the convergence issues are reversed!
 ```{r}
 sd = 1
 n = 100
@@ -186,12 +272,27 @@ plot(y)
 lines(X %*% btrue)
 
 y.em1 = ridge_em1(y,X,1,1,100)
-lines(X %*% y.em1$postmean,col=2)
+lines(X %*% y.em1$postmean,col=1)
 
 y.em2 = ridge_em2(y,X,1,1,100)
 lines(X %*% y.em2$postmean,col=2)
 
-plot_loglik(y.em1,y.em2)
+y.em3 = ridge_em3(y,X,1,1,1,100)
+lines(X %*% y.em3$postmean,col=3)
+
+```
+
+The EM2 and EM3 converge faster here:
+```{r}
+plot_loglik(y.em1,y.em2,y.em3)
+```
+
+
+Try starting the expanded algorithm from very large lambda... it still seems to work.
+```{r}
+y.em3b = ridge_em3(y,X,1,1,100,100)
+plot_loglik(y.em1,y.em2,y.em3b)
+
 ```
 
 
