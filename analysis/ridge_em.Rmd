@@ -69,10 +69,8 @@ ridge_em2 = function(y,X, s2,sb2, niter=10){
     Sigma1 = (s2/sb2)*V  # posterior variance of b
     mu1 = (sqrt(sb2)/s2)*as.vector(Sigma1 %*% Xty) # posterior mean of b
     
-  
-    s2 = as.vector((yty + sb2*sum(diag(XtX %*% (mu1 %*% t(mu1) + Sigma1)))- 2*sqrt(sb2)*sum(Xty*mu1))/n)
     sb2 = (sum(mu1*Xty)/sum(diag(XtX %*% (mu1 %*% t(mu1) + Sigma1))))^2
-   
+    s2 = as.vector((yty + sb2*sum(diag(XtX %*% (mu1 %*% t(mu1) + Sigma1)))- 2*sqrt(sb2)*sum(Xty*mu1))/n)
   }
   return(list(s2=s2,sb2=sb2,loglik=loglik,postmean=mu1*sqrt(sb2)))
 }
@@ -109,9 +107,10 @@ ridge_em3 = function(y,X, s2, sb2, l2, niter=10){
     Sigma1 = (s2/sb2)*V  # posterior variance of b
     mu1 = (1/sqrt(sb2))*as.vector(V %*% Xty) # posterior mean of b
     
-    s2 = as.vector((yty + sb2*sum(diag(XtX %*% (mu1 %*% t(mu1) + Sigma1)))- 2*sqrt(sb2)*sum(Xty*mu1))/n)
+   
     sb2 = (sum(mu1*Xty)/sum(diag(XtX %*% (mu1 %*% t(mu1) + Sigma1))))^2
-    
+    s2 = as.vector((yty + sb2*sum(diag(XtX %*% (mu1 %*% t(mu1) + Sigma1)))- 2*sqrt(sb2)*sum(Xty*mu1))/n)
+     
     l2 = mean(mu1^2+diag(Sigma1))
    
   }
