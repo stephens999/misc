@@ -21,7 +21,6 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 
 * [coordinate ascent and parallel version](mr_ash_sca.html)
 * [mr.ash.alpha applied to changepoint problems](mr.ash.changepoint.html)
-* [teach myself ADMM (L1 and L0)](admm_01.html)
 * [combining mr.ash and ridge regression/iterative ridge regression](mr.ash_ridge.html)
 
 # Ridge Regression
@@ -30,6 +29,10 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 * [Ridge regression via conjugate gradient](ridge_conjugate_gradient.html)
 * [EM for hyperparameters Ridge regression](ridge_em.html)
 
+# Lasso
+
+* [Fit lasso by EM](lasso_em.html)
+* [teach myself ADMM (L1 and L0)](admm_01.html)
 
 # Mash
 
