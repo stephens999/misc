@@ -1,0 +1,132 @@
+---
+title: "fit Lasso by EM"
+author: "Matthew Stephens"
+date: "2020-06-02"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+The idea here is to implement an EM algorithm for the Lasso.
+My implementation is based on [these lecture notes](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.330.69) from M Figuerdo.
+
+
+```{r}
+# see objective computation for scaling of eta and residual variance s2
+lasso_em = function(y,X,b.init,s2=1,eta=1,niter=100){
+  n = nrow(X)
+  p = ncol(X)
+  b = b.init # initiolize
+  XtX = t(X) %*% X
+  Xty = t(X) %*% y
+  obj = rep(0,niter)
+  for(i in 1:niter){
+    W =  diag(as.vector((1/abs(b)) * sqrt(2/eta)))
+    V = chol2inv(chol(s2*W + XtX))
+    b = V %*% Xty
+    
+    # the computation here was intended to avoid 
+    # infinities in the weights by working with Winv
+    # could improve this...
+    # Winv_sqrt = diag(as.vector(sqrt(abs(b) * sqrt(eta/2))))
+    # V = chol2inv(chol(diag(s2,p) + Winv_sqrt %*% XtX %*% Winv_sqrt))
+    # b = Winv_sqrt %*% V %*% Winv_sqrt %*% Xty
+    
+    r =  (y - X %*% b)
+    obj[i] = (1/(2*s2)) * (sum(r^2)) + sqrt(2/eta)*(sum(abs(b)))
+  }
+  return(list(bhat=b, obj=obj))
+}
+```
+
+Here I try it out on a trend filtering example. I run twice from two different random
+initializations
+
+```{r}
+set.seed(100)
+sd = 1
+n = 100
+p = n
+X = matrix(0,nrow=n,ncol=n)
+for(i in 1:n){
+  X[i:n,i] = 1:(n-i+1)
+}
+#X = X %*% diag(1/sqrt(colSums(X^2)))
+
+btrue = rep(0,n)
+btrue[40] = 8
+btrue[41] = -8
+y = X %*% btrue + sd*rnorm(n)
+
+plot(y)
+lines(X %*% btrue)
+
+y.em1 = lasso_em(y,X,b.init = rnorm(100),1,1,100)
+lines(X %*% y.em1$bhat,col=2)
+
+y.em2 = lasso_em(y,X,b.init = rnorm(100),1,1,100)
+lines(X %*% y.em2$bhat,col=3)
+
+
+```
+
+And check the objective is decreasing:
+```{r}
+plot(y.em1$obj,type="l")
+lines(y.em2$obj,col=2)
+```
+
+
+## Bayesian Lasso
+
+We should be able to do the same thing to fit the ``variational bayesian lasso", by which here I mean compute the (approximate) posterior mean under the double-exponential prior.
+
+```{r}
+# see objective computation for scaling of eta and residual variance s2
+# if compute_mode=TRUE we have the regular LASSO
+blasso_em = function(y,X,b.init,s2=1,eta=1,niter=100,compute_mode=FALSE){
+  n = nrow(X)
+  p = ncol(X)
+  b = b.init # initiolize
+  XtX = t(X) %*% X
+  Xty = t(X) %*% y
+  obj = rep(0,niter)
+  EB = rep(1,p)
+  EB2 = rep(1,p)
+  
+  for(i in 1:niter){
+    W = as.vector(1/sqrt(EB2 + EB^2) * sqrt(2/eta))
+     
+    V = chol2inv(chol(XtX+ diag(s2*W))) 
+    Sigma1 = s2*V  # posterior variance of b
+    EB2 = diag(Sigma1)
+    if(compute_mode){
+      EB2 = rep(0,p)
+    }
+    mu1 = as.vector(V %*% Xty) # posterior mean of b
+    EB = mu1
+    
+  }
+  return(list(bhat=EB))
+}
+```
+
+```{r}
+y.em3 = blasso_em(y,X,b.init = rnorm(100),1,1,100)
+plot(y,main="red=blasso; green = lasso")
+lines(X %*% y.em3$bhat,col=2)
+lines(X %*% y.em2$bhat,col=3)
+plot(y.em3$bhat,y.em2$bhat, xlab="blasso",ylab="lasso")
+```
+
+Check the posterior mode is same as my Lasso implementation 
+```{r}
+y.em4 = blasso_em(y,X,b.init = rnorm(100),1,1,100,compute_mode=TRUE)
+plot(y)
+lines(X %*% y.em4$bhat,col=2)
+lines(X %*% y.em2$bhat,col=3)
+plot(y.em4$bhat,y.em2$bhat)
+```
+
