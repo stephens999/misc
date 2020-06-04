@@ -22,6 +22,7 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 * [coordinate ascent and parallel version](mr_ash_sca.html)
 * [mr.ash.alpha applied to changepoint problems](mr.ash.changepoint.html)
 * [combining mr.ash and ridge regression/iterative ridge regression](mr.ash_ridge.html)
+* [bimodal example from "Bayesian lasso"" paper](blasso_bimodal_example.html)
 
 # Ridge Regression
 
@@ -33,6 +34,7 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 
 * [Fit lasso by EM](lasso_em.html)
 * [teach myself ADMM (L1 and L0)](admm_01.html)
+
 
 # Mash
 
