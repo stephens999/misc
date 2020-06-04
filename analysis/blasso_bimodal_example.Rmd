@@ -1,0 +1,104 @@
+---
+title: "blasso_bimodal_example"
+author: "Matthew Stephens"
+date: "2020-06-04"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+I'm going to look at the example from Park and Casella Figure 4.
+
+
+This posterior is from the equation (7) in that paper, in the cases $p=1$ variable (so b is a scalar).
+```{r}
+post = function(s2, b, yty=26, xtx=1, xty=5, n=10, lambda=3){
+  (1/s2) * ((s2)^(-(n-1)/2))  * exp(-0.5*(1/s2)*(yty+b^2*xtx-2*xty*b) - lambda*abs(b) )
+}
+```
+
+This was an attempt to reproduce their Figure 4. It has qualitatively
+similar features, but the mode near the null is not as big as theirs.
+```{r}
+b = seq(-1,6,length=100)
+ls2 = seq(-3,2,length=100)
+z = matrix(0,nrow=100, ncol=100)
+for(i in 1:length(b)){
+  for(j in 1:length(ls2)){
+    z[i,j] = post(exp(ls2[j]),b[i],lambda=3)
+  }
+}
+contour(b,ls2,z,nlevels = 100,main="lambda=3",xlab="b",ylab="log(sigma^2)")
+```
+
+However, a slight change in lambda produces a more similar plot.
+It could just be that appearance is sensitive to details
+of how the contour plot is produced.
+```{r}
+for(i in 1:length(b)){
+  for(j in 1:length(ls2)){
+    z[i,j] = post(exp(ls2[j]),b[i],lambda=3.5)
+  }
+}
+contour(b,ls2,z,nlevels = 20,main="lambda=3.5",xlab="b",ylab="log(sigma^2)")
+```
+
+
+# In sigma space
+
+I was interested to see how the picture changes if
+we plot in sigma space instead of log(sigma). It is still bimodal.
+```{r}
+contour(b,exp(ls2),z,nlevels = 20, main="lambda=3.5",xlab="b",ylab="sigma^2")
+```
+
+# Scaled prior
+
+Here we change so that the prior on $b$ is scaled by $\sigma$.
+ 
+```{r}
+post2 = function(s2, b, yty=26, xtx=1, xty=5, n=10, lambda=3){
+  (1/s2) * ((s2)^(-(n-1)/2)) * exp(-0.5*(1/s2)*(yty+b^2*xtx-2*xty*b) - (lambda/sqrt(s2))*abs(b) )
+}
+
+z2 = matrix(0,nrow=100, ncol=100)
+for(i in 1:length(b)){
+  for(j in 1:length(ls2)){
+    z2[i,j] = post2(exp(ls2[j]),b[i],lambda=3.5)
+  }
+}
+contour(b,ls2,z2)
+```
+
+And try with some other lambda values:
+```{r}
+for(i in 1:length(b)){
+  for(j in 1:length(ls2)){
+    z2[i,j] = post2(exp(ls2[j]),b[i],lambda=1)
+  }
+}
+contour(b,ls2,z2,main="lambda=1",xlab="b",ylab="log(sigma^2)")
+contour(b,exp(ls2),z2,main="lambda=1", ,xlab="b",ylab="sigma^2")
+```
+
+```{r}
+for(i in 1:length(b)){
+  for(j in 1:length(ls2)){
+    z2[i,j] = post2(exp(ls2[j]),b[i],lambda=1.5)
+  }
+}
+contour(b,ls2,z2,main="lambda=1.5",xlab="b",ylab="log(sigma^2)")
+contour(b,exp(ls2),z2,main="lambda=1.5", ,xlab="b",ylab="sigma^2")
+```
+
+```{r}
+for(i in 1:length(b)){
+  for(j in 1:length(ls2)){
+    z2[i,j] = post2(exp(ls2[j]),b[i],lambda=2.5)
+  }
+}
+contour(b,ls2,z2,main="lambda=2.5",xlab="b",ylab="log(sigma^2)")
+contour(b,exp(ls2),z2,main="lambda=2.5", ,xlab="b",ylab="sigma^2")
+```
