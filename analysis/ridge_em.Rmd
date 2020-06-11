@@ -11,7 +11,7 @@ editor_options:
 
 Here I am going to experiment with EM algorithm for estimating parameters 
 of ridge regression in different parameterizations.
-Derivations of EM updates are [here](../docs/EM_Ridge.pdf)
+Derivations of EM updates are [here](EM_Ridge.pdf)
 The ones implemented here are 1,2, and 5 in that document. 
 The others are a little more complex so I did not implement them yet.
 
