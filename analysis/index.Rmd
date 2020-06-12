@@ -23,6 +23,7 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 * [mr.ash.alpha applied to changepoint problems](mr.ash.changepoint.html)
 * [combining mr.ash and ridge regression/iterative ridge regression](mr.ash_ridge.html)
 * [bimodal example from "Bayesian lasso"" paper](blasso_bimodal_example.html)
+* [mr ash vs lasso: example where lasso does better](mr_ash_vs_lasso.html)
 
 # Ridge Regression
 
