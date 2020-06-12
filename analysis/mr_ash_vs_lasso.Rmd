@@ -1,0 +1,59 @@
+---
+title: "mr_ash_vs_lasso"
+author: "Matthew Stephens"
+date: "2020-06-12"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+library("mr.ash.alpha")
+library("glmnet")
+```
+
+## Introduction
+
+This is to illustrate a setting where Fabio Morgante found
+lasso to work better than mr.ash. The simulation is based on
+his set-up, and then simplified. 
+
+```{r}
+  set.seed(123)
+  n <- 500
+  p <- 1000
+  p_causal <- 500 # number of causal variables (simulated effects N(0,1))
+  pve <- 0.95
+  nrep = 10
+  rmse_mrash = rep(0,nrep)
+  rmse_glmnet = rep(0,nrep)
+  
+  for(i in 1:nrep){
+    sim=list()
+    sim$X =  matrix(rnorm(n*p),nrow=n)
+  
+    B <- rep(0,p)
+    causal_variables <- sample(x=(1:p), size=p_causal)
+    B[causal_variables] <- rnorm(n=p_causal, mean=0, sd=1)
+
+    sim$B = B
+    sim$Y = sim$X %*% sim$B
+    E = rnorm(n,sd = sqrt((1-pve)/(pve))*sd(sim$Y))
+    sim$Y = sim$Y + E
+  
+    fit_mrash <- mr.ash.alpha::mr.ash(sim$X, sim$Y,standardize = FALSE)
+
+    fit_glmnet <- cv.glmnet(x=sim$X, y=sim$Y, family="gaussian", alpha=1, standardize=FALSE)
+  
+   
+    rmse_mrash[i] = sqrt(mean((sim$B-fit_mrash$beta)^2))
+    rmse_glmnet[i] = sqrt(mean((sim$B-coef(fit_glmnet)[-1])^2))
+    
+  }
+  
+  plot(rmse_mrash,rmse_glmnet)
+  
+```
+
+
+
