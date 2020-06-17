@@ -12,6 +12,7 @@ editor_options:
 The idea here is to implement an EM algorithm for the Lasso.
 My implementation is based on [these lecture notes](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.330.69) from M Figuerdo.
 
+I also have relevant handwritten notes with some derivations [here](EM_Lasso.pdf).
 
 ```{r}
 # see objective computation for scaling of eta and residual variance s2
@@ -94,20 +95,19 @@ blasso_em = function(y,X,b.init,s2=1,eta=1,niter=100,compute_mode=FALSE){
   Xty = t(X) %*% y
   obj = rep(0,niter)
   EB = rep(1,p)
-  EB2 = rep(1,p)
+  varB = rep(1,p)
   
   for(i in 1:niter){
-    W = as.vector(1/sqrt(EB2 + EB^2) * sqrt(2/eta))
+    W = as.vector(1/sqrt(varB + EB^2) * sqrt(2/eta))
      
     V = chol2inv(chol(XtX+ diag(s2*W))) 
     Sigma1 = s2*V  # posterior variance of b
-    EB2 = diag(Sigma1)
+    varB = diag(Sigma1)  
     if(compute_mode){
-      EB2 = rep(0,p)
+      varB = rep(0,p)
     }
     mu1 = as.vector(V %*% Xty) # posterior mean of b
     EB = mu1
-    
   }
   return(list(bhat=EB))
 }
@@ -128,5 +128,77 @@ plot(y)
 lines(X %*% y.em4$bhat,col=2)
 lines(X %*% y.em2$bhat,col=3)
 plot(y.em4$bhat,y.em2$bhat)
+```
+
+# Update eta
+
+A next step would be to update eta (and the residual variance). This becomes
+a "Variational Empirical Bayes" (VEB) approach.
+
+The update for eta is rather simple: `eta = mean(sqrt(diag(EB2))*sqrt(eta/2) + eta/2)`. Again see [here](EM_Lasso.pdf).
+
+The update for $s^2$ is $$(1/n)E||y-Xb||^2_2$$. This could be simplified
+if we make a mean-field approximation, but for now we just go with the full 
+
+
+
+```{r}
+calc_s2hat = function(y,X,XtX,EB,EB2){
+  n = length(y)
+  Xb = X %*% EB
+  s2hat = as.numeric((1/n)* (t(y) %*% y - 2*sum(y*Xb) + sum(XtX * EB2)))
+}
+
+# see objective computation for scaling of eta and residual variance s2
+# if compute_mode=TRUE we have the regular LASSO
+blasso_veb = function(y,X,b.init,s2=1,eta=1,niter=100){
+  n = nrow(X)
+  p = ncol(X)
+  b = b.init # initiolize
+  XtX = t(X) %*% X
+  Xty = t(X) %*% y
+  obj = rep(0,niter)
+  EB = rep(1,p)
+  EB2 = diag(p)
+  
+  for(i in 1:niter){
+    W = as.vector(1/sqrt(diag(EB2) + EB^2) * sqrt(2/eta))
+     
+    V = chol2inv(chol(XtX+ diag(s2*W))) 
+    Sigma1 = s2*V  # posterior variance of b
+    varB = diag(Sigma1)
+   
+    mu1 = as.vector(V %*% Xty) # posterior mean of b
+    EB = mu1
+    EB2 = Sigma1 + outer(mu1,mu1)
+    
+    eta = mean(sqrt(diag(EB2))*sqrt(eta/2) + eta/2)
+    s2 = calc_s2hat(y,X,XtX,EB,EB2)
+  }
+  return(list(bhat=EB,eta=eta,s2 = s2))
+}
+```
+
+```{r}
+set.seed(100)
+sd = 1
+n = 100
+p = n
+X = matrix(0,nrow=n,ncol=n)
+for(i in 1:n){
+  X[i:n,i] = 1:(n-i+1)
+}
+#X = X %*% diag(1/sqrt(colSums(X^2)))
+
+btrue = rep(0,n)
+btrue[40] = 8
+btrue[41] = -8
+y = X %*% btrue + sd*rnorm(n)
+
+plot(y)
+lines(X %*% btrue)
+
+y.veb = blasso_veb(y,X,b.init = rnorm(100),1,1,100)
+lines(X %*% y.veb$bhat,col=2)
 ```
 
