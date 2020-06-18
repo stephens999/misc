@@ -401,7 +401,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2020-06-17
+<strong>Last updated:</strong> 2020-06-18
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -492,16 +492,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree430bbbbfb40e02ebcf80cdef9bf960e951f60ffatargetblank430bbbba"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/430bbbbfb40e02ebcf80cdef9bf960e951f60ffa" target="_blank">430bbbb</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreeb8fd86d183ca8c311c48ded3827406c3bd145295targetblankb8fd86da"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/b8fd86d183ca8c311c48ded3827406c3bd145295" target="_blank">b8fd86d</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree430bbbbfb40e02ebcf80cdef9bf960e951f60ffatargetblank430bbbba" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreeb8fd86d183ca8c311c48ded3827406c3bd145295targetblankb8fd86da" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/430bbbbfb40e02ebcf80cdef9bf960e951f60ffa" target="_blank">430bbbb</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/b8fd86d183ca8c311c48ded3827406c3bd145295" target="_blank">b8fd86d</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -689,6 +689,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/b8fd86d183ca8c311c48ded3827406c3bd145295/analysis/lasso_em.Rmd" target="_blank">b8fd86d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-18
+</td>
+<td>
+workflowr::wflow_publish(“lasso_em.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/328203fc4404cab43157f49c8201ec10f4ee5489/docs/lasso_em.html" target="_blank">328203f</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-17
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/430bbbbfb40e02ebcf80cdef9bf960e951f60ffa/analysis/lasso_em.Rmd" target="_blank">430bbbb</a>
 </td>
 <td>
@@ -744,8 +778,16 @@ workflowr::wflow_publish(“lasso_em.Rmd”)
 </div>
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
-<p>The idea here is to implement an EM algorithm for the Lasso. My implementation is based on <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.330.69">these lecture notes</a> from M Figuerdo.</p>
+<p>The idea here is to implement EM algorithms for the Lasso, and VB algorithms for Bayesian Lasso (the last two being novel as far as I am aware).</p>
+<p>My implementation for the Lasso is based on <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.330.69">these lecture notes</a> from M Figuerdo. The variational approaches follow on from that basic idea.</p>
+<p>The model is: <span class="math display">\[y = Xb + e\]</span> with <span class="math display">\[b_j \sim N(0,s_j^2)\]</span> and <span class="math display">\[s^2_j \sim Exp(1/\eta)\]</span>, which gives marginally <span class="math display">\[b_j \sim DExp(rate = \sqrt(2/\eta))\]</span>. Note that I am initially using the unscaled parameterization of the prior here, with</p>
+<p>The Lasso-EM uses EM to maximize over <span class="math inline">\(b\)</span>, treating the <span class="math inline">\(s=(s_1,\dots,s_p)\)</span> as the “missing” data. Given <span class="math inline">\(s\)</span> we have ridge regression, which is what makes this work.</p>
+<p>My blasso-EM uses the same ideas to do a variational approximation, to obtain a posterior approximation to <span class="math inline">\(p(b,s|y)\)</span> – and in particular,</p>
+<p>an approximate posterior mean for <span class="math inline">\(b\)</span> – rather than just the mode. The form of the approximation is: <span class="math display">\[p(b,s|y) \approx p(b|s,y) \prod_j q_j(s_j).\]</span> That is, there is a mean-field approximation on <span class="math inline">\(s\)</span>, but not on <span class="math inline">\(b\)</span>. The conditional <span class="math inline">\(p(b|s,y)\)</span> is given by ridge regression.</p>
 <p>I also have relevant handwritten notes with some derivations <a href="EM_Lasso.pdf">here</a>.</p>
+</div>
+<div id="lasso-em" class="section level2">
+<h2>Lasso EM</h2>
 <pre class="r"><code># see objective computation for scaling of eta and residual variance s2
 lasso_em = function(y,X,b.init,s2=1,eta=1,niter=100){
   n = nrow(X)
@@ -878,6 +920,8 @@ Matthew Stephens
 <div id="bayesian-lasso" class="section level2">
 <h2>Bayesian Lasso</h2>
 <p>We should be able to do the same thing to fit the ``variational bayesian lasso“, by which here I mean compute the (approximate) posterior mean under the double-exponential prior.</p>
+<p>Interestingly the posterior mode approximation can also be seen as sa variational approximation, in which the approximating distribution <span class="math inline">\(q(b|y,s)\)</span> is restricted to be a point mass on <span class="math inline">\(b\)</span>.<br />
+Thus essentially the same code can be used to implement both the posterior mode and posterior mean (if <code>compute_mode =TRUE</code> below it should give the usual lasso solution).</p>
 <pre class="r"><code># see objective computation for scaling of eta and residual variance s2
 # if compute_mode=TRUE we have the regular LASSO
 blasso_em = function(y,X,b.init,s2=1,eta=1,niter=100,compute_mode=FALSE){
@@ -1068,11 +1112,12 @@ Matthew Stephens
 </div>
 </div>
 </div>
-<div id="update-eta" class="section level1">
-<h1>Update eta</h1>
-<p>A next step would be to update eta (and the residual variance). This becomes a “Variational Empirical Bayes” (VEB) approach.</p>
+<div id="veb-lasso-estimate-hyperparameters-eta" class="section level2">
+<h2>VEB lasso: estimate hyperparameters eta</h2>
+<p>The next step is to estimate/update the prior hyperparameter <span class="math inline">\(\eta\)</span>, and the residual variance <span class="math inline">\(s^2\)</span>. This becomes a “Variational Empirical Bayes” (VEB) approach.</p>
 <p>The update for eta is rather simple: <code>eta = mean(sqrt(diag(EB2))*sqrt(eta/2) + eta/2)</code>. Again see <a href="EM_Lasso.pdf">here</a>.</p>
-<p>The update for <span class="math inline">\(s^2\)</span> is <span class="math display">\[(1/n)E||y-Xb||^2_2\]</span>. This could be simplified if we make a mean-field approximation, but for now we just go with the full</p>
+<p>The update for <span class="math inline">\(s^2\)</span> is <span class="math display">\[(1/n)E||y-Xb||^2_2\]</span>. This could be simplified if we make a mean-field approximation on <span class="math inline">\(b\)</span>, but for now we just go with the full.</p>
+<p>Note we are using the unscaled parameterization right now for simplicity. This may cause problems with multi-modality, as discussed <a href="blasso_bimodal_example.html">here</a>.</p>
 <pre class="r"><code>calc_s2hat = function(y,X,XtX,EB,EB2){
   n = length(y)
   Xb = X %*% EB
@@ -1107,6 +1152,7 @@ blasso_veb = function(y,X,b.init,s2=1,eta=1,niter=100){
   }
   return(list(bhat=EB,eta=eta,s2 = s2))
 }</code></pre>
+<p>Try it out on trend-filtering example:</p>
 <pre class="r"><code>set.seed(100)
 sd = 1
 n = 100
@@ -1128,6 +1174,122 @@ lines(X %*% btrue)
 y.veb = blasso_veb(y,X,b.init = rnorm(100),1,1,100)
 lines(X %*% y.veb$bhat,col=2)</code></pre>
 <p><img src="figure/lasso_em.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-1">
+Past versions of unnamed-chunk-8-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-8-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/328203fc4404cab43157f49c8201ec10f4ee5489/docs/figure/lasso_em.Rmd/unnamed-chunk-8-1.png" target="_blank">328203f</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="a-dense-simulation" class="section level2">
+<h2>A dense simulation</h2>
+<p>Now a dense simulation, similar to <a href="mr_ash_vs_lasso.html">here</a> but with <span class="math inline">\(n\)</span> and <span class="math inline">\(p\)</span> ten times smaller to make it run fast. The idea here is that we know this case can cause convergence issues for VEB approach and we want to see if this affects the VEB lasso.</p>
+<pre class="r"><code>  library(glmnet)</code></pre>
+<pre><code>Loading required package: Matrix</code></pre>
+<pre><code>Loaded glmnet 3.0-2</code></pre>
+<pre class="r"><code>  set.seed(123)
+  n &lt;- 50
+  p &lt;- 100
+  p_causal &lt;- 50 # number of causal variables (simulated effects N(0,1))
+  pve &lt;- 0.95
+  nrep = 10
+  rmse_blasso_veb = rep(0,nrep)
+  rmse_glmnet = rep(0,nrep)
+  
+  for(i in 1:nrep){
+    sim=list()
+    sim$X =  matrix(rnorm(n*p),nrow=n)
+  
+    B &lt;- rep(0,p)
+    causal_variables &lt;- sample(x=(1:p), size=p_causal)
+    B[causal_variables] &lt;- rnorm(n=p_causal, mean=0, sd=1)
+
+    sim$B = B
+    sim$Y = sim$X %*% sim$B
+    E = rnorm(n,sd = sqrt((1-pve)/(pve))*sd(sim$Y))
+    sim$Y = sim$Y + E
+  
+    fit_blasso_veb &lt;- blasso_veb(sim$Y,sim$X,b.init=rep(0,p))
+
+    fit_glmnet &lt;- cv.glmnet(x=sim$X, y=sim$Y, family=&quot;gaussian&quot;, alpha=1, standardize=FALSE)
+  
+   
+    rmse_blasso_veb[i] = sqrt(mean((sim$B-fit_blasso_veb$bhat)^2))
+    rmse_glmnet[i] = sqrt(mean((sim$B-coef(fit_glmnet)[-1])^2))
+    
+  }
+  
+  plot(rmse_blasso_veb,rmse_glmnet, xlim=c(0.4,0.75),ylim=c(0.4,0.75), main=&quot;RMSE for glmnet vs blasso_veb, dense case&quot;)
+  abline(a=0,b=1)</code></pre>
+<p><img src="figure/lasso_em.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>We see the results for <code>blasso_veb</code> are consistently better than <code>glmnet</code> here – reassuring, if ultimately kind of expected since the truth is quite dense. Interestingly there is no sign of convergence problems we could have seen.</p>
+<p>Here I repeat with sparser. We see here that glmnet is sligthly better (also kind of expected).</p>
+<pre class="r"><code>  set.seed(123)
+  n &lt;- 50
+  p &lt;- 100
+  p_causal &lt;- 5 # number of causal variables (simulated effects N(0,1))
+  pve &lt;- 0.95
+  nrep = 10
+  rmse_blasso_veb = rep(0,nrep)
+  rmse_glmnet = rep(0,nrep)
+  
+  for(i in 1:nrep){
+    sim=list()
+    sim$X =  matrix(rnorm(n*p),nrow=n)
+  
+    B &lt;- rep(0,p)
+    causal_variables &lt;- sample(x=(1:p), size=p_causal)
+    B[causal_variables] &lt;- rnorm(n=p_causal, mean=0, sd=1)
+
+    sim$B = B
+    sim$Y = sim$X %*% sim$B
+    E = rnorm(n,sd = sqrt((1-pve)/(pve))*sd(sim$Y))
+    sim$Y = sim$Y + E
+  
+    fit_blasso_veb &lt;- blasso_veb(sim$Y,sim$X,b.init=rep(0,p))
+
+    fit_glmnet &lt;- cv.glmnet(x=sim$X, y=sim$Y, family=&quot;gaussian&quot;, alpha=1, standardize=FALSE)
+  
+   
+    rmse_blasso_veb[i] = sqrt(mean((sim$B-fit_blasso_veb$bhat)^2))
+    rmse_glmnet[i] = sqrt(mean((sim$B-coef(fit_glmnet)[-1])^2))
+    
+  }
+  
+  plot(rmse_blasso_veb,rmse_glmnet,  main=&quot;RMSE for glmnet vs blasso_veb, sparse case&quot;, xlim=c(0,.1),ylim=c(0,.1))
+  abline(a=0,b=1)</code></pre>
+<p><img src="figure/lasso_em.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -1150,14 +1312,18 @@ locale:
 attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
+other attached packages:
+[1] glmnet_3.0-2  Matrix_1.2-18
+
 loaded via a namespace (and not attached):
- [1] workflowr_1.6.1 Rcpp_1.0.4.6    rprojroot_1.3-2 digest_0.6.25  
- [5] later_1.0.0     R6_2.4.1        backports_1.1.5 git2r_0.26.1   
- [9] magrittr_1.5    evaluate_0.14   stringi_1.4.6   rlang_0.4.5    
-[13] fs_1.3.2        promises_1.1.0  whisker_0.4     rmarkdown_2.1  
-[17] tools_3.6.0     stringr_1.4.0   glue_1.4.0      httpuv_1.5.2   
-[21] xfun_0.12       yaml_2.2.1      compiler_3.6.0  htmltools_0.4.0
-[25] knitr_1.28     </code></pre>
+ [1] Rcpp_1.0.4.6     knitr_1.28       whisker_0.4      magrittr_1.5    
+ [5] workflowr_1.6.1  lattice_0.20-40  R6_2.4.1         rlang_0.4.5     
+ [9] foreach_1.4.8    stringr_1.4.0    tools_3.6.0      grid_3.6.0      
+[13] xfun_0.12        git2r_0.26.1     iterators_1.0.12 htmltools_0.4.0 
+[17] yaml_2.2.1       digest_0.6.25    rprojroot_1.3-2  later_1.0.0     
+[21] codetools_0.2-16 promises_1.1.0   fs_1.3.2         shape_1.4.4     
+[25] glue_1.4.0       evaluate_0.14    rmarkdown_2.1    stringi_1.4.6   
+[29] compiler_3.6.0   backports_1.1.5  httpuv_1.5.2    </code></pre>
 </div>
 </div>
 
