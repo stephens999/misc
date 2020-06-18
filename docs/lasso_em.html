@@ -492,16 +492,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreeb8fd86d183ca8c311c48ded3827406c3bd145295targetblankb8fd86da"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/b8fd86d183ca8c311c48ded3827406c3bd145295" target="_blank">b8fd86d</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree51b89bbf0b3e8fa9c56759a6789ba12cf278c461targetblank51b89bba"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/51b89bbf0b3e8fa9c56759a6789ba12cf278c461" target="_blank">51b89bb</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreeb8fd86d183ca8c311c48ded3827406c3bd145295targetblankb8fd86da" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree51b89bbf0b3e8fa9c56759a6789ba12cf278c461targetblank51b89bba" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/b8fd86d183ca8c311c48ded3827406c3bd145295" target="_blank">b8fd86d</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/51b89bbf0b3e8fa9c56759a6789ba12cf278c461" target="_blank">51b89bb</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -542,6 +542,7 @@ Untracked files:
     Untracked:  analysis/mixsqp.Rmd
     Untracked:  analysis/mr.mash.test.Rmd
     Untracked:  analysis/mr_ash_modular.Rmd
+    Untracked:  analysis/mr_ash_new_veb.Rmd
     Untracked:  analysis/mr_ash_parameterization.Rmd
     Untracked:  analysis/mr_ash_pen.Rmd
     Untracked:  analysis/nejm.Rmd
@@ -689,6 +690,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/51b89bbf0b3e8fa9c56759a6789ba12cf278c461/analysis/lasso_em.Rmd" target="_blank">51b89bb</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-18
+</td>
+<td>
+workflowr::wflow_publish(“lasso_em.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/6a342554606fa8124117fe8e8638e8571467dd8f/docs/lasso_em.html" target="_blank">6a34255</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-18
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/b8fd86d183ca8c311c48ded3827406c3bd145295/analysis/lasso_em.Rmd" target="_blank">b8fd86d</a>
 </td>
 <td>
@@ -783,7 +818,7 @@ workflowr::wflow_publish(“lasso_em.Rmd”)
 <p>The model is: <span class="math display">\[y = Xb + e\]</span> with <span class="math display">\[b_j \sim N(0,s_j^2)\]</span> and <span class="math display">\[s^2_j \sim Exp(1/\eta)\]</span>, which gives marginally <span class="math display">\[b_j \sim DExp(rate = \sqrt(2/\eta))\]</span>. Note that I am initially using the unscaled parameterization of the prior here, with</p>
 <p>The Lasso-EM uses EM to maximize over <span class="math inline">\(b\)</span>, treating the <span class="math inline">\(s=(s_1,\dots,s_p)\)</span> as the “missing” data. Given <span class="math inline">\(s\)</span> we have ridge regression, which is what makes this work.</p>
 <p>My blasso-EM uses the same ideas to do a variational approximation, to obtain a posterior approximation to <span class="math inline">\(p(b,s|y)\)</span> – and in particular,</p>
-<p>an approximate posterior mean for <span class="math inline">\(b\)</span> – rather than just the mode. The form of the approximation is: <span class="math display">\[p(b,s|y) \approx p(b|s,y) \prod_j q_j(s_j).\]</span> That is, there is a mean-field approximation on <span class="math inline">\(s\)</span>, but not on <span class="math inline">\(b\)</span>. The conditional <span class="math inline">\(p(b|s,y)\)</span> is given by ridge regression.</p>
+<p>an approximate posterior mean for <span class="math inline">\(b\)</span> – rather than just the mode. The form of the approximation is: <span class="math display">\[p(b,s|y) \approx q(b) \prod_j q_j(s_j).\]</span> That is, there is a mean-field approximation on <span class="math inline">\(s\)</span>, but not on <span class="math inline">\(b\)</span>. The best approximation <span class="math inline">\(q(b)\)</span> is given by ridge regression <span class="math inline">\(p(b|y, \hat{s}^2)\)</span> where the prior precision is given by its expectation under the variational approximation: <span class="math display">\[1/\hat{s_j^2} = E_q(1/s_j^2).\]</span></p>
 <p>I also have relevant handwritten notes with some derivations <a href="EM_Lasso.pdf">here</a>.</p>
 </div>
 <div id="lasso-em" class="section level2">
@@ -1253,6 +1288,43 @@ Matthew Stephens
   plot(rmse_blasso_veb,rmse_glmnet, xlim=c(0.4,0.75),ylim=c(0.4,0.75), main=&quot;RMSE for glmnet vs blasso_veb, dense case&quot;)
   abline(a=0,b=1)</code></pre>
 <p><img src="figure/lasso_em.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-1">
+Past versions of unnamed-chunk-9-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/6a342554606fa8124117fe8e8638e8571467dd8f/docs/figure/lasso_em.Rmd/unnamed-chunk-9-1.png" target="_blank">6a34255</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-18
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>We see the results for <code>blasso_veb</code> are consistently better than <code>glmnet</code> here – reassuring, if ultimately kind of expected since the truth is quite dense. Interestingly there is no sign of convergence problems we could have seen.</p>
 <p>Here I repeat with sparser. We see here that glmnet is sligthly better (also kind of expected).</p>
 <pre class="r"><code>  set.seed(123)
@@ -1290,6 +1362,43 @@ Matthew Stephens
   plot(rmse_blasso_veb,rmse_glmnet,  main=&quot;RMSE for glmnet vs blasso_veb, sparse case&quot;, xlim=c(0,.1),ylim=c(0,.1))
   abline(a=0,b=1)</code></pre>
 <p><img src="figure/lasso_em.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-10-1">
+Past versions of unnamed-chunk-10-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-10-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/6a342554606fa8124117fe8e8638e8571467dd8f/docs/figure/lasso_em.Rmd/unnamed-chunk-10-1.png" target="_blank">6a34255</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-18
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
