@@ -9,10 +9,37 @@ editor_options:
 
 ## Introduction
 
-The idea here is to implement an EM algorithm for the Lasso.
-My implementation is based on [these lecture notes](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.330.69) from M Figuerdo.
+The idea here is to implement EM algorithms for the Lasso, 
+and VB algorithms for Bayesian Lasso (the last two being novel as
+far as I am aware).
+
+My implementation for the Lasso is based on [these lecture notes](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.330.69) from M Figuerdo. 
+The variational approaches follow on from that basic idea. 
+
+The model is:
+$$y = Xb + e$$
+with $$b_j \sim N(0,s_j^2)$$
+and $$s^2_j \sim Exp(1/\eta)$$, which gives
+marginally
+$$b_j \sim DExp(rate = \sqrt(2/\eta))$$.
+Note that I am initially using the unscaled parameterization of the prior here, with 
+
+The Lasso-EM uses EM to maximize over $b$, treating the $s=(s_1,\dots,s_p)$ as
+the "missing" data. Given $s$ we have ridge regression,
+which is what makes this work.
+
+My blasso-EM uses the same ideas to do a variational approximation,
+to obtain a posterior approximation to $p(b,s|y)$ -- and in particular,
+
+an approximate posterior mean for $b$ -- rather than just the mode.
+The form of the approximation is:
+$$p(b,s|y) \approx p(b|s,y) \prod_j q_j(s_j).$$
+That is, there is a mean-field approximation on $s$, but
+not on $b$. The conditional $p(b|s,y)$ is given by ridge regression.
 
 I also have relevant handwritten notes with some derivations [here](EM_Lasso.pdf).
+
+## Lasso EM
 
 ```{r}
 # see objective computation for scaling of eta and residual variance s2
@@ -84,6 +111,13 @@ lines(y.em2$obj,col=2)
 
 We should be able to do the same thing to fit the ``variational bayesian lasso", by which here I mean compute the (approximate) posterior mean under the double-exponential prior.
 
+Interestingly the posterior mode approximation can also be seen
+as sa variational approximation, in which the approximating
+distribution $q(b|y,s)$ is restricted to be a point mass on $b$.  
+Thus essentially the same code can be used to implement both the posterior mode and posterior mean (if `compute_mode =TRUE` below
+it should give the usual lasso solution).
+
+
 ```{r}
 # see objective computation for scaling of eta and residual variance s2
 # if compute_mode=TRUE we have the regular LASSO
@@ -130,16 +164,20 @@ lines(X %*% y.em2$bhat,col=3)
 plot(y.em4$bhat,y.em2$bhat)
 ```
 
-# Update eta
+## VEB lasso: estimate hyperparameters eta
 
-A next step would be to update eta (and the residual variance). This becomes
+The next step is to estimate/update the prior hyperparameter $\eta$,
+and the residual variance $s^2$. This becomes
 a "Variational Empirical Bayes" (VEB) approach.
 
 The update for eta is rather simple: `eta = mean(sqrt(diag(EB2))*sqrt(eta/2) + eta/2)`. Again see [here](EM_Lasso.pdf).
 
 The update for $s^2$ is $$(1/n)E||y-Xb||^2_2$$. This could be simplified
-if we make a mean-field approximation, but for now we just go with the full 
+if we make a mean-field approximation on $b$, but for now we just go with the full.
 
+Note we are using the unscaled parameterization right now for
+simplicity. This may cause problems with multi-modality,
+as discussed [here](blasso_bimodal_example.html).
 
 
 ```{r}
@@ -179,6 +217,7 @@ blasso_veb = function(y,X,b.init,s2=1,eta=1,niter=100){
 }
 ```
 
+Try it out on trend-filtering example:
 ```{r}
 set.seed(100)
 sd = 1
@@ -200,5 +239,97 @@ lines(X %*% btrue)
 
 y.veb = blasso_veb(y,X,b.init = rnorm(100),1,1,100)
 lines(X %*% y.veb$bhat,col=2)
+```
+
+## A dense simulation
+
+Now a dense simulation, similar to [here](mr_ash_vs_lasso.html)
+but with $n$ and $p$ ten times smaller to make it run fast.
+The idea here is that we know this case can cause convergence
+issues for VEB approach and we want to see if this
+affects the VEB lasso.
+
+
+
+```{r}
+  library(glmnet)
+  set.seed(123)
+  n <- 50
+  p <- 100
+  p_causal <- 50 # number of causal variables (simulated effects N(0,1))
+  pve <- 0.95
+  nrep = 10
+  rmse_blasso_veb = rep(0,nrep)
+  rmse_glmnet = rep(0,nrep)
+  
+  for(i in 1:nrep){
+    sim=list()
+    sim$X =  matrix(rnorm(n*p),nrow=n)
+  
+    B <- rep(0,p)
+    causal_variables <- sample(x=(1:p), size=p_causal)
+    B[causal_variables] <- rnorm(n=p_causal, mean=0, sd=1)
+
+    sim$B = B
+    sim$Y = sim$X %*% sim$B
+    E = rnorm(n,sd = sqrt((1-pve)/(pve))*sd(sim$Y))
+    sim$Y = sim$Y + E
+  
+    fit_blasso_veb <- blasso_veb(sim$Y,sim$X,b.init=rep(0,p))
+
+    fit_glmnet <- cv.glmnet(x=sim$X, y=sim$Y, family="gaussian", alpha=1, standardize=FALSE)
+  
+   
+    rmse_blasso_veb[i] = sqrt(mean((sim$B-fit_blasso_veb$bhat)^2))
+    rmse_glmnet[i] = sqrt(mean((sim$B-coef(fit_glmnet)[-1])^2))
+    
+  }
+  
+  plot(rmse_blasso_veb,rmse_glmnet, xlim=c(0.4,0.75),ylim=c(0.4,0.75), main="RMSE for glmnet vs blasso_veb, dense case")
+  abline(a=0,b=1)
+```
+
+We see the results for `blasso_veb` are consistently better than
+`glmnet` here -- reassuring, if ultimately kind of expected since the truth is quite dense.
+Interestingly there is no sign of convergence problems we could have seen. 
+
+Here I repeat with sparser. We see here that glmnet is sligthly better (also 
+kind of expected). 
+
+```{r}
+  set.seed(123)
+  n <- 50
+  p <- 100
+  p_causal <- 5 # number of causal variables (simulated effects N(0,1))
+  pve <- 0.95
+  nrep = 10
+  rmse_blasso_veb = rep(0,nrep)
+  rmse_glmnet = rep(0,nrep)
+  
+  for(i in 1:nrep){
+    sim=list()
+    sim$X =  matrix(rnorm(n*p),nrow=n)
+  
+    B <- rep(0,p)
+    causal_variables <- sample(x=(1:p), size=p_causal)
+    B[causal_variables] <- rnorm(n=p_causal, mean=0, sd=1)
+
+    sim$B = B
+    sim$Y = sim$X %*% sim$B
+    E = rnorm(n,sd = sqrt((1-pve)/(pve))*sd(sim$Y))
+    sim$Y = sim$Y + E
+  
+    fit_blasso_veb <- blasso_veb(sim$Y,sim$X,b.init=rep(0,p))
+
+    fit_glmnet <- cv.glmnet(x=sim$X, y=sim$Y, family="gaussian", alpha=1, standardize=FALSE)
+  
+   
+    rmse_blasso_veb[i] = sqrt(mean((sim$B-fit_blasso_veb$bhat)^2))
+    rmse_glmnet[i] = sqrt(mean((sim$B-coef(fit_glmnet)[-1])^2))
+    
+  }
+  
+  plot(rmse_blasso_veb,rmse_glmnet,  main="RMSE for glmnet vs blasso_veb, sparse case", xlim=c(0,.1),ylim=c(0,.1))
+  abline(a=0,b=1)
 ```
 
