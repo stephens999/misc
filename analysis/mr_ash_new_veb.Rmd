@@ -1,0 +1,262 @@
+---
+title: "mr_ash_new_veb"
+author: "Matthew Stephens"
+date: "2020-06-18"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+The goal here is to investigate a new VEB approximation
+for `mr.ash`. It builds on the use of EM and ridge regression 
+to fit the Lasso and Bayesian lasso [here](lasso_em.html).
+
+It is based on the model:
+$$y = Xb + e$$
+$$e \sim N(0,s^2)$$
+$$b_j | s_j \sim N(0,s_j^2)$$
+$$s^2_j \sim discrete(\pi, s_0^2)$$
+where $$s_0$$ denotes the usual grid of values of the variances we use in ash (and `mr.ash`), and $\pi$ are the usual mixture proportions.
+
+This is the usual `mr.ash` model, just rewritten by introducing 
+the $s^2_j$ as latent variables.
+
+We will form the variational approximation to the posterior
+$$q(b,s_1^2,\dots,s_p^2) = q(b) \prod_j q(s^2_j)$$.
+
+
+Here $q(b)$ is given by a ridge regression, $q(b) = p(b|y,\hat{s_j^2})$ where the prior precision is given by its expectation under the variational approximation:
+$$1/\hat{s_j^2} = E_q(1/s_j^2).$$
+Note that we will never be able to get down to $s_j^2=0$ because
+that would produce infinite here... but we can have a sequence
+of very small values. 
+
+For $q(s^2_j)$ we have that it is the same posterior as we would get from
+an observation $x_j:=\sqrt(E(b_j^2))$ from $x_j \sim N(0,s_j^2)$.
+So the posterior probability that $s^2_j$ came from component $k$ is
+proportional to $\pi_k p(x_j | s_k^2) = \pi_k dnorm(x_j, 0, s_k^2)$.
+So `dnorm(outer(x_j, sa, ))
+```{r}
+softmax = function(x){
+    x = x- max(x)
+    y = exp(x)
+    return(y/sum(y))
+}
+
+calc_s2hat = function(y,X,XtX,EB,EB2){
+  n = length(y)
+  Xb = X %*% EB
+  s2hat = as.numeric((1/n)* (t(y) %*% y - 2*sum(y*Xb) + sum(XtX * EB2)))
+}
+
+# sa2 is the grid of prior variances
+mr.ash_newveb = function(y,X,W.init = NULL,s2=1,sa2 = NULL ,w=NULL,niter=100,update.w=c("mixsqp","EM","none"), update.s2=c("mle","none")){
+  update.s2 = match.arg(update.s2)
+  if(is.null(sa2)){
+    K=20
+    sa2 = sd(y)^2 * (2^(0.05*((1:K))) - 1)^2
+  }
+    
+  K = length(sa2) 
+ 
+  
+  n = nrow(X)
+  p = ncol(X)
+
+  XtX = t(X) %*% X
+  Xty = t(X) %*% y
+  obj = rep(0,niter)
+  
+  EB = rep(0,p) # first moments of B under q
+  EB2 = diag(p) # second moments
+  
+  # these are the key initializations
+  
+  if(is.null(W.init)){
+    W = rep(1,p) # the weights are the expected(1/s^2_j)  used in ridge regression
+  } else {
+    W = W.init
+  }
+
+   if(is.null(w)){
+    w = rep(1/K,K)
+   }
+  
+  
+  for(i in 1:niter){
+    
+    V = chol2inv(chol(XtX+ diag(s2*W))) 
+    Sigma1 = s2*V  # posterior variance of b
+    varB = diag(Sigma1)
+   
+    mu1 = as.vector(V %*% Xty) # posterior mean of b
+    EB = mu1
+    EB2 = Sigma1 + outer(mu1,mu1)
+    
+    loglik = -0.5* log(sa2) + dnorm(outer(1/sqrt(sa2),sqrt(diag(EB2)),FUN = "*"),log=TRUE) # K by p matrix
+    if(update.w== "mixsqp"){
+      w = mixsqp::mixsqp(t(loglik),log=TRUE,control = list(verbose=FALSE))$x
+    }
+    log_post = loglik + log(w)
+    alpha = apply(log_post, 2, softmax) 
+    if(update.w=="EM"){
+      w = rowMeans(alpha)
+    }
+    if(update.s2=="mle"){
+      s2 = calc_s2hat(y,X,XtX,EB,EB2)
+    }
+    W = as.vector(colSums(alpha*(1/sa2))) # the weights are the expected(1/s^2_j)
+  }
+  return(list(bhat=EB,alpha=alpha,s2 = s2, w=w, sa2=sa2))
+}
+```
+
+# Trendfiltering example
+
+
+```{r}
+set.seed(123)
+sd = 1
+n = 100
+p = n
+X = matrix(0,nrow=n,ncol=n)
+for(i in 1:n){
+  X[i:n,i] = 1:(n-i+1)
+}
+#X = X %*% diag(1/sqrt(colSums(X^2)))
+
+btrue = rep(0,n)
+btrue[40] = 8
+btrue[41] = -8
+y = X %*% btrue + sd*rnorm(n)
+
+plot(y)
+lines(X %*% btrue)
+
+y.mrash.new = mr.ash_newveb(y,X,update.w="EM")
+lines(X %*% y.mrash.new$bhat,col=2)
+
+y.mrash.new.init = mr.ash_newveb(y,X,update.w="EM")
+lines(X %*% y.mrash.new.init$bhat,col=3)
+```
+
+
+# Dense example with high PVE
+
+This is an example where we have seen convergence problems before.
+
+```{r}
+  library(glmnet)
+  set.seed(123)
+  n <- 50
+  p <- 100
+  p_causal <- 50 # number of causal variables (simulated effects N(0,1))
+  pve <- 0.95
+  nrep = 10
+  rmse_mr.ash_newveb = rep(0,nrep)
+  rmse_glmnet = rep(0,nrep)
+  
+  for(i in 1:nrep){
+    sim=list()
+    sim$X =  matrix(rnorm(n*p),nrow=n)
+  
+    B <- rep(0,p)
+    causal_variables <- sample(x=(1:p), size=p_causal)
+    B[causal_variables] <- rnorm(n=p_causal, mean=0, sd=1)
+
+    sim$B = B
+    sim$Y = sim$X %*% sim$B
+    E = rnorm(n,sd = sqrt((1-pve)/(pve))*sd(sim$Y))
+    sim$Y = sim$Y + E
+  
+    fit_mr.ash_newveb <- mr.ash_newveb(sim$Y,sim$X,update.w="EM")
+
+    fit_glmnet <- cv.glmnet(x=sim$X, y=sim$Y, family="gaussian", alpha=1, standardize=FALSE)
+  
+   
+    rmse_mr.ash_newveb[i] = sqrt(mean((sim$B-fit_mr.ash_newveb$bhat)^2))
+    rmse_glmnet[i] = sqrt(mean((sim$B-coef(fit_glmnet)[-1])^2))
+    
+  }
+
+   plot(rmse_mr.ash_newveb,rmse_glmnet, xlim=c(0.4,0.75),ylim=c(0.4,0.75), main="RMSE for glmnet vs mr.ash_newveb, dense case")
+  abline(a=0,b=1)
+```
+
+
+# Sparse example with high PVE
+
+Try same example, modified to be sparse.
+Recall that in this example [here](lasso_em.html), VEBlasso did worse than glmnet.
+
+```{r}
+  library(glmnet)
+  set.seed(123)
+  n <- 50
+  p <- 100
+  p_causal <- 5 # number of causal variables (simulated effects N(0,1))
+  pve <- 0.95
+  nrep = 10
+  rmse_mr.ash_newveb = rep(0,nrep)
+  rmse_glmnet = rep(0,nrep)
+  
+  for(i in 1:nrep){
+    sim=list()
+    sim$X =  matrix(rnorm(n*p),nrow=n)
+  
+    B <- rep(0,p)
+    causal_variables <- sample(x=(1:p), size=p_causal)
+    B[causal_variables] <- rnorm(n=p_causal, mean=0, sd=1)
+
+    sim$B = B
+    sim$Y = sim$X %*% sim$B
+    E = rnorm(n,sd = sqrt((1-pve)/(pve))*sd(sim$Y))
+    sim$Y = sim$Y + E
+    sim$s2 = ((1-pve)/(pve))*sd(sim$Y)^2
+  
+    fit_mr.ash_newveb <- mr.ash_newveb(sim$Y,sim$X,update.w="EM")
+
+    fit_glmnet <- cv.glmnet(x=sim$X, y=sim$Y, family="gaussian", alpha=1, standardize=FALSE)
+  
+   
+    rmse_mr.ash_newveb[i] = sqrt(mean((sim$B-fit_mr.ash_newveb$bhat)^2))
+    rmse_glmnet[i] = sqrt(mean((sim$B-coef(fit_glmnet)[-1])^2))
+    
+  }
+
+   plot(rmse_mr.ash_newveb,rmse_glmnet, xlim=c(0,.2),ylim=c(0,0.2), main="RMSE for glmnet vs mr.ash_newveb, sparse case")
+  abline(a=0,b=1)
+```
+
+Try again, with fixing true g (setting the 0 variance to 1e-6).
+
+```{r}
+fit_mr.ash_newveb_trueg <- mr.ash_newveb(sim$Y,sim$X,
+                                   sa2= c(1e-6,1),w=c(0.95,0.05),update.w="none")
+
+sqrt(mean((sim$B-fit_mr.ash_newveb_trueg$bhat)^2))
+sqrt(mean((sim$B-fit_mr.ash_newveb$bhat)^2))
+```
+
+```{r}
+fit_mr.ash_newveb_trueg_trues2 <- mr.ash_newveb(sim$Y,sim$X,
+                                   sa2= c(1e-6,1),w=c(0.95,0.05),update.w="none",s2=sim$s2,update.s2="none")
+sqrt(mean((sim$B-fit_mr.ash_newveb_trueg_trues2$bhat)^2))
+```
+
+On investigation, the problem is that the algorithm is sticky
+between s and b. In this case it basically ends up 
+ridge regression with every b having the higher variance.
+The alpha matrix ends up having all its weight on the larger
+component, for every b.
+
+
+We could try initializing the W weights using `blasso_veb` from [lasso_em.html](lasso_em.html).
+
+
+```{r}
+
+```
+
