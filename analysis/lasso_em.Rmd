@@ -33,9 +33,11 @@ to obtain a posterior approximation to $p(b,s|y)$ -- and in particular,
 
 an approximate posterior mean for $b$ -- rather than just the mode.
 The form of the approximation is:
-$$p(b,s|y) \approx p(b|s,y) \prod_j q_j(s_j).$$
+$$p(b,s|y) \approx q(b) \prod_j q_j(s_j).$$
 That is, there is a mean-field approximation on $s$, but
-not on $b$. The conditional $p(b|s,y)$ is given by ridge regression.
+not on $b$. The best approximation $q(b)$ is given by ridge regression
+$p(b|y, \hat{s}^2)$ where the prior precision is given by its expectation under the variational approximation:
+$$1/\hat{s_j^2} = E_q(1/s_j^2).$$
 
 I also have relevant handwritten notes with some derivations [here](EM_Lasso.pdf).
 
