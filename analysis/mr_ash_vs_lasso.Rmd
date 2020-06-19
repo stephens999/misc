@@ -16,7 +16,9 @@ library("glmnet")
 
 This is to illustrate a setting where Fabio Morgante found
 lasso to work better than mr.ash. The simulation is based on
-his set-up, and then simplified. 
+his set-up, and then simplified. (Note that I have set the columns
+of $X$ to have norm approximately 1 to make connections with the mr.ash paper
+easier.)
 
 ```{r}
   set.seed(123)
@@ -27,11 +29,11 @@ his set-up, and then simplified.
   nrep = 10
   rmse_mrash = rep(0,nrep)
   rmse_glmnet = rep(0,nrep)
+  rmse_ridge = rep(0,nrep)
   
   for(i in 1:nrep){
     sim=list()
-    sim$X =  matrix(rnorm(n*p),nrow=n)
-  
+    sim$X =  matrix(rnorm(n*p,sd=1),nrow=n)
     B <- rep(0,p)
     causal_variables <- sample(x=(1:p), size=p_causal)
     B[causal_variables] <- rnorm(n=p_causal, mean=0, sd=1)
@@ -40,20 +42,217 @@ his set-up, and then simplified.
     sim$Y = sim$X %*% sim$B
     E = rnorm(n,sd = sqrt((1-pve)/(pve))*sd(sim$Y))
     sim$Y = sim$Y + E
-  
+      
     fit_mrash <- mr.ash.alpha::mr.ash(sim$X, sim$Y,standardize = FALSE)
 
     fit_glmnet <- cv.glmnet(x=sim$X, y=sim$Y, family="gaussian", alpha=1, standardize=FALSE)
-  
+    #fit_ridge <- cv.glmnet(x=sim$X, y=sim$Y, family="gaussian", alpha=0, standardize=FALSE)
    
     rmse_mrash[i] = sqrt(mean((sim$B-fit_mrash$beta)^2))
     rmse_glmnet[i] = sqrt(mean((sim$B-coef(fit_glmnet)[-1])^2))
-    
+    #rmse_ridge[i] = sqrt(mean((sim$B-coef(fit_ridge)[-1])^2))
   }
   
-  plot(rmse_mrash,rmse_glmnet)
+  plot(rmse_mrash,rmse_glmnet, xlim=c(0.5,0.7), ylim=c(0.5,0.7), main="red=ridge; black=lasso")
+  #points(rmse_mrash,rmse_ridge,col=2)
+  abline(a=0,b=1)
+  
   
 ```
+
+# Attempt to find better initialization
+
+Since the resut is so consistently that mr.ash is worse than lasso here, 
+I'll initially just focus on the last of the simulations above. 
+
+The first thing I wanted to try was fixing the prior to the "true" value.
+I was suprised to find I actually needed to use the true beta to initialize
+in order to get good error. And the initialization really changes things,
+even with true fixed prior.
+
+```{r}
+s2 = (sqrt((1-pve)/(pve))*sd(sim$Y))^2
+
+fit_trueg <- mr.ash.alpha::mr.ash(sim$X, sim$Y,standardize = FALSE, sa2 = c(0,1/s2), pi=c(0.5,0.5), sigma2 = s2, update.pi=FALSE, update.sigma2 = FALSE, intercept=FALSE,min.iter=100)
+
+fit_trueg.inittrueb <- mr.ash.alpha::mr.ash(sim$X, sim$Y,standardize = FALSE, sa2 = c(0,1/s2), beta.init=sim$B, pi=c(0.5,0.5), sigma2 = s2, update.pi=FALSE, update.sigma2 = FALSE, intercept = FALSE)
+
+sqrt(mean((sim$B-fit_trueg$beta)^2))
+sqrt(mean((sim$B-fit_trueg.inittrueb$beta)^2))
+plot(fit_trueg$beta, fit_trueg.inittrueb$beta)
+```
+
+Reassuringly, the better solution also has better objective (but only slightly).
+```{r}
+min(fit_trueg$varobj)
+min(fit_trueg.inittrueb$varobj)
+```
+
+Try running longer. Note that now the worse solution has
+better objective... unfortunate! One caveat is that, after discussion,
+it seems that the computation of the variational objective
+may be unreliable for fixed g.
+```{r}
+fit_trueg_long <- mr.ash.alpha::mr.ash(sim$X, sim$Y,standardize = FALSE, sa2 = c(0,1/s2), pi=c(0.5,0.5), sigma2 = s2, update.pi=FALSE, update.sigma2 = FALSE, intercept=FALSE,min.iter=1000)
+
+fit_trueg.inittrueb_long <- mr.ash.alpha::mr.ash(sim$X, sim$Y,standardize = FALSE, sa2 = c(0,1/s2), beta.init=sim$B, pi=c(0.5,0.5), sigma2 = s2, update.pi=FALSE, update.sigma2 = FALSE, intercept = FALSE,min.iter=1000)
+
+
+min(fit_trueg_long$varobj)
+min(fit_trueg.inittrueb_long$varobj)
+sqrt(mean((sim$B-fit_trueg_long$beta)^2))
+sqrt(mean((sim$B-fit_trueg.inittrueb_long$beta)^2))
+sqrt(mean((sim$B-coef(fit_glmnet)[-1])^2))
+sqrt(mean((sim$B-fit_mrash$beta)^2))
+```
+
+
+# Try to initialize based on Lasso fit
+
+Here I investigate some ideas to try to get the mr.ash prior to 
+fit the lasso prior.
+
+First I will compute the values of $\tilde{b}$, which, algorithmically, 
+are the values
+of $b$ before shrinkage (soft-thresholding) 
+is applied to them. I'm going to look at
+the shrinkage factors, which I define to be $f:=b/\tilde{b}$.
+
+```{r}
+y = sim$Y
+X = sim$X
+d = colSums(X^2)
+b = coef(fit_glmnet)[-1]
+r = y-sim$X %*% b - coef(fit_glmnet)[1]
+btilde = drop((t(X) %*% r)/d) + b
+
+plot(btilde,b, main="btilde vs b from lasso")
+hist(b/btilde,nclass=100, main = "histogram of shrinkage factors from lasso fit")
+```
+
+We want to try to select a prior such that the  mr ash shrinkage operator
+is similar to the lasso. Intuitively 
+that will ensure that the first mr ash update
+step does not change the solution "very much".
+Ideally one might select $g$ to minimize $b-S_g(btilde)$.
+
+THe mr ash shrinkage operator is the average of many ridge regression
+shrinkage operators. In ridge regression, with prior sa2 s2
+the shrinkage factor for a variable
+$j$ is $f_j = sa2/(sa2 + 1/d_j)$, where $d_j = x_j'x_j$.
+
+Rearranging, and writing the shrinkage factor as $f$, 
+$(d sa2 + 1) f_j = d_j sa2$ or 
+$$sa2 = f_j/[d_j(1-f)]$$
+
+To get a quick approximation of what $g$ might be we take the empirical values for sa2 computed in this way from the shrinkage factors. To give a grid I then cluster these empirical values into quantiles and give them equal weights in the prior. I deal separately with shrinkage factor 0. 
+```{r}
+f = b/btilde
+sa2 = f/(d*(1-f))
+hist(sa2)
+
+pi0 = mean(sa2==0)
+sa2 = sa2[sa2!=0] # deal with zeros separately
+
+sa2 = as.vector(quantile(sa2,seq(0,1,length=20)))
+sa2 = c(0,sa2)
+w = c(pi0, (1-pi0)*rep(1/20,20))
+```
+
+Here I write code to compute posterior mean under normal means model
+with given prior variances and data variances. (Note the prior variances
+here not scaled by data variances.)
+
+```{r}
+softmax = function(x){
+    x = x- max(x)
+    y = exp(x)
+    return(y/sum(y))
+}
+
+postmean = function(b, w, prior_variances, data_variance){
+  total_var = prior_variances + data_variance
+  loglik = -0.5* log(total_var) + dnorm(outer(sqrt(1/total_var),b,FUN="*"),log=TRUE) # K by p matrix
+  log_post = loglik + log(w)
+  phi = apply(log_post, 2, softmax) 
+  mu = outer(prior_variances/total_var,b)
+  return(colSums(phi*mu))
+}
+```
+
+Now check if our prior reproduces the lasso shrinkage approximately. It does!
+```{r}
+plot(btilde,b, main="comparison of mr.ash shrinkage (red) with soft thresholding")
+
+lines(sort(btilde),postmean(sort(btilde), w, prior_variances = s2*sa2, data_variance = s2/median(d)),col=2,lwd=2)
+```
+
+
+Somewhat unexpectedly though, initializing here has no effect
+```{r}
+fit_mrash = mr.ash.alpha::mr.ash(sim$X, sim$Y,standardize = FALSE)
+fit_mrash_lassoinit <- mr.ash.alpha::mr.ash(sim$X, sim$Y,standardize = FALSE, beta.init = b, sa2 = sa2, pi=w, sigma2=s2)
+plot(fit_mrash_lassoinit$beta,fit_mrash$beta)
+
+sqrt(mean((sim$B-fit_mrash_lassoinit$beta)^2))
+sqrt(mean((sim$B-fit_mrash$beta)^2))
+
+min(fit_mrash$varobj)
+min(fit_mrash_lassoinit$varobj)
+```
+
+Plot the learned mr.mash shrinkage operators:
+```{r}
+plot(btilde,b, main="comparison of mr.ash shrinkage (red) with soft thresholding")
+lines(sort(btilde),postmean(sort(btilde), as.vector(fit_mrash$pi), prior_variances = fit_mrash$sigma2*fit_mrash$data$sa2, data_variance = fit_mrash$sigma2/median(d)),col=2,lwd=2)
+
+lines(sort(btilde),postmean(sort(btilde), as.vector(fit_mrash_lassoinit$pi), prior_variances = fit_mrash_lassoinit$sigma2*fit_mrash_lassoinit$data$sa2, data_variance = fit_mrash_lassoinit$sigma2/median(d)),col=3,lwd=2)
+
+```
+
+Interestingly the fitted pi from lasso intialization is almost identical to the
+one used in lasso. So actually the prior is the same! It is the sigma2 that must be different....
+```{r}
+plot(fit_mrash_lassoinit$pi,w)
+```
+
+So here I fix sigma2:
+```{r}
+fit_mrash_lassoinit_fixs2 <- mr.ash.alpha::mr.ash(sim$X, sim$Y,standardize = FALSE, beta.init = b, sa2 = sa2, pi=w, sigma2=s2, update.sigma2 = FALSE)
+sqrt(mean((sim$B-fit_mrash_lassoinit_fixs2$beta)^2))
+```
+
+
+And now initialize from that fit:
+
+```{r}
+fit_mrash_lassoinit_relaxs2 <- mr.ash.alpha::mr.ash(sim$X, sim$Y,standardize = FALSE, beta.init = fit_mrash_lassoinit_fixs2$beta, sa2 = fit_mrash_lassoinit_fixs2$data$sa2, pi=fit_mrash_lassoinit_fixs2$pi, sigma2=fit_mrash_lassoinit_fixs2$sigma2)
+sqrt(mean((sim$B-fit_mrash_lassoinit_relaxs2$beta)^2))
+min(fit_mrash_lassoinit_relaxs2$varobj)
+min(fit_mrash_lassoinit_fixs2$varobj)
+```
+
+
+# Initializing from ridge regression
+
+One of the challenges is that the mr ash shrinkage operator is not a special
+case of lasso. In contrast, the ridge shrinkage operator is a special case.
+So it is easier to initialize from that. 
+
+Here i wanted to try this. 
+
+```{r}
+fit_ridge <- cv.glmnet(x=sim$X, y=sim$Y, family="gaussian", alpha=0, standardize=FALSE)
+b = coef(fit_ridge)[-1]
+r = y-sim$X %*% b - coef(fit_ridge)[1]
+btilde = drop((t(X) %*% r)/d) + b
+
+plot(btilde,b, main="btilde vs b from ridge")
+abline(a=0,b=1)
+hist(b/btilde,nclass=100, main = "histogram of shrinkage factors from ridge fit")
+sqrt(mean((sim$B-b)^2))
+```
+
 
 
 
