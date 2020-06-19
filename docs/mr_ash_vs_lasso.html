@@ -401,7 +401,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2020-06-12
+<strong>Last updated:</strong> 2020-06-19
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -492,16 +492,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree94bd508454ee1f81288ac05297880aae652a5314targetblank94bd508a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/94bd508454ee1f81288ac05297880aae652a5314" target="_blank">94bd508</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreef8037ebc03f8b09bd3cfd9d856967dafde4bf586targetblankf8037eba"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/f8037ebc03f8b09bd3cfd9d856967dafde4bf586" target="_blank">f8037eb</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree94bd508454ee1f81288ac05297880aae652a5314targetblank94bd508a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreef8037ebc03f8b09bd3cfd9d856967dafde4bf586targetblankf8037eba" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/94bd508454ee1f81288ac05297880aae652a5314" target="_blank">94bd508</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/f8037ebc03f8b09bd3cfd9d856967dafde4bf586" target="_blank">f8037eb</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -514,6 +514,7 @@ Ignored files:
     Ignored:    analysis/.RData
     Ignored:    analysis/.Rhistory
     Ignored:    analysis/ALStruct_cache/
+    Ignored:    analysis/figure/
     Ignored:    data/.Rhistory
     Ignored:    data/pbmc/
 
@@ -540,6 +541,7 @@ Untracked files:
     Untracked:  analysis/mash_bhat_z.Rmd
     Untracked:  analysis/mash_ieqtl_permutations.Rmd
     Untracked:  analysis/mixsqp.Rmd
+    Untracked:  analysis/mr.ash_lasso_init.Rmd
     Untracked:  analysis/mr.mash.test.Rmd
     Untracked:  analysis/mr_ash_modular.Rmd
     Untracked:  analysis/mr_ash_parameterization.Rmd
@@ -552,6 +554,7 @@ Untracked files:
     Untracked:  analysis/qrnotes.txt
     Untracked:  analysis/ridge_iterative_02.Rmd
     Untracked:  analysis/ridge_iterative_splitting.Rmd
+    Untracked:  analysis/samps/
     Untracked:  analysis/sc_bimodal.Rmd
     Untracked:  analysis/shrinkage_comparisons_changepoints.Rmd
     Untracked:  analysis/susie_en.Rmd
@@ -689,6 +692,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/f8037ebc03f8b09bd3cfd9d856967dafde4bf586/analysis/mr_ash_vs_lasso.Rmd" target="_blank">f8037eb</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-19
+</td>
+<td>
+workflowr::wflow_publish(“mr_ash_vs_lasso.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/c94d7bf5d2078f585efbf80e2e7b04ac58451559/docs/mr_ash_vs_lasso.html" target="_blank">c94d7bf</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-12
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/94bd508454ee1f81288ac05297880aae652a5314/analysis/mr_ash_vs_lasso.Rmd" target="_blank">94bd508</a>
 </td>
 <td>
@@ -714,7 +751,7 @@ library(&quot;glmnet&quot;)</code></pre>
 <pre><code>Loaded glmnet 3.0-2</code></pre>
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
-<p>This is to illustrate a setting where Fabio Morgante found lasso to work better than mr.ash. The simulation is based on his set-up, and then simplified.</p>
+<p>This is to illustrate a setting where Fabio Morgante found lasso to work better than mr.ash. The simulation is based on his set-up, and then simplified. (Note that I have set the columns of <span class="math inline">\(X\)</span> to have norm approximately 1 to make connections with the mr.ash paper easier.)</p>
 <pre class="r"><code>  set.seed(123)
   n &lt;- 500
   p &lt;- 1000
@@ -723,11 +760,11 @@ library(&quot;glmnet&quot;)</code></pre>
   nrep = 10
   rmse_mrash = rep(0,nrep)
   rmse_glmnet = rep(0,nrep)
+  rmse_ridge = rep(0,nrep)
   
   for(i in 1:nrep){
     sim=list()
-    sim$X =  matrix(rnorm(n*p),nrow=n)
-  
+    sim$X =  matrix(rnorm(n*p,sd=1),nrow=n)
     B &lt;- rep(0,p)
     causal_variables &lt;- sample(x=(1:p), size=p_causal)
     B[causal_variables] &lt;- rnorm(n=p_causal, mean=0, sd=1)
@@ -736,19 +773,229 @@ library(&quot;glmnet&quot;)</code></pre>
     sim$Y = sim$X %*% sim$B
     E = rnorm(n,sd = sqrt((1-pve)/(pve))*sd(sim$Y))
     sim$Y = sim$Y + E
-  
+      
     fit_mrash &lt;- mr.ash.alpha::mr.ash(sim$X, sim$Y,standardize = FALSE)
 
     fit_glmnet &lt;- cv.glmnet(x=sim$X, y=sim$Y, family=&quot;gaussian&quot;, alpha=1, standardize=FALSE)
-  
+    #fit_ridge &lt;- cv.glmnet(x=sim$X, y=sim$Y, family=&quot;gaussian&quot;, alpha=0, standardize=FALSE)
    
     rmse_mrash[i] = sqrt(mean((sim$B-fit_mrash$beta)^2))
     rmse_glmnet[i] = sqrt(mean((sim$B-coef(fit_glmnet)[-1])^2))
-    
+    #rmse_ridge[i] = sqrt(mean((sim$B-coef(fit_ridge)[-1])^2))
   }
   
-  plot(rmse_mrash,rmse_glmnet)</code></pre>
+  plot(rmse_mrash,rmse_glmnet, xlim=c(0.5,0.7), ylim=c(0.5,0.7), main=&quot;red=ridge; black=lasso&quot;)
+  #points(rmse_mrash,rmse_ridge,col=2)
+  abline(a=0,b=1)</code></pre>
 <p><img src="figure/mr_ash_vs_lasso.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-1">
+Past versions of unnamed-chunk-2-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c94d7bf5d2078f585efbf80e2e7b04ac58451559/docs/figure/mr_ash_vs_lasso.Rmd/unnamed-chunk-2-1.png" target="_blank">c94d7bf</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-12
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="attempt-to-find-better-initialization" class="section level1">
+<h1>Attempt to find better initialization</h1>
+<p>Since the resut is so consistently that mr.ash is worse than lasso here, I’ll initially just focus on the last of the simulations above.</p>
+<p>The first thing I wanted to try was fixing the prior to the “true” value. I was suprised to find I actually needed to use the true beta to initialize in order to get good error. And the initialization really changes things, even with true fixed prior.</p>
+<pre class="r"><code>s2 = (sqrt((1-pve)/(pve))*sd(sim$Y))^2
+
+fit_trueg &lt;- mr.ash.alpha::mr.ash(sim$X, sim$Y,standardize = FALSE, sa2 = c(0,1/s2), pi=c(0.5,0.5), sigma2 = s2, update.pi=FALSE, update.sigma2 = FALSE, intercept=FALSE,min.iter=100)</code></pre>
+<pre><code>Warning in mr.ash.alpha::mr.ash(sim$X, sim$Y, standardize = FALSE, sa2 = c(0, :
+The mixture proportion associated with the largest prior variance is greater
+than zero; this indicates that the model fit could be improved by using a larger
+setting of the prior variance. Consider increasing the range of the variances
+&quot;sa2&quot;.</code></pre>
+<pre class="r"><code>fit_trueg.inittrueb &lt;- mr.ash.alpha::mr.ash(sim$X, sim$Y,standardize = FALSE, sa2 = c(0,1/s2), beta.init=sim$B, pi=c(0.5,0.5), sigma2 = s2, update.pi=FALSE, update.sigma2 = FALSE, intercept = FALSE)</code></pre>
+<pre><code>Warning in mr.ash.alpha::mr.ash(sim$X, sim$Y, standardize = FALSE, sa2 = c(0, :
+The mixture proportion associated with the largest prior variance is greater
+than zero; this indicates that the model fit could be improved by using a larger
+setting of the prior variance. Consider increasing the range of the variances
+&quot;sa2&quot;.</code></pre>
+<pre class="r"><code>sqrt(mean((sim$B-fit_trueg$beta)^2))</code></pre>
+<pre><code>[1] 0.5782072</code></pre>
+<pre class="r"><code>sqrt(mean((sim$B-fit_trueg.inittrueb$beta)^2))</code></pre>
+<pre><code>[1] 0.441107</code></pre>
+<pre class="r"><code>plot(fit_trueg$beta, fit_trueg.inittrueb$beta)</code></pre>
+<p><img src="figure/mr_ash_vs_lasso.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Reassuringly, the better solution also has better objective (but only slightly).</p>
+<pre class="r"><code>min(fit_trueg$varobj)</code></pre>
+<pre><code>[1] 2195.987</code></pre>
+<pre class="r"><code>min(fit_trueg.inittrueb$varobj)</code></pre>
+<pre><code>[1] 2184.777</code></pre>
+<p>Try running longer. Note that now the worse solution has better objective… unfortunate! One caveat is that, after discussion, it seems that the computation of the variational objective may be unreliable for fixed g.</p>
+<pre class="r"><code>fit_trueg_long &lt;- mr.ash.alpha::mr.ash(sim$X, sim$Y,standardize = FALSE, sa2 = c(0,1/s2), pi=c(0.5,0.5), sigma2 = s2, update.pi=FALSE, update.sigma2 = FALSE, intercept=FALSE,min.iter=1000)</code></pre>
+<pre><code>Warning in mr.ash.alpha::mr.ash(sim$X, sim$Y, standardize = FALSE, sa2 = c(0, :
+The mixture proportion associated with the largest prior variance is greater
+than zero; this indicates that the model fit could be improved by using a larger
+setting of the prior variance. Consider increasing the range of the variances
+&quot;sa2&quot;.</code></pre>
+<pre class="r"><code>fit_trueg.inittrueb_long &lt;- mr.ash.alpha::mr.ash(sim$X, sim$Y,standardize = FALSE, sa2 = c(0,1/s2), beta.init=sim$B, pi=c(0.5,0.5), sigma2 = s2, update.pi=FALSE, update.sigma2 = FALSE, intercept = FALSE,min.iter=1000)</code></pre>
+<pre><code>Warning in mr.ash.alpha::mr.ash(sim$X, sim$Y, standardize = FALSE, sa2 = c(0, :
+The mixture proportion associated with the largest prior variance is greater
+than zero; this indicates that the model fit could be improved by using a larger
+setting of the prior variance. Consider increasing the range of the variances
+&quot;sa2&quot;.</code></pre>
+<pre class="r"><code>min(fit_trueg_long$varobj)</code></pre>
+<pre><code>[1] 2161.257</code></pre>
+<pre class="r"><code>min(fit_trueg.inittrueb_long$varobj)</code></pre>
+<pre><code>[1] 2176.406</code></pre>
+<pre class="r"><code>sqrt(mean((sim$B-fit_trueg_long$beta)^2))</code></pre>
+<pre><code>[1] 0.5794779</code></pre>
+<pre class="r"><code>sqrt(mean((sim$B-fit_trueg.inittrueb_long$beta)^2))</code></pre>
+<pre><code>[1] 0.4648454</code></pre>
+<pre class="r"><code>sqrt(mean((sim$B-coef(fit_glmnet)[-1])^2))</code></pre>
+<pre><code>[1] 0.5278743</code></pre>
+<pre class="r"><code>sqrt(mean((sim$B-fit_mrash$beta)^2))</code></pre>
+<pre><code>[1] 0.6096672</code></pre>
+</div>
+<div id="try-to-initialize-based-on-lasso-fit" class="section level1">
+<h1>Try to initialize based on Lasso fit</h1>
+<p>Here I investigate some ideas to try to get the mr.ash prior to fit the lasso prior.</p>
+<p>First I will compute the values of <span class="math inline">\(\tilde{b}\)</span>, which, algorithmically, are the values of <span class="math inline">\(b\)</span> before shrinkage (soft-thresholding) is applied to them. I’m going to look at the shrinkage factors, which I define to be <span class="math inline">\(f:=b/\tilde{b}\)</span>.</p>
+<pre class="r"><code>y = sim$Y
+X = sim$X
+d = colSums(X^2)
+b = coef(fit_glmnet)[-1]
+r = y-sim$X %*% b - coef(fit_glmnet)[1]
+btilde = drop((t(X) %*% r)/d) + b
+
+plot(btilde,b, main=&quot;btilde vs b from lasso&quot;)</code></pre>
+<p><img src="figure/mr_ash_vs_lasso.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>hist(b/btilde,nclass=100, main = &quot;histogram of shrinkage factors from lasso fit&quot;)</code></pre>
+<p><img src="figure/mr_ash_vs_lasso.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>We want to try to select a prior such that the mr ash shrinkage operator is similar to the lasso. Intuitively that will ensure that the first mr ash update step does not change the solution “very much”. Ideally one might select <span class="math inline">\(g\)</span> to minimize <span class="math inline">\(b-S_g(btilde)\)</span>.</p>
+<p>THe mr ash shrinkage operator is the average of many ridge regression shrinkage operators. In ridge regression, with prior sa2 s2 the shrinkage factor for a variable <span class="math inline">\(j\)</span> is <span class="math inline">\(f_j = sa2/(sa2 + 1/d_j)\)</span>, where <span class="math inline">\(d_j = x_j&#39;x_j\)</span>.</p>
+<p>Rearranging, and writing the shrinkage factor as <span class="math inline">\(f\)</span>, <span class="math inline">\((d sa2 + 1) f_j = d_j sa2\)</span> or <span class="math display">\[sa2 = f_j/[d_j(1-f)]\]</span></p>
+<p>To get a quick approximation of what <span class="math inline">\(g\)</span> might be we take the empirical values for sa2 computed in this way from the shrinkage factors. To give a grid I then cluster these empirical values into quantiles and give them equal weights in the prior. I deal separately with shrinkage factor 0.</p>
+<pre class="r"><code>f = b/btilde
+sa2 = f/(d*(1-f))
+hist(sa2)</code></pre>
+<p><img src="figure/mr_ash_vs_lasso.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>pi0 = mean(sa2==0)
+sa2 = sa2[sa2!=0] # deal with zeros separately
+
+sa2 = as.vector(quantile(sa2,seq(0,1,length=20)))
+sa2 = c(0,sa2)
+w = c(pi0, (1-pi0)*rep(1/20,20))</code></pre>
+<p>Here I write code to compute posterior mean under normal means model with given prior variances and data variances. (Note the prior variances here not scaled by data variances.)</p>
+<pre class="r"><code>softmax = function(x){
+    x = x- max(x)
+    y = exp(x)
+    return(y/sum(y))
+}
+
+postmean = function(b, w, prior_variances, data_variance){
+  total_var = prior_variances + data_variance
+  loglik = -0.5* log(total_var) + dnorm(outer(sqrt(1/total_var),b,FUN=&quot;*&quot;),log=TRUE) # K by p matrix
+  log_post = loglik + log(w)
+  phi = apply(log_post, 2, softmax) 
+  mu = outer(prior_variances/total_var,b)
+  return(colSums(phi*mu))
+}</code></pre>
+<p>Now check if our prior reproduces the lasso shrinkage approximately. It does!</p>
+<pre class="r"><code>plot(btilde,b, main=&quot;comparison of mr.ash shrinkage (red) with soft thresholding&quot;)
+
+lines(sort(btilde),postmean(sort(btilde), w, prior_variances = s2*sa2, data_variance = s2/median(d)),col=2,lwd=2)</code></pre>
+<p><img src="figure/mr_ash_vs_lasso.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Somewhat unexpectedly though, initializing here has no effect</p>
+<pre class="r"><code>fit_mrash = mr.ash.alpha::mr.ash(sim$X, sim$Y,standardize = FALSE)
+fit_mrash_lassoinit &lt;- mr.ash.alpha::mr.ash(sim$X, sim$Y,standardize = FALSE, beta.init = b, sa2 = sa2, pi=w, sigma2=s2)</code></pre>
+<pre><code>Warning in mr.ash.alpha::mr.ash(sim$X, sim$Y, standardize = FALSE, beta.init
+= b, : The mixture proportion associated with the largest prior variance is
+greater than zero; this indicates that the model fit could be improved by using
+a larger setting of the prior variance. Consider increasing the range of the
+variances &quot;sa2&quot;.</code></pre>
+<pre class="r"><code>plot(fit_mrash_lassoinit$beta,fit_mrash$beta)</code></pre>
+<p><img src="figure/mr_ash_vs_lasso.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>sqrt(mean((sim$B-fit_mrash_lassoinit$beta)^2))</code></pre>
+<pre><code>[1] 0.6073579</code></pre>
+<pre class="r"><code>sqrt(mean((sim$B-fit_mrash$beta)^2))</code></pre>
+<pre><code>[1] 0.6096672</code></pre>
+<pre class="r"><code>min(fit_mrash$varobj)</code></pre>
+<pre><code>[1] 2210.826</code></pre>
+<pre class="r"><code>min(fit_mrash_lassoinit$varobj)</code></pre>
+<pre><code>[1] 2210.982</code></pre>
+<p>Plot the learned mr.mash shrinkage operators:</p>
+<pre class="r"><code>plot(btilde,b, main=&quot;comparison of mr.ash shrinkage (red) with soft thresholding&quot;)
+lines(sort(btilde),postmean(sort(btilde), as.vector(fit_mrash$pi), prior_variances = fit_mrash$sigma2*fit_mrash$data$sa2, data_variance = fit_mrash$sigma2/median(d)),col=2,lwd=2)
+
+lines(sort(btilde),postmean(sort(btilde), as.vector(fit_mrash_lassoinit$pi), prior_variances = fit_mrash_lassoinit$sigma2*fit_mrash_lassoinit$data$sa2, data_variance = fit_mrash_lassoinit$sigma2/median(d)),col=3,lwd=2)</code></pre>
+<p><img src="figure/mr_ash_vs_lasso.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Interestingly the fitted pi from lasso intialization is almost identical to the one used in lasso. So actually the prior is the same! It is the sigma2 that must be different….</p>
+<pre class="r"><code>plot(fit_mrash_lassoinit$pi,w)</code></pre>
+<p><img src="figure/mr_ash_vs_lasso.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>So here I fix sigma2:</p>
+<pre class="r"><code>fit_mrash_lassoinit_fixs2 &lt;- mr.ash.alpha::mr.ash(sim$X, sim$Y,standardize = FALSE, beta.init = b, sa2 = sa2, pi=w, sigma2=s2, update.sigma2 = FALSE)</code></pre>
+<pre><code>Warning in mr.ash.alpha::mr.ash(sim$X, sim$Y, standardize = FALSE, beta.init
+= b, : The mixture proportion associated with the largest prior variance is
+greater than zero; this indicates that the model fit could be improved by using
+a larger setting of the prior variance. Consider increasing the range of the
+variances &quot;sa2&quot;.</code></pre>
+<pre class="r"><code>sqrt(mean((sim$B-fit_mrash_lassoinit_fixs2$beta)^2))</code></pre>
+<pre><code>[1] 0.4895238</code></pre>
+<p>And now initialize from that fit:</p>
+<pre class="r"><code>fit_mrash_lassoinit_relaxs2 &lt;- mr.ash.alpha::mr.ash(sim$X, sim$Y,standardize = FALSE, beta.init = fit_mrash_lassoinit_fixs2$beta, sa2 = fit_mrash_lassoinit_fixs2$data$sa2, pi=fit_mrash_lassoinit_fixs2$pi, sigma2=fit_mrash_lassoinit_fixs2$sigma2)</code></pre>
+<pre><code>Warning in mr.ash.alpha::mr.ash(sim$X, sim$Y, standardize = FALSE, beta.init
+= fit_mrash_lassoinit_fixs2$beta, : The mixture proportion associated with the
+largest prior variance is greater than zero; this indicates that the model fit
+could be improved by using a larger setting of the prior variance. Consider
+increasing the range of the variances &quot;sa2&quot;.</code></pre>
+<pre class="r"><code>sqrt(mean((sim$B-fit_mrash_lassoinit_relaxs2$beta)^2))</code></pre>
+<pre><code>[1] 0.5878012</code></pre>
+<pre class="r"><code>min(fit_mrash_lassoinit_relaxs2$varobj)</code></pre>
+<pre><code>[1] 2215.324</code></pre>
+<pre class="r"><code>min(fit_mrash_lassoinit_fixs2$varobj)</code></pre>
+<pre><code>[1] 2464.856</code></pre>
+</div>
+<div id="initializing-from-ridge-regression" class="section level1">
+<h1>Initializing from ridge regression</h1>
+<p>One of the challenges is that the mr ash shrinkage operator is not a special case of lasso. In contrast, the ridge shrinkage operator is a special case. So it is easier to initialize from that.</p>
+<p>Here i wanted to try this.</p>
+<pre class="r"><code>fit_ridge &lt;- cv.glmnet(x=sim$X, y=sim$Y, family=&quot;gaussian&quot;, alpha=0, standardize=FALSE)
+b = coef(fit_ridge)[-1]
+r = y-sim$X %*% b - coef(fit_ridge)[1]
+btilde = drop((t(X) %*% r)/d) + b
+
+plot(btilde,b, main=&quot;btilde vs b from ridge&quot;)
+abline(a=0,b=1)</code></pre>
+<p><img src="figure/mr_ash_vs_lasso.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>hist(b/btilde,nclass=100, main = &quot;histogram of shrinkage factors from ridge fit&quot;)</code></pre>
+<p><img src="figure/mr_ash_vs_lasso.Rmd/unnamed-chunk-15-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>sqrt(mean((sim$B-b)^2))</code></pre>
+<pre><code>[1] 0.5908821</code></pre>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -772,7 +1019,7 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] glmnet_3.0-2        Matrix_1.2-18       mr.ash.alpha_0.1-33
+[1] glmnet_3.0-2        Matrix_1.2-18       mr.ash.alpha_0.1-34
 
 loaded via a namespace (and not attached):
  [1] Rcpp_1.0.4.6     knitr_1.28       whisker_0.4      magrittr_1.5    
