@@ -1,0 +1,155 @@
+---
+title: "mr_ash_vs_lasso_02"
+author: "Matthew Stephens"
+date: "2020-06-22"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+-
+```{r}
+library("mr.ash.alpha")
+library("mr.mash.alpha")
+library("glmnet")
+```
+
+## Introduction
+
+This is a follow-up to my [previous investigation](mr_ash_vs_lasso.html)
+where it looks like `mr.ash` may have convergence issues on cases with
+dense variables and high PVE.
+
+Here I want to try to check that this really is a convergence issue 
+by checking the objective function from different initialization strategies.
+I use the `mr.mash` implementation here since we believe it computes
+objective correctly even when prior is fixed, which at time of writing
+was not true for `mr.ash`.
+
+I run `mr.mash` in different ways:
+
+1. Initialized just b from lasso solution
+2. Fix g and V to true g and true V, init from lasso solution.
+3. Fix g and V to true g and true V, init from true b
+
+
+```{r}
+  set.seed(123)
+  n <- 500
+  p <- 1000
+  p_causal <- 500 # number of causal variables (simulated effects N(0,1))
+  pve <- 0.95
+  nrep = 10
+  rmse = list(mr_mash=rep(0,nrep),lasso = rep(0,nrep),ridge=rep(0,nrep),mr_ash=rep(0,nrep))
+  obj = list(mr_mash=rep(0,nrep),lasso = rep(0,nrep),ridge=rep(0,nrep),mr_ash=rep(0,nrep))
+  
+  for(i in 1:nrep){
+    sim=list()
+    sim$X =  matrix(rnorm(n*p,sd=1),nrow=n)
+    B <- rep(0,p)
+    causal_variables <- sample(x=(1:p), size=p_causal)
+    B[causal_variables] <- rnorm(n=p_causal, mean=0, sd=1)
+    sim$B = B
+    sim$Y = sim$X %*% sim$B
+    
+    E = rnorm(n,sd = sqrt((1-pve)/(pve))*sd(sim$Y))
+    sim$Y = sim$Y + E
+    sim$E = E
+    
+    fit_lasso <- cv.glmnet(x=sim$X, y=sim$Y, family="gaussian", alpha=1, standardize=FALSE)
+    fit_ridge <- cv.glmnet(x=sim$X, y=sim$Y, family="gaussian", alpha=0, standardize=FALSE)
+    fit_mrash <- mr.ash.alpha::mr.ash(sim$X, sim$Y, beta.init=coef(fit_lasso)[-1], standardize = FALSE)
+     
+    ###Fit mr.mash univariate
+    grid <- fit_mrash$data$sa2 * fit_mrash$sigma2
+    s0 <- vector("list", length(grid)+1)
+    for(j in 1:(length(grid)+1)){
+      s0[[j]] <- matrix(c(0, grid)[j], ncol=1, nrow=1)
+    }
+    fit_mrmash <- mr.mash(sim$X, cbind(sim$Y), s0, tol=1e-8, convergence_criterion="ELBO", update_w0=TRUE,
+                          update_w0_method="EM", compute_ELBO=TRUE, standardize=FALSE, verbose=FALSE, update_V=TRUE,
+                          mu1_init=matrix(coef(fit_lasso)[-1], nrow=p, ncol=1), w0_threshold=0)
+    
+    ###Fit mr.mash univariate using true g etc
+    s2 = (sqrt((1-pve)/(pve))*sd(sim$Y))^2
+    grid = c(1)
+    s0 <- vector("list", length(grid)+1)
+    for(j in 1:(length(grid)+1)){
+      s0[[j]] <- matrix(c(0, grid)[j], ncol=1, nrow=1)
+    }
+    fit_mrmash_trueg_trueV <- mr.mash(sim$X, cbind(sim$Y), s0, w0 = c(0.5,0.5), V=matrix(s2,nrow=1,ncol=1),tol=1e-8, convergence_criterion="ELBO", update_w0=FALSE, compute_ELBO=TRUE, standardize=FALSE, verbose=FALSE, update_V=FALSE,mu1_init=matrix(coef(fit_lasso)[-1], nrow=p, ncol=1), w0_threshold=0)
+    
+    fit_mrmash_trueg_trueV_trueb <- mr.mash(sim$X, cbind(sim$Y), s0, w0 = c(0.5,0.5), V=matrix(s2,nrow=1,ncol=1),tol=1e-8, convergence_criterion="ELBO", update_w0=FALSE, compute_ELBO=TRUE, standardize=FALSE, verbose=FALSE, update_V=FALSE,mu1_init=matrix(sim$B, nrow=p, ncol=1), w0_threshold=0)
+    
+    
+    rmse$mr_ash[i] = sqrt(mean((sim$B-fit_mrash$beta)^2))
+    rmse$mr_mash[i] = sqrt(mean((sim$B-fit_mrmash$mu1)^2))
+    rmse$lasso[i] = sqrt(mean((sim$B-coef(fit_lasso)[-1])^2))
+    rmse$ridge[i] = sqrt(mean((sim$B-coef(fit_ridge)[-1])^2))
+    rmse$mr_mash_trueg_trueV[i] = sqrt(mean((sim$B-fit_mrmash_trueg_trueV$mu1)^2))
+    rmse$mr_mash_trueg_trueV_trueb[i] = sqrt(mean((sim$B-fit_mrmash_trueg_trueV_trueb$mu1)^2))
+    
+    
+    obj$mr_ash[i] = min(fit_mrash$varobj)
+    obj$mr_mash[i] = fit_mrmash$ELBO
+    obj$mr_mash_trueg_trueV[i] = fit_mrmash_trueg_trueV$ELBO
+    obj$mr_mash_trueg_trueV_trueb[i] = fit_mrmash_trueg_trueV_trueb$ELBO
+  }
+```
+
+
+## mr.mash vs mr.ash
+
+First compare RMSE and objective of `mr.ash` vs `mr.mash` 
+from default settings (same grid for both).
+Note the obective in `mr.ash` is the negative ELBO.
+
+```{r}
+  plot(rmse$mr_ash,rmse$mr_mash, main="RMSE: mr.ash vs mr.mash", ylab="mr.mash", xlab="mr.ash")
+  abline(a=0,b=1)
+```
+
+```{r}
+  plot(obj$mr_ash,obj$mr_mash, main="objective: mr.ash vs mr.mash", ylab="mr.mash", xlab="mr.ash")
+  abline(a=0,b=-1)
+```
+
+
+## mr.mash vs ridge/lasso
+
+Now compare RMSE against lasso and ridge; as we know lasso is better here.
+
+```{r}
+ plot(rmse$mr_mash,rmse$lasso, xlim=c(0.5,0.7), ylim=c(0.5,0.7), main="RMSE, mr_mash vs lasso (black) and ridge (red)")
+  points(rmse$mr_mash,rmse$ridge,col=2)
+  abline(a=0,b=1)
+```
+
+## mr.mash objective with true g and true V
+  
+Now compare objective with default initialization vs fix g and V to true values.
+We see the objective is consistently better when g and V are estimated. (Red shows
+initialization from true b)
+```{r}
+  plot(obj$mr_mash,obj$mr_mash_trueg_trueV, xlim=c(-2500,-2200),ylim=c(-2500,-2200), main="Compare objective: g,V estimated vs fixed")
+  points(obj$mr_mash,obj$mr_mash_trueg_trueV_trueb, col=2)
+  abline(a=0,b=1)
+```
+
+
+## mr.mash objective with true g and true V
+  
+Now compare rmse. We confirm the rmse performance is better for true (g,V), as it should be. 
+But, of course, this is cheating...
+
+```{r}
+  plot(rmse$mr_mash,rmse$mr_mash_trueg_trueV,xlim=c(0.5,0.7),ylim=c(0.5,0.7))
+  points(rmse$mr_mash,rmse$mr_mash_trueg_trueV_trueb, col=2)
+  abline(a=0,b=1)
+```
+
+My explanation for this behaviour is that the gap between the variational approximation
+and true posterior is smaller for (g,V) that correspond to less signal. So it tends to
+favor a solution with less signal than it should.
+
+
