@@ -1,0 +1,105 @@
+---
+title: "lasso_em_02"
+author: "Matthew Stephens"
+date: "2020-06-23"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+library("glmnet")
+library("mr.ash.alpha")
+```
+
+## Introduction
+
+Following up on [previous](lasso_em.html) investigation we try it on
+an example where [mr ash struggles](mr_ash_vs_lasso.html).
+
+This code comes from [lasso_em.html](lasso_em.html).
+
+```{r}
+calc_s2hat = function(y,X,XtX,EB,EB2){
+  n = length(y)
+  Xb = X %*% EB
+  s2hat = as.numeric((1/n)* (t(y) %*% y - 2*sum(y*Xb) + sum(XtX * EB2)))
+}
+
+# see objective computation for scaling of eta and residual variance s2
+# if compute_mode=TRUE we have the regular LASSO
+blasso_veb = function(y,X,b.init,s2=1,eta=1,niter=100){
+  n = nrow(X)
+  p = ncol(X)
+  b = b.init # initiolize
+  XtX = t(X) %*% X
+  Xty = t(X) %*% y
+  obj = rep(0,niter)
+  EB = rep(1,p)
+  EB2 = diag(p)
+  
+  for(i in 1:niter){
+    W = as.vector(1/sqrt(diag(EB2) + EB^2) * sqrt(2/eta))
+     
+    V = chol2inv(chol(XtX+ diag(s2*W))) 
+    Sigma1 = s2*V  # posterior variance of b
+    varB = diag(Sigma1)
+   
+    mu1 = as.vector(V %*% Xty) # posterior mean of b
+    EB = mu1
+    EB2 = Sigma1 + outer(mu1,mu1)
+    
+    eta = mean(sqrt(diag(EB2))*sqrt(eta/2) + eta/2)
+    s2 = calc_s2hat(y,X,XtX,EB,EB2)
+  }
+  return(list(bhat=EB,eta=eta,s2 = s2, W=W))
+}
+```
+
+
+
+```{r}
+  set.seed(123)
+  n <- 500
+  p <- 1000
+  p_causal <- 500 # number of causal variables (simulated effects N(0,1))
+  pve <- 0.95
+  nrep = 10
+  rmse = list(mr_mash=rep(0,nrep),lasso = rep(0,nrep),ridge=rep(0,nrep),mr_ash=rep(0,nrep))
+  
+  for(i in 1:nrep){
+    sim=list()
+    sim$X =  matrix(rnorm(n*p,sd=1),nrow=n)
+    B <- rep(0,p)
+    causal_variables <- sample(x=(1:p), size=p_causal)
+    B[causal_variables] <- rnorm(n=p_causal, mean=0, sd=1)
+    sim$B = B
+    sim$Y = sim$X %*% sim$B
+    
+    E = rnorm(n,sd = sqrt((1-pve)/(pve))*sd(sim$Y))
+    sim$Y = sim$Y + E
+    sim$E = E
+    
+    fit_lasso <- cv.glmnet(x=sim$X, y=sim$Y, family="gaussian", alpha=1, standardize=FALSE)
+    fit_ridge <- cv.glmnet(x=sim$X, y=sim$Y, family="gaussian", alpha=0, standardize=FALSE)
+    fit_mrash <- mr.ash.alpha::mr.ash(sim$X, sim$Y, beta.init=coef(fit_lasso)[-1], standardize = FALSE)
+    fit_veblasso <- blasso_veb(y=sim$Y, X=sim$X,b.init = coef(fit_lasso)[-1])
+    
+    rmse$mr_ash[i] = sqrt(mean((sim$B-fit_mrash$beta)^2))
+    rmse$lasso[i] = sqrt(mean((sim$B-coef(fit_lasso)[-1])^2))
+    rmse$ridge[i] = sqrt(mean((sim$B-coef(fit_ridge)[-1])^2))
+    rmse$veblasso[i] = sqrt(mean((sim$B-fit_veblasso$bhat)^2))
+  }
+```
+
+Here we compare RMSE for lasso against all three other methods. Clearly VEBlasso does very well!
+
+```{r}
+  plot(rmse$lasso, rmse$mr_ash, xlim=c(0.4,0.7), ylim=c(0.4,0.7), main="RMSE lasso vs other methods\n black: mr.ash; red: ridge; green: veblasso ", xlab = "RMSE lasso", ylab="RMSE other method")
+  points(rmse$lasso,rmse$ridge,col=2)
+  points(rmse$lasso,rmse$veblasso, col=3)
+  abline(a=0,b=1)
+```
+
+
+
