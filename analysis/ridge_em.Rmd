@@ -11,9 +11,12 @@ editor_options:
 
 Here I am going to experiment with EM algorithm for estimating parameters 
 of ridge regression in different parameterizations.
-Derivations of EM updates are [here](EM_Ridge.pdf)
-The ones implemented here are 1,2, and 5 in that document. 
-The others are a little more complex so I did not implement them yet.
+
+Initial derivations of EM updates are [here](EM_Ridge.pdf).
+I initially implemented 1,2, and 5 in that document. 
+
+A futher derivation for another parameterization is [here](EM_Ridge_02.pdf).
+
 
 ## Simple parameterization
 
@@ -89,7 +92,6 @@ only on $s_b^2 \lambda^2$. The hope is to get the
 best of both worlds...
 
 
-
 ```{r}
 ridge_em3 = function(y,X, s2, sb2, l2, niter=10){
   XtX = t(X) %*% X
@@ -118,11 +120,55 @@ ridge_em3 = function(y,X, s2, sb2, l2, niter=10){
 }
 ```
 
+## Avoiding large 2nd moment computation
+
+The previous parameterizations require the full second moment of $b$, 
+which is a $p$ times $p$ matrix. This can be expensive to compute if $p$ is big. 
+The following parameterization avoids this.
+
+$$y \sim N(sXb, s^2 I)$$
+
+$$b \sim N(0,s_b^2I)$$
+
+(Note that for simplicity I still do compute the $p \times p$ matrix, as for now it
+is the easiest way to implement the ridge regression).
+
+```{r}
+dot = function(x,y){sum(x*y)}
+
+ridge_em4 = function(y, X, s2, sb2,  niter=10){
+  XtX = t(X) %*% X
+  Xty = t(X) %*% y
+  yty = t(y) %*% y
+  n = length(y)
+  p = ncol(X)
+  loglik = rep(0,niter)
+  for(i in 1:niter){
+    
+    SigmaY = s2*sb2 *(X %*% t(X)) + diag(s2,n)
+    loglik[i] = mvtnorm::dmvnorm(as.vector(y),sigma = SigmaY,log=TRUE)
+    
+    Sigma1 = chol2inv(chol(XtX + diag(1/sb2,p)))  # posterior variance of b
+    mu1 = (1/sqrt(s2))*as.vector(Sigma1 %*% Xty) # posterior mean of b
+    
+    sb2 = mean(mu1^2+diag(Sigma1))
+    yhat = X %*% mu1
+    
+    s2 = drop((0.5/n)* (sqrt(dot(y,yhat)^2 + 4*n*yty) - dot(y,yhat)))^2
+   
+  }
+  return(list(s2=s2,sb2=sb2,loglik=loglik,postmean=mu1*sqrt(s2)))
+}
+```
+
+
 ## Simple Simulations
 
-This is a simple simulation with independent design matrix I used while debugging.
+This is a simple simulation with independent design matrix.
 
-High signal:
+### High signal:
+
+This simulation has high signal:
 ```{r}
 set.seed(100)
 sd = 1
@@ -132,43 +178,50 @@ X = matrix(rnorm(n*p),ncol=n)
 btrue = rnorm(n)
 y = X %*% btrue + sd*rnorm(n)
 
-plot(y)
-lines(X %*% btrue)
+plot(X %*% btrue, y)
+```
+
+```{r}
 y.em1 = ridge_em1(y,X,1,1,100)
 y.em2 = ridge_em2(y,X,1,1,100)
 y.em3 = ridge_em3(y,X,1,1,1,100)
+y.em4 = ridge_em4(y,X,1,1,100)
 
-plot_loglik = function(y.em1,y.em2,y.em3=NULL){
-  plot(y.em1$loglik,ylim=c(min(y.em1$loglik),max(c(y.em1$loglik,y.em2$loglik))),type="l",xlim=c(0,max(length(y.em2$loglik),length(y.em1$loglik))))
-lines(y.em2$loglik,col=2)
-if(!is.null(y.em3)){
-  lines(y.em3$loglik,col=3)
-}
-}
-plot_loglik(y.em1,y.em2,y.em3)
+plot_loglik = function(res){
+  maxloglik = max(res[[1]]$loglik)
+  minloglik = min(res[[1]]$loglik)
+  maxlen =length(res[[1]]$loglik)
+  for(i in 2:length(res)){
+    maxloglik = max(c(maxloglik,res[[i]]$loglik))
+    minloglik = min(c(minloglik,res[[i]]$loglik))
+    maxlen= max(maxlen, length(res[[i]]$loglik))
+  }
+  
+  
+  plot(res[[1]]$loglik,type="n",ylim=c(minloglik,maxloglik),xlim=c(0,maxlen),ylab="log-likelihood",
+       xlab="iteration")
+  for(i in 1:length(res)){
+    lines(res[[i]]$loglik,col=i,lwd=2)
+  }
 
+}
+res = list(y.em1,y.em2,y.em3,y.em4)
+plot_loglik(res)
 ```
 
-Same again with no signal:
+## No signal
+
+This simulation has no signal (b=0):
 ```{r}
 btrue = rep(0,n)
 y = X %*% btrue + sd*rnorm(n)
 
-plot(y)
-lines(X %*% btrue)
 y.em1 = ridge_em1(y,X,1,1,100)
 y.em2 = ridge_em2(y,X,1,1,100)
 y.em3 = ridge_em3(y,X,1,1,1,100)
+y.em4 = ridge_em4(y,X,1,1,100)
 
-plot_loglik = function(y.em1,y.em2,y.em3=NULL){
-  plot(y.em1$loglik,ylim=c(min(y.em1$loglik),max(c(y.em1$loglik,y.em2$loglik))),type="l",xlim=c(0,max(length(y.em2$loglik),length(y.em1$loglik))))
-lines(y.em2$loglik,col=2)
-if(!is.null(y.em3)){
-  lines(y.em3$loglik,col=3)
-}
-}
-plot_loglik(y.em1,y.em2,y.em3)
-
+plot_loglik(list(y.em1,y.em2,y.em3,y.em4))
 ```
 
 ## Trendfiltering Simulations
@@ -195,44 +248,50 @@ plot(y)
 lines(X %*% btrue)
 
 y.em1 = ridge_em1(y,X,1,1,100)
-lines(X %*% y.em1$postmean,col=1)
+lines(X %*% y.em1$postmean,col=1,lwd=2)
 
 y.em2 = ridge_em2(y,X,1,1,100)
-lines(X %*% y.em2$postmean,col=2)
+lines(X %*% y.em2$postmean,col=2,lwd=2)
 
 y.em3 = ridge_em3(y,X,1,1,1,100)
-lines(X %*% y.em3$postmean,col=3)
+lines(X %*% y.em3$postmean,col=3,lwd=2)
 
+y.em4 = ridge_em4(y,X,1,1,100)
+lines(X %*% y.em4$postmean,col=4,lwd=2)
 ```
 
 
 Look at the likelihoods:
 ```{r}
-plot_loglik(y.em1,y.em2,y.em3)
+plot_loglik(list(y.em1,y.em2,y.em3,y.em4))
 ```
 
 Run the second one longer and check it:
 ```{r}
 y.em2 = ridge_em2(y,X,1,1,1000)
-plot_loglik(y.em1,y.em2,y.em3)
+plot_loglik(list(y.em1,y.em2,y.em3,y.em4))
 
 y.em1$sb2
 y.em2$sb2
 y.em3$sb2*y.em3$l2
-
+y.em4$sb2 * y.em4$s2
 
 y.em1$s2
 y.em2$s2
 y.em3$s2
+y.em4$s2
 ```
 
+
+## Different initializations
 
 Try starting $s$ in wrong place
 ```{r}
 y.em1 = ridge_em1(y,X,10,1,100)
 y.em2 = ridge_em2(y,X,10,1,100)
-
-plot_loglik(y.em1,y.em2)
+y.em3 = ridge_em3(y,X,10,1,1,100)
+y.em4 = ridge_em4(y,X,10,1,100)
+plot_loglik(list(y.em1,y.em2,y.em3,y.em4))
 ```
 
 
@@ -240,16 +299,21 @@ Try starting $s2$ in wrong place
 ```{r}
 y.em1 = ridge_em1(y,X,1,10,100)
 y.em2 = ridge_em2(y,X,1,10,100)
-
-plot_loglik(y.em1,y.em2)
+y.em3 = ridge_em3(y,X,1,10,10,100)
+y.em4 = ridge_em4(y,X,1,10,100)
+plot_loglik(list(y.em1,y.em2,y.em3,y.em4))
 ```
 
-Try starting $s2$ in wrong place
+Try starting both in wrong place. Interestingly in this example em4 seems to converge
+to a local optimum?
 ```{r}
 y.em1 = ridge_em1(y,X,.1,10,100)
 y.em2 = ridge_em2(y,X,.1,10,100)
-
-plot_loglik(y.em1,y.em2)
+y.em3 = ridge_em3(y,X,.1,10,10,100)
+y.em4 = ridge_em4(y,X,.1,10,100)
+plot_loglik(list(y.em1,y.em2,y.em3,y.em4))
+y.em4$s2
+y.em1$s2
 ```
 
 ### No signal case
@@ -271,27 +335,29 @@ plot(y)
 lines(X %*% btrue)
 
 y.em1 = ridge_em1(y,X,1,1,100)
-lines(X %*% y.em1$postmean,col=1)
+lines(X %*% y.em1$postmean,col=1,lwd=2)
 
 y.em2 = ridge_em2(y,X,1,1,100)
-lines(X %*% y.em2$postmean,col=2)
+lines(X %*% y.em2$postmean,col=2,lwd=2)
 
 y.em3 = ridge_em3(y,X,1,1,1,100)
-lines(X %*% y.em3$postmean,col=3)
+lines(X %*% y.em3$postmean,col=3,lwd=2)
+
+y.em4 = ridge_em4(y,X,1,1,100)
+lines(X %*% y.em4$postmean,col=4,lwd=2)
 
 ```
 
 The EM2 and EM3 converge faster here:
 ```{r}
-plot_loglik(y.em1,y.em2,y.em3)
+plot_loglik(list(y.em1,y.em2,y.em3,y.em4))
 ```
 
 
 Try starting the expanded algorithm from very large lambda... it still seems to work.
 ```{r}
 y.em3b = ridge_em3(y,X,1,1,100,100)
-plot_loglik(y.em1,y.em2,y.em3b)
-
+plot_loglik(list(y.em1,y.em2,y.em3b,y.em4))
 ```
 
-
+The next step seems to be to combine the expanded idea with algorithm em4....
