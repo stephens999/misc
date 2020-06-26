@@ -321,7 +321,7 @@ $(document).ready(function () {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2020-06-22
+<strong>Last updated:</strong> 2020-06-26
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 2 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -352,16 +352,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreede094ed4d498582b52a250db4681fa5bcdf1094ctargetblankde094eda"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/de094ed4d498582b52a250db4681fa5bcdf1094c" target="_blank">de094ed</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree8098b1376b09709305cdc692f931148ed087dcc0targetblank8098b13a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/8098b1376b09709305cdc692f931148ed087dcc0" target="_blank">8098b13</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreede094ed4d498582b52a250db4681fa5bcdf1094ctargetblankde094eda" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree8098b1376b09709305cdc692f931148ed087dcc0targetblank8098b13a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/de094ed4d498582b52a250db4681fa5bcdf1094c" target="_blank">de094ed</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/8098b1376b09709305cdc692f931148ed087dcc0" target="_blank">8098b13</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -396,6 +396,7 @@ Untracked files:
     Untracked:  analysis/ebpmf1.Rmd
     Untracked:  analysis/flash_test_tree.Rmd
     Untracked:  analysis/ieQTL.perm.rand.pdf
+    Untracked:  analysis/lasso_em_03.Rmd
     Untracked:  analysis/m6amash.Rmd
     Untracked:  analysis/mash_bhat_z.Rmd
     Untracked:  analysis/mash_ieqtl_permutations.Rmd
@@ -405,6 +406,7 @@ Untracked files:
     Untracked:  analysis/mr_ash_modular.Rmd
     Untracked:  analysis/mr_ash_parameterization.Rmd
     Untracked:  analysis/mr_ash_pen.Rmd
+    Untracked:  analysis/mr_ash_ridge.Rmd
     Untracked:  analysis/nejm.Rmd
     Untracked:  analysis/normalize.Rmd
     Untracked:  analysis/pbmc.Rmd
@@ -546,6 +548,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/8098b1376b09709305cdc692f931148ed087dcc0/analysis/index.Rmd" target="_blank">8098b13</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-26
+</td>
+<td>
+workflowr::wflow_publish(“index.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/60d5a2a62d438f2f3ce3ba7f2a104052fabcb17f/docs/index.html" target="_blank">60d5a2a</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-22
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -1957,6 +1993,7 @@ Start workflowr project.
 <li><a href="ridge_trend_filter.html">Ridge regression for trend filtering</a></li>
 <li><a href="ridge_conjugate_gradient.html">Ridge regression via conjugate gradient</a></li>
 <li><a href="ridge_em.html">EM for hyperparameters Ridge regression</a></li>
+<li><a href="ridge_em_svd.html">EM for hyperparameters of Ridge regression using SVD</a></li>
 </ul>
 </div>
 <div id="lasso" class="section level1">
