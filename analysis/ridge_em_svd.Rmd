@@ -13,8 +13,6 @@ Following up on these [EM algorithms to fit Ridge by EB](ridge_em.html),
 I look at implementing these kinds of ideas when an SVD for $X=UDV'$ is available
 (or, simply by doing SVD of $X$ as a pre-computation step). Assume we are in the big $p$ regime, so $D$ is $k$ \times $k$ with $k<p$, and $V'V = I_k$.
 
-
-
 The model is: 
 $$Y \sim N(Xb, s^2I_n)$$
 
@@ -62,6 +60,13 @@ Here we take the $s_b$ out of the prior on $\theta_j$:
 $$y_j \sim N(s_b \theta_j, s^2)$$
 $$\theta_j \sim N(0,d_j^2).$$
 
+Note that we could also put the $d_j$ into the mean of $y_j$ and have $\theta_j \sim N(0,1)$
+but this ends up leading to exactly the same EM algorithm. (In earlier versions of
+this document I implemented this, but it turned out to indeed be identical, so I removed it.)
+
+Note also that here I give the option to recompute quantities between updates of `sb2` and
+`s2`. However, results later generally suggest this is not worth the additional expense.
+
 ```{r}
 ridge_indep_em2 = function(y, d2, s2, sb2, niter=10, recompute_between_updates = FALSE){
   k = length(y)
@@ -76,7 +81,6 @@ ridge_indep_em2 = function(y, d2, s2, sb2, niter=10, recompute_between_updates =
     
     sb2 = (sum(y*post_mean)/sum(post_mean^2 + post_var))^2
     
-    
     loglik[2*i] = sum(dnorm(y,mean=0,sd = sqrt(sb2*d2 + s2),log=TRUE))
     
     if(recompute_between_updates){
@@ -88,46 +92,6 @@ ridge_indep_em2 = function(y, d2, s2, sb2, niter=10, recompute_between_updates =
     
     r = y - sqrt(sb2) * post_mean # residuals
     s2 = mean(r^2 + sb2 * post_var)
-    
-  }
-  return(list(s2=s2,sb2=sb2,loglik=loglik,postmean = post_mean))
-}
-
-```
-
-## Scaled parameterization, part II
-
-We could also do the same with $d_j$ resulting in this variation:
-$$y_j \sim N(s_b d_j \theta_j, s^2)$$
-$$\theta_j \sim N(0,1).$$
-
-
-```{r}
-ridge_indep_em2b = function(y, d2, s2, sb2, niter=10, recompute_between_updates = FALSE){
-  k = length(y)
-  loglik = rep(0,2*niter)
-  for(i in 1:niter){
-    
-    loglik[2*i-1] = sum(dnorm(y,mean=0,sd = sqrt(sb2*d2 + s2),log=TRUE))
-    
-    prior_var = 1 # prior variance for theta
-    data_var = s2/(sb2*d2) # variance of y/(sb d), which has mean theta
-    post_var = 1/((1/prior_var) + (1/data_var)) #posterior variance of theta
-    post_mean =  post_var * (1/data_var) * y/(sqrt(sb2)*sqrt(d2)) # posterior mean of theta
-    
-    sb2 = (sum(y*post_mean*sqrt(d2))/sum(d2*(post_mean^2 + post_var)))^2
-    
-    loglik[2*i] = sum(dnorm(y,mean=0,sd = sqrt(sb2*d2 + s2),log=TRUE))
-    
-    if(recompute_between_updates){
-      prior_var = 1 # prior variance for theta
-      data_var = s2/(sb2*d2) # variance of y/(sb d), which has mean theta
-      post_var = 1/((1/prior_var) + (1/data_var)) #posterior variance of theta
-      post_mean =  post_var * (1/data_var) * y/(sqrt(sb2)*sqrt(d2)) # posterior mean of theta
-    }
-    
-    r = y - sqrt(d2) * sqrt(sb2) * post_mean # residuals
-    s2 = mean(r^2 + sb2 * d2 * post_var)
     
   }
   return(list(s2=s2,sb2=sb2,loglik=loglik,postmean = post_mean))
@@ -151,14 +115,10 @@ y = X %*% btrue + sd*rnorm(n)
 plot(X %*% btrue, y)
 ```
 
+
+Here I define a function to plot the log-likelihoods:
+
 ```{r}
-X.svd = svd(X)
-ytilde = drop(X.svd$u %*% y)
-yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,1,1,100)
-yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100)
-yt.em2b = ridge_indep_em2b(ytilde,X.svd$d^2,1,1,100)
-
-
 plot_loglik = function(res){
   maxloglik = max(res[[1]]$loglik)
   minloglik = min(res[[1]]$loglik)
@@ -177,6 +137,34 @@ plot_loglik = function(res){
   }
 
 }
+```
+
+Run all the methods: the simple parameterization is best here:
+```{r}
+X.svd = svd(X)
+ytilde = drop(t(X.svd$u) %*% y)
+yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,1,1,100)
+yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100)
+yt.em2b = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100,recompute_between_updates = TRUE)
+
+plot_loglik(list(yt.em1,yt.em2,yt.em2b))
+```
+
+Try different initializations. Here `s2=.1` and `sb2=10`. 
+```{r}
+yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,.1,10,100)
+yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,.1,10,100)
+yt.em2b = ridge_indep_em2(ytilde,X.svd$d^2,.1,10,100,recompute_between_updates = TRUE)
+
+plot_loglik(list(yt.em1,yt.em2,yt.em2b))
+```
+
+
+Here `s2=10` and `sb2=.1`.
+```{r}
+yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,10,.1,100)
+yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,10,.1,100)
+yt.em2b = ridge_indep_em2(ytilde,X.svd$d^2,10,.1,100,recompute_between_updates = TRUE)
 
 plot_loglik(list(yt.em1,yt.em2,yt.em2b))
 ```
@@ -184,16 +172,17 @@ plot_loglik(list(yt.em1,yt.em2,yt.em2b))
 
 ## No signal
 
-This simulation has no signal (b=0):
+This simulation has no signal (b=0). Methods are similar here. (Note that the green line requires approximately twice as much computation per iteration...)
+
 ```{r}
 btrue = rep(0,n)
 y = X %*% btrue + sd*rnorm(n)
 
 X.svd = svd(X)
-ytilde = drop(X.svd$u %*% y)
+ytilde = drop(t(X.svd$u) %*% y)
 yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,1,1,100)
 yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100)
-yt.em2b = ridge_indep_em2b(ytilde,X.svd$d^2,1,1,100)
+yt.em2b = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100, recompute_between_updates = TRUE)
 
 
 plot_loglik(list(yt.em1,yt.em2,yt.em2b))
@@ -225,14 +214,15 @@ plot(y)
 lines(X %*% btrue)
 ```
 
+Run the methods: there is a clear advantage of simple parameterization.
 
 ```{r}
 X.svd = svd(X)
-ytilde = drop(X.svd$u %*% y)
+ytilde = drop(t(X.svd$u) %*% y)
 
 yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,1,1,100)
 yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100)
-yt.em2b = ridge_indep_em2b(ytilde,X.svd$d^2,1,1,100)
+yt.em2b = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100, recompute_between_updates = TRUE)
 
 plot_loglik(list(yt.em1,yt.em2,yt.em2b))
 
@@ -255,19 +245,17 @@ y = X %*% btrue + sd*rnorm(n)
 
 plot(y)
 lines(X %*% btrue)
-
-
-
 ```
 
+
+Run the EM: there is a clear advantage of scaled parameterization; not much benefit of recomputing between updates.
 ```{r}
 X.svd = svd(X)
-ytilde = drop(X.svd$u %*% y)
+ytilde = drop(t(X.svd$u) %*% y)
 
 yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,1,1,100)
 yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100)
-yt.em2b = ridge_indep_em2b(ytilde,X.svd$d^2,1,1,100)
+yt.em2b = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100, recompute_between_updates = TRUE)
 
 plot_loglik(list(yt.em1,yt.em2,yt.em2b))
-plot_loglik(list(yt.em1,yt.em2))
 ```
