@@ -492,16 +492,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree25cb42099a15dda346e86a7bfb19ea7fb619d724targetblank25cb420a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/25cb42099a15dda346e86a7bfb19ea7fb619d724" target="_blank">25cb420</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreeced143f6ab9866b856d4afa3e2804da58593a3eatargetblankced143fa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/ced143f6ab9866b856d4afa3e2804da58593a3ea" target="_blank">ced143f</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree25cb42099a15dda346e86a7bfb19ea7fb619d724targetblank25cb420a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreeced143f6ab9866b856d4afa3e2804da58593a3eatargetblankced143fa" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/25cb42099a15dda346e86a7bfb19ea7fb619d724" target="_blank">25cb420</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/ced143f6ab9866b856d4afa3e2804da58593a3ea" target="_blank">ced143f</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -693,6 +693,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/ced143f6ab9866b856d4afa3e2804da58593a3ea/analysis/ridge_em_svd.Rmd" target="_blank">ced143f</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-26
+</td>
+<td>
+workflowr::wflow_publish(“ridge_em_svd.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/29360cf8f3ffaaa5ac4cc81c1ac9cbbba6a18399/docs/ridge_em_svd.html" target="_blank">29360cf</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-26
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/25cb42099a15dda346e86a7bfb19ea7fb619d724/analysis/ridge_em_svd.Rmd" target="_blank">25cb420</a>
 </td>
 <td>
@@ -721,19 +755,23 @@ workflowr::wflow_publish(“ridge_em_svd.Rmd”)
 <p>Here is the EM for the simple parameterization as above:</p>
 <pre class="r"><code>ridge_indep_em1 = function(y, d2, s2, sb2, niter=10){
   k = length(y)
-  loglik = rep(0,niter)
+  loglik = rep(0,2*niter)
+  
   for(i in 1:niter){
     
     prior_var = sb2*d2
     data_var = s2
     
-    loglik[i] = sum(dnorm(y,mean=0,sd = sqrt(prior_var + data_var),log=TRUE))
+    loglik[2*i-1] = sum(dnorm(y,mean=0,sd = sqrt(sb2*d2 + s2),log=TRUE))
     
+    # update sb2
     post_var = 1/((1/prior_var) + (1/data_var)) #posterior variance of theta
     post_mean =  post_var * (1/data_var) * y # posterior mean of theta
-    
     sb2 = mean((post_mean^2 + post_var)/d2)
      
+    loglik[2*i] = sum(dnorm(y,mean=0,sd = sqrt(sb2*d2 + s2),log=TRUE))
+    
+    # update s2
     r = y - post_mean # residuals
     s2 = mean(r^2 + post_var)
   }
@@ -743,7 +781,7 @@ workflowr::wflow_publish(“ridge_em_svd.Rmd”)
 <div id="scaled-parameterization" class="section level2">
 <h2>Scaled parameterization</h2>
 <p>Here we take the <span class="math inline">\(s_b\)</span> out of the prior on <span class="math inline">\(\theta_j\)</span>: <span class="math display">\[y_j \sim N(s_b \theta_j, s^2)\]</span> <span class="math display">\[\theta_j \sim N(0,d_j^2).\]</span></p>
-<pre class="r"><code>ridge_indep_em2 = function(y, d2, s2, sb2, niter=10){
+<pre class="r"><code>ridge_indep_em2 = function(y, d2, s2, sb2, niter=10, recompute_between_updates = FALSE){
   k = length(y)
   loglik = rep(0,2*niter)
   for(i in 1:niter){
@@ -759,10 +797,12 @@ workflowr::wflow_publish(“ridge_em_svd.Rmd”)
     
     loglik[2*i] = sum(dnorm(y,mean=0,sd = sqrt(sb2*d2 + s2),log=TRUE))
     
-    prior_var = d2 # prior variance for theta
-    data_var = s2/sb2 # variance of y/sb, which has mean theta
-    post_var = 1/((1/prior_var) + (1/data_var)) #posterior variance of theta
-    post_mean =  post_var * (1/data_var) * (y/sqrt(sb2)) # posterior mean of theta
+    if(recompute_between_updates){
+      prior_var = d2 # prior variance for theta
+      data_var = s2/sb2 # variance of y/sb, which has mean theta
+      post_var = 1/((1/prior_var) + (1/data_var)) #posterior variance of theta
+      post_mean =  post_var * (1/data_var) * (y/sqrt(sb2)) # posterior mean of theta
+    }
     
     r = y - sqrt(sb2) * post_mean # residuals
     s2 = mean(r^2 + sb2 * post_var)
@@ -774,7 +814,7 @@ workflowr::wflow_publish(“ridge_em_svd.Rmd”)
 <div id="scaled-parameterization-part-ii" class="section level2">
 <h2>Scaled parameterization, part II</h2>
 <p>We could also do the same with <span class="math inline">\(d_j\)</span> resulting in this variation: <span class="math display">\[y_j \sim N(s_b d_j \theta_j, s^2)\]</span> <span class="math display">\[\theta_j \sim N(0,1).\]</span></p>
-<pre class="r"><code>ridge_indep_em2b = function(y, d2, s2, sb2, niter=10){
+<pre class="r"><code>ridge_indep_em2b = function(y, d2, s2, sb2, niter=10, recompute_between_updates = FALSE){
   k = length(y)
   loglik = rep(0,2*niter)
   for(i in 1:niter){
@@ -790,10 +830,12 @@ workflowr::wflow_publish(“ridge_em_svd.Rmd”)
     
     loglik[2*i] = sum(dnorm(y,mean=0,sd = sqrt(sb2*d2 + s2),log=TRUE))
     
-    prior_var = 1 # prior variance for theta
-    data_var = s2/(sb2*d2) # variance of y/(sb d), which has mean theta
-    post_var = 1/((1/prior_var) + (1/data_var)) #posterior variance of theta
-    post_mean =  post_var * (1/data_var) * y/(sqrt(sb2)*sqrt(d2)) # posterior mean of theta
+    if(recompute_between_updates){
+      prior_var = 1 # prior variance for theta
+      data_var = s2/(sb2*d2) # variance of y/(sb d), which has mean theta
+      post_var = 1/((1/prior_var) + (1/data_var)) #posterior variance of theta
+      post_mean =  post_var * (1/data_var) * y/(sqrt(sb2)*sqrt(d2)) # posterior mean of theta
+    }
     
     r = y - sqrt(d2) * sqrt(sb2) * post_mean # residuals
     s2 = mean(r^2 + sb2 * d2 * post_var)
@@ -815,6 +857,43 @@ y = X %*% btrue + sd*rnorm(n)
 
 plot(X %*% btrue, y)</code></pre>
 <p><img src="figure/ridge_em_svd.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-1">
+Past versions of unnamed-chunk-4-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/29360cf8f3ffaaa5ac4cc81c1ac9cbbba6a18399/docs/figure/ridge_em_svd.Rmd/unnamed-chunk-4-1.png" target="_blank">29360cf</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-26
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>X.svd = svd(X)
 ytilde = drop(X.svd$u %*% y)
 yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,1,1,100)
@@ -843,6 +922,43 @@ plot_loglik = function(res){
 
 plot_loglik(list(yt.em1,yt.em2,yt.em2b))</code></pre>
 <p><img src="figure/ridge_em_svd.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-1">
+Past versions of unnamed-chunk-5-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/29360cf8f3ffaaa5ac4cc81c1ac9cbbba6a18399/docs/figure/ridge_em_svd.Rmd/unnamed-chunk-5-1.png" target="_blank">29360cf</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-26
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="no-signal" class="section level2">
 <h2>No signal</h2>
@@ -859,6 +975,103 @@ yt.em2b = ridge_indep_em2b(ytilde,X.svd$d^2,1,1,100)
 
 plot_loglik(list(yt.em1,yt.em2,yt.em2b))</code></pre>
 <p><img src="figure/ridge_em_svd.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-1">
+Past versions of unnamed-chunk-6-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/29360cf8f3ffaaa5ac4cc81c1ac9cbbba6a18399/docs/figure/ridge_em_svd.Rmd/unnamed-chunk-6-1.png" target="_blank">29360cf</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-26
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="trendfiltering-simulations" class="section level2">
+<h2>Trendfiltering Simulations</h2>
+<p>This is more challenging example (in that the design matrix is correlated)</p>
+<div id="high-signal" class="section level3">
+<h3>High Signal</h3>
+<pre class="r"><code>set.seed(100)
+sd = 1
+n = 100
+p = n
+X = matrix(0,nrow=n,ncol=n)
+for(i in 1:n){
+  X[i:n,i] = 1:(n-i+1)
+}
+btrue = rep(0,n)
+btrue[40] = 8
+btrue[41] = -8
+y = X %*% btrue + sd*rnorm(n)
+
+plot(y)
+lines(X %*% btrue)</code></pre>
+<p><img src="figure/ridge_em_svd.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>X.svd = svd(X)
+ytilde = drop(X.svd$u %*% y)
+
+yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,1,1,100)
+yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100)
+yt.em2b = ridge_indep_em2b(ytilde,X.svd$d^2,1,1,100)
+
+plot_loglik(list(yt.em1,yt.em2,yt.em2b))</code></pre>
+<p><img src="figure/ridge_em_svd.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="no-signal-case" class="section level3">
+<h3>No signal case</h3>
+<p>Try no signal case</p>
+<pre class="r"><code>sd = 1
+n = 100
+p = n
+X = matrix(0,nrow=n,ncol=n)
+for(i in 1:n){
+  X[i:n,i] = 1:(n-i+1)
+}
+btrue = rep(0,n)
+
+y = X %*% btrue + sd*rnorm(n)
+
+plot(y)
+lines(X %*% btrue)</code></pre>
+<p><img src="figure/ridge_em_svd.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>X.svd = svd(X)
+ytilde = drop(X.svd$u %*% y)
+
+yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,1,1,100)
+yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100)
+yt.em2b = ridge_indep_em2b(ytilde,X.svd$d^2,1,1,100)
+
+plot_loglik(list(yt.em1,yt.em2,yt.em2b))</code></pre>
+<p><img src="figure/ridge_em_svd.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot_loglik(list(yt.em1,yt.em2))</code></pre>
+<p><img src="figure/ridge_em_svd.Rmd/unnamed-chunk-10-2.png" width="672" style="display: block; margin: auto;" /></p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -889,6 +1102,7 @@ loaded via a namespace (and not attached):
 [17] tools_3.6.0     stringr_1.4.0   glue_1.4.0      httpuv_1.5.2   
 [21] xfun_0.12       yaml_2.2.1      compiler_3.6.0  htmltools_0.4.0
 [25] knitr_1.28     </code></pre>
+</div>
 </div>
 </div>
 
