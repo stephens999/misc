@@ -492,16 +492,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreefab7fde05b769481c4fc540f0f7c0b6b9496b131targetblankfab7fdea"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/fab7fde05b769481c4fc540f0f7c0b6b9496b131" target="_blank">fab7fde</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreed5544c47648edb1c0147fbd2030f0e1fa1160ac5targetblankd5544c4a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/d5544c47648edb1c0147fbd2030f0e1fa1160ac5" target="_blank">d5544c4</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreefab7fde05b769481c4fc540f0f7c0b6b9496b131targetblankfab7fdea" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreed5544c47648edb1c0147fbd2030f0e1fa1160ac5targetblankd5544c4a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/fab7fde05b769481c4fc540f0f7c0b6b9496b131" target="_blank">fab7fde</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/d5544c47648edb1c0147fbd2030f0e1fa1160ac5" target="_blank">d5544c4</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -693,6 +693,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/d5544c47648edb1c0147fbd2030f0e1fa1160ac5/analysis/ridge_em_svd.Rmd" target="_blank">d5544c4</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-26
+</td>
+<td>
+workflowr::wflow_publish(“ridge_em_svd.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/7e506903c0670e37ef2f05f4f700570e48bca80d/docs/ridge_em_svd.html" target="_blank">7e50690</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-26
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/fab7fde05b769481c4fc540f0f7c0b6b9496b131/analysis/ridge_em_svd.Rmd" target="_blank">fab7fde</a>
 </td>
 <td>
@@ -782,29 +816,29 @@ workflowr::wflow_publish(“ridge_em_svd.Rmd”)
 </div>
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
-<p>Following up on these <a href="ridge_em.html">EM algorithms to fit Ridge by EB</a>, I look at implementing these kinds of ideas when an SVD for <span class="math inline">\(X=UDV&#39;\)</span> is available (or, simply by doing SVD of <span class="math inline">\(X\)</span> as a pre-computation step). Assume we are in the big <span class="math inline">\(p\)</span> regime, so <span class="math inline">\(D\)</span> is <span class="math inline">\(k\)</span> <span class="math inline">\(k\)</span> with <span class="math inline">\(k&lt;p\)</span>, and <span class="math inline">\(V&#39;V = I_k\)</span>.</p>
+<p>Following up on these <a href="ridge_em.html">EM algorithms to fit Ridge by EB</a>, I look at implementing these kinds of ideas when an SVD for <span class="math inline">\(X=UDV&#39;\)</span> is available (or, simply by doing SVD of <span class="math inline">\(X\)</span> as a pre-computation step). Note that randomized methods can allow very fast approximation of the SVD of <span class="math inline">\(X\)</span> for large matrices, and I have in mind we may be able to exploit these down the line, especially as we may only need approximate solutions to ridge regression for our purposes.</p>
+<p>I assume we are in the big <span class="math inline">\(p\)</span> regime, so <span class="math inline">\(D\)</span> is <span class="math inline">\(k\)</span> <span class="math inline">\(k\)</span> with <span class="math inline">\(k&lt;p\)</span>, and <span class="math inline">\(V&#39;V = I_k\)</span>, and <span class="math inline">\(U&#39;U=I_k\)</span>. Often we will have <span class="math inline">\(k=n\)</span>, in which case <span class="math inline">\(UU&#39;= U&#39;U = I_n\)</span>.</p>
 <p>The model is: <span class="math display">\[Y \sim N(Xb, s^2I_n)\]</span></p>
 <p>Premultiplying by <span class="math inline">\(U&#39;\)</span> gives: <span class="math display">\[U&#39;Y \sim N(DV&#39;b, s^2 I_k)\]</span> which we can write as <span class="math display">\[\tilde{Y}_j \sim N(\theta_j, s^2)\]</span> <span class="math display">\[\theta_j \sim N(0, s_b^2 d_j^2)\]</span>.</p>
 <p>And we can solve this by EM, just as before. Of course we can parameterize in various ways.</p>
+<p>Some derivations are <a href="EM_Ridge_SVD.pdf">here</a>.</p>
 <p>Here is the EM for the simple parameterization as above:</p>
 <pre class="r"><code>ridge_indep_em1 = function(y, d2, s2, sb2, niter=10){
   k = length(y)
-  loglik = rep(0,2*niter)
+  loglik = rep(0,niter)
   
   for(i in 1:niter){
     
     prior_var = sb2*d2
     data_var = s2
     
-    loglik[2*i-1] = sum(dnorm(y,mean=0,sd = sqrt(sb2*d2 + s2),log=TRUE))
+    loglik[i] = sum(dnorm(y,mean=0,sd = sqrt(sb2*d2 + s2),log=TRUE))
     
     # update sb2
     post_var = 1/((1/prior_var) + (1/data_var)) #posterior variance of theta
     post_mean =  post_var * (1/data_var) * y # posterior mean of theta
     sb2 = mean((post_mean^2 + post_var)/d2)
      
-    loglik[2*i] = sum(dnorm(y,mean=0,sd = sqrt(sb2*d2 + s2),log=TRUE))
-    
     # update s2
     r = y - post_mean # residuals
     s2 = mean(r^2 + post_var)
@@ -816,12 +850,12 @@ workflowr::wflow_publish(“ridge_em_svd.Rmd”)
 <h2>Scaled parameterization</h2>
 <p>Here we take the <span class="math inline">\(s_b\)</span> out of the prior on <span class="math inline">\(\theta_j\)</span>: <span class="math display">\[y_j \sim N(s_b \theta_j, s^2)\]</span> <span class="math display">\[\theta_j \sim N(0,d_j^2).\]</span></p>
 <p>Note that we could also put the <span class="math inline">\(d_j\)</span> into the mean of <span class="math inline">\(y_j\)</span> and have <span class="math inline">\(\theta_j \sim N(0,1)\)</span> but this ends up leading to exactly the same EM algorithm. (In earlier versions of this document I implemented this, but it turned out to indeed be identical, so I removed it.)</p>
-<p>Note also that here I give the option to recompute quantities between updates of <code>sb2</code> and <code>s2</code>. However, results later generally suggest this is not worth the additional expense.</p>
+<p>Note also that here I give the option to recompute quantities between updates of <code>sb2</code> and <code>s2</code>. However, this didn’t help in any examples I tried (not shown).</p>
 <pre class="r"><code>ridge_indep_em2 = function(y, d2, s2, sb2, niter=10, recompute_between_updates = FALSE){
   k = length(y)
-  loglik = rep(0,2*niter)
+  loglik = rep(0,niter)
   for(i in 1:niter){
-    loglik[2*i-1] = sum(dnorm(y,mean=0,sd = sqrt(sb2*d2 + s2),log=TRUE))
+    loglik[i] = sum(dnorm(y,mean=0,sd = sqrt(sb2*d2 + s2),log=TRUE))
     
     prior_var = d2 # prior variance for theta
     data_var = s2/sb2 # variance of y/sb, which has mean theta
@@ -829,8 +863,6 @@ workflowr::wflow_publish(“ridge_em_svd.Rmd”)
     post_mean =  post_var * (1/data_var) * (y/sqrt(sb2)) # posterior mean of theta
     
     sb2 = (sum(y*post_mean)/sum(post_mean^2 + post_var))^2
-    
-    loglik[2*i] = sum(dnorm(y,mean=0,sd = sqrt(sb2*d2 + s2),log=TRUE))
     
     if(recompute_between_updates){
       prior_var = d2 # prior variance for theta
@@ -843,7 +875,32 @@ workflowr::wflow_publish(“ridge_em_svd.Rmd”)
     s2 = mean(r^2 + sb2 * post_var)
     
   }
-  return(list(s2=s2,sb2=sb2,loglik=loglik,postmean = post_mean))
+  return(list(s2=s2,sb2=sb2,loglik=loglik,postmean = sqrt(sb2) * post_mean))
+}</code></pre>
+</div>
+<div id="hybridredundant-parameterization" class="section level2">
+<h2>Hybrid/redundant parameterization</h2>
+<p>As <a href="ridge_em.html">before</a> we take a hybrid approach aimed at getting the best of both worlds.</p>
+<p><span class="math display">\[y_j \sim N(s_b \theta_j, s^2)\]</span> <span class="math display">\[\theta_j \sim N(0,l^2 d_j^2).\]</span> The updates involve combinations of the updates in em1 and em2.</p>
+<pre class="r"><code>ridge_indep_em3 = function(y, d2, s2, sb2, l2,niter=10){
+  k = length(y)
+  loglik = rep(0,niter)
+  for(i in 1:niter){
+    loglik[i] = sum(dnorm(y,mean=0,sd = sqrt(sb2*l2*d2 + s2),log=TRUE))
+    
+    prior_var = d2*l2 # prior variance for theta
+    data_var = s2/sb2 # variance of y/sb, which has mean theta
+    post_var = 1/((1/prior_var) + (1/data_var)) #posterior variance of theta
+    post_mean =  post_var * (1/data_var) * (y/sqrt(sb2)) # posterior mean of theta
+    
+    sb2 = (sum(y*post_mean)/sum(post_mean^2 + post_var))^2
+    l2 = mean((post_mean^2 + post_var)/d2)
+      
+    r = y - sqrt(sb2) * post_mean # residuals
+    s2 = mean(r^2 + sb2 * post_var)
+    
+  }
+  return(list(s2=s2,sb2=sb2,loglik=loglik,postmean = sqrt(sb2) *post_mean))
 }</code></pre>
 </div>
 <div id="simple-simulation" class="section level2">
@@ -858,7 +915,55 @@ btrue = rnorm(n)
 y = X %*% btrue + sd*rnorm(n)
 
 plot(X %*% btrue, y)</code></pre>
-<p><img src="figure/ridge_em_svd.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/ridge_em_svd.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-1">
+Past versions of unnamed-chunk-4-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/7e506903c0670e37ef2f05f4f700570e48bca80d/docs/figure/ridge_em_svd.Rmd/unnamed-chunk-4-1.png" target="_blank">7e50690</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-26
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/29360cf8f3ffaaa5ac4cc81c1ac9cbbba6a18399/docs/figure/ridge_em_svd.Rmd/unnamed-chunk-4-1.png" target="_blank">29360cf</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-26
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Here I define a function to plot the log-likelihoods:</p>
 <pre class="r"><code>plot_loglik = function(res){
   maxloglik = max(res[[1]]$loglik)
@@ -878,69 +983,14 @@ plot(X %*% btrue, y)</code></pre>
   }
 
 }</code></pre>
-<p>Run all the methods: the simple parameterization is best here:</p>
+<p>Run all the methods: the scaled parameterization is worst here:</p>
 <pre class="r"><code>X.svd = svd(X)
 ytilde = drop(t(X.svd$u) %*% y)
 yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,1,1,100)
 yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100)
-yt.em2b = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100,recompute_between_updates = TRUE)
+yt.em3= ridge_indep_em3(ytilde,X.svd$d^2,1,1,1,100)
 
-plot_loglik(list(yt.em1,yt.em2,yt.em2b))</code></pre>
-<p><img src="figure/ridge_em_svd.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-1">
-Past versions of unnamed-chunk-5-1.png
-</button>
-</p>
-<div id="fig-unnamed-chunk-5-1" class="collapse">
-<div class="table-responsive">
-<table class="table table-condensed table-hover">
-<thead>
-<tr>
-<th>
-Version
-</th>
-<th>
-Author
-</th>
-<th>
-Date
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a href="https://github.com/stephens999/misc/blob/ae73528cf7a0d4c9159b4e25ff14ba9cb0d0a9f9/docs/figure/ridge_em_svd.Rmd/unnamed-chunk-5-1.png" target="_blank">ae73528</a>
-</td>
-<td>
-Matthew Stephens
-</td>
-<td>
-2020-06-26
-</td>
-</tr>
-<tr>
-<td>
-<a href="https://github.com/stephens999/misc/blob/29360cf8f3ffaaa5ac4cc81c1ac9cbbba6a18399/docs/figure/ridge_em_svd.Rmd/unnamed-chunk-5-1.png" target="_blank">29360cf</a>
-</td>
-<td>
-Matthew Stephens
-</td>
-<td>
-2020-06-26
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<p>Try different initializations. Here <code>s2=.1</code> and <code>sb2=10</code>.</p>
-<pre class="r"><code>yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,.1,10,100)
-yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,.1,10,100)
-yt.em2b = ridge_indep_em2(ytilde,X.svd$d^2,.1,10,100,recompute_between_updates = TRUE)
-
-plot_loglik(list(yt.em1,yt.em2,yt.em2b))</code></pre>
+plot_loglik(list(yt.em1,yt.em2,yt.em3))</code></pre>
 <p><img src="figure/ridge_em_svd.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
 <button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-1">
@@ -964,6 +1014,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/7e506903c0670e37ef2f05f4f700570e48bca80d/docs/figure/ridge_em_svd.Rmd/unnamed-chunk-6-1.png" target="_blank">7e50690</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-26
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/stephens999/misc/blob/ae73528cf7a0d4c9159b4e25ff14ba9cb0d0a9f9/docs/figure/ridge_em_svd.Rmd/unnamed-chunk-6-1.png" target="_blank">ae73528</a>
@@ -990,12 +1051,11 @@ Matthew Stephens
 </table>
 </div>
 </div>
-<p>Here <code>s2=10</code> and <code>sb2=.1</code>.</p>
-<pre class="r"><code>yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,10,.1,100)
-yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,10,.1,100)
-yt.em2b = ridge_indep_em2(ytilde,X.svd$d^2,10,.1,100,recompute_between_updates = TRUE)
-
-plot_loglik(list(yt.em1,yt.em2,yt.em2b))</code></pre>
+<p>Check that the posterior means are all the same</p>
+<pre class="r"><code>plot(ytilde, yt.em1$postmean,col=1)
+points(ytilde, yt.em2$postmean,col=2)
+points(ytilde, yt.em3$postmean,col=3)
+abline(a=0,b=1)</code></pre>
 <p><img src="figure/ridge_em_svd.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
 <button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-7-1">
@@ -1021,6 +1081,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/7e506903c0670e37ef2f05f4f700570e48bca80d/docs/figure/ridge_em_svd.Rmd/unnamed-chunk-7-1.png" target="_blank">7e50690</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-26
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/ae73528cf7a0d4c9159b4e25ff14ba9cb0d0a9f9/docs/figure/ridge_em_svd.Rmd/unnamed-chunk-7-1.png" target="_blank">ae73528</a>
 </td>
 <td>
@@ -1034,21 +1105,12 @@ Matthew Stephens
 </table>
 </div>
 </div>
-</div>
-<div id="no-signal" class="section level2">
-<h2>No signal</h2>
-<p>This simulation has no signal (b=0). Methods are similar here. (Note that the green line requires approximately twice as much computation per iteration…)</p>
-<pre class="r"><code>btrue = rep(0,n)
-y = X %*% btrue + sd*rnorm(n)
+<p>Try different initializations. Here <code>s2=.1</code> and <code>sb2=10</code>.</p>
+<pre class="r"><code>yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,.1,10,100)
+yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,.1,10,100)
+yt.em3= ridge_indep_em3(ytilde,X.svd$d^2,.1,10,1,100)
 
-X.svd = svd(X)
-ytilde = drop(t(X.svd$u) %*% y)
-yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,1,1,100)
-yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100)
-yt.em2b = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100, recompute_between_updates = TRUE)
-
-
-plot_loglik(list(yt.em1,yt.em2,yt.em2b))</code></pre>
+plot_loglik(list(yt.em1,yt.em2,yt.em3))</code></pre>
 <p><img src="figure/ridge_em_svd.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
 <button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-1">
@@ -1074,7 +1136,137 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/7e506903c0670e37ef2f05f4f700570e48bca80d/docs/figure/ridge_em_svd.Rmd/unnamed-chunk-8-1.png" target="_blank">7e50690</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-26
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/ae73528cf7a0d4c9159b4e25ff14ba9cb0d0a9f9/docs/figure/ridge_em_svd.Rmd/unnamed-chunk-8-1.png" target="_blank">ae73528</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-26
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Here <code>s2=10</code> and <code>sb2=.1</code>.</p>
+<pre class="r"><code>yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,10,.1,50)
+yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,10,.1,50)
+yt.em3= ridge_indep_em3(ytilde,X.svd$d^2,10,.1,1,50)
+
+plot_loglik(list(yt.em1,yt.em2,yt.em3))</code></pre>
+<p><img src="figure/ridge_em_svd.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-1">
+Past versions of unnamed-chunk-9-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/7e506903c0670e37ef2f05f4f700570e48bca80d/docs/figure/ridge_em_svd.Rmd/unnamed-chunk-9-1.png" target="_blank">7e50690</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-26
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/ae73528cf7a0d4c9159b4e25ff14ba9cb0d0a9f9/docs/figure/ridge_em_svd.Rmd/unnamed-chunk-9-1.png" target="_blank">ae73528</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-26
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="no-signal" class="section level2">
+<h2>No signal</h2>
+<p>This simulation has no signal (b=0). Methods are similar here.</p>
+<pre class="r"><code>btrue = rep(0,n)
+y = X %*% btrue + sd*rnorm(n)
+
+X.svd = svd(X)
+ytilde = drop(t(X.svd$u) %*% y)
+yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,1,1,100)
+yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100)
+yt.em3 = ridge_indep_em3(ytilde,X.svd$d^2,1,1,1,100)
+
+
+plot_loglik(list(yt.em1,yt.em2,yt.em3))</code></pre>
+<p><img src="figure/ridge_em_svd.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-10-1">
+Past versions of unnamed-chunk-10-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-10-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/7e506903c0670e37ef2f05f4f700570e48bca80d/docs/figure/ridge_em_svd.Rmd/unnamed-chunk-10-1.png" target="_blank">7e50690</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-06-26
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/ae73528cf7a0d4c9159b4e25ff14ba9cb0d0a9f9/docs/figure/ridge_em_svd.Rmd/unnamed-chunk-10-1.png" target="_blank">ae73528</a>
 </td>
 <td>
 Matthew Stephens
@@ -1108,13 +1300,13 @@ y = X %*% btrue + sd*rnorm(n)
 
 plot(y)
 lines(X %*% btrue)</code></pre>
-<p><img src="figure/ridge_em_svd.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/ridge_em_svd.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-1">
-Past versions of unnamed-chunk-9-1.png
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-1">
+Past versions of unnamed-chunk-11-1.png
 </button>
 </p>
-<div id="fig-unnamed-chunk-9-1" class="collapse">
+<div id="fig-unnamed-chunk-11-1" class="collapse">
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
 <thead>
@@ -1133,7 +1325,7 @@ Date
 <tbody>
 <tr>
 <td>
-<a href="https://github.com/stephens999/misc/blob/ae73528cf7a0d4c9159b4e25ff14ba9cb0d0a9f9/docs/figure/ridge_em_svd.Rmd/unnamed-chunk-9-1.png" target="_blank">ae73528</a>
+<a href="https://github.com/stephens999/misc/blob/7e506903c0670e37ef2f05f4f700570e48bca80d/docs/figure/ridge_em_svd.Rmd/unnamed-chunk-11-1.png" target="_blank">7e50690</a>
 </td>
 <td>
 Matthew Stephens
@@ -1152,16 +1344,16 @@ ytilde = drop(t(X.svd$u) %*% y)
 
 yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,1,1,100)
 yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100)
-yt.em2b = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100, recompute_between_updates = TRUE)
+yt.em3 = ridge_indep_em3(ytilde,X.svd$d^2,1,1,1,100)
 
-plot_loglik(list(yt.em1,yt.em2,yt.em2b))</code></pre>
-<p><img src="figure/ridge_em_svd.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+plot_loglik(list(yt.em1,yt.em2,yt.em3))</code></pre>
+<p><img src="figure/ridge_em_svd.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-10-1">
-Past versions of unnamed-chunk-10-1.png
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-1">
+Past versions of unnamed-chunk-12-1.png
 </button>
 </p>
-<div id="fig-unnamed-chunk-10-1" class="collapse">
+<div id="fig-unnamed-chunk-12-1" class="collapse">
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
 <thead>
@@ -1180,7 +1372,7 @@ Date
 <tbody>
 <tr>
 <td>
-<a href="https://github.com/stephens999/misc/blob/ae73528cf7a0d4c9159b4e25ff14ba9cb0d0a9f9/docs/figure/ridge_em_svd.Rmd/unnamed-chunk-10-1.png" target="_blank">ae73528</a>
+<a href="https://github.com/stephens999/misc/blob/7e506903c0670e37ef2f05f4f700570e48bca80d/docs/figure/ridge_em_svd.Rmd/unnamed-chunk-12-1.png" target="_blank">7e50690</a>
 </td>
 <td>
 Matthew Stephens
@@ -1193,6 +1385,13 @@ Matthew Stephens
 </table>
 </div>
 </div>
+<p>Fits are different:</p>
+<pre class="r"><code>plot(y)
+lines(X %*% btrue,col=&quot;gray&quot;)
+lines(X.svd$u %*% yt.em1$postmean,lwd=2)
+lines(X.svd$u %*% yt.em2$postmean,col=2,lwd=2)
+lines(X.svd$u %*% yt.em3$postmean,col=3,lwd=2)</code></pre>
+<p><img src="figure/ridge_em_svd.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="no-signal-case" class="section level3">
 <h3>No signal case</h3>
@@ -1210,17 +1409,17 @@ y = X %*% btrue + sd*rnorm(n)
 
 plot(y)
 lines(X %*% btrue)</code></pre>
-<p><img src="figure/ridge_em_svd.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Run the EM: there is a clear advantage of scaled parameterization; not much benefit of recomputing between updates.</p>
+<p><img src="figure/ridge_em_svd.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Run the EM: there is a clear advantage of scaled parameterizations.</p>
 <pre class="r"><code>X.svd = svd(X)
 ytilde = drop(t(X.svd$u) %*% y)
 
 yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,1,1,100)
 yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100)
-yt.em2b = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100, recompute_between_updates = TRUE)
+yt.em3 = ridge_indep_em3(ytilde,X.svd$d^2,1,1,1,100)
 
-plot_loglik(list(yt.em1,yt.em2,yt.em2b))</code></pre>
-<p><img src="figure/ridge_em_svd.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+plot_loglik(list(yt.em1,yt.em2,yt.em3))</code></pre>
+<p><img src="figure/ridge_em_svd.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
