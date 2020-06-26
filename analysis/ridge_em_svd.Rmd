@@ -11,7 +11,14 @@ editor_options:
 
 Following up on these [EM algorithms to fit Ridge by EB](ridge_em.html), 
 I look at implementing these kinds of ideas when an SVD for $X=UDV'$ is available
-(or, simply by doing SVD of $X$ as a pre-computation step). Assume we are in the big $p$ regime, so $D$ is $k$ \times $k$ with $k<p$, and $V'V = I_k$.
+(or, simply by doing SVD of $X$ as a pre-computation step). Note that 
+randomized methods can allow very fast approximation
+of the SVD of $X$ for large matrices, and I have in mind we may be able to exploit
+these down the line, especially as we may only need approximate solutions to ridge regression for
+our purposes.
+
+I assume we are in the big $p$ regime, so $D$ is $k$ \times $k$ with $k<p$, and $V'V = I_k$, and $U'U=I_k$. Often we will have $k=n$, in which case $UU'= U'U = I_n$. 
+
 
 The model is: 
 $$Y \sim N(Xb, s^2I_n)$$
@@ -25,26 +32,26 @@ $$\theta_j \sim N(0, s_b^2 d_j^2)$$.
 And we can solve this by EM, just as before. Of course we can parameterize
 in various ways. 
 
+Some derivations are [here](EM_Ridge_SVD.pdf).
+
 Here is the EM for the simple parameterization as above:
 ```{r}
 ridge_indep_em1 = function(y, d2, s2, sb2, niter=10){
   k = length(y)
-  loglik = rep(0,2*niter)
+  loglik = rep(0,niter)
   
   for(i in 1:niter){
     
     prior_var = sb2*d2
     data_var = s2
     
-    loglik[2*i-1] = sum(dnorm(y,mean=0,sd = sqrt(sb2*d2 + s2),log=TRUE))
+    loglik[i] = sum(dnorm(y,mean=0,sd = sqrt(sb2*d2 + s2),log=TRUE))
     
     # update sb2
     post_var = 1/((1/prior_var) + (1/data_var)) #posterior variance of theta
     post_mean =  post_var * (1/data_var) * y # posterior mean of theta
     sb2 = mean((post_mean^2 + post_var)/d2)
      
-    loglik[2*i] = sum(dnorm(y,mean=0,sd = sqrt(sb2*d2 + s2),log=TRUE))
-    
     # update s2
     r = y - post_mean # residuals
     s2 = mean(r^2 + post_var)
@@ -65,14 +72,14 @@ but this ends up leading to exactly the same EM algorithm. (In earlier versions 
 this document I implemented this, but it turned out to indeed be identical, so I removed it.)
 
 Note also that here I give the option to recompute quantities between updates of `sb2` and
-`s2`. However, results later generally suggest this is not worth the additional expense.
+`s2`. However, this didn't help in any examples I tried (not shown).
 
 ```{r}
 ridge_indep_em2 = function(y, d2, s2, sb2, niter=10, recompute_between_updates = FALSE){
   k = length(y)
-  loglik = rep(0,2*niter)
+  loglik = rep(0,niter)
   for(i in 1:niter){
-    loglik[2*i-1] = sum(dnorm(y,mean=0,sd = sqrt(sb2*d2 + s2),log=TRUE))
+    loglik[i] = sum(dnorm(y,mean=0,sd = sqrt(sb2*d2 + s2),log=TRUE))
     
     prior_var = d2 # prior variance for theta
     data_var = s2/sb2 # variance of y/sb, which has mean theta
@@ -80,8 +87,6 @@ ridge_indep_em2 = function(y, d2, s2, sb2, niter=10, recompute_between_updates =
     post_mean =  post_var * (1/data_var) * (y/sqrt(sb2)) # posterior mean of theta
     
     sb2 = (sum(y*post_mean)/sum(post_mean^2 + post_var))^2
-    
-    loglik[2*i] = sum(dnorm(y,mean=0,sd = sqrt(sb2*d2 + s2),log=TRUE))
     
     if(recompute_between_updates){
       prior_var = d2 # prior variance for theta
@@ -94,7 +99,41 @@ ridge_indep_em2 = function(y, d2, s2, sb2, niter=10, recompute_between_updates =
     s2 = mean(r^2 + sb2 * post_var)
     
   }
-  return(list(s2=s2,sb2=sb2,loglik=loglik,postmean = post_mean))
+  return(list(s2=s2,sb2=sb2,loglik=loglik,postmean = sqrt(sb2) * post_mean))
+}
+
+```
+
+
+## Hybrid/redundant parameterization
+
+As [before](ridge_em.html) we take a hybrid approach aimed
+at getting the best of both worlds.
+
+$$y_j \sim N(s_b \theta_j, s^2)$$
+$$\theta_j \sim N(0,l^2 d_j^2).$$
+The updates involve combinations of the updates in em1 and em2.
+
+```{r}
+ridge_indep_em3 = function(y, d2, s2, sb2, l2,niter=10){
+  k = length(y)
+  loglik = rep(0,niter)
+  for(i in 1:niter){
+    loglik[i] = sum(dnorm(y,mean=0,sd = sqrt(sb2*l2*d2 + s2),log=TRUE))
+    
+    prior_var = d2*l2 # prior variance for theta
+    data_var = s2/sb2 # variance of y/sb, which has mean theta
+    post_var = 1/((1/prior_var) + (1/data_var)) #posterior variance of theta
+    post_mean =  post_var * (1/data_var) * (y/sqrt(sb2)) # posterior mean of theta
+    
+    sb2 = (sum(y*post_mean)/sum(post_mean^2 + post_var))^2
+    l2 = mean((post_mean^2 + post_var)/d2)
+      
+    r = y - sqrt(sb2) * post_mean # residuals
+    s2 = mean(r^2 + sb2 * post_var)
+    
+  }
+  return(list(s2=s2,sb2=sb2,loglik=loglik,postmean = sqrt(sb2) *post_mean))
 }
 
 ```
@@ -139,40 +178,49 @@ plot_loglik = function(res){
 }
 ```
 
-Run all the methods: the simple parameterization is best here:
+Run all the methods: the scaled parameterization is worst here:
 ```{r}
 X.svd = svd(X)
 ytilde = drop(t(X.svd$u) %*% y)
 yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,1,1,100)
 yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100)
-yt.em2b = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100,recompute_between_updates = TRUE)
+yt.em3= ridge_indep_em3(ytilde,X.svd$d^2,1,1,1,100)
 
-plot_loglik(list(yt.em1,yt.em2,yt.em2b))
+plot_loglik(list(yt.em1,yt.em2,yt.em3))
 ```
+
+Check that the posterior means are all the same
+```{r}
+plot(ytilde, yt.em1$postmean,col=1)
+points(ytilde, yt.em2$postmean,col=2)
+points(ytilde, yt.em3$postmean,col=3)
+abline(a=0,b=1)
+```
+
 
 Try different initializations. Here `s2=.1` and `sb2=10`. 
 ```{r}
 yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,.1,10,100)
 yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,.1,10,100)
-yt.em2b = ridge_indep_em2(ytilde,X.svd$d^2,.1,10,100,recompute_between_updates = TRUE)
+yt.em3= ridge_indep_em3(ytilde,X.svd$d^2,.1,10,1,100)
 
-plot_loglik(list(yt.em1,yt.em2,yt.em2b))
+plot_loglik(list(yt.em1,yt.em2,yt.em3))
 ```
 
 
 Here `s2=10` and `sb2=.1`.
 ```{r}
-yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,10,.1,100)
-yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,10,.1,100)
-yt.em2b = ridge_indep_em2(ytilde,X.svd$d^2,10,.1,100,recompute_between_updates = TRUE)
+yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,10,.1,50)
+yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,10,.1,50)
+yt.em3= ridge_indep_em3(ytilde,X.svd$d^2,10,.1,1,50)
 
-plot_loglik(list(yt.em1,yt.em2,yt.em2b))
+plot_loglik(list(yt.em1,yt.em2,yt.em3))
 ```
 
 
 ## No signal
 
-This simulation has no signal (b=0). Methods are similar here. (Note that the green line requires approximately twice as much computation per iteration...)
+This simulation has no signal (b=0). Methods are similar here. 
 
 ```{r}
 btrue = rep(0,n)
@@ -182,10 +230,10 @@ X.svd = svd(X)
 ytilde = drop(t(X.svd$u) %*% y)
 yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,1,1,100)
 yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100)
-yt.em2b = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100, recompute_between_updates = TRUE)
+yt.em3 = ridge_indep_em3(ytilde,X.svd$d^2,1,1,1,100)
 
 
-plot_loglik(list(yt.em1,yt.em2,yt.em2b))
+plot_loglik(list(yt.em1,yt.em2,yt.em3))
 ```
 
 
@@ -222,10 +270,19 @@ ytilde = drop(t(X.svd$u) %*% y)
 
 yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,1,1,100)
 yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100)
-yt.em2b = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100, recompute_between_updates = TRUE)
+yt.em3 = ridge_indep_em3(ytilde,X.svd$d^2,1,1,1,100)
 
-plot_loglik(list(yt.em1,yt.em2,yt.em2b))
+plot_loglik(list(yt.em1,yt.em2,yt.em3))
 
+```
+
+Fits are different:
+```{r}
+plot(y)
+lines(X %*% btrue,col="gray")
+lines(X.svd$u %*% yt.em1$postmean,lwd=2)
+lines(X.svd$u %*% yt.em2$postmean,col=2,lwd=2)
+lines(X.svd$u %*% yt.em3$postmean,col=3,lwd=2)
 ```
 
 ### No signal case
@@ -248,14 +305,14 @@ lines(X %*% btrue)
 ```
 
 
-Run the EM: there is a clear advantage of scaled parameterization; not much benefit of recomputing between updates.
+Run the EM: there is a clear advantage of scaled parameterizations.
 ```{r}
 X.svd = svd(X)
 ytilde = drop(t(X.svd$u) %*% y)
 
 yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,1,1,100)
 yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100)
-yt.em2b = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100, recompute_between_updates = TRUE)
+yt.em3 = ridge_indep_em3(ytilde,X.svd$d^2,1,1,1,100)
 
-plot_loglik(list(yt.em1,yt.em2,yt.em2b))
+plot_loglik(list(yt.em1,yt.em2,yt.em3))
 ```
