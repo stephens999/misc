@@ -31,19 +31,23 @@ Here is the EM for the simple parameterization as above:
 ```{r}
 ridge_indep_em1 = function(y, d2, s2, sb2, niter=10){
   k = length(y)
-  loglik = rep(0,niter)
+  loglik = rep(0,2*niter)
+  
   for(i in 1:niter){
     
     prior_var = sb2*d2
     data_var = s2
     
-    loglik[i] = sum(dnorm(y,mean=0,sd = sqrt(prior_var + data_var),log=TRUE))
+    loglik[2*i-1] = sum(dnorm(y,mean=0,sd = sqrt(sb2*d2 + s2),log=TRUE))
     
+    # update sb2
     post_var = 1/((1/prior_var) + (1/data_var)) #posterior variance of theta
     post_mean =  post_var * (1/data_var) * y # posterior mean of theta
-    
     sb2 = mean((post_mean^2 + post_var)/d2)
      
+    loglik[2*i] = sum(dnorm(y,mean=0,sd = sqrt(sb2*d2 + s2),log=TRUE))
+    
+    # update s2
     r = y - post_mean # residuals
     s2 = mean(r^2 + post_var)
   }
@@ -59,7 +63,7 @@ $$y_j \sim N(s_b \theta_j, s^2)$$
 $$\theta_j \sim N(0,d_j^2).$$
 
 ```{r}
-ridge_indep_em2 = function(y, d2, s2, sb2, niter=10){
+ridge_indep_em2 = function(y, d2, s2, sb2, niter=10, recompute_between_updates = FALSE){
   k = length(y)
   loglik = rep(0,2*niter)
   for(i in 1:niter){
@@ -75,10 +79,12 @@ ridge_indep_em2 = function(y, d2, s2, sb2, niter=10){
     
     loglik[2*i] = sum(dnorm(y,mean=0,sd = sqrt(sb2*d2 + s2),log=TRUE))
     
-    prior_var = d2 # prior variance for theta
-    data_var = s2/sb2 # variance of y/sb, which has mean theta
-    post_var = 1/((1/prior_var) + (1/data_var)) #posterior variance of theta
-    post_mean =  post_var * (1/data_var) * (y/sqrt(sb2)) # posterior mean of theta
+    if(recompute_between_updates){
+      prior_var = d2 # prior variance for theta
+      data_var = s2/sb2 # variance of y/sb, which has mean theta
+      post_var = 1/((1/prior_var) + (1/data_var)) #posterior variance of theta
+      post_mean =  post_var * (1/data_var) * (y/sqrt(sb2)) # posterior mean of theta
+    }
     
     r = y - sqrt(sb2) * post_mean # residuals
     s2 = mean(r^2 + sb2 * post_var)
@@ -97,7 +103,7 @@ $$\theta_j \sim N(0,1).$$
 
 
 ```{r}
-ridge_indep_em2b = function(y, d2, s2, sb2, niter=10){
+ridge_indep_em2b = function(y, d2, s2, sb2, niter=10, recompute_between_updates = FALSE){
   k = length(y)
   loglik = rep(0,2*niter)
   for(i in 1:niter){
@@ -113,10 +119,12 @@ ridge_indep_em2b = function(y, d2, s2, sb2, niter=10){
     
     loglik[2*i] = sum(dnorm(y,mean=0,sd = sqrt(sb2*d2 + s2),log=TRUE))
     
-    prior_var = 1 # prior variance for theta
-    data_var = s2/(sb2*d2) # variance of y/(sb d), which has mean theta
-    post_var = 1/((1/prior_var) + (1/data_var)) #posterior variance of theta
-    post_mean =  post_var * (1/data_var) * y/(sqrt(sb2)*sqrt(d2)) # posterior mean of theta
+    if(recompute_between_updates){
+      prior_var = 1 # prior variance for theta
+      data_var = s2/(sb2*d2) # variance of y/(sb d), which has mean theta
+      post_var = 1/((1/prior_var) + (1/data_var)) #posterior variance of theta
+      post_mean =  post_var * (1/data_var) * y/(sqrt(sb2)*sqrt(d2)) # posterior mean of theta
+    }
     
     r = y - sqrt(d2) * sqrt(sb2) * post_mean # residuals
     s2 = mean(r^2 + sb2 * d2 * post_var)
@@ -189,4 +197,77 @@ yt.em2b = ridge_indep_em2b(ytilde,X.svd$d^2,1,1,100)
 
 
 plot_loglik(list(yt.em1,yt.em2,yt.em2b))
+```
+
+
+
+## Trendfiltering Simulations
+
+This is more challenging example (in that the design matrix is correlated)
+
+### High Signal
+
+```{r}
+set.seed(100)
+sd = 1
+n = 100
+p = n
+X = matrix(0,nrow=n,ncol=n)
+for(i in 1:n){
+  X[i:n,i] = 1:(n-i+1)
+}
+btrue = rep(0,n)
+btrue[40] = 8
+btrue[41] = -8
+y = X %*% btrue + sd*rnorm(n)
+
+plot(y)
+lines(X %*% btrue)
+```
+
+
+```{r}
+X.svd = svd(X)
+ytilde = drop(X.svd$u %*% y)
+
+yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,1,1,100)
+yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100)
+yt.em2b = ridge_indep_em2b(ytilde,X.svd$d^2,1,1,100)
+
+plot_loglik(list(yt.em1,yt.em2,yt.em2b))
+
+```
+
+### No signal case
+
+Try no signal case
+```{r}
+sd = 1
+n = 100
+p = n
+X = matrix(0,nrow=n,ncol=n)
+for(i in 1:n){
+  X[i:n,i] = 1:(n-i+1)
+}
+btrue = rep(0,n)
+
+y = X %*% btrue + sd*rnorm(n)
+
+plot(y)
+lines(X %*% btrue)
+
+
+
+```
+
+```{r}
+X.svd = svd(X)
+ytilde = drop(X.svd$u %*% y)
+
+yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,1,1,100)
+yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100)
+yt.em2b = ridge_indep_em2b(ytilde,X.svd$d^2,1,1,100)
+
+plot_loglik(list(yt.em1,yt.em2,yt.em2b))
+plot_loglik(list(yt.em1,yt.em2))
 ```
