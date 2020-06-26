@@ -1,0 +1,192 @@
+---
+title: "ridge_em_svd"
+author: "Matthew Stephens"
+date: "2020-06-26"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+Following up on these [EM algorithms to fit Ridge by EB](ridge_em.html), 
+I look at implementing these kinds of ideas when an SVD for $X=UDV'$ is available
+(or, simply by doing SVD of $X$ as a pre-computation step). Assume we are in the big $p$ regime, so $D$ is $k$ \times $k$ with $k<p$, and $V'V = I_k$.
+
+
+
+The model is: 
+$$Y \sim N(Xb, s^2I_n)$$
+
+Premultiplying by $U'$ gives:
+$$U'Y \sim N(DV'b, s^2 I_k)$$
+which we can write as
+$$\tilde{Y}_j \sim N(\theta_j, s^2)$$
+$$\theta_j \sim N(0, s_b^2 d_j^2)$$.
+
+And we can solve this by EM, just as before. Of course we can parameterize
+in various ways. 
+
+Here is the EM for the simple parameterization as above:
+```{r}
+ridge_indep_em1 = function(y, d2, s2, sb2, niter=10){
+  k = length(y)
+  loglik = rep(0,niter)
+  for(i in 1:niter){
+    
+    prior_var = sb2*d2
+    data_var = s2
+    
+    loglik[i] = sum(dnorm(y,mean=0,sd = sqrt(prior_var + data_var),log=TRUE))
+    
+    post_var = 1/((1/prior_var) + (1/data_var)) #posterior variance of theta
+    post_mean =  post_var * (1/data_var) * y # posterior mean of theta
+    
+    sb2 = mean((post_mean^2 + post_var)/d2)
+     
+    r = y - post_mean # residuals
+    s2 = mean(r^2 + post_var)
+  }
+  return(list(s2=s2,sb2=sb2,loglik=loglik,postmean = post_mean))
+}
+```
+
+
+## Scaled parameterization
+
+Here we take the $s_b$ out of the prior on $\theta_j$:
+$$y_j \sim N(s_b \theta_j, s^2)$$
+$$\theta_j \sim N(0,d_j^2).$$
+
+```{r}
+ridge_indep_em2 = function(y, d2, s2, sb2, niter=10){
+  k = length(y)
+  loglik = rep(0,2*niter)
+  for(i in 1:niter){
+    loglik[2*i-1] = sum(dnorm(y,mean=0,sd = sqrt(sb2*d2 + s2),log=TRUE))
+    
+    prior_var = d2 # prior variance for theta
+    data_var = s2/sb2 # variance of y/sb, which has mean theta
+    post_var = 1/((1/prior_var) + (1/data_var)) #posterior variance of theta
+    post_mean =  post_var * (1/data_var) * (y/sqrt(sb2)) # posterior mean of theta
+    
+    sb2 = (sum(y*post_mean)/sum(post_mean^2 + post_var))^2
+    
+    
+    loglik[2*i] = sum(dnorm(y,mean=0,sd = sqrt(sb2*d2 + s2),log=TRUE))
+    
+    prior_var = d2 # prior variance for theta
+    data_var = s2/sb2 # variance of y/sb, which has mean theta
+    post_var = 1/((1/prior_var) + (1/data_var)) #posterior variance of theta
+    post_mean =  post_var * (1/data_var) * (y/sqrt(sb2)) # posterior mean of theta
+    
+    r = y - sqrt(sb2) * post_mean # residuals
+    s2 = mean(r^2 + sb2 * post_var)
+    
+  }
+  return(list(s2=s2,sb2=sb2,loglik=loglik,postmean = post_mean))
+}
+
+```
+
+## Scaled parameterization, part II
+
+We could also do the same with $d_j$ resulting in this variation:
+$$y_j \sim N(s_b d_j \theta_j, s^2)$$
+$$\theta_j \sim N(0,1).$$
+
+
+```{r}
+ridge_indep_em2b = function(y, d2, s2, sb2, niter=10){
+  k = length(y)
+  loglik = rep(0,2*niter)
+  for(i in 1:niter){
+    
+    loglik[2*i-1] = sum(dnorm(y,mean=0,sd = sqrt(sb2*d2 + s2),log=TRUE))
+    
+    prior_var = 1 # prior variance for theta
+    data_var = s2/(sb2*d2) # variance of y/(sb d), which has mean theta
+    post_var = 1/((1/prior_var) + (1/data_var)) #posterior variance of theta
+    post_mean =  post_var * (1/data_var) * y/(sqrt(sb2)*sqrt(d2)) # posterior mean of theta
+    
+    sb2 = (sum(y*post_mean*sqrt(d2))/sum(d2*(post_mean^2 + post_var)))^2
+    
+    loglik[2*i] = sum(dnorm(y,mean=0,sd = sqrt(sb2*d2 + s2),log=TRUE))
+    
+    prior_var = 1 # prior variance for theta
+    data_var = s2/(sb2*d2) # variance of y/(sb d), which has mean theta
+    post_var = 1/((1/prior_var) + (1/data_var)) #posterior variance of theta
+    post_mean =  post_var * (1/data_var) * y/(sqrt(sb2)*sqrt(d2)) # posterior mean of theta
+    
+    r = y - sqrt(d2) * sqrt(sb2) * post_mean # residuals
+    s2 = mean(r^2 + sb2 * d2 * post_var)
+    
+  }
+  return(list(s2=s2,sb2=sb2,loglik=loglik,postmean = post_mean))
+}
+
+```
+
+
+## Simple simulation
+
+Here we try a simple simulation to test:
+```{r}
+set.seed(100)
+sd = 1
+n = 100
+p = n
+X = matrix(rnorm(n*p),ncol=n)
+btrue = rnorm(n)
+y = X %*% btrue + sd*rnorm(n)
+
+plot(X %*% btrue, y)
+```
+
+```{r}
+X.svd = svd(X)
+ytilde = drop(X.svd$u %*% y)
+yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,1,1,100)
+yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100)
+yt.em2b = ridge_indep_em2b(ytilde,X.svd$d^2,1,1,100)
+
+
+plot_loglik = function(res){
+  maxloglik = max(res[[1]]$loglik)
+  minloglik = min(res[[1]]$loglik)
+  maxlen =length(res[[1]]$loglik)
+  for(i in 2:length(res)){
+    maxloglik = max(c(maxloglik,res[[i]]$loglik))
+    minloglik = min(c(minloglik,res[[i]]$loglik))
+    maxlen= max(maxlen, length(res[[i]]$loglik))
+  }
+  
+  
+  plot(res[[1]]$loglik,type="n",ylim=c(minloglik,maxloglik),xlim=c(0,maxlen),ylab="log-likelihood",
+       xlab="iteration")
+  for(i in 1:length(res)){
+    lines(res[[i]]$loglik,col=i,lwd=2)
+  }
+
+}
+
+plot_loglik(list(yt.em1,yt.em2,yt.em2b))
+```
+
+
+## No signal
+
+This simulation has no signal (b=0):
+```{r}
+btrue = rep(0,n)
+y = X %*% btrue + sd*rnorm(n)
+
+X.svd = svd(X)
+ytilde = drop(X.svd$u %*% y)
+yt.em1 = ridge_indep_em1(ytilde,X.svd$d^2,1,1,100)
+yt.em2 = ridge_indep_em2(ytilde,X.svd$d^2,1,1,100)
+yt.em2b = ridge_indep_em2b(ytilde,X.svd$d^2,1,1,100)
+
+
+plot_loglik(list(yt.em1,yt.em2,yt.em2b))
+```
