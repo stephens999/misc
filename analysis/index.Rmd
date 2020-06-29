@@ -33,6 +33,8 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 * [Ridge regression via conjugate gradient](ridge_conjugate_gradient.html)
 * [EM for hyperparameters Ridge regression](ridge_em.html)
 * [EM for hyperparameters of Ridge regression using SVD](ridge_em_svd.html)
+* [ADMM for ridge regression with heterogenous prior variances](ridge_admm.html)
+
 
 # Lasso
 
