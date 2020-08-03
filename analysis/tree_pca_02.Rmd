@@ -1,0 +1,220 @@
+---
+title: "tree_pca_02"
+author: "Matthew Stephens"
+date: "2020-07-29"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+Following up on a [previous analysis](tree_pca.html) to look at how
+PCA behaves on some tree-structure covariance matrices.
+
+
+## Tree-structure covariance - 4 tips
+
+I look at the simple 4-tip tree where the root first splits into 2 branches,
+and then each branch splits into two tips.
+
+
+This function produces the covariance matrix of this tree, with 
+branch lengths given by `b`.
+The first two elements of `b` give 
+the left and right branches of the first split, etc
+(There are 6 branches in all.)
+```{r}
+Sigma4_fun = function(b){
+  Sigma4 = matrix(0,nrow=4, ncol=4) # shared branch
+  Sigma4[1:2,1:2] = Sigma4[1:2,1:2] + b[1] # left
+  Sigma4[3:4,3:4] = Sigma4[3:4,3:4] + b[2] # right split
+  for(i in 1:4)
+    Sigma4[i,i] = Sigma4[i,i] + b[2+i]
+  Sigma4
+}
+```
+
+
+### Even trees
+
+Here we assume all the branch lengths are the same. We see that
+the PCA (eigenvectors) reproduce the tree. 
+```{r}
+Sigma4_even = Sigma4_fun(rep(1,6))
+Sigma4_even
+eigen(Sigma4_even)
+```
+
+However, note that the equal eigenvalues (3,3) and (1,1)
+mean that there is ambiguity about these eigenvectors. Any
+linear cobination of these last two eigenvectors will also be
+an eigenvector. For example:
+```{r}
+v=c(-1,1,-1,1)
+Sigma4_even %*% v
+```
+
+This means that if the truth is a tree like this,
+the representation learned could be quite prior dependent.
+It makes it more attractive to make
+assumptions like sparsity,  or even a hierarchical structure
+on the loadings. (One long-term question is whether a sparsity
+assumption is enough, or whether we really need to put in
+a hierarchical assumption to recover trees.)
+
+
+### The effects of centering
+
+We can also center the covariance matrix before eigen-decomposition,
+which is analogous to including a constant factor. This way each
+eigenvector represents a "split" of the samples in the tree (rather
+than the top two branches being put in two different eigen vectors).
+```{r}
+Sigma4_even_centered = Sigma4_even-mean(Sigma4_even)
+eigen(Sigma4_even_centered)
+```
+
+
+### Balanced trees
+
+By a (locally-)balanced tree I mean one where every split is balanced (although
+not all splits are the same). We see similar results in this case to the even tree
+(but this is not true for the locally-balanced 8 tip tree!)
+
+```{r}
+Sigma4_balanced = Sigma4_fun(c(1,1,2,2,3,3))
+Sigma4_balanced
+eigen(Sigma4_balanced)
+eigen(Sigma4_balanced-mean(Sigma4_balanced))
+```
+
+### Un-balanced trees
+
+With arbitrary branch lengths we don't see the nice exact results.
+For example, the first eigen-vector, the loadings are not equal for all
+the samples that split the same way.
+However the general patterns are somewhat similar. 
+
+```{r}
+Sigma4_unbalanced = Sigma4_fun(c(1,2,3,4,5,6))
+Sigma4_unbalanced
+eigen(Sigma4_unbalanced)
+eigen(Sigma4_unbalanced-mean(Sigma4_unbalanced))
+```
+
+### Un-balanced trees: correlation matrix
+
+Part of the issue is that with arbitrary branch lengths the different
+nodes do not have the same variance. Taking the correlation matrix
+instead of the covariance matrix seemms to make the results for irregular trees
+closer to the "regular" trees. 
+
+```{r}
+eigen(cov2cor(Sigma4_unbalanced)-mean(cov2cor(Sigma4_unbalanced)))
+```
+
+## Tree-structure covariance - 8 tips
+
+
+Here I create an 8-tip tree by joining two 4-tip trees with a top splitting branch
+whose branch lengths are given by `b_top`. 
+```{r}
+Sigma8_fun = function(b_top,b_left,b_right){
+  Sigma8 = matrix(0,nrow=8,ncol=8)
+  Sigma8[1:4,1:4] = b_top[1] + Sigma4_fun(b_left) # left
+  Sigma8[5:8,5:8] = b_top[2] + Sigma4_fun(b_right) # right split
+  Sigma8
+}
+```
+
+
+### Balanced trees
+
+Note that for the 8-tip case, the (locally-)balanced trees don't give such clean
+results as the 4-tip case. In particular, the first eigenvector varies
+among samples that split the same way. And the second eigenvector is not really 
+reflecting the tree!
+```{r}
+Sigma8_balanced = Sigma8_fun(c(1,1),c(2,2,3,3,4,4),c(5,5,6,6,7,7))
+Sigma8_balanced
+eigen(Sigma8_balanced)
+eigen(Sigma8_balanced-mean(Sigma8_balanced))
+```
+
+Using the correlation matrix instead helps make the results cleaner and more "tree-like":
+```{r}
+eigen(cov2cor(Sigma8_balanced)-mean(cov2cor(Sigma8_balanced)))
+```
+
+
+### Add an outgroup
+
+Here I add a 9th "outgroup" to an even 8-tip tree to see what happens.
+I try eigen-decomposition of correlation matrix 
+both with and without centering. In both cases
+the first eigen-vector has no weight on the 9th population. This might not
+get in the way of partition-based approaches because in both cases the first 
+eigenvector partitions the samples 
+consistent with the unrooted tree. However, it may complicate
+the issue of taking account of admixed populations; how to distinguish
+admixed vs an outgroup?
+
+```{r}
+Sigma8_even = Sigma8_fun(c(1,1),rep(1,6),rep(1,6))
+Sigma9 = rbind(cbind(1+Sigma8_even, rep(0,8)),rep(0,9))
+Sigma9[9,9] = 1
+Sigma9
+Sigma9_cor = cov2cor(Sigma9)
+Sigma9_cor
+```
+
+
+```{r}
+eigen(Sigma9_cor)
+eigen(Sigma9_cor-mean(Sigma9_cor))
+```
+
+
+## Relationship between distance and covariance
+
+This section is a bit of a diversion and may be ignored...
+I just wanted to remind myself about the relationship between the pairwise
+distances and covariances.
+
+Basically if $D$ is a distance matrix, and $L$ is the centering
+matrix (so premultiplying by $L$ subtracts the) then
+$W=-LDL'$ is symmetric positive semi-definite, and closely related to the covariance matrix. See Petkova et al for more discussion....
+
+```{r}
+D4_fun = function(b){
+  D4 = matrix(0,nrow=4, ncol=4) 
+  D4[1:2,3:4] = b[2] + b[3] # top split
+  D4[1,-1] = D4[1,-1] + b[4]
+  D4[2,-2] = D4[2,-2] + b[5]
+  D4[3,-3] = D4[3,-3] + b[6]
+  D4[4,-4] = D4[4,-4] + b[7]
+  D4 + t(D4)
+}
+```
+
+```{r}
+D4_even = D4_fun(rep(1,7))
+D4_even
+
+L = diag(4) - matrix(1/4,nrow=4,ncol=4)
+W = -L %*% D4_even %*% t(L)
+W
+0.5*W - Sigma4_even
+eigen(W)
+```
+
+
+```{r}
+D4_unbalanced_noshare = D4_fun(c(0,2,3,4,5,6,7))
+D4_unbalanced_noshare
+W = -L %*% D4_unbalanced_noshare %*% t(L)
+W
+eigen(W)
+```
+
