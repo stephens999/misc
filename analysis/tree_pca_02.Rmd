@@ -133,8 +133,9 @@ Sigma8_fun = function(b_top,b_left,b_right){
 
 Note that for the 8-tip case, the (locally-)balanced trees don't give such clean
 results as the 4-tip case. In particular, the first eigenvector varies
-among samples that split the same way. And the second eigenvector is not really 
-reflecting the tree!
+among samples that split the same way. However if you take the strategy of splitting
+each eigenvector at its largest gap, then I think every eigenvector splits the tree according to 
+some branch...
 ```{r}
 Sigma8_balanced = Sigma8_fun(c(1,1),c(2,2,3,3,4,4),c(5,5,6,6,7,7))
 Sigma8_balanced
@@ -176,6 +177,122 @@ eigen(Sigma9_cor-mean(Sigma9_cor))
 ```
 
 
+## Try admixture 
+
+Here I add an admixed population that I intended to represent $X=qX_1 + (1-q)X_2$,
+from which one obtains $cov(X,X_k) = q^2 cov(X_1,X_k) + (1-q)^2 cov(X_2,X_k)$.
+```{r}
+q = 0.5
+Sigma8_even = Sigma8_fun(c(1,1),rep(1,6),rep(1,6))
+Sigma9 = rbind(Sigma8_even, q^2*Sigma8_even[1,]+(1-q)^2*Sigma8_even[2,])
+Sigma9 = cbind(Sigma9, c(q^2*Sigma8_even[1,]+(1-q)^2*Sigma8_even[2,], 0))
+Sigma9[9,9] = q^2*Sigma8_even[1,1]+(1-q)^2*Sigma8_even[1,1] + 2*q*(1-q)*Sigma8_even[1,2]
+Sigma9
+cov2cor(Sigma9)
+
+eigen(cov2cor(Sigma9)-mean(cov2cor(Sigma9)))
+```
+
+These results do not look promising. While the first 3 eigenvectors make some sense,
+the fourth eigenvector picks out the admixed
+population, and in fact contrasts it with the populations it is admixed with, which is not what we want.
+
+Trying it without centering. In this case the 5th eigenvector is contrasting admixed population.
+```{r}
+eigen(cov2cor(Sigma9))
+```
+
+And try without taking correlation.. it still happens.
+```{r}
+eigen(Sigma9)
+```
+
+
+## Graph Laplacian
+
+The graph laplacian for a graph with edge weights (distances) $w$ is $L=D-W$ where $D$ is a diagonal
+matrix with $d_{ii} = \sum_j w_{ij}$. Cutting a graph into two can be acheived by taking the top eigenvector
+of the Graph Laplacian, as [here](https://www-liebertpub-com.proxy.uchicago.edu/doi/10.1089/cmb.2009.0028)
+for example.
+
+Here we have functions to compute distance matrices for the 4-tip and 8-tip trees as above.
+
+```{r}
+D4_fun = function(b){
+  D4 = matrix(0,nrow=4, ncol=4) 
+  D4[1:2,3:4] = b[1] + b[2] # top split
+  D4[1,-1] = D4[1,-1] + b[3]
+  D4[2,-2] = D4[2,-2] + b[4]
+  D4[3,-3] = D4[3,-3] + b[5]
+  D4[4,-4] = D4[4,-4] + b[6]
+  D4 + t(D4)
+}
+
+D8_fun = function(b_top, b_left, b_right){
+  D8 = matrix(0,nrow=8, ncol=8) 
+  D8[1:4,-(1:4)] = b_top[1] 
+  D8[5:8,-(5:8)] = b_top[2] # top split
+  
+  D8[1:2,-(1:2)] = D8[1:2,-(1:2)] + b_left[1]
+  D8[3:4,-(3:4)] = D8[3:4,-(3:4)] + b_left[2]
+  D8[1,-1] = D8[1,-1] + b_left[3]
+  D8[2,-2] = D8[2,-2] + b_left[4]
+  D8[3,-3] = D8[3,-3] + b_left[5]
+  D8[4,-4] = D8[4,-4] + b_left[6]
+  
+  D8[5:6,-(5:6)] = D8[5:6,-(5:6)] + b_right[1]
+  D8[7:8,-(7:8)] = D8[7:8,-(7:8)] + b_right[2]
+  D8[5,-5] = D8[5,-5] + b_right[3]
+  D8[6,-6] = D8[6,-6] + b_right[4]
+  D8[7,-7] = D8[7,-7] + b_right[5]
+  D8[8,-8] = D8[8,-8] + b_right[6]
+  
+  D8 + t(D8)
+  
+}
+```
+
+Interestingly, in the case with even branches not even the top eigenvector is unique -- there are three equal eigenvalues. (However, all the top eigenvectors would produce a "valid" split
+of the tree if you applied the strategy of splitting them at the largest gap. The second and third eigenvectors
+would split into 2 vs 6 rather than 4 vs 4. Would all linear combinations of eigenvectors produce a valid split? Not sure...) 
+```{r}
+D8_even = D8_fun(c(1,1),rep(1,6),rep(1,6))
+D8_even
+L_even = diag(rowSums(D8_even)) - D8_even 
+L_even
+eigen(L_even)
+```
+
+
+### Balanced tree
+
+```{r}
+D8_balanced = D8_fun(c(1,1),c(2,2,3,3,4,4),c(5,5,6,6,7,7))
+D8_balanced
+eigen(diag(rowSums(D8_balanced))-D8_balanced)
+```
+
+
+### Outgroup
+
+Add an outgroup to the even tree. The top eigenvector splits 5 vs 4.
+```{r}
+D9 = rbind(cbind(D8_even, rep(5,8)),rep(5,9))
+D9[9,9] = 0
+L9 = diag(rowSums(D9)) - D9 
+eigen(L9)
+```
+
+Notice here that, unlike the correlation case, the length of the outgroup will matter. If we make it long
+enough then the first eigenvector will split 8 vs 1.
+```{r}
+D9 = rbind(cbind(D8_even, rep(50,8)),rep(50,9))
+D9[9,9] = 0
+L9 = diag(rowSums(D9)) - D9 
+eigen(L9)
+```
+
+
 ## Relationship between distance and covariance
 
 This section is a bit of a diversion and may be ignored...
@@ -189,17 +306,17 @@ $W=-LDL'$ is symmetric positive semi-definite, and closely related to the covari
 ```{r}
 D4_fun = function(b){
   D4 = matrix(0,nrow=4, ncol=4) 
-  D4[1:2,3:4] = b[2] + b[3] # top split
-  D4[1,-1] = D4[1,-1] + b[4]
-  D4[2,-2] = D4[2,-2] + b[5]
-  D4[3,-3] = D4[3,-3] + b[6]
-  D4[4,-4] = D4[4,-4] + b[7]
+  D4[1:2,3:4] = b[1] + b[2] # top split
+  D4[1,-1] = D4[1,-1] + b[3]
+  D4[2,-2] = D4[2,-2] + b[4]
+  D4[3,-3] = D4[3,-3] + b[5]
+  D4[4,-4] = D4[4,-4] + b[6]
   D4 + t(D4)
 }
 ```
 
 ```{r}
-D4_even = D4_fun(rep(1,7))
+D4_even = D4_fun(rep(1,6))
 D4_even
 
 L = diag(4) - matrix(1/4,nrow=4,ncol=4)
@@ -210,11 +327,4 @@ eigen(W)
 ```
 
 
-```{r}
-D4_unbalanced_noshare = D4_fun(c(0,2,3,4,5,6,7))
-D4_unbalanced_noshare
-W = -L %*% D4_unbalanced_noshare %*% t(L)
-W
-eigen(W)
-```
 
