@@ -180,30 +180,30 @@ eigen(Sigma9_cor-mean(Sigma9_cor))
 ## Try admixture 
 
 Here I add an admixed population that I intended to represent $X=qX_1 + (1-q)X_2$,
-from which one obtains $cov(X,X_k) = q^2 cov(X_1,X_k) + (1-q)^2 cov(X_2,X_k)$.
+from which one obtains $cov(X,X_k) = q cov(X_1,X_k) + (1-q) cov(X_2,X_k)$.
 ```{r}
 q = 0.5
 Sigma8_even = Sigma8_fun(c(1,1),rep(1,6),rep(1,6))
-Sigma9 = rbind(Sigma8_even, q^2*Sigma8_even[1,]+(1-q)^2*Sigma8_even[2,])
-Sigma9 = cbind(Sigma9, c(q^2*Sigma8_even[1,]+(1-q)^2*Sigma8_even[2,], 0))
+Sigma9 = rbind(Sigma8_even, q*Sigma8_even[1,]+(1-q)*Sigma8_even[2,])
+Sigma9 = cbind(Sigma9, c(q*Sigma8_even[1,]+(1-q)*Sigma8_even[2,], 0))
 Sigma9[9,9] = q^2*Sigma8_even[1,1]+(1-q)^2*Sigma8_even[1,1] + 2*q*(1-q)*Sigma8_even[1,2]
 Sigma9
 cov2cor(Sigma9)
 
+eigen(Sigma9)
 eigen(cov2cor(Sigma9)-mean(cov2cor(Sigma9)))
 ```
 
-These results do not look promising. While the first 3 eigenvectors make some sense,
-the fourth eigenvector picks out the admixed
-population, and in fact contrasts it with the populations it is admixed with, which is not what we want.
+Both the correlation and covariance decompose in an intutive way, with the admixed
+population being loaded as approximately the average of populations 1 and 2 (exactly in the case
+of the covariance).
 
-Trying it without centering. In this case the 5th eigenvector is contrasting admixed population.
+Also try a different q:
 ```{r}
-eigen(cov2cor(Sigma9))
-```
-
-And try without taking correlation.. it still happens.
-```{r}
+q = 0.25
+Sigma9 = rbind(Sigma8_even, q*Sigma8_even[1,]+(1-q)*Sigma8_even[2,])
+Sigma9 = cbind(Sigma9, c(q*Sigma8_even[1,]+(1-q)*Sigma8_even[2,], 0))
+Sigma9[9,9] = q^2*Sigma8_even[1,1]+(1-q)^2*Sigma8_even[1,1] + 2*q*(1-q)*Sigma8_even[1,2]
 eigen(Sigma9)
 ```
 
