@@ -401,7 +401,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2020-08-03
+<strong>Last updated:</strong> 2020-08-06
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -492,16 +492,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreed41fc88a7fbe1016f02843b402329b8e1593b52btargetblankd41fc88a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/d41fc88a7fbe1016f02843b402329b8e1593b52b" target="_blank">d41fc88</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreed749eb4627323ecfc6ce319dbfc24b0cdf518caetargetblankd749eb4a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/d749eb4627323ecfc6ce319dbfc24b0cdf518cae" target="_blank">d749eb4</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreed41fc88a7fbe1016f02843b402329b8e1593b52btargetblankd41fc88a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreed749eb4627323ecfc6ce319dbfc24b0cdf518caetargetblankd749eb4a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/d41fc88a7fbe1016f02843b402329b8e1593b52b" target="_blank">d41fc88</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/d749eb4627323ecfc6ce319dbfc24b0cdf518cae" target="_blank">d749eb4</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -695,6 +695,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/d749eb4627323ecfc6ce319dbfc24b0cdf518cae/analysis/tree_pca_02.Rmd" target="_blank">d749eb4</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-08-06
+</td>
+<td>
+workflowr::wflow_publish(“tree_pca_02.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/2091ae26b16f099909bed397067f5b0a5e285b28/docs/tree_pca_02.html" target="_blank">2091ae2</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-08-03
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/d41fc88a7fbe1016f02843b402329b8e1593b52b/analysis/tree_pca_02.Rmd" target="_blank">d41fc88</a>
 </td>
 <td>
@@ -870,7 +904,7 @@ $vectors
 }</code></pre>
 <div id="balanced-trees-1" class="section level3">
 <h3>Balanced trees</h3>
-<p>Note that for the 8-tip case, the (locally-)balanced trees don’t give such clean results as the 4-tip case. In particular, the first eigenvector varies among samples that split the same way. And the second eigenvector is not really reflecting the tree!</p>
+<p>Note that for the 8-tip case, the (locally-)balanced trees don’t give such clean results as the 4-tip case. In particular, the first eigenvector varies among samples that split the same way. However if you take the strategy of splitting each eigenvector at its largest gap, then I think every eigenvector splits the tree according to some branch…</p>
 <pre class="r"><code>Sigma8_balanced = Sigma8_fun(c(1,1),c(2,2,3,3,4,4),c(5,5,6,6,7,7))
 Sigma8_balanced</code></pre>
 <pre><code>     [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8]
@@ -1043,20 +1077,334 @@ $vectors
  [9,] -6.982262e-17 -7.597605e-17  1.110223e-15 -0.7185999</code></pre>
 </div>
 </div>
+<div id="try-admixture" class="section level2">
+<h2>Try admixture</h2>
+<p>Here I add an admixed population that I intended to represent <span class="math inline">\(X=qX_1 + (1-q)X_2\)</span>, from which one obtains <span class="math inline">\(cov(X,X_k) = q^2 cov(X_1,X_k) + (1-q)^2 cov(X_2,X_k)\)</span>.</p>
+<pre class="r"><code>q = 0.5
+Sigma8_even = Sigma8_fun(c(1,1),rep(1,6),rep(1,6))
+Sigma9 = rbind(Sigma8_even, q^2*Sigma8_even[1,]+(1-q)^2*Sigma8_even[2,])
+Sigma9 = cbind(Sigma9, c(q^2*Sigma8_even[1,]+(1-q)^2*Sigma8_even[2,], 0))
+Sigma9[9,9] = q^2*Sigma8_even[1,1]+(1-q)^2*Sigma8_even[1,1] + 2*q*(1-q)*Sigma8_even[1,2]
+Sigma9</code></pre>
+<pre><code>      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9]
+ [1,] 3.00 2.00  1.0  1.0    0    0    0    0 1.25
+ [2,] 2.00 3.00  1.0  1.0    0    0    0    0 1.25
+ [3,] 1.00 1.00  3.0  2.0    0    0    0    0 0.50
+ [4,] 1.00 1.00  2.0  3.0    0    0    0    0 0.50
+ [5,] 0.00 0.00  0.0  0.0    3    2    1    1 0.00
+ [6,] 0.00 0.00  0.0  0.0    2    3    1    1 0.00
+ [7,] 0.00 0.00  0.0  0.0    1    1    3    2 0.00
+ [8,] 0.00 0.00  0.0  0.0    1    1    2    3 0.00
+ [9,] 1.25 1.25  0.5  0.5    0    0    0    0 2.50</code></pre>
+<pre class="r"><code>cov2cor(Sigma9)</code></pre>
+<pre><code>           [,1]      [,2]      [,3]      [,4]      [,5]      [,6]      [,7]
+ [1,] 1.0000000 0.6666667 0.3333333 0.3333333 0.0000000 0.0000000 0.0000000
+ [2,] 0.6666667 1.0000000 0.3333333 0.3333333 0.0000000 0.0000000 0.0000000
+ [3,] 0.3333333 0.3333333 1.0000000 0.6666667 0.0000000 0.0000000 0.0000000
+ [4,] 0.3333333 0.3333333 0.6666667 1.0000000 0.0000000 0.0000000 0.0000000
+ [5,] 0.0000000 0.0000000 0.0000000 0.0000000 1.0000000 0.6666667 0.3333333
+ [6,] 0.0000000 0.0000000 0.0000000 0.0000000 0.6666667 1.0000000 0.3333333
+ [7,] 0.0000000 0.0000000 0.0000000 0.0000000 0.3333333 0.3333333 1.0000000
+ [8,] 0.0000000 0.0000000 0.0000000 0.0000000 0.3333333 0.3333333 0.6666667
+ [9,] 0.4564355 0.4564355 0.1825742 0.1825742 0.0000000 0.0000000 0.0000000
+           [,8]      [,9]
+ [1,] 0.0000000 0.4564355
+ [2,] 0.0000000 0.4564355
+ [3,] 0.0000000 0.1825742
+ [4,] 0.0000000 0.1825742
+ [5,] 0.3333333 0.0000000
+ [6,] 0.3333333 0.0000000
+ [7,] 0.6666667 0.0000000
+ [8,] 1.0000000 0.0000000
+ [9,] 0.0000000 1.0000000</code></pre>
+<pre class="r"><code>eigen(cov2cor(Sigma9)-mean(cov2cor(Sigma9)))</code></pre>
+<pre><code>eigen() decomposition
+$values
+[1]  2.45814705  1.15153572  1.00000000  0.62358369  0.33333333  0.33333333
+[7]  0.33333333  0.33333333 -0.03578926
+
+$vectors
+            [,1]        [,2]          [,3]        [,4]          [,5]
+ [1,] -0.3519569  0.30841585  0.000000e+00 -0.48484501  0.000000e+00
+ [2,] -0.3519569  0.30841585  1.571968e-16 -0.48484501 -1.081451e-16
+ [3,] -0.3020466 -0.54213874 -1.151827e-16  0.02383262  2.957952e-01
+ [4,] -0.3020466 -0.54213874  2.269846e-16  0.02383262 -2.957952e-01
+ [5,]  0.3532596  0.01037774  5.000000e-01 -0.09985140  6.277784e-01
+ [6,]  0.3532596  0.01037774  5.000000e-01 -0.09985140 -6.277784e-01
+ [7,]  0.3532596  0.01037774 -5.000000e-01 -0.09985140 -1.356448e-01
+ [8,]  0.3532596  0.01037774 -5.000000e-01 -0.09985140  1.356448e-01
+ [9,] -0.2657423  0.47063755 -8.017202e-17  0.69916624 -1.012340e-16
+               [,6]          [,7]          [,8]      [,9]
+ [1,]  0.000000e+00  0.000000e+00  7.071068e-01 0.2143160
+ [2,]  2.557933e-16 -3.422547e-16 -7.071068e-01 0.2143160
+ [3,] -4.318109e-01  4.754415e-01  1.387779e-16 0.3380613
+ [4,]  4.318109e-01 -4.754415e-01  4.857226e-16 0.3380613
+ [5,]  3.049337e-01 -1.136210e-01  2.775558e-16 0.3393076
+ [6,] -3.049337e-01  1.136210e-01  1.665335e-16 0.3393076
+ [7,]  4.696326e-01  5.109263e-01  1.110223e-16 0.3393076
+ [8,] -4.696326e-01 -5.109263e-01  2.220446e-16 0.3393076
+ [9,]  5.637541e-17 -7.074017e-17  4.718448e-16 0.4680255</code></pre>
+<p>These results do not look promising. While the first 3 eigenvectors make some sense, the fourth eigenvector picks out the admixed population, and in fact contrasts it with the populations it is admixed with, which is not what we want.</p>
+<p>Trying it without centering. In this case the 5th eigenvector is contrasting admixed population.</p>
+<pre class="r"><code>eigen(cov2cor(Sigma9))</code></pre>
+<pre><code>eigen() decomposition
+$values
+[1] 2.5968025 2.3333333 1.1510713 1.0000000 0.5854596 0.3333333 0.3333333
+[8] 0.3333333 0.3333333
+
+$vectors
+            [,1] [,2]       [,3] [,4]       [,5]       [,6]       [,7]
+ [1,] -0.4938835  0.0  0.2973059  0.0 -0.4094975  0.0000000  0.0000000
+ [2,] -0.4938835  0.0  0.2973059  0.0 -0.4094975  0.0000000  0.0000000
+ [3,] -0.4286482  0.0 -0.5499090  0.0  0.1177323  0.0000000  0.0000000
+ [4,] -0.4286482  0.0 -0.5499090  0.0  0.1177323  0.0000000  0.0000000
+ [5,]  0.0000000  0.5  0.0000000  0.5  0.0000000 -0.4452957  0.5492829
+ [6,]  0.0000000  0.5  0.0000000  0.5  0.0000000  0.4452957 -0.5492829
+ [7,]  0.0000000  0.5  0.0000000 -0.5  0.0000000 -0.5492829 -0.4452957
+ [8,]  0.0000000  0.5  0.0000000 -0.5  0.0000000  0.5492829  0.4452957
+ [9,] -0.3803677  0.0  0.4673528  0.0  0.7980612  0.0000000  0.0000000
+               [,8]          [,9]
+ [1,] -2.445368e-01  6.634770e-01
+ [2,]  2.445368e-01 -6.634770e-01
+ [3,] -6.634770e-01 -2.445368e-01
+ [4,]  6.634770e-01  2.445368e-01
+ [5,]  0.000000e+00  0.000000e+00
+ [6,]  0.000000e+00  0.000000e+00
+ [7,]  0.000000e+00  0.000000e+00
+ [8,]  0.000000e+00  0.000000e+00
+ [9,] -1.526557e-16  5.551115e-17</code></pre>
+<p>And try without taking correlation.. it still happens.</p>
+<pre class="r"><code>eigen(Sigma9)</code></pre>
+<pre><code>eigen() decomposition
+$values
+[1] 7.613530 7.000000 3.336366 3.000000 1.550104 1.000000 1.000000 1.000000
+[9] 1.000000
+
+$vectors
+            [,1] [,2]       [,3] [,4]        [,5]          [,6]          [,7]
+ [1,] -0.4980147  0.0  0.3518252  0.0 -0.35805080  7.071068e-01  0.000000e+00
+ [2,] -0.4980147  0.0  0.3518252  0.0 -0.35805080 -7.071068e-01  1.099972e-16
+ [3,] -0.4443084  0.0 -0.5436645  0.0  0.08377927  2.775558e-16 -7.071068e-01
+ [4,] -0.4443084  0.0 -0.5436645  0.0  0.08377927  4.440892e-16  7.071068e-01
+ [5,]  0.0000000 -0.5  0.0000000  0.5  0.00000000  0.000000e+00  0.000000e+00
+ [6,]  0.0000000 -0.5  0.0000000  0.5  0.00000000  0.000000e+00  0.000000e+00
+ [7,]  0.0000000 -0.5  0.0000000 -0.5  0.00000000  0.000000e+00  0.000000e+00
+ [8,]  0.0000000 -0.5  0.0000000 -0.5  0.00000000  0.000000e+00  0.000000e+00
+ [9,] -0.3303677  0.0  0.4016166  0.0  0.85414362  4.996004e-16 -2.130473e-16
+            [,8]       [,9]
+ [1,]  0.0000000  0.0000000
+ [2,]  0.0000000  0.0000000
+ [3,]  0.0000000  0.0000000
+ [4,]  0.0000000  0.0000000
+ [5,]  0.4828840 -0.5165492
+ [6,] -0.4828840  0.5165492
+ [7,] -0.5165492 -0.4828840
+ [8,]  0.5165492  0.4828840
+ [9,]  0.0000000  0.0000000</code></pre>
+</div>
+<div id="graph-laplacian" class="section level2">
+<h2>Graph Laplacian</h2>
+<p>The graph laplacian for a graph with edge weights (distances) <span class="math inline">\(w\)</span> is <span class="math inline">\(L=D-W\)</span> where <span class="math inline">\(D\)</span> is a diagonal matrix with <span class="math inline">\(d_{ii} = \sum_j w_{ij}\)</span>. Cutting a graph into two can be acheived by taking the top eigenvector of the Graph Laplacian, as <a href="https://www-liebertpub-com.proxy.uchicago.edu/doi/10.1089/cmb.2009.0028">here</a> for example.</p>
+<p>Here we have functions to compute distance matrices for the 4-tip and 8-tip trees as above.</p>
+<pre class="r"><code>D4_fun = function(b){
+  D4 = matrix(0,nrow=4, ncol=4) 
+  D4[1:2,3:4] = b[1] + b[2] # top split
+  D4[1,-1] = D4[1,-1] + b[3]
+  D4[2,-2] = D4[2,-2] + b[4]
+  D4[3,-3] = D4[3,-3] + b[5]
+  D4[4,-4] = D4[4,-4] + b[6]
+  D4 + t(D4)
+}
+
+D8_fun = function(b_top, b_left, b_right){
+  D8 = matrix(0,nrow=8, ncol=8) 
+  D8[1:4,-(1:4)] = b_top[1] 
+  D8[5:8,-(5:8)] = b_top[2] # top split
+  
+  D8[1:2,-(1:2)] = D8[1:2,-(1:2)] + b_left[1]
+  D8[3:4,-(3:4)] = D8[3:4,-(3:4)] + b_left[2]
+  D8[1,-1] = D8[1,-1] + b_left[3]
+  D8[2,-2] = D8[2,-2] + b_left[4]
+  D8[3,-3] = D8[3,-3] + b_left[5]
+  D8[4,-4] = D8[4,-4] + b_left[6]
+  
+  D8[5:6,-(5:6)] = D8[5:6,-(5:6)] + b_right[1]
+  D8[7:8,-(7:8)] = D8[7:8,-(7:8)] + b_right[2]
+  D8[5,-5] = D8[5,-5] + b_right[3]
+  D8[6,-6] = D8[6,-6] + b_right[4]
+  D8[7,-7] = D8[7,-7] + b_right[5]
+  D8[8,-8] = D8[8,-8] + b_right[6]
+  
+  D8 + t(D8)
+  
+}</code></pre>
+<p>Interestingly, in the case with even branches not even the top eigenvector is unique – there are three equal eigenvalues. (However, all the top eigenvectors would produce a “valid” split of the tree if you applied the strategy of splitting them at the largest gap. The second and third eigenvectors would split into 2 vs 6 rather than 4 vs 4. Would all linear combinations of eigenvectors produce a valid split? Not sure…)</p>
+<pre class="r"><code>D8_even = D8_fun(c(1,1),rep(1,6),rep(1,6))
+D8_even</code></pre>
+<pre><code>     [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8]
+[1,]    0    2    4    4    6    6    6    6
+[2,]    2    0    4    4    6    6    6    6
+[3,]    4    4    0    2    6    6    6    6
+[4,]    4    4    2    0    6    6    6    6
+[5,]    6    6    6    6    0    2    4    4
+[6,]    6    6    6    6    2    0    4    4
+[7,]    6    6    6    6    4    4    0    2
+[8,]    6    6    6    6    4    4    2    0</code></pre>
+<pre class="r"><code>L_even = diag(rowSums(D8_even)) - D8_even 
+L_even</code></pre>
+<pre><code>     [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8]
+[1,]   34   -2   -4   -4   -6   -6   -6   -6
+[2,]   -2   34   -4   -4   -6   -6   -6   -6
+[3,]   -4   -4   34   -2   -6   -6   -6   -6
+[4,]   -4   -4   -2   34   -6   -6   -6   -6
+[5,]   -6   -6   -6   -6   34   -2   -4   -4
+[6,]   -6   -6   -6   -6   -2   34   -4   -4
+[7,]   -6   -6   -6   -6   -4   -4   34   -2
+[8,]   -6   -6   -6   -6   -4   -4   -2   34</code></pre>
+<pre class="r"><code>eigen(L_even)</code></pre>
+<pre><code>eigen() decomposition
+$values
+[1] 4.80000e+01 4.00000e+01 4.00000e+01 3.60000e+01 3.60000e+01 3.60000e+01
+[7] 3.60000e+01 7.81597e-14
+
+$vectors
+           [,1]       [,2]       [,3]       [,4]       [,5]          [,6]
+[1,] -0.3535534  0.4819643  0.1330804 -0.0726462  0.3162704  0.000000e+00
+[2,] -0.3535534  0.4819643  0.1330804  0.0726462 -0.3162704  6.378627e-17
+[3,] -0.3535534 -0.4819643 -0.1330804  0.2512920 -0.5715778  9.894067e-02
+[4,] -0.3535534 -0.4819643 -0.1330804 -0.2512920  0.5715778 -9.894067e-02
+[5,]  0.3535534  0.1330804 -0.4819643  0.6338747  0.2198524 -2.201603e-01
+[6,]  0.3535534  0.1330804 -0.4819643 -0.6338747 -0.2198524  2.201603e-01
+[7,]  0.3535534 -0.1330804  0.4819643 -0.1725623 -0.1579137 -6.646354e-01
+[8,]  0.3535534 -0.1330804  0.4819643  0.1725623  0.1579137  6.646354e-01
+            [,7]       [,8]
+[1,]  0.62824800 -0.3535534
+[2,] -0.62824800 -0.3535534
+[3,]  0.31679938 -0.3535534
+[4,] -0.31679938 -0.3535534
+[5,] -0.03738048 -0.3535534
+[6,]  0.03738048 -0.3535534
+[7,]  0.05954248 -0.3535534
+[8,] -0.05954248 -0.3535534</code></pre>
+<div id="balanced-tree" class="section level3">
+<h3>Balanced tree</h3>
+<pre class="r"><code>D8_balanced = D8_fun(c(1,1),c(2,2,3,3,4,4),c(5,5,6,6,7,7))
+D8_balanced</code></pre>
+<pre><code>     [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8]
+[1,]    0    6   11   11   18   18   19   19
+[2,]    6    0   11   11   18   18   19   19
+[3,]   11   11    0    8   19   19   20   20
+[4,]   11   11    8    0   19   19   20   20
+[5,]   18   18   19   19    0   12   23   23
+[6,]   18   18   19   19   12    0   23   23
+[7,]   19   19   20   20   23   23    0   14
+[8,]   19   19   20   20   23   23   14    0</code></pre>
+<pre class="r"><code>eigen(diag(rowSums(D8_balanced))-D8_balanced)</code></pre>
+<pre><code>eigen() decomposition
+$values
+[1] 1.684900e+02 1.520000e+02 1.517593e+02 1.440000e+02 1.197507e+02
+[6] 1.160000e+02 1.080000e+02 2.273737e-13
+
+$vectors
+            [,1]          [,2]       [,3]          [,4]        [,5]
+[1,] -0.05537472  0.000000e+00 -0.3032768 -2.494094e-16  0.52910948
+[2,] -0.05537472  0.000000e+00 -0.3032768 -4.141320e-16  0.52910948
+[3,] -0.06533195  7.050795e-17 -0.3906786 -2.572166e-16 -0.46701389
+[4,] -0.06533195 -6.592973e-17 -0.3906786  1.117597e-16 -0.46701389
+[5,] -0.43228260 -5.438079e-15  0.4324365 -7.071068e-01 -0.03362174
+[6,] -0.43228260  5.392787e-15  0.4324365  7.071068e-01 -0.03362174
+[7,]  0.55298927 -7.071068e-01  0.2615189  5.419620e-15 -0.02847385
+[8,]  0.55298927  7.071068e-01  0.2615189 -5.349543e-15 -0.02847385
+              [,6]          [,7]       [,8]
+[1,] -1.008211e-14  7.071068e-01 -0.3535534
+[2,] -7.754136e-15 -7.071068e-01 -0.3535534
+[3,] -7.071068e-01  9.436896e-16 -0.3535534
+[4,]  7.071068e-01  3.219647e-15 -0.3535534
+[5,]  9.632002e-17 -5.551115e-17 -0.3535534
+[6,]  2.073423e-16 -1.110223e-16 -0.3535534
+[7,] -3.562959e-16 -3.330669e-16 -0.3535534
+[8,] -1.342513e-16 -3.330669e-16 -0.3535534</code></pre>
+</div>
+<div id="outgroup" class="section level3">
+<h3>Outgroup</h3>
+<p>Add an outgroup to the even tree. The top eigenvector splits 5 vs 4.</p>
+<pre class="r"><code>D9 = rbind(cbind(D8_even, rep(5,8)),rep(5,9))
+D9[9,9] = 0
+L9 = diag(rowSums(D9)) - D9 
+eigen(L9)</code></pre>
+<pre><code>eigen() decomposition
+$values
+[1] 5.300000e+01 4.500000e+01 4.500000e+01 4.500000e+01 4.100000e+01
+[6] 4.100000e+01 4.100000e+01 4.100000e+01 5.684342e-14
+
+$vectors
+               [,1]       [,2]        [,3]        [,4]          [,5]
+ [1,] -3.535534e-01 -0.2436648  0.42289173 -0.16024642  4.753566e-01
+ [2,] -3.535534e-01 -0.2436648  0.42289173 -0.16024642 -4.753566e-01
+ [3,] -3.535534e-01  0.2597599 -0.43688105 -0.07448918 -4.804414e-01
+ [4,] -3.535534e-01  0.2597599 -0.43688105 -0.07448918  4.804414e-01
+ [5,]  3.535534e-01  0.4387158  0.24661338 -0.10295233  1.856798e-01
+ [6,]  3.535534e-01  0.4387158  0.24661338 -0.10295233 -1.856798e-01
+ [7,]  3.535534e-01 -0.4226207 -0.26060270 -0.13178327 -9.346202e-02
+ [8,]  3.535534e-01 -0.4226207 -0.26060270 -0.13178327  9.346202e-02
+ [9,]  2.354887e-16 -0.0643802  0.05595726  0.93894242 -3.469447e-15
+               [,6]          [,7]          [,8]       [,9]
+ [1,] -3.682758e-01  2.438096e-01 -2.810086e-01 -0.3333333
+ [2,]  3.682758e-01 -2.438096e-01  2.810086e-01 -0.3333333
+ [3,] -2.496118e-01  3.721106e-02 -4.533049e-01 -0.3333333
+ [4,]  2.496118e-01 -3.721106e-02  4.533049e-01 -0.3333333
+ [5,]  2.050295e-02 -6.305419e-01 -2.598453e-01 -0.3333333
+ [6,] -2.050295e-02  6.305419e-01  2.598453e-01 -0.3333333
+ [7,] -5.492236e-01 -2.039342e-01  3.847456e-01 -0.3333333
+ [8,]  5.492236e-01  2.039342e-01 -3.847456e-01 -0.3333333
+ [9,] -7.494005e-16  2.345346e-15 -7.494005e-16 -0.3333333</code></pre>
+<p>Notice here that, unlike the correlation case, the length of the outgroup will matter. If we make it long enough then the first eigenvector will split 8 vs 1.</p>
+<pre class="r"><code>D9 = rbind(cbind(D8_even, rep(50,8)),rep(50,9))
+D9[9,9] = 0
+L9 = diag(rowSums(D9)) - D9 
+eigen(L9)</code></pre>
+<pre><code>eigen() decomposition
+$values
+[1] 4.500000e+02 9.800000e+01 9.000000e+01 9.000000e+01 8.600000e+01
+[6] 8.600000e+01 8.600000e+01 8.600000e+01 9.753393e-14
+
+$vectors
+            [,1]          [,2]          [,3]          [,4]          [,5]
+ [1,]  0.1178511 -3.535534e-01  0.000000e+00 -5.000000e-01  0.000000e+00
+ [2,]  0.1178511 -3.535534e-01 -2.409528e-16 -5.000000e-01  5.334851e-16
+ [3,]  0.1178511 -3.535534e-01 -2.248180e-15  5.000000e-01  7.241999e-02
+ [4,]  0.1178511 -3.535534e-01  2.969590e-15  5.000000e-01 -7.241999e-02
+ [5,]  0.1178511  3.535534e-01 -5.000000e-01  1.387779e-15  1.576739e-01
+ [6,]  0.1178511  3.535534e-01 -5.000000e-01 -4.996004e-16 -1.576739e-01
+ [7,]  0.1178511  3.535534e-01  5.000000e-01 -4.996004e-16  6.854884e-01
+ [8,]  0.1178511  3.535534e-01  5.000000e-01  2.498002e-16 -6.854884e-01
+ [9,] -0.9428090 -8.326673e-17  1.795032e-17  1.110223e-16  3.430958e-18
+               [,6]          [,7]          [,8]       [,9]
+ [1,]  0.000000e+00  0.000000e+00  7.071068e-01 -0.3333333
+ [2,] -3.833340e-15  8.563212e-15 -7.071068e-01 -0.3333333
+ [3,] -2.107800e-01  6.710642e-01  8.659740e-15 -0.3333333
+ [4,]  2.107800e-01 -6.710642e-01 -5.828671e-16 -0.3333333
+ [5,] -6.525791e-01 -2.219898e-01  2.275957e-15 -0.3333333
+ [6,]  6.525791e-01  2.219898e-01  1.276756e-15 -0.3333333
+ [7,]  1.723725e-01 -1.983473e-02  1.276756e-15 -0.3333333
+ [8,] -1.723725e-01  1.983473e-02  1.915135e-15 -0.3333333
+ [9,] -3.969815e-17  1.914446e-16  0.000000e+00 -0.3333333</code></pre>
+</div>
+</div>
 <div id="relationship-between-distance-and-covariance" class="section level2">
 <h2>Relationship between distance and covariance</h2>
 <p>This section is a bit of a diversion and may be ignored… I just wanted to remind myself about the relationship between the pairwise distances and covariances.</p>
 <p>Basically if <span class="math inline">\(D\)</span> is a distance matrix, and <span class="math inline">\(L\)</span> is the centering matrix (so premultiplying by <span class="math inline">\(L\)</span> subtracts the) then <span class="math inline">\(W=-LDL&#39;\)</span> is symmetric positive semi-definite, and closely related to the covariance matrix. See Petkova et al for more discussion….</p>
 <pre class="r"><code>D4_fun = function(b){
   D4 = matrix(0,nrow=4, ncol=4) 
-  D4[1:2,3:4] = b[2] + b[3] # top split
-  D4[1,-1] = D4[1,-1] + b[4]
-  D4[2,-2] = D4[2,-2] + b[5]
-  D4[3,-3] = D4[3,-3] + b[6]
-  D4[4,-4] = D4[4,-4] + b[7]
+  D4[1:2,3:4] = b[1] + b[2] # top split
+  D4[1,-1] = D4[1,-1] + b[3]
+  D4[2,-2] = D4[2,-2] + b[4]
+  D4[3,-3] = D4[3,-3] + b[5]
+  D4[4,-4] = D4[4,-4] + b[6]
   D4 + t(D4)
 }</code></pre>
-<pre class="r"><code>D4_even = D4_fun(rep(1,7))
+<pre class="r"><code>D4_even = D4_fun(rep(1,6))
 D4_even</code></pre>
 <pre><code>     [,1] [,2] [,3] [,4]
 [1,]    0    2    4    4
@@ -1088,31 +1436,6 @@ $vectors
 [2,] -0.5 -7.071068e-01  6.824628e-17  0.5
 [3,]  0.5 -9.992007e-16 -7.071068e-01  0.5
 [4,]  0.5 -1.054712e-15  7.071068e-01  0.5</code></pre>
-<pre class="r"><code>D4_unbalanced_noshare = D4_fun(c(0,2,3,4,5,6,7))
-D4_unbalanced_noshare</code></pre>
-<pre><code>     [,1] [,2] [,3] [,4]
-[1,]    0    9   15   16
-[2,]    9    0   16   17
-[3,]   15   16    0   13
-[4,]   16   17   13    0</code></pre>
-<pre class="r"><code>W = -L %*% D4_unbalanced_noshare %*% t(L)
-W</code></pre>
-<pre><code>      [,1]  [,2]  [,3]  [,4]
-[1,]  9.25  0.75 -4.75 -5.25
-[2,]  0.75 10.25 -5.25 -5.75
-[3,] -4.75 -5.25 11.25 -1.25
-[4,] -5.25 -5.75 -1.25 12.25</code></pre>
-<pre class="r"><code>eigen(W)</code></pre>
-<pre><code>eigen() decomposition
-$values
-[1] 2.110302e+01 1.293894e+01 8.958048e+00 3.552714e-14
-
-$vectors
-           [,1]        [,2]        [,3] [,4]
-[1,] -0.4561794  0.03209393  0.73543887  0.5
-[2,] -0.5383516  0.05393445 -0.67621645  0.5
-[3,]  0.4358975 -0.74741486 -0.03693718  0.5
-[4,]  0.5586334  0.66138648 -0.02228524  0.5</code></pre>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
