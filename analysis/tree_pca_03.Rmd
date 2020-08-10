@@ -191,6 +191,78 @@ X.flash$objective
 X.flash.warmstart$objective
 ```
 
+## Simplify and investigate further
 
+To further simplify I'm going to remove the effects of the top branches
+so we are just left with the "difficult" part of the problem.
+(Actually distinguishing the top 2 solutions between (1,1,1,1) and (1,1,-1,-1)
+vs (1,1,0,0) and (0,0,1,1) is also interesting, but we leave that for now.)
+
+```{r}
+X2 = X- X.svd$u[,1:2] %*% diag(X.svd$d[1:2]) %*% t(X.svd$v[,1:2])
+X2.svd= svd(X2)
+plot(X2.svd$v[,1])
+```
+
+Run flash. As we know, with defaults, it just gives the svd solution.
+That is, it does not move from the initial value. (Note: I tried decreasing tol to 1e-14 and it did not change this result, just takes much longer to converge.)
+```{r}
+X2.flash = flash(X2,1,var_type="constant",ebnm_fn = list(l="ebnm_pn",f="ebnm_ash"))
+plot(X2.flash$ldf$f[,1],X2.svd$v[,1])
+```
+
+
+Now I'm going to try to force a sparser solution by using 
+a fixed (sparse)  prior for f, and normal prior for l (with standard deviation given by the diagonal of the svd).
+```{r}
+sd_grid = seq(0,1,length=20)
+mean = rep(0,20)
+pi = rep(1/20,20)
+gf = ashr::normalmix(pi,mean,sd_grid)
+
+gl = ashr::normalmix(c(1),c(0),c(sqrt(X2.svd$d[1])))
+
+X2.flash = flash(X2,1,var_type="constant",ebnm_fn = list(l="ebnm_ash",f="ebnm_ash"),ebnm_param = list(l=list(g=gl,fixg=TRUE), f=list(g = gf,fixg=TRUE)))
+                 
+plot(X2.flash$fit$EF[,1],X2.svd$v[,1])
+```
+
+I'm not sure I'm doing that right, but it did not seem to work...it is shrinking
+everything too uniformly?
+
+
+### Try iterative thresholding
+
+To help me understand, I try to implement a simple
+iterative-thresholding algorithm to estimate a single sparse PC,
+along the lines of [this paper](https://projecteuclid.org/euclid.aos/1368018173)
+
+Remarkably this example seems to not only converge to a good solution,
+but does so starting from near the "other" good solution. (Presumably this
+is because the likelihood slightly favours the one it converges to?)
+
+```{r}
+soft_thresh = function(x,lambda=0.1){
+  ifelse(abs(x)>lambda,sign(x)*(abs(x)-lambda),0)
+}
+normalize = function(x){x/sqrt(sum(x^2))}
+S = cov(X2)
+set.seed(1)
+TT = rnorm(nrow(S))
+TT = S %*% TT
+TT = soft_thresh(TT)
+TT = normalize(TT)
+par(mfcol=c(3,3),mai=rep(0.3,4))
+plot(TT,main="iteration = 1")
+  
+for(outer in 1:8){
+  for(i in 1:20){
+    TT = S %*% TT
+    TT = soft_thresh(TT)
+    TT = normalize(TT)
+  }
+  plot(TT,main = paste0("iteration = ",i*outer+1))
+}
+```
 
 
