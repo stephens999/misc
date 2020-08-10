@@ -1,0 +1,196 @@
+---
+title: "tree_pca_03"
+author: "Matthew Stephens"
+date: "2020-08-08"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+The idea here is to look at behaviour of sparse PCA algorithms on
+a simple tree.
+
+It is a  tree with four tips and equal branch lengths. (Also no noise for now.)
+
+
+```{r}
+set.seed(123)
+p = 1000
+n = 20
+f = list()
+for(i in 1:6){ 
+  f[[i]] = rnorm(p)
+}
+X =matrix(0,ncol=4*n, nrow=p)
+X[,1:(2*n)] = f[[1]]
+X[,(2*n+1):(4*n)] = f[[2]]
+
+X[,1:n] = X[,1:n]+f[[3]]
+X[,(n+1):(2*n)] = X[,(n+1):(2*n)]+f[[4]]
+X[,(2*n+1):(3*n)] = X[,(2*n+1):(3*n)] + f[[5]]
+X[,(3*n+1):(4*n)] = X[,(3*n+1):(4*n)] + f[[6]]
+image(cor(X))
+```
+
+
+## Regular SVD
+
+Regular SVD does not reproduce the tree here. Indeed we should not expect it to, because the third
+and fourth eigenvectors have very similar eigenvalues which makes them
+non-identifiable without sparsity:
+```{r}
+X.svd = svd(X)
+X.svd$d[1:4]
+par(mfcol=c(2,2))
+plot(X.svd$v[,1])
+plot(X.svd$v[,2])
+plot(X.svd$v[,3])
+plot(X.svd$v[,4])
+```
+
+## sparse PCA in `sparsepca` package
+
+Try sparse PCA with default settings. 
+It does pretty well. Maybe not as sparse as one would like.
+```{r}
+library(sparsepca)
+X.spca = spca(X,10)
+par(mfcol=c(2,2))
+plot(X.spca$loadings[,1])
+plot(X.spca$loadings[,2])
+plot(X.spca$loadings[,3])
+plot(X.spca$loadings[,4])
+```
+
+Try increasing sparsity by increasing alpha. That lost the tree... too sparse! 
+```{r}
+X.spca = spca(X,10,alpha=0.01)
+par(mfcol=c(2,2))
+plot(X.spca$loadings[,1])
+plot(X.spca$loadings[,2])
+plot(X.spca$loadings[,3])
+plot(X.spca$loadings[,4])
+```
+
+Try again.. .also not what I was hoping for.
+```{r}
+X.spca = spca(X,10,alpha=0.001)
+par(mfcol=c(2,2))
+plot(X.spca$loadings[,1])
+plot(X.spca$loadings[,2])
+plot(X.spca$loadings[,3])
+plot(X.spca$loadings[,4])
+```
+
+## flash
+
+Here I try flash. (Note that setting var_type has an effect; may want to look into that more, but for now i set it constant...).
+
+The way I have the matrix set up, the columns (not the rows) 
+are the individuals, so
+for a drift model the "loadings"  here should be normal; for simplicity I just set them to point normal and hope it learns them to be normal.
+```{r}
+library("flashr")
+X.flash = flash(X,10,ebnm_fn = list(l="ebnm_pn", f="ebnm_pn"),var_type = "constant")
+par(mfcol=c(2,2))
+plot(X.flash$ldf$f[,1])
+plot(X.flash$ldf$f[,2])
+plot(X.flash$ldf$f[,3])
+plot(X.flash$ldf$f[,4])
+```
+
+See if point laplace prior makes a difference. But it is basically indistinguishable.
+```{r}
+library("flashr")
+X.flash = flash(X,10,ebnm_fn = list(l="ebnm_pn", f="ebnm_pl"),var_type = "constant")
+par(mfcol=c(2,2))
+plot(X.flash$ldf$f[,1])
+plot(X.flash$ldf$f[,2])
+plot(X.flash$ldf$f[,3])
+plot(X.flash$ldf$f[,4])
+```
+
+Try ash prior...but it looks about the same.
+```{r}
+library("flashr")
+X.flash = flash(X,10,ebnm_fn = list(l="ebnm_pn", f="ebnm_ash"),var_type = "constant")
+par(mfcol=c(2,2))
+plot(X.flash$ldf$f[,1])
+plot(X.flash$ldf$f[,2])
+plot(X.flash$ldf$f[,3])
+plot(X.flash$ldf$f[,4])
+```
+
+In fact these all look essentially the same as the svd solution...
+```{r}
+plot(X.flash$ldf$f[,1],X.svd$v[,1])
+plot(X.flash$ldf$f[,2],X.svd$v[,2])
+plot(X.flash$ldf$f[,3],X.svd$v[,3])
+plot(X.flash$ldf$f[,4],X.svd$v[,4])
+```
+
+I guess maybe at the initialization the prior gets estimated close to normal,
+which results in no change....
+
+## Add noise
+
+I tried adding some noise as I thought low noise could exacerbate convergence issues. I found sometimes it would help, depending on the seed.
+
+Here's an example where it does not help;
+```{r}
+set.seed(9)
+Xn = X + rnorm(4*n*p,sd=3)
+Xn.flash = flash(Xn,10,ebnm_fn = list(l="ebnm_pn", f="ebnm_ash"),var_type = "constant")
+par(mfcol=c(2,2))
+plot(Xn.flash$ldf$f[,1])
+plot(Xn.flash$ldf$f[,2])
+plot(Xn.flash$ldf$f[,3])
+plot(Xn.flash$ldf$f[,4])
+```
+
+Here is an example where it did help. (i had to search through several seeds to find one)
+```{r}
+set.seed(5)
+Xn = X + rnorm(4*n*p,sd=3)
+Xn.flash = flash(Xn,10,ebnm_fn = list(l="ebnm_pn", f="ebnm_ash"),var_type = "constant")
+par(mfcol=c(2,2))
+plot(Xn.flash$ldf$f[,1])
+plot(Xn.flash$ldf$f[,2])
+plot(Xn.flash$ldf$f[,3])
+plot(Xn.flash$ldf$f[,4])
+```
+
+Is this because the svd happens to be sparse... looks like it. (That is, it is likely not really the noise per se that is helping here, but the initialization.)
+```{r}
+Xn.svd = svd(Xn)
+Xn.svd$d[1:4]
+par(mfcol=c(2,2))
+plot(Xn.svd$v[,1])
+plot(Xn.svd$v[,2])
+plot(Xn.svd$v[,3])
+plot(Xn.svd$v[,4])
+```
+
+Using this fit to initialize on the non-noisy data leads to a much better solution: 
+```{r}
+X.flash.warmstart = flash(X,K=4,f_init=Xn.flash,ebnm_fn = list(l="ebnm_pn", f="ebnm_ash"),var_type = "constant",backfit = TRUE,greedy = FALSE)
+par(mfcol=c(2,2))
+plot(X.flash.warmstart$ldf$f[,1])
+plot(X.flash.warmstart$ldf$f[,2])
+plot(X.flash.warmstart$ldf$f[,3])
+plot(X.flash.warmstart$ldf$f[,4])
+```
+
+And the objective with warmstart is much larger, demonstrating this
+is a convergence problem rather than a fundamental problem with the
+objective function: 
+```{r}
+X.flash$objective
+X.flash.warmstart$objective
+```
+
+
+
+
