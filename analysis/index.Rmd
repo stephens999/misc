@@ -105,6 +105,7 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 
 * [look at SVD applied to tree structured data](tree_pca.html)
 * [Eigen-decomposition applied to some simple 4- and 8-tip trees](tree_pca_02.html)
+* [Apply sparsepca and flash to some tree data](tree_pca_03.html)
 
 [rmarkdown]: http://rmarkdown.rstudio.com/rmarkdown_websites.htm
 [rstudio]: https://www.rstudio.com/products/rstudio/download/preview/
