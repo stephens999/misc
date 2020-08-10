@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Matthew Stephens" />
+
+<meta name="date" content="2020-08-08" />
+
+<title>tree_pca_03</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">misc</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/stephens999/misc">source</a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">tree_pca_03</h1>
+<h4 class="author">Matthew Stephens</h4>
+<h4 class="date">2020-08-08</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2020-08-10
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>misc/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed1code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(1)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed1code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(1)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree7f008b7bf7905fd596a30f81641488085b26f749targetblank7f008b7a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/7f008b7bf7905fd596a30f81641488085b26f749" target="_blank">7f008b7</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree7f008b7bf7905fd596a30f81641488085b26f749targetblank7f008b7a" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/7f008b7bf7905fd596a30f81641488085b26f749" target="_blank">7f008b7</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.RData
+    Ignored:    analysis/.Rhistory
+    Ignored:    analysis/ALStruct_cache/
+    Ignored:    data/.Rhistory
+    Ignored:    data/pbmc/
+
+Untracked files:
+    Untracked:  .dropbox
+    Untracked:  Icon
+    Untracked:  analysis/GHstan.Rmd
+    Untracked:  analysis/GTEX-cogaps.Rmd
+    Untracked:  analysis/PACS.Rmd
+    Untracked:  analysis/Rplot.png
+    Untracked:  analysis/SPCAvRP.rmd
+    Untracked:  analysis/admm_02.Rmd
+    Untracked:  analysis/admm_03.Rmd
+    Untracked:  analysis/compare-transformed-models.Rmd
+    Untracked:  analysis/cormotif.Rmd
+    Untracked:  analysis/cp_ash.Rmd
+    Untracked:  analysis/eQTL.perm.rand.pdf
+    Untracked:  analysis/eb_prepilot.Rmd
+    Untracked:  analysis/eb_var.Rmd
+    Untracked:  analysis/ebpmf1.Rmd
+    Untracked:  analysis/flash_test_tree.Rmd
+    Untracked:  analysis/flash_tree.Rmd
+    Untracked:  analysis/ieQTL.perm.rand.pdf
+    Untracked:  analysis/lasso_em_03.Rmd
+    Untracked:  analysis/m6amash.Rmd
+    Untracked:  analysis/mash_bhat_z.Rmd
+    Untracked:  analysis/mash_ieqtl_permutations.Rmd
+    Untracked:  analysis/mixsqp.Rmd
+    Untracked:  analysis/mr.ash_lasso_init.Rmd
+    Untracked:  analysis/mr.mash.test.Rmd
+    Untracked:  analysis/mr_ash_modular.Rmd
+    Untracked:  analysis/mr_ash_parameterization.Rmd
+    Untracked:  analysis/mr_ash_pen.Rmd
+    Untracked:  analysis/mr_ash_ridge.Rmd
+    Untracked:  analysis/nejm.Rmd
+    Untracked:  analysis/normalize.Rmd
+    Untracked:  analysis/pbmc.Rmd
+    Untracked:  analysis/poisson_transform.Rmd
+    Untracked:  analysis/pseudodata.Rmd
+    Untracked:  analysis/qrnotes.txt
+    Untracked:  analysis/ridge_iterative_02.Rmd
+    Untracked:  analysis/ridge_iterative_splitting.Rmd
+    Untracked:  analysis/samps/
+    Untracked:  analysis/sc_bimodal.Rmd
+    Untracked:  analysis/shrinkage_comparisons_changepoints.Rmd
+    Untracked:  analysis/susie_en.Rmd
+    Untracked:  analysis/susie_z_investigate.Rmd
+    Untracked:  analysis/svd-timing.Rmd
+    Untracked:  analysis/temp.RDS
+    Untracked:  analysis/temp.Rmd
+    Untracked:  analysis/test-figure/
+    Untracked:  analysis/test.Rmd
+    Untracked:  analysis/test.Rpres
+    Untracked:  analysis/test.md
+    Untracked:  analysis/test_qr.R
+    Untracked:  analysis/test_sparse.Rmd
+    Untracked:  analysis/z.txt
+    Untracked:  code/multivariate_testfuncs.R
+    Untracked:  code/rqb.hacked.R
+    Untracked:  data/4matthew/
+    Untracked:  data/4matthew2/
+    Untracked:  data/E-MTAB-2805.processed.1/
+    Untracked:  data/ENSG00000156738.Sim_Y2.RDS
+    Untracked:  data/GDS5363_full.soft.gz
+    Untracked:  data/GSE41265_allGenesTPM.txt
+    Untracked:  data/Muscle_Skeletal.ACTN3.pm1Mb.RDS
+    Untracked:  data/Thyroid.FMO2.pm1Mb.RDS
+    Untracked:  data/bmass.HaemgenRBC2016.MAF01.Vs2.MergedDataSources.200kRanSubset.ChrBPMAFMarkerZScores.vs1.txt.gz
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.PreviousSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/eb_prepilot/
+    Untracked:  data/finemap_data/fmo2.sim/b.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/data
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.ld
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.z
+    Untracked:  data/finemap_data/fmo2.sim/pos.txt
+    Untracked:  data/logm.csv
+    Untracked:  data/m.cd.RDS
+    Untracked:  data/m.cdu.old.RDS
+    Untracked:  data/m.new.cd.RDS
+    Untracked:  data/m.old.cd.RDS
+    Untracked:  data/mainbib.bib.old
+    Untracked:  data/mat.csv
+    Untracked:  data/mat.txt
+    Untracked:  data/mat_new.csv
+    Untracked:  data/matrix_lik.rds
+    Untracked:  data/paintor_data/
+    Untracked:  data/temp.txt
+    Untracked:  data/y.txt
+    Untracked:  data/y_f.txt
+    Untracked:  data/zscore_jointLCLs_m6AQTLs_susie_eQTLpruned.rds
+    Untracked:  data/zscore_jointLCLs_random.rds
+    Untracked:  explore_udi.R
+    Untracked:  output/fit.k10.rds
+    Untracked:  output/fit.varbvs.RDS
+    Untracked:  output/glmnet.fit.RDS
+    Untracked:  output/test.bv.txt
+    Untracked:  output/test.gamma.txt
+    Untracked:  output/test.hyp.txt
+    Untracked:  output/test.log.txt
+    Untracked:  output/test.param.txt
+    Untracked:  output/test2.bv.txt
+    Untracked:  output/test2.gamma.txt
+    Untracked:  output/test2.hyp.txt
+    Untracked:  output/test2.log.txt
+    Untracked:  output/test2.param.txt
+    Untracked:  output/test3.bv.txt
+    Untracked:  output/test3.gamma.txt
+    Untracked:  output/test3.hyp.txt
+    Untracked:  output/test3.log.txt
+    Untracked:  output/test3.param.txt
+    Untracked:  output/test4.bv.txt
+    Untracked:  output/test4.gamma.txt
+    Untracked:  output/test4.hyp.txt
+    Untracked:  output/test4.log.txt
+    Untracked:  output/test4.param.txt
+    Untracked:  output/test5.bv.txt
+    Untracked:  output/test5.gamma.txt
+    Untracked:  output/test5.hyp.txt
+    Untracked:  output/test5.log.txt
+    Untracked:  output/test5.param.txt
+
+Unstaged changes:
+    Modified:   analysis/ash_delta_operator.Rmd
+    Modified:   analysis/ash_pois_bcell.Rmd
+    Modified:   analysis/lasso_em.Rmd
+    Modified:   analysis/minque.Rmd
+    Modified:   analysis/mr_missing_data.Rmd
+    Modified:   analysis/ridge_admm.Rmd
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/tree_pca_03.Rmd</code>) and HTML (<code>docs/tree_pca_03.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/7f008b7bf7905fd596a30f81641488085b26f749/analysis/tree_pca_03.Rmd" target="_blank">7f008b7</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-08-10
+</td>
+<td>
+workflowr::wflow_publish(“tree_pca_03.Rmd”)
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>The idea here is to look at behaviour of sparse PCA algorithms on a simple tree.</p>
+<p>It is a tree with four tips and equal branch lengths. (Also no noise for now.)</p>
+<pre class="r"><code>set.seed(123)
+p = 1000
+n = 20
+f = list()
+for(i in 1:6){ 
+  f[[i]] = rnorm(p)
+}
+X =matrix(0,ncol=4*n, nrow=p)
+X[,1:(2*n)] = f[[1]]
+X[,(2*n+1):(4*n)] = f[[2]]
+
+X[,1:n] = X[,1:n]+f[[3]]
+X[,(n+1):(2*n)] = X[,(n+1):(2*n)]+f[[4]]
+X[,(2*n+1):(3*n)] = X[,(2*n+1):(3*n)] + f[[5]]
+X[,(3*n+1):(4*n)] = X[,(3*n+1):(4*n)] + f[[6]]
+image(cor(X))</code></pre>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="regular-svd" class="section level2">
+<h2>Regular SVD</h2>
+<p>Regular SVD does not reproduce the tree here. Indeed we should not expect it to, because the third and fourth eigenvectors have very similar eigenvalues which makes them non-identifiable without sparsity:</p>
+<pre class="r"><code>X.svd = svd(X)
+X.svd$d[1:4]</code></pre>
+<pre><code>[1] 255.5150 237.0327 140.2663 134.5016</code></pre>
+<pre class="r"><code>par(mfcol=c(2,2))
+plot(X.svd$v[,1])
+plot(X.svd$v[,2])
+plot(X.svd$v[,3])
+plot(X.svd$v[,4])</code></pre>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="sparse-pca-in-sparsepca-package" class="section level2">
+<h2>sparse PCA in <code>sparsepca</code> package</h2>
+<p>Try sparse PCA with default settings. It does pretty well. Maybe not as sparse as one would like.</p>
+<pre class="r"><code>library(sparsepca)
+X.spca = spca(X,10)</code></pre>
+<pre><code>[1] &quot;Iteration:    1, Objective: 3.50720e+02, Relative improvement Inf&quot;
+[1] &quot;Iteration:   11, Objective: 3.48231e+02, Relative improvement 6.06872e-04&quot;
+[1] &quot;Iteration:   21, Objective: 3.46219e+02, Relative improvement 5.12042e-04&quot;
+[1] &quot;Iteration:   31, Objective: 3.44437e+02, Relative improvement 5.19981e-04&quot;
+[1] &quot;Iteration:   41, Objective: 3.42754e+02, Relative improvement 4.89517e-04&quot;
+[1] &quot;Iteration:   51, Objective: 3.41072e+02, Relative improvement 4.95160e-04&quot;
+[1] &quot;Iteration:   61, Objective: 3.39374e+02, Relative improvement 5.02866e-04&quot;
+[1] &quot;Iteration:   71, Objective: 3.37657e+02, Relative improvement 5.10738e-04&quot;
+[1] &quot;Iteration:   81, Objective: 3.35927e+02, Relative improvement 5.16759e-04&quot;
+[1] &quot;Iteration:   91, Objective: 3.34181e+02, Relative improvement 5.24954e-04&quot;
+[1] &quot;Iteration:  101, Objective: 3.32420e+02, Relative improvement 5.31325e-04&quot;
+[1] &quot;Iteration:  111, Objective: 3.30657e+02, Relative improvement 5.02626e-04&quot;
+[1] &quot;Iteration:  121, Objective: 3.29017e+02, Relative improvement 5.00601e-04&quot;
+[1] &quot;Iteration:  131, Objective: 3.27360e+02, Relative improvement 5.08424e-04&quot;
+[1] &quot;Iteration:  141, Objective: 3.25828e+02, Relative improvement 4.20379e-04&quot;
+[1] &quot;Iteration:  151, Objective: 3.24450e+02, Relative improvement 4.26393e-04&quot;
+[1] &quot;Iteration:  161, Objective: 3.23059e+02, Relative improvement 4.32524e-04&quot;
+[1] &quot;Iteration:  171, Objective: 3.21660e+02, Relative improvement 4.36754e-04&quot;
+[1] &quot;Iteration:  181, Objective: 3.20247e+02, Relative improvement 4.43118e-04&quot;
+[1] &quot;Iteration:  191, Objective: 3.18820e+02, Relative improvement 4.49609e-04&quot;
+[1] &quot;Iteration:  201, Objective: 3.17379e+02, Relative improvement 4.56229e-04&quot;
+[1] &quot;Iteration:  211, Objective: 3.15923e+02, Relative improvement 4.62982e-04&quot;
+[1] &quot;Iteration:  221, Objective: 3.14452e+02, Relative improvement 4.69870e-04&quot;
+[1] &quot;Iteration:  231, Objective: 3.12966e+02, Relative improvement 4.76895e-04&quot;
+[1] &quot;Iteration:  241, Objective: 3.11465e+02, Relative improvement 4.84061e-04&quot;
+[1] &quot;Iteration:  251, Objective: 3.09949e+02, Relative improvement 4.91370e-04&quot;
+[1] &quot;Iteration:  261, Objective: 3.08418e+02, Relative improvement 4.98825e-04&quot;
+[1] &quot;Iteration:  271, Objective: 3.06872e+02, Relative improvement 5.04296e-04&quot;
+[1] &quot;Iteration:  281, Objective: 3.05316e+02, Relative improvement 5.12032e-04&quot;
+[1] &quot;Iteration:  291, Objective: 3.03744e+02, Relative improvement 5.19922e-04&quot;
+[1] &quot;Iteration:  301, Objective: 3.02160e+02, Relative improvement 5.25784e-04&quot;
+[1] &quot;Iteration:  311, Objective: 3.00563e+02, Relative improvement 5.33977e-04&quot;
+[1] &quot;Iteration:  321, Objective: 2.98949e+02, Relative improvement 5.42333e-04&quot;
+[1] &quot;Iteration:  331, Objective: 2.97319e+02, Relative improvement 5.50857e-04&quot;
+[1] &quot;Iteration:  341, Objective: 2.95672e+02, Relative improvement 5.59550e-04&quot;
+[1] &quot;Iteration:  351, Objective: 2.94008e+02, Relative improvement 5.68418e-04&quot;
+[1] &quot;Iteration:  361, Objective: 2.92328e+02, Relative improvement 5.77463e-04&quot;
+[1] &quot;Iteration:  371, Objective: 2.90632e+02, Relative improvement 5.84455e-04&quot;
+[1] &quot;Iteration:  381, Objective: 2.88924e+02, Relative improvement 5.93843e-04&quot;
+[1] &quot;Iteration:  391, Objective: 2.87199e+02, Relative improvement 6.03420e-04&quot;
+[1] &quot;Iteration:  401, Objective: 2.85456e+02, Relative improvement 6.13190e-04&quot;
+[1] &quot;Iteration:  411, Objective: 2.84112e+02, Relative improvement 3.47491e-04&quot;
+[1] &quot;Iteration:  421, Objective: 2.83224e+02, Relative improvement 3.14645e-04&quot;
+[1] &quot;Iteration:  431, Objective: 2.82403e+02, Relative improvement 2.35151e-04&quot;
+[1] &quot;Iteration:  441, Objective: 2.81736e+02, Relative improvement 2.37779e-04&quot;
+[1] &quot;Iteration:  451, Objective: 2.81062e+02, Relative improvement 2.40701e-04&quot;
+[1] &quot;Iteration:  461, Objective: 2.80382e+02, Relative improvement 2.43672e-04&quot;
+[1] &quot;Iteration:  471, Objective: 2.79695e+02, Relative improvement 2.46696e-04&quot;
+[1] &quot;Iteration:  481, Objective: 2.79006e+02, Relative improvement 2.47413e-04&quot;
+[1] &quot;Iteration:  491, Objective: 2.78312e+02, Relative improvement 2.50534e-04&quot;
+[1] &quot;Iteration:  501, Objective: 2.77614e+02, Relative improvement 2.51213e-04&quot;
+[1] &quot;Iteration:  511, Objective: 2.76913e+02, Relative improvement 2.54437e-04&quot;
+[1] &quot;Iteration:  521, Objective: 2.76204e+02, Relative improvement 2.57719e-04&quot;
+[1] &quot;Iteration:  531, Objective: 2.75493e+02, Relative improvement 2.56531e-04&quot;
+[1] &quot;Iteration:  541, Objective: 2.74889e+02, Relative improvement 1.98765e-04&quot;
+[1] &quot;Iteration:  551, Objective: 2.74347e+02, Relative improvement 1.96491e-04&quot;
+[1] &quot;Iteration:  561, Objective: 2.73805e+02, Relative improvement 1.99089e-04&quot;
+[1] &quot;Iteration:  571, Objective: 2.73256e+02, Relative improvement 2.01732e-04&quot;
+[1] &quot;Iteration:  581, Objective: 2.72702e+02, Relative improvement 2.04424e-04&quot;
+[1] &quot;Iteration:  591, Objective: 2.72141e+02, Relative improvement 2.07165e-04&quot;
+[1] &quot;Iteration:  601, Objective: 2.71574e+02, Relative improvement 2.07510e-04&quot;
+[1] &quot;Iteration:  611, Objective: 2.71007e+02, Relative improvement 2.10356e-04&quot;
+[1] &quot;Iteration:  621, Objective: 2.70434e+02, Relative improvement 2.13241e-04&quot;
+[1] &quot;Iteration:  631, Objective: 2.69853e+02, Relative improvement 2.16178e-04&quot;
+[1] &quot;Iteration:  641, Objective: 2.69266e+02, Relative improvement 2.19168e-04&quot;
+[1] &quot;Iteration:  651, Objective: 2.68672e+02, Relative improvement 2.22213e-04&quot;
+[1] &quot;Iteration:  661, Objective: 2.68071e+02, Relative improvement 2.25313e-04&quot;
+[1] &quot;Iteration:  671, Objective: 2.67463e+02, Relative improvement 2.28468e-04&quot;
+[1] &quot;Iteration:  681, Objective: 2.66848e+02, Relative improvement 2.31681e-04&quot;
+[1] &quot;Iteration:  691, Objective: 2.66226e+02, Relative improvement 2.34951e-04&quot;
+[1] &quot;Iteration:  701, Objective: 2.65597e+02, Relative improvement 2.38281e-04&quot;
+[1] &quot;Iteration:  711, Objective: 2.64960e+02, Relative improvement 2.41670e-04&quot;
+[1] &quot;Iteration:  721, Objective: 2.64315e+02, Relative improvement 2.45120e-04&quot;
+[1] &quot;Iteration:  731, Objective: 2.63663e+02, Relative improvement 2.48632e-04&quot;
+[1] &quot;Iteration:  741, Objective: 2.63003e+02, Relative improvement 2.52208e-04&quot;
+[1] &quot;Iteration:  751, Objective: 2.62336e+02, Relative improvement 2.55847e-04&quot;
+[1] &quot;Iteration:  761, Objective: 2.61660e+02, Relative improvement 2.59552e-04&quot;
+[1] &quot;Iteration:  771, Objective: 2.60977e+02, Relative improvement 2.63323e-04&quot;
+[1] &quot;Iteration:  781, Objective: 2.60285e+02, Relative improvement 2.67161e-04&quot;
+[1] &quot;Iteration:  791, Objective: 2.59585e+02, Relative improvement 2.71068e-04&quot;
+[1] &quot;Iteration:  801, Objective: 2.58877e+02, Relative improvement 2.75045e-04&quot;
+[1] &quot;Iteration:  811, Objective: 2.58160e+02, Relative improvement 2.79093e-04&quot;
+[1] &quot;Iteration:  821, Objective: 2.57435e+02, Relative improvement 2.83213e-04&quot;
+[1] &quot;Iteration:  831, Objective: 2.56701e+02, Relative improvement 2.87406e-04&quot;
+[1] &quot;Iteration:  841, Objective: 2.55958e+02, Relative improvement 2.91674e-04&quot;
+[1] &quot;Iteration:  851, Objective: 2.55207e+02, Relative improvement 2.96018e-04&quot;
+[1] &quot;Iteration:  861, Objective: 2.54447e+02, Relative improvement 3.00440e-04&quot;
+[1] &quot;Iteration:  871, Objective: 2.53677e+02, Relative improvement 3.04939e-04&quot;
+[1] &quot;Iteration:  881, Objective: 2.52898e+02, Relative improvement 3.09519e-04&quot;
+[1] &quot;Iteration:  891, Objective: 2.52112e+02, Relative improvement 3.11713e-04&quot;
+[1] &quot;Iteration:  901, Objective: 2.51321e+02, Relative improvement 3.16440e-04&quot;
+[1] &quot;Iteration:  911, Objective: 2.50521e+02, Relative improvement 3.21256e-04&quot;
+[1] &quot;Iteration:  921, Objective: 2.49711e+02, Relative improvement 3.26157e-04&quot;
+[1] &quot;Iteration:  931, Objective: 2.48891e+02, Relative improvement 3.31145e-04&quot;
+[1] &quot;Iteration:  941, Objective: 2.48061e+02, Relative improvement 3.36221e-04&quot;
+[1] &quot;Iteration:  951, Objective: 2.47222e+02, Relative improvement 3.41387e-04&quot;
+[1] &quot;Iteration:  961, Objective: 2.46372e+02, Relative improvement 3.46644e-04&quot;
+[1] &quot;Iteration:  971, Objective: 2.45514e+02, Relative improvement 3.49127e-04&quot;
+[1] &quot;Iteration:  981, Objective: 2.44735e+02, Relative improvement 2.68392e-04&quot;
+[1] &quot;Iteration:  991, Objective: 2.44094e+02, Relative improvement 2.61922e-04&quot;</code></pre>
+<pre class="r"><code>par(mfcol=c(2,2))
+plot(X.spca$loadings[,1])
+plot(X.spca$loadings[,2])
+plot(X.spca$loadings[,3])
+plot(X.spca$loadings[,4])</code></pre>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Try increasing sparsity by increasing alpha. That lost the tree… too sparse!</p>
+<pre class="r"><code>X.spca = spca(X,10,alpha=0.01)</code></pre>
+<pre><code>[1] &quot;Iteration:    1, Objective: 2.93409e+04, Relative improvement Inf&quot;
+[1] &quot;Iteration:   11, Objective: 2.00661e+04, Relative improvement 1.81365e-02&quot;
+[1] &quot;Iteration:   21, Objective: 1.77272e+04, Relative improvement 6.79263e-03&quot;
+[1] &quot;Iteration:   31, Objective: 1.59354e+04, Relative improvement 1.43948e-02&quot;
+[1] &quot;Iteration:   41, Objective: 1.51195e+04, Relative improvement 4.97303e-03&quot;
+[1] &quot;Iteration:   51, Objective: 1.37303e+04, Relative improvement 1.55392e-02&quot;
+[1] &quot;Iteration:   61, Objective: 1.29725e+04, Relative improvement 2.38115e-03&quot;
+[1] &quot;Iteration:   71, Objective: 1.26555e+04, Relative improvement 2.55998e-03&quot;
+[1] &quot;Iteration:   81, Objective: 1.23228e+04, Relative improvement 2.75820e-03&quot;
+[1] &quot;Iteration:   91, Objective: 1.19739e+04, Relative improvement 2.97609e-03&quot;
+[1] &quot;Iteration:  101, Objective: 1.16085e+04, Relative improvement 3.19317e-03&quot;
+[1] &quot;Iteration:  111, Objective: 1.13358e+04, Relative improvement 1.32116e-03&quot;</code></pre>
+<pre class="r"><code>par(mfcol=c(2,2))
+plot(X.spca$loadings[,1])
+plot(X.spca$loadings[,2])
+plot(X.spca$loadings[,3])
+plot(X.spca$loadings[,4])</code></pre>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Try again.. .also not what I was hoping for.</p>
+<pre class="r"><code>X.spca = spca(X,10,alpha=0.001)</code></pre>
+<pre><code>[1] &quot;Iteration:    1, Objective: 3.18733e+03, Relative improvement Inf&quot;
+[1] &quot;Iteration:   11, Objective: 3.02096e+03, Relative improvement 5.21372e-03&quot;
+[1] &quot;Iteration:   21, Objective: 2.89002e+03, Relative improvement 4.41432e-03&quot;
+[1] &quot;Iteration:   31, Objective: 2.75381e+03, Relative improvement 5.18506e-03&quot;
+[1] &quot;Iteration:   41, Objective: 2.60149e+03, Relative improvement 6.15317e-03&quot;
+[1] &quot;Iteration:   51, Objective: 2.52474e+03, Relative improvement 2.44057e-03&quot;
+[1] &quot;Iteration:   61, Objective: 2.46924e+03, Relative improvement 2.01406e-03&quot;
+[1] &quot;Iteration:   71, Objective: 2.41617e+03, Relative improvement 2.33568e-03&quot;
+[1] &quot;Iteration:   81, Objective: 2.35522e+03, Relative improvement 2.75216e-03&quot;
+[1] &quot;Iteration:   91, Objective: 2.28529e+03, Relative improvement 3.24973e-03&quot;
+[1] &quot;Iteration:  101, Objective: 2.21687e+03, Relative improvement 2.74952e-03&quot;
+[1] &quot;Iteration:  111, Objective: 2.15670e+03, Relative improvement 2.61468e-03&quot;
+[1] &quot;Iteration:  121, Objective: 2.11070e+03, Relative improvement 2.07298e-03&quot;
+[1] &quot;Iteration:  131, Objective: 2.06407e+03, Relative improvement 2.38195e-03&quot;
+[1] &quot;Iteration:  141, Objective: 2.01160e+03, Relative improvement 2.74547e-03&quot;
+[1] &quot;Iteration:  151, Objective: 1.96577e+03, Relative improvement 4.98195e-04&quot;
+[1] &quot;Iteration:  161, Objective: 1.95595e+03, Relative improvement 4.86109e-04&quot;
+[1] &quot;Iteration:  171, Objective: 1.94621e+03, Relative improvement 5.10503e-04&quot;
+[1] &quot;Iteration:  181, Objective: 1.93601e+03, Relative improvement 5.37983e-04&quot;
+[1] &quot;Iteration:  191, Objective: 1.92530e+03, Relative improvement 5.68969e-04&quot;
+[1] &quot;Iteration:  201, Objective: 1.91402e+03, Relative improvement 6.03914e-04&quot;
+[1] &quot;Iteration:  211, Objective: 1.90210e+03, Relative improvement 6.43330e-04&quot;
+[1] &quot;Iteration:  221, Objective: 1.88945e+03, Relative improvement 6.87782e-04&quot;
+[1] &quot;Iteration:  231, Objective: 1.87600e+03, Relative improvement 7.37744e-04&quot;
+[1] &quot;Iteration:  241, Objective: 1.86227e+03, Relative improvement 7.60054e-04&quot;
+[1] &quot;Iteration:  251, Objective: 1.84755e+03, Relative improvement 8.22672e-04&quot;
+[1] &quot;Iteration:  261, Objective: 1.83230e+03, Relative improvement 8.56512e-04&quot;
+[1] &quot;Iteration:  271, Objective: 1.81591e+03, Relative improvement 9.35226e-04&quot;
+[1] &quot;Iteration:  281, Objective: 1.79870e+03, Relative improvement 9.68806e-04&quot;
+[1] &quot;Iteration:  291, Objective: 1.78103e+03, Relative improvement 9.93763e-04&quot;
+[1] &quot;Iteration:  301, Objective: 1.76240e+03, Relative improvement 1.10205e-03&quot;
+[1] &quot;Iteration:  311, Objective: 1.74195e+03, Relative improvement 1.22279e-03&quot;
+[1] &quot;Iteration:  321, Objective: 1.71955e+03, Relative improvement 1.35709e-03&quot;
+[1] &quot;Iteration:  331, Objective: 1.69502e+03, Relative improvement 1.50609e-03&quot;
+[1] &quot;Iteration:  341, Objective: 1.66860e+03, Relative improvement 1.64479e-03&quot;
+[1] &quot;Iteration:  351, Objective: 1.64029e+03, Relative improvement 1.52872e-03&quot;
+[1] &quot;Iteration:  361, Objective: 1.63408e+03, Relative improvement 2.69523e-04&quot;
+[1] &quot;Iteration:  371, Objective: 1.62957e+03, Relative improvement 2.83067e-04&quot;
+[1] &quot;Iteration:  381, Objective: 1.62483e+03, Relative improvement 2.98352e-04&quot;
+[1] &quot;Iteration:  391, Objective: 1.61983e+03, Relative improvement 3.15609e-04&quot;
+[1] &quot;Iteration:  401, Objective: 1.61456e+03, Relative improvement 3.35101e-04&quot;
+[1] &quot;Iteration:  411, Objective: 1.60897e+03, Relative improvement 3.57128e-04&quot;
+[1] &quot;Iteration:  421, Objective: 1.60302e+03, Relative improvement 3.82028e-04&quot;
+[1] &quot;Iteration:  431, Objective: 1.59667e+03, Relative improvement 4.10181e-04&quot;
+[1] &quot;Iteration:  441, Objective: 1.58986e+03, Relative improvement 4.42013e-04&quot;
+[1] &quot;Iteration:  451, Objective: 1.58254e+03, Relative improvement 4.78002e-04&quot;
+[1] &quot;Iteration:  461, Objective: 1.57465e+03, Relative improvement 5.18683e-04&quot;
+[1] &quot;Iteration:  471, Objective: 1.56612e+03, Relative improvement 5.64652e-04&quot;
+[1] &quot;Iteration:  481, Objective: 1.55687e+03, Relative improvement 6.16571e-04&quot;
+[1] &quot;Iteration:  491, Objective: 1.54681e+03, Relative improvement 6.75174e-04&quot;
+[1] &quot;Iteration:  501, Objective: 1.53586e+03, Relative improvement 7.41272e-04&quot;
+[1] &quot;Iteration:  511, Objective: 1.52391e+03, Relative improvement 8.15755e-04&quot;
+[1] &quot;Iteration:  521, Objective: 1.51085e+03, Relative improvement 8.99596e-04&quot;
+[1] &quot;Iteration:  531, Objective: 1.49656e+03, Relative improvement 9.93852e-04&quot;
+[1] &quot;Iteration:  541, Objective: 1.48092e+03, Relative improvement 1.09967e-03&quot;
+[1] &quot;Iteration:  551, Objective: 1.46380e+03, Relative improvement 1.21826e-03&quot;
+[1] &quot;Iteration:  561, Objective: 1.44505e+03, Relative improvement 1.35094e-03&quot;
+[1] &quot;Iteration:  571, Objective: 1.42453e+03, Relative improvement 1.49908e-03&quot;
+[1] &quot;Iteration:  581, Objective: 1.40210e+03, Relative improvement 1.66409e-03&quot;
+[1] &quot;Iteration:  591, Objective: 1.37761e+03, Relative improvement 1.84746e-03&quot;
+[1] &quot;Iteration:  601, Objective: 1.35093e+03, Relative improvement 2.05065e-03&quot;
+[1] &quot;Iteration:  611, Objective: 1.33012e+03, Relative improvement 4.00772e-04&quot;
+[1] &quot;Iteration:  621, Objective: 1.32659e+03, Relative improvement 2.64651e-04&quot;
+[1] &quot;Iteration:  631, Objective: 1.32307e+03, Relative improvement 2.66086e-04&quot;
+[1] &quot;Iteration:  641, Objective: 1.31955e+03, Relative improvement 2.67531e-04&quot;
+[1] &quot;Iteration:  651, Objective: 1.31601e+03, Relative improvement 2.68987e-04&quot;
+[1] &quot;Iteration:  661, Objective: 1.31247e+03, Relative improvement 2.70453e-04&quot;
+[1] &quot;Iteration:  671, Objective: 1.30891e+03, Relative improvement 2.71930e-04&quot;
+[1] &quot;Iteration:  681, Objective: 1.30535e+03, Relative improvement 2.73417e-04&quot;
+[1] &quot;Iteration:  691, Objective: 1.30177e+03, Relative improvement 2.74914e-04&quot;
+[1] &quot;Iteration:  701, Objective: 1.29819e+03, Relative improvement 2.76423e-04&quot;
+[1] &quot;Iteration:  711, Objective: 1.29460e+03, Relative improvement 2.77942e-04&quot;
+[1] &quot;Iteration:  721, Objective: 1.29099e+03, Relative improvement 2.79473e-04&quot;
+[1] &quot;Iteration:  731, Objective: 1.28738e+03, Relative improvement 2.81015e-04&quot;
+[1] &quot;Iteration:  741, Objective: 1.28376e+03, Relative improvement 2.82569e-04&quot;
+[1] &quot;Iteration:  751, Objective: 1.28012e+03, Relative improvement 2.84134e-04&quot;
+[1] &quot;Iteration:  761, Objective: 1.27648e+03, Relative improvement 2.85711e-04&quot;
+[1] &quot;Iteration:  771, Objective: 1.27283e+03, Relative improvement 2.87300e-04&quot;
+[1] &quot;Iteration:  781, Objective: 1.26917e+03, Relative improvement 2.88901e-04&quot;
+[1] &quot;Iteration:  791, Objective: 1.26549e+03, Relative improvement 2.90514e-04&quot;
+[1] &quot;Iteration:  801, Objective: 1.26181e+03, Relative improvement 2.92141e-04&quot;
+[1] &quot;Iteration:  811, Objective: 1.25812e+03, Relative improvement 2.93779e-04&quot;
+[1] &quot;Iteration:  821, Objective: 1.25442e+03, Relative improvement 2.95431e-04&quot;
+[1] &quot;Iteration:  831, Objective: 1.25071e+03, Relative improvement 2.97096e-04&quot;
+[1] &quot;Iteration:  841, Objective: 1.24699e+03, Relative improvement 2.98774e-04&quot;
+[1] &quot;Iteration:  851, Objective: 1.24325e+03, Relative improvement 3.00465e-04&quot;
+[1] &quot;Iteration:  861, Objective: 1.23951e+03, Relative improvement 3.02170e-04&quot;
+[1] &quot;Iteration:  871, Objective: 1.23576e+03, Relative improvement 3.03890e-04&quot;
+[1] &quot;Iteration:  881, Objective: 1.23200e+03, Relative improvement 3.05623e-04&quot;
+[1] &quot;Iteration:  891, Objective: 1.22823e+03, Relative improvement 3.07370e-04&quot;
+[1] &quot;Iteration:  901, Objective: 1.22445e+03, Relative improvement 3.09132e-04&quot;
+[1] &quot;Iteration:  911, Objective: 1.22066e+03, Relative improvement 3.10909e-04&quot;
+[1] &quot;Iteration:  921, Objective: 1.21686e+03, Relative improvement 3.12701e-04&quot;
+[1] &quot;Iteration:  931, Objective: 1.21305e+03, Relative improvement 3.14508e-04&quot;
+[1] &quot;Iteration:  941, Objective: 1.20924e+03, Relative improvement 3.07394e-04&quot;
+[1] &quot;Iteration:  951, Objective: 1.20606e+03, Relative improvement 2.63773e-04&quot;
+[1] &quot;Iteration:  961, Objective: 1.20287e+03, Relative improvement 2.65165e-04&quot;
+[1] &quot;Iteration:  971, Objective: 1.19968e+03, Relative improvement 2.66568e-04&quot;
+[1] &quot;Iteration:  981, Objective: 1.19648e+03, Relative improvement 2.67981e-04&quot;
+[1] &quot;Iteration:  991, Objective: 1.19327e+03, Relative improvement 2.69406e-04&quot;</code></pre>
+<pre class="r"><code>par(mfcol=c(2,2))
+plot(X.spca$loadings[,1])
+plot(X.spca$loadings[,2])
+plot(X.spca$loadings[,3])
+plot(X.spca$loadings[,4])</code></pre>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="flash" class="section level2">
+<h2>flash</h2>
+<p>Here I try flash. (Note that setting var_type has an effect; may want to look into that more, but for now i set it constant…).</p>
+<p>The way I have the matrix set up, the columns (not the rows) are the individuals, so for a drift model the “loadings” here should be normal; for simplicity I just set them to point normal and hope it learns them to be normal.</p>
+<pre class="r"><code>library(&quot;flashr&quot;)
+X.flash = flash(X,10,ebnm_fn = list(l=&quot;ebnm_pn&quot;, f=&quot;ebnm_pn&quot;),var_type = &quot;constant&quot;)</code></pre>
+<pre><code>Fitting factor/loading 1 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
+<pre><code>  Iteration      Objective   Obj Diff</code></pre>
+<pre><code>          1     -122755.15        Inf</code></pre>
+<pre><code>          2     -122751.31   3.83e+00</code></pre>
+<pre><code>          3     -122751.19   1.23e-01</code></pre>
+<pre><code>          4     -122751.10   9.04e-02</code></pre>
+<pre><code>          5     -122751.03   6.70e-02</code></pre>
+<pre><code>          6     -122750.98   4.96e-02</code></pre>
+<pre><code>          7     -122750.95   3.67e-02</code></pre>
+<pre><code>          8     -122750.92   2.72e-02</code></pre>
+<pre><code>          9     -122750.90   2.01e-02</code></pre>
+<pre><code>         10     -122750.88   1.49e-02</code></pre>
+<pre><code>         11     -122750.87   1.10e-02</code></pre>
+<pre><code>         12     -122750.86   8.18e-03</code></pre>
+<pre><code>Performing nullcheck...</code></pre>
+<pre><code>  Deleting factor 1 decreases objective by 1.83e+04. Factor retained.</code></pre>
+<pre><code>  Nullcheck complete. Objective: -122750.86</code></pre>
+<pre><code>Fitting factor/loading 2 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
+<pre><code>  Iteration      Objective   Obj Diff</code></pre>
+<pre><code>          1      -90295.93        Inf</code></pre>
+<pre><code>          2      -90292.27   3.67e+00</code></pre>
+<pre><code>          3      -90292.26   1.02e-03</code></pre>
+<pre><code>Performing nullcheck...</code></pre>
+<pre><code>  Deleting factor 2 decreases objective by 3.25e+04. Factor retained.</code></pre>
+<pre><code>  Nullcheck complete. Objective: -90292.26</code></pre>
+<pre><code>Fitting factor/loading 3 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
+<pre><code>  Iteration      Objective   Obj Diff</code></pre>
+<pre><code>          1      -65808.49        Inf</code></pre>
+<pre><code>          2      -65804.56   3.93e+00</code></pre>
+<pre><code>          3      -65804.33   2.28e-01</code></pre>
+<pre><code>          4      -65804.14   1.92e-01</code></pre>
+<pre><code>          5      -65803.97   1.62e-01</code></pre>
+<pre><code>          6      -65803.84   1.37e-01</code></pre>
+<pre><code>          7      -65803.72   1.16e-01</code></pre>
+<pre><code>          8      -65803.62   9.82e-02</code></pre>
+<pre><code>          9      -65803.54   8.30e-02</code></pre>
+<pre><code>         10      -65803.47   7.02e-02</code></pre>
+<pre><code>         11      -65803.41   5.93e-02</code></pre>
+<pre><code>         12      -65803.36   5.02e-02</code></pre>
+<pre><code>         13      -65803.32   4.24e-02</code></pre>
+<pre><code>         14      -65803.28   3.59e-02</code></pre>
+<pre><code>         15      -65803.25   3.03e-02</code></pre>
+<pre><code>         16      -65803.23   2.56e-02</code></pre>
+<pre><code>         17      -65803.20   2.17e-02</code></pre>
+<pre><code>         18      -65803.19   1.83e-02</code></pre>
+<pre><code>         19      -65803.17   1.55e-02</code></pre>
+<pre><code>         20      -65803.16   1.31e-02</code></pre>
+<pre><code>         21      -65803.15   1.11e-02</code></pre>
+<pre><code>         22      -65803.14   9.36e-03</code></pre>
+<pre><code>Performing nullcheck...</code></pre>
+<pre><code>  Deleting factor 3 decreases objective by 2.45e+04. Factor retained.</code></pre>
+<pre><code>  Nullcheck complete. Objective: -65803.14</code></pre>
+<pre><code>Fitting factor/loading 4 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
+<pre><code>  Iteration      Objective   Obj Diff</code></pre>
+<pre><code>          1       20643.25        Inf</code></pre>
+<pre><code>          2       20646.91   3.66e+00</code></pre>
+<pre><code>          3       20646.91   6.64e-04</code></pre>
+<pre><code>Performing nullcheck...</code></pre>
+<pre><code>  Deleting factor 4 decreases objective by 8.65e+04. Factor retained.</code></pre>
+<pre><code>  Nullcheck complete. Objective: 20646.91</code></pre>
+<pre><code>Fitting factor/loading 5 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
+<pre><code>  Iteration      Objective   Obj Diff</code></pre>
+<pre><code>          1       20644.01        Inf</code></pre>
+<pre><code>          2       20646.91   2.90e+00</code></pre>
+<pre><code>          3       20646.91   0.00e+00</code></pre>
+<pre><code>Performing nullcheck...</code></pre>
+<pre><code>  Deleting factor 5 does not change objective. Factor zeroed out.</code></pre>
+<pre><code>  Nullcheck complete. Objective: 20646.91</code></pre>
+<pre class="r"><code>par(mfcol=c(2,2))
+plot(X.flash$ldf$f[,1])
+plot(X.flash$ldf$f[,2])
+plot(X.flash$ldf$f[,3])
+plot(X.flash$ldf$f[,4])</code></pre>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>See if point laplace prior makes a difference. But it is basically indistinguishable.</p>
+<pre class="r"><code>library(&quot;flashr&quot;)
+X.flash = flash(X,10,ebnm_fn = list(l=&quot;ebnm_pn&quot;, f=&quot;ebnm_pl&quot;),var_type = &quot;constant&quot;)</code></pre>
+<pre><code>Fitting factor/loading 1 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
+<pre><code>  Iteration      Objective   Obj Diff</code></pre>
+<pre><code>          1     -122775.18        Inf</code></pre>
+<pre><code>          2     -122771.29   3.89e+00</code></pre>
+<pre><code>          3     -122771.13   1.65e-01</code></pre>
+<pre><code>          4     -122771.00   1.22e-01</code></pre>
+<pre><code>          5     -122770.91   9.08e-02</code></pre>
+<pre><code>          6     -122770.85   6.75e-02</code></pre>
+<pre><code>          7     -122770.80   5.01e-02</code></pre>
+<pre><code>          8     -122770.76   3.72e-02</code></pre>
+<pre><code>          9     -122770.73   2.77e-02</code></pre>
+<pre><code>         10     -122770.71   2.06e-02</code></pre>
+<pre><code>         11     -122770.70   1.53e-02</code></pre>
+<pre><code>         12     -122770.68   1.13e-02</code></pre>
+<pre><code>         13     -122770.68   8.43e-03</code></pre>
+<pre><code>Performing nullcheck...</code></pre>
+<pre><code>  Deleting factor 1 decreases objective by 1.83e+04. Factor retained.</code></pre>
+<pre><code>  Nullcheck complete. Objective: -122770.68</code></pre>
+<pre><code>Fitting factor/loading 2 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
+<pre><code>  Iteration      Objective   Obj Diff</code></pre>
+<pre><code>          1      -90335.83        Inf</code></pre>
+<pre><code>          2      -90332.16   3.67e+00</code></pre>
+<pre><code>          3      -90332.16   1.01e-03</code></pre>
+<pre><code>Performing nullcheck...</code></pre>
+<pre><code>  Deleting factor 2 decreases objective by 3.24e+04. Factor retained.</code></pre>
+<pre><code>  Nullcheck complete. Objective: -90332.16</code></pre>
+<pre><code>Fitting factor/loading 3 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
+<pre><code>  Iteration      Objective   Obj Diff</code></pre>
+<pre><code>          1      -65866.77        Inf</code></pre>
+<pre><code>          2      -65862.74   4.03e+00</code></pre>
+<pre><code>          3      -65862.44   3.08e-01</code></pre>
+<pre><code>          4      -65862.18   2.60e-01</code></pre>
+<pre><code>          5      -65861.96   2.20e-01</code></pre>
+<pre><code>          6      -65861.77   1.87e-01</code></pre>
+<pre><code>          7      -65861.61   1.58e-01</code></pre>
+<pre><code>          8      -65861.48   1.34e-01</code></pre>
+<pre><code>          9      -65861.36   1.14e-01</code></pre>
+<pre><code>         10      -65861.27   9.63e-02</code></pre>
+<pre><code>         11      -65861.18   8.16e-02</code></pre>
+<pre><code>         12      -65861.12   6.92e-02</code></pre>
+<pre><code>         13      -65861.06   5.86e-02</code></pre>
+<pre><code>         14      -65861.01   4.97e-02</code></pre>
+<pre><code>         15      -65860.96   4.21e-02</code></pre>
+<pre><code>         16      -65860.93   3.57e-02</code></pre>
+<pre><code>         17      -65860.90   3.02e-02</code></pre>
+<pre><code>         18      -65860.87   2.56e-02</code></pre>
+<pre><code>         19      -65860.85   2.17e-02</code></pre>
+<pre><code>         20      -65860.83   1.84e-02</code></pre>
+<pre><code>         21      -65860.82   1.56e-02</code></pre>
+<pre><code>         22      -65860.80   1.32e-02</code></pre>
+<pre><code>         23      -65860.79   1.12e-02</code></pre>
+<pre><code>         24      -65860.78   9.49e-03</code></pre>
+<pre><code>Performing nullcheck...</code></pre>
+<pre><code>  Deleting factor 3 decreases objective by 2.45e+04. Factor retained.</code></pre>
+<pre><code>  Nullcheck complete. Objective: -65860.78</code></pre>
+<pre><code>Fitting factor/loading 4 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
+<pre><code>  Iteration      Objective   Obj Diff</code></pre>
+<pre><code>          1       20564.43        Inf</code></pre>
+<pre><code>          2       20568.09   3.66e+00</code></pre>
+<pre><code>          3       20568.09   6.65e-04</code></pre>
+<pre><code>Performing nullcheck...</code></pre>
+<pre><code>  Deleting factor 4 decreases objective by 8.64e+04. Factor retained.</code></pre>
+<pre><code>  Nullcheck complete. Objective: 20568.09</code></pre>
+<pre><code>Fitting factor/loading 5 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
+<pre><code>  Iteration      Objective   Obj Diff</code></pre>
+<pre><code>          1       20565.18        Inf</code></pre>
+<pre><code>          2       20568.09   2.91e+00</code></pre>
+<pre><code>          3       20568.09   0.00e+00</code></pre>
+<pre><code>Performing nullcheck...</code></pre>
+<pre><code>  Deleting factor 5 increases objective by 7.28e-12. Factor zeroed out.</code></pre>
+<pre><code>  Nullcheck complete. Objective: 20568.09</code></pre>
+<pre class="r"><code>par(mfcol=c(2,2))
+plot(X.flash$ldf$f[,1])
+plot(X.flash$ldf$f[,2])
+plot(X.flash$ldf$f[,3])
+plot(X.flash$ldf$f[,4])</code></pre>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Try ash prior…but it looks about the same.</p>
+<pre class="r"><code>library(&quot;flashr&quot;)
+X.flash = flash(X,10,ebnm_fn = list(l=&quot;ebnm_pn&quot;, f=&quot;ebnm_ash&quot;),var_type = &quot;constant&quot;)</code></pre>
+<pre><code>Fitting factor/loading 1 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
+<pre><code>  Iteration      Objective   Obj Diff</code></pre>
+<pre><code>          1     -122756.12        Inf</code></pre>
+<pre><code>          2     -122752.26   3.86e+00</code></pre>
+<pre><code>          3     -122752.12   1.40e-01</code></pre>
+<pre><code>          4     -122752.02   1.05e-01</code></pre>
+<pre><code>          5     -122751.94   7.95e-02</code></pre>
+<pre><code>          6     -122751.88   6.03e-02</code></pre>
+<pre><code>          7     -122751.83   4.58e-02</code></pre>
+<pre><code>          8     -122751.80   3.50e-02</code></pre>
+<pre><code>          9     -122751.77   2.68e-02</code></pre>
+<pre><code>         10     -122751.75   2.06e-02</code></pre>
+<pre><code>         11     -122751.73   1.59e-02</code></pre>
+<pre><code>         12     -122751.72   1.24e-02</code></pre>
+<pre><code>         13     -122751.71   9.65e-03</code></pre>
+<pre><code>Performing nullcheck...</code></pre>
+<pre><code>  Deleting factor 1 decreases objective by 1.83e+04. Factor retained.</code></pre>
+<pre><code>  Nullcheck complete. Objective: -122751.71</code></pre>
+<pre><code>Fitting factor/loading 2 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
+<pre><code>  Iteration      Objective   Obj Diff</code></pre>
+<pre><code>          1      -90298.98        Inf</code></pre>
+<pre><code>          2      -90295.31   3.67e+00</code></pre>
+<pre><code>          3      -90295.30   1.90e-03</code></pre>
+<pre><code>Performing nullcheck...</code></pre>
+<pre><code>  Deleting factor 2 decreases objective by 3.25e+04. Factor retained.</code></pre>
+<pre><code>  Nullcheck complete. Objective: -90295.3</code></pre>
+<pre><code>Fitting factor/loading 3 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
+<pre><code>  Iteration      Objective   Obj Diff</code></pre>
+<pre><code>          1      -65811.86        Inf</code></pre>
+<pre><code>          2      -65807.92   3.94e+00</code></pre>
+<pre><code>          3      -65807.69   2.35e-01</code></pre>
+<pre><code>          4      -65807.49   1.99e-01</code></pre>
+<pre><code>          5      -65807.32   1.69e-01</code></pre>
+<pre><code>          6      -65807.18   1.43e-01</code></pre>
+<pre><code>          7      -65807.05   1.21e-01</code></pre>
+<pre><code>          8      -65806.95   1.03e-01</code></pre>
+<pre><code>          9      -65806.86   8.74e-02</code></pre>
+<pre><code>         10      -65806.79   7.42e-02</code></pre>
+<pre><code>         11      -65806.73   6.30e-02</code></pre>
+<pre><code>         12      -65806.67   5.35e-02</code></pre>
+<pre><code>         13      -65806.63   4.55e-02</code></pre>
+<pre><code>         14      -65806.59   3.87e-02</code></pre>
+<pre><code>         15      -65806.56   3.29e-02</code></pre>
+<pre><code>         16      -65806.53   2.80e-02</code></pre>
+<pre><code>         17      -65806.50   2.39e-02</code></pre>
+<pre><code>         18      -65806.48   2.03e-02</code></pre>
+<pre><code>         19      -65806.47   1.73e-02</code></pre>
+<pre><code>         20      -65806.45   1.48e-02</code></pre>
+<pre><code>         21      -65806.44   1.26e-02</code></pre>
+<pre><code>         22      -65806.43   1.08e-02</code></pre>
+<pre><code>         23      -65806.42   9.22e-03</code></pre>
+<pre><code>Performing nullcheck...</code></pre>
+<pre><code>  Deleting factor 3 decreases objective by 2.45e+04. Factor retained.</code></pre>
+<pre><code>  Nullcheck complete. Objective: -65806.42</code></pre>
+<pre><code>Fitting factor/loading 4 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
+<pre><code>  Iteration      Objective   Obj Diff</code></pre>
+<pre><code>          1       20638.36        Inf</code></pre>
+<pre><code>          2       20642.02   3.66e+00</code></pre>
+<pre><code>          3       20642.02   6.64e-04</code></pre>
+<pre><code>Performing nullcheck...</code></pre>
+<pre><code>  Deleting factor 4 decreases objective by 8.64e+04. Factor retained.</code></pre>
+<pre><code>  Nullcheck complete. Objective: 20642.02</code></pre>
+<pre><code>Fitting factor/loading 5 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
+<pre><code>  Iteration      Objective   Obj Diff</code></pre>
+<pre><code>          1       20637.96        Inf</code></pre>
+<pre><code>          2       20642.01   4.05e+00</code></pre>
+<pre><code>          3       20642.01   7.37e-06</code></pre>
+<pre><code>Performing nullcheck...</code></pre>
+<pre><code>  Deleting factor 5 increases objective by 1.11e-02. Factor zeroed out.</code></pre>
+<pre><code>  Nullcheck complete. Objective: 20642.02</code></pre>
+<pre class="r"><code>par(mfcol=c(2,2))
+plot(X.flash$ldf$f[,1])
+plot(X.flash$ldf$f[,2])
+plot(X.flash$ldf$f[,3])
+plot(X.flash$ldf$f[,4])</code></pre>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>In fact these all look essentially the same as the svd solution…</p>
+<pre class="r"><code>plot(X.flash$ldf$f[,1],X.svd$v[,1])</code></pre>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(X.flash$ldf$f[,2],X.svd$v[,2])</code></pre>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(X.flash$ldf$f[,3],X.svd$v[,3])</code></pre>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-9-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(X.flash$ldf$f[,4],X.svd$v[,4])</code></pre>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-9-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p>I guess maybe at the initialization the prior gets estimated close to normal, which results in no change….</p>
+</div>
+<div id="add-noise" class="section level2">
+<h2>Add noise</h2>
+<p>I tried adding some noise as I thought low noise could exacerbate convergence issues. I found sometimes it would help, depending on the seed.</p>
+<p>Here’s an example where it does not help;</p>
+<pre class="r"><code>set.seed(9)
+Xn = X + rnorm(4*n*p,sd=3)
+Xn.flash = flash(Xn,10,ebnm_fn = list(l=&quot;ebnm_pn&quot;, f=&quot;ebnm_ash&quot;),var_type = &quot;constant&quot;)</code></pre>
+<pre><code>Fitting factor/loading 1 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
+<pre><code>  Iteration      Objective   Obj Diff</code></pre>
+<pre><code>          1     -207544.30        Inf</code></pre>
+<pre><code>          2     -207540.51   3.79e+00</code></pre>
+<pre><code>          3     -207540.50   7.39e-03</code></pre>
+<pre><code>Performing nullcheck...</code></pre>
+<pre><code>  Deleting factor 1 decreases objective by 1.88e+03. Factor retained.</code></pre>
+<pre><code>  Nullcheck complete. Objective: -207540.5</code></pre>
+<pre><code>Fitting factor/loading 2 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
+<pre><code>  Iteration      Objective   Obj Diff</code></pre>
+<pre><code>          1     -205717.08        Inf</code></pre>
+<pre><code>          2     -205713.30   3.78e+00</code></pre>
+<pre><code>          3     -205713.30   9.41e-04</code></pre>
+<pre><code>Performing nullcheck...</code></pre>
+<pre><code>  Deleting factor 2 decreases objective by 1.83e+03. Factor retained.</code></pre>
+<pre><code>  Nullcheck complete. Objective: -205713.3</code></pre>
+<pre><code>Fitting factor/loading 3 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
+<pre><code>  Iteration      Objective   Obj Diff</code></pre>
+<pre><code>          1     -205424.77        Inf</code></pre>
+<pre><code>          2     -205420.29   4.47e+00</code></pre>
+<pre><code>          3     -205420.21   8.19e-02</code></pre>
+<pre><code>          4     -205420.16   5.67e-02</code></pre>
+<pre><code>          5     -205420.10   5.16e-02</code></pre>
+<pre><code>          6     -205420.05   4.86e-02</code></pre>
+<pre><code>          7     -205420.01   4.63e-02</code></pre>
+<pre><code>          8     -205419.96   4.43e-02</code></pre>
+<pre><code>          9     -205419.92   4.26e-02</code></pre>
+<pre><code>         10     -205419.88   4.12e-02</code></pre>
+<pre><code>         11     -205419.84   4.00e-02</code></pre>
+<pre><code>         12     -205419.80   3.90e-02</code></pre>
+<pre><code>         13     -205419.76   3.81e-02</code></pre>
+<pre><code>         14     -205419.73   3.74e-02</code></pre>
+<pre><code>         15     -205419.69   3.68e-02</code></pre>
+<pre><code>         16     -205419.65   3.64e-02</code></pre>
+<pre><code>         17     -205419.62   3.61e-02</code></pre>
+<pre><code>         18     -205419.58   3.59e-02</code></pre>
+<pre><code>         19     -205419.55   3.57e-02</code></pre>
+<pre><code>         20     -205419.51   3.57e-02</code></pre>
+<pre><code>         21     -205419.47   3.57e-02</code></pre>
+<pre><code>         22     -205419.44   3.57e-02</code></pre>
+<pre><code>         23     -205419.40   3.59e-02</code></pre>
+<pre><code>         24     -205419.37   3.60e-02</code></pre>
+<pre><code>         25     -205419.33   3.63e-02</code></pre>
+<pre><code>         26     -205419.29   3.65e-02</code></pre>
+<pre><code>         27     -205419.26   3.68e-02</code></pre>
+<pre><code>         28     -205419.22   3.63e-02</code></pre>
+<pre><code>         29     -205419.19   3.31e-02</code></pre>
+<pre><code>         30     -205419.16   3.08e-02</code></pre>
+<pre><code>         31     -205419.13   2.88e-02</code></pre>
+<pre><code>         32     -205419.10   2.70e-02</code></pre>
+<pre><code>         33     -205419.08   2.54e-02</code></pre>
+<pre><code>         34     -205419.05   2.39e-02</code></pre>
+<pre><code>         35     -205419.03   2.24e-02</code></pre>
+<pre><code>         36     -205419.01   2.11e-02</code></pre>
+<pre><code>         37     -205418.99   1.98e-02</code></pre>
+<pre><code>         38     -205418.97   1.87e-02</code></pre>
+<pre><code>         39     -205418.95   1.76e-02</code></pre>
+<pre><code>         40     -205418.94   1.65e-02</code></pre>
+<pre><code>         41     -205418.92   1.56e-02</code></pre>
+<pre><code>         42     -205418.90   1.47e-02</code></pre>
+<pre><code>         43     -205418.89   1.38e-02</code></pre>
+<pre><code>         44     -205418.88   1.30e-02</code></pre>
+<pre><code>         45     -205418.87   1.23e-02</code></pre>
+<pre><code>         46     -205418.85   1.16e-02</code></pre>
+<pre><code>         47     -205418.84   1.09e-02</code></pre>
+<pre><code>         48     -205418.83   1.03e-02</code></pre>
+<pre><code>         49     -205418.82   9.73e-03</code></pre>
+<pre><code>Performing nullcheck...</code></pre>
+<pre><code>  Deleting factor 3 decreases objective by 2.94e+02. Factor retained.</code></pre>
+<pre><code>  Nullcheck complete. Objective: -205418.82</code></pre>
+<pre><code>Fitting factor/loading 4 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
+<pre><code>  Iteration      Objective   Obj Diff</code></pre>
+<pre><code>          1     -205146.63        Inf</code></pre>
+<pre><code>          2     -205142.29   4.34e+00</code></pre>
+<pre><code>          3     -205142.28   1.27e-02</code></pre>
+<pre><code>          4     -205142.28   2.37e-04</code></pre>
+<pre><code>Performing nullcheck...</code></pre>
+<pre><code>  Deleting factor 4 decreases objective by 2.77e+02. Factor retained.</code></pre>
+<pre><code>  Nullcheck complete. Objective: -205142.28</code></pre>
+<pre><code>Fitting factor/loading 5 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
+<pre><code>  Iteration      Objective   Obj Diff</code></pre>
+<pre><code>          1     -205206.57        Inf</code></pre>
+<pre><code>          2     -205193.36   1.32e+01</code></pre>
+<pre><code>          3     -205189.31   4.04e+00</code></pre>
+<pre><code>          4     -205186.34   2.97e+00</code></pre>
+<pre><code>          5     -205184.02   2.32e+00</code></pre>
+<pre><code>          6     -205182.31   1.70e+00</code></pre>
+<pre><code>          7     -205180.72   1.59e+00</code></pre>
+<pre><code>          8     -205179.03   1.69e+00</code></pre>
+<pre><code>          9     -205175.89   3.14e+00</code></pre>
+<pre><code>         10     -205172.29   3.59e+00</code></pre>
+<pre><code>         11     -205170.36   1.93e+00</code></pre>
+<pre><code>         12     -205169.73   6.31e-01</code></pre>
+<pre><code>         13     -205169.53   1.99e-01</code></pre>
+<pre><code>         14     -205169.42   1.17e-01</code></pre>
+<pre><code>         15     -205169.21   2.10e-01</code></pre>
+<pre><code>         16     -205169.13   7.60e-02</code></pre>
+<pre><code>         17     -205169.02   1.15e-01</code></pre>
+<pre><code>         18     -205168.70   3.20e-01</code></pre>
+<pre><code>         19     -205167.67   1.03e+00</code></pre>
+<pre><code>         20     -205166.82   8.43e-01</code></pre>
+<pre><code>         21     -205166.77   5.29e-02</code></pre>
+<pre><code>         22     -205166.76   6.25e-03</code></pre>
+<pre><code>Performing nullcheck...</code></pre>
+<pre><code>  Deleting factor 5 increases objective by 2.45e+01. Factor zeroed out.</code></pre>
+<pre><code>  Nullcheck complete. Objective: -205142.28</code></pre>
+<pre class="r"><code>par(mfcol=c(2,2))
+plot(Xn.flash$ldf$f[,1])
+plot(Xn.flash$ldf$f[,2])
+plot(Xn.flash$ldf$f[,3])
+plot(Xn.flash$ldf$f[,4])</code></pre>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Here is an example where it did help. (i had to search through several seeds to find one)</p>
+<pre class="r"><code>set.seed(5)
+Xn = X + rnorm(4*n*p,sd=3)
+Xn.flash = flash(Xn,10,ebnm_fn = list(l=&quot;ebnm_pn&quot;, f=&quot;ebnm_ash&quot;),var_type = &quot;constant&quot;)</code></pre>
+<pre><code>Fitting factor/loading 1 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
+<pre><code>  Iteration      Objective   Obj Diff</code></pre>
+<pre><code>          1     -207818.46        Inf</code></pre>
+<pre><code>          2     -207814.67   3.79e+00</code></pre>
+<pre><code>          3     -207814.66   6.45e-03</code></pre>
+<pre><code>Performing nullcheck...</code></pre>
+<pre><code>  Deleting factor 1 decreases objective by 1.84e+03. Factor retained.</code></pre>
+<pre><code>  Nullcheck complete. Objective: -207814.66</code></pre>
+<pre><code>Fitting factor/loading 2 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
+<pre><code>  Iteration      Objective   Obj Diff</code></pre>
+<pre><code>          1     -206245.15        Inf</code></pre>
+<pre><code>          2     -206241.34   3.81e+00</code></pre>
+<pre><code>          3     -206241.34   3.20e-03</code></pre>
+<pre><code>Performing nullcheck...</code></pre>
+<pre><code>  Deleting factor 2 decreases objective by 1.57e+03. Factor retained.</code></pre>
+<pre><code>  Nullcheck complete. Objective: -206241.34</code></pre>
+<pre><code>Fitting factor/loading 3 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
+<pre><code>  Iteration      Objective   Obj Diff</code></pre>
+<pre><code>          1     -205926.28        Inf</code></pre>
+<pre><code>          2     -205919.49   6.78e+00</code></pre>
+<pre><code>          3     -205919.10   3.94e-01</code></pre>
+<pre><code>          4     -205919.04   6.22e-02</code></pre>
+<pre><code>          5     -205919.03   1.28e-02</code></pre>
+<pre><code>          6     -205919.02   3.65e-03</code></pre>
+<pre><code>Performing nullcheck...</code></pre>
+<pre><code>  Deleting factor 3 decreases objective by 3.22e+02. Factor retained.</code></pre>
+<pre><code>  Nullcheck complete. Objective: -205919.02</code></pre>
+<pre><code>Fitting factor/loading 4 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
+<pre><code>  Iteration      Objective   Obj Diff</code></pre>
+<pre><code>          1     -205661.05        Inf</code></pre>
+<pre><code>          2     -205655.22   5.84e+00</code></pre>
+<pre><code>          3     -205654.78   4.32e-01</code></pre>
+<pre><code>          4     -205654.67   1.16e-01</code></pre>
+<pre><code>          5     -205654.64   3.25e-02</code></pre>
+<pre><code>          6     -205654.63   1.00e-02</code></pre>
+<pre><code>          7     -205654.62   3.45e-03</code></pre>
+<pre><code>Performing nullcheck...</code></pre>
+<pre><code>  Deleting factor 4 decreases objective by 2.64e+02. Factor retained.</code></pre>
+<pre><code>  Nullcheck complete. Objective: -205654.62</code></pre>
+<pre><code>Fitting factor/loading 5 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
+<pre><code>  Iteration      Objective   Obj Diff</code></pre>
+<pre><code>          1     -205713.11        Inf</code></pre>
+<pre><code>          2     -205702.77   1.03e+01</code></pre>
+<pre><code>          3     -205701.59   1.18e+00</code></pre>
+<pre><code>          4     -205701.08   5.16e-01</code></pre>
+<pre><code>          5     -205700.64   4.37e-01</code></pre>
+<pre><code>          6     -205700.06   5.79e-01</code></pre>
+<pre><code>          7     -205698.99   1.06e+00</code></pre>
+<pre><code>          8     -205696.53   2.47e+00</code></pre>
+<pre><code>          9     -205691.37   5.16e+00</code></pre>
+<pre><code>         10     -205684.14   7.22e+00</code></pre>
+<pre><code>         11     -205678.13   6.02e+00</code></pre>
+<pre><code>         12     -205678.11   1.79e-02</code></pre>
+<pre><code>         13     -205678.11   0.00e+00</code></pre>
+<pre><code>Performing nullcheck...</code></pre>
+<pre><code>  Deleting factor 5 increases objective by 2.35e+01. Factor zeroed out.</code></pre>
+<pre><code>  Nullcheck complete. Objective: -205654.62</code></pre>
+<pre class="r"><code>par(mfcol=c(2,2))
+plot(Xn.flash$ldf$f[,1])
+plot(Xn.flash$ldf$f[,2])
+plot(Xn.flash$ldf$f[,3])
+plot(Xn.flash$ldf$f[,4])</code></pre>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Is this because the svd happens to be sparse… looks like it. (That is, it is likely not really the noise per se that is helping here, but the initialization.)</p>
+<pre class="r"><code>Xn.svd = svd(Xn)
+Xn.svd$d[1:4]</code></pre>
+<pre><code>[1] 274.4662 252.4827 171.4019 164.3220</code></pre>
+<pre class="r"><code>par(mfcol=c(2,2))
+plot(Xn.svd$v[,1])
+plot(Xn.svd$v[,2])
+plot(Xn.svd$v[,3])
+plot(Xn.svd$v[,4])</code></pre>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Using this fit to initialize on the non-noisy data leads to a much better solution:</p>
+<pre class="r"><code>X.flash.warmstart = flash(X,K=4,f_init=Xn.flash,ebnm_fn = list(l=&quot;ebnm_pn&quot;, f=&quot;ebnm_ash&quot;),var_type = &quot;constant&quot;,backfit = TRUE,greedy = FALSE)</code></pre>
+<pre><code>Backfitting 4 factor/loading(s) (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
+<pre><code>  Iteration      Objective   Obj Diff</code></pre>
+<pre><code>          1      -22561.50        Inf</code></pre>
+<pre><code>          2      127675.68   1.50e+05</code></pre>
+<pre><code>          3      277187.43   1.50e+05</code></pre>
+<pre><code>          4      424502.25   1.47e+05</code></pre>
+<pre><code>          5      570868.91   1.46e+05</code></pre>
+<pre><code>          6      716984.12   1.46e+05</code></pre>
+<pre><code>          7      863101.91   1.46e+05</code></pre>
+<pre><code>          8     1003104.16   1.40e+05</code></pre>
+<pre><code>          9     1055225.60   5.21e+04</code></pre>
+<pre><code>         10     1055916.90   6.91e+02</code></pre>
+<pre><code>         11     1056004.19   8.73e+01</code></pre>
+<pre><code>         12     1056015.01   1.08e+01</code></pre>
+<pre><code>Warning in verbose_obj_decrease_warning(): An iteration decreased the objective.
+This happens occasionally, perhaps due to numeric reasons. You could ignore this
+warning, but you might like to check out https://github.com/stephenslab/flashr/
+issues/26 for more details.</code></pre>
+<pre><code>         13     1056000.70  -1.43e+01</code></pre>
+<pre><code>Performing nullcheck...</code></pre>
+<pre><code>  Deleting factor 1 decreases objective by 1.22e+06. Factor retained.</code></pre>
+<pre><code>  Deleting factor 2 decreases objective by 1.21e+06. Factor retained.</code></pre>
+<pre><code>  Deleting factor 3 decreases objective by 1.17e+06. Factor retained.</code></pre>
+<pre><code>  Deleting factor 4 decreases objective by 1.17e+06. Factor retained.</code></pre>
+<pre><code>  Nullcheck complete. Objective: 1056000.7</code></pre>
+<pre class="r"><code>par(mfcol=c(2,2))
+plot(X.flash.warmstart$ldf$f[,1])
+plot(X.flash.warmstart$ldf$f[,2])
+plot(X.flash.warmstart$ldf$f[,3])
+plot(X.flash.warmstart$ldf$f[,4])</code></pre>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>And the objective with warmstart is much larger, demonstrating this is a convergence problem rather than a fundamental problem with the objective function:</p>
+<pre class="r"><code>X.flash$objective</code></pre>
+<pre><code>[1] 20642.02</code></pre>
+<pre class="r"><code>X.flash.warmstart$objective</code></pre>
+<pre><code>[1] 1056001</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.6.0 (2019-04-26)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS Mojave 10.14.6
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/3.6/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.6/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] flashr_0.6-7    sparsepca_0.1.2
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_1.0.5       plyr_1.8.6       pillar_1.4.6     compiler_3.6.0  
+ [5] later_1.1.0.1    git2r_0.27.1     workflowr_1.6.2  tools_3.6.0     
+ [9] digest_0.6.25    gtable_0.3.0     evaluate_0.14    lifecycle_0.2.0 
+[13] tibble_3.0.3     lattice_0.20-41  pkgconfig_2.0.3  rlang_0.4.7     
+[17] Matrix_1.2-18    rstudioapi_0.11  yaml_2.2.1       ebnm_0.1-24     
+[21] xfun_0.16        invgamma_1.1     dplyr_1.0.1      stringr_1.4.0   
+[25] knitr_1.29       generics_0.0.2   fs_1.4.2         vctrs_0.3.2     
+[29] tidyselect_1.1.0 rprojroot_1.3-2  grid_3.6.0       glue_1.4.1      
+[33] R6_2.4.1         rmarkdown_2.3    mixsqp_0.3-43    irlba_2.3.3     
+[37] reshape2_1.4.4   purrr_0.3.4      ggplot2_3.3.2    ashr_2.2-51     
+[41] magrittr_1.5     whisker_0.4      scales_1.1.1     backports_1.1.8 
+[45] promises_1.1.1   ellipsis_0.3.1   htmltools_0.5.0  rsvd_1.0.3      
+[49] softImpute_1.4   colorspace_1.4-1 httpuv_1.5.4     stringi_1.4.6   
+[53] munsell_0.5.0    truncnorm_1.0-8  SQUAREM_2020.3   crayon_1.3.4    </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
