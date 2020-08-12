@@ -7,6 +7,14 @@ editor_options:
   chunk_output_type: console
 ---
 
+```{r}
+library(flashr)
+library(flashier)
+library(magrittr)
+library(sparsepca)
+library(EbayesThresh)
+```
+
 ## Introduction
 
 The idea here is to look at behaviour of sparse PCA algorithms on
@@ -55,7 +63,6 @@ plot(X.svd$v[,4])
 Try sparse PCA with default settings. 
 It does pretty well. Maybe not as sparse as one would like.
 ```{r}
-library(sparsepca)
 X.spca = spca(X,10)
 par(mfcol=c(2,2))
 plot(X.spca$loadings[,1])
@@ -92,8 +99,7 @@ The way I have the matrix set up, the columns (not the rows)
 are the individuals, so
 for a drift model the "loadings"  here should be normal; for simplicity I just set them to point normal and hope it learns them to be normal.
 ```{r}
-library("flashr")
-X.flash = flash(X,10,ebnm_fn = list(l="ebnm_pn", f="ebnm_pn"),var_type = "constant")
+X.flash = flashr::flash(X,10,ebnm_fn = list(l="ebnm_pn", f="ebnm_pn"),var_type = "constant")
 par(mfcol=c(2,2))
 plot(X.flash$ldf$f[,1])
 plot(X.flash$ldf$f[,2])
@@ -103,8 +109,7 @@ plot(X.flash$ldf$f[,4])
 
 See if point laplace prior makes a difference. But it is basically indistinguishable.
 ```{r}
-library("flashr")
-X.flash = flash(X,10,ebnm_fn = list(l="ebnm_pn", f="ebnm_pl"),var_type = "constant")
+X.flash = flashr::flash(X,10,ebnm_fn = list(l="ebnm_pn", f="ebnm_pl"),var_type = "constant")
 par(mfcol=c(2,2))
 plot(X.flash$ldf$f[,1])
 plot(X.flash$ldf$f[,2])
@@ -114,8 +119,7 @@ plot(X.flash$ldf$f[,4])
 
 Try ash prior...but it looks about the same.
 ```{r}
-library("flashr")
-X.flash = flash(X,10,ebnm_fn = list(l="ebnm_pn", f="ebnm_ash"),var_type = "constant")
+X.flash = flashr::flash(X,10,ebnm_fn = list(l="ebnm_pn", f="ebnm_ash"),var_type = "constant")
 par(mfcol=c(2,2))
 plot(X.flash$ldf$f[,1])
 plot(X.flash$ldf$f[,2])
@@ -134,6 +138,25 @@ plot(X.flash$ldf$f[,4],X.svd$v[,4])
 I guess maybe at the initialization the prior gets estimated close to normal,
 which results in no change....
 
+
+
+## flashr::flashier point-laplace
+
+Jason had some luck with point laplace prior, so I thought I would
+add results with his code here. It did not seem to help.
+
+```{r}
+fl_pl <- flashier::flash.init(t(X)) %>%
+  flashier::flash.set.verbose(0) %>%
+  flashier::flash.add.greedy(Kmax = 4, 
+                   prior.family = c(prior.point.laplace(), prior.normal())) %>%
+  flashier::flash.backfit(tol = 1e-4)
+
+for(i in 1:4){
+  plot(fl_pl$loadings.pm[[1]][,i])
+}
+```
+
 ## Add noise
 
 I tried adding some noise as I thought low noise could exacerbate convergence issues. I found sometimes it would help, depending on the seed.
@@ -142,7 +165,7 @@ Here's an example where it does not help;
 ```{r}
 set.seed(9)
 Xn = X + rnorm(4*n*p,sd=3)
-Xn.flash = flash(Xn,10,ebnm_fn = list(l="ebnm_pn", f="ebnm_ash"),var_type = "constant")
+Xn.flash = flashr::flash(Xn,10,ebnm_fn = list(l="ebnm_pn", f="ebnm_ash"),var_type = "constant")
 par(mfcol=c(2,2))
 plot(Xn.flash$ldf$f[,1])
 plot(Xn.flash$ldf$f[,2])
@@ -154,7 +177,7 @@ Here is an example where it did help. (i had to search through several seeds to 
 ```{r}
 set.seed(5)
 Xn = X + rnorm(4*n*p,sd=3)
-Xn.flash = flash(Xn,10,ebnm_fn = list(l="ebnm_pn", f="ebnm_ash"),var_type = "constant")
+Xn.flash = flashr::flash(Xn,10,ebnm_fn = list(l="ebnm_pn", f="ebnm_ash"),var_type = "constant")
 par(mfcol=c(2,2))
 plot(Xn.flash$ldf$f[,1])
 plot(Xn.flash$ldf$f[,2])
@@ -175,7 +198,7 @@ plot(Xn.svd$v[,4])
 
 Using this fit to initialize on the non-noisy data leads to a much better solution: 
 ```{r}
-X.flash.warmstart = flash(X,K=4,f_init=Xn.flash,ebnm_fn = list(l="ebnm_pn", f="ebnm_ash"),var_type = "constant",backfit = TRUE,greedy = FALSE)
+X.flash.warmstart = flashr::flash(X,K=4,f_init=Xn.flash,ebnm_fn = list(l="ebnm_pn", f="ebnm_ash"),var_type = "constant",backfit = TRUE,greedy = FALSE)
 par(mfcol=c(2,2))
 plot(X.flash.warmstart$ldf$f[,1])
 plot(X.flash.warmstart$ldf$f[,2])
@@ -204,10 +227,10 @@ X2.svd= svd(X2)
 plot(X2.svd$v[,1])
 ```
 
-Run flash. As we know, with defaults, it just gives the svd solution.
+Run flashr::flash. As we know, with defaults, it just gives the svd solution.
 That is, it does not move from the initial value. (Note: I tried decreasing tol to 1e-14 and it did not change this result, just takes much longer to converge.)
 ```{r}
-X2.flash = flash(X2,1,var_type="constant",ebnm_fn = list(l="ebnm_pn",f="ebnm_ash"))
+X2.flash = flashr::flash(X2,1,var_type="constant",ebnm_fn = list(l="ebnm_pn",f="ebnm_ash"))
 plot(X2.flash$ldf$f[,1],X2.svd$v[,1])
 ```
 
@@ -222,7 +245,7 @@ gf = ashr::normalmix(pi,mean,sd_grid)
 
 gl = ashr::normalmix(c(1),c(0),c(sqrt(X2.svd$d[1])))
 
-X2.flash = flash(X2,1,var_type="constant",ebnm_fn = list(l="ebnm_ash",f="ebnm_ash"),ebnm_param = list(l=list(g=gl,fixg=TRUE), f=list(g = gf,fixg=TRUE)))
+X2.flash = flashr::flash(X2,1,var_type="constant",ebnm_fn = list(l="ebnm_ash",f="ebnm_ash"),ebnm_param = list(l=list(g=gl,fixg=TRUE), f=list(g = gf,fixg=TRUE)))
                  
 plot(X2.flash$fit$EF[,1],X2.svd$v[,1])
 ```
@@ -265,4 +288,86 @@ for(outer in 1:8){
 }
 ```
 
+Try again with smaller lambda - does not work so well, showing that lambda matters (not suprising).
+```{r}
+set.seed(1)
+TT = rnorm(nrow(S))
+TT = S %*% TT
+TT = soft_thresh(TT,lambda=.01)
+TT = normalize(TT)
+par(mfcol=c(3,3),mai=rep(0.3,4))
+plot(TT,main="iteration = 1")
+  
+for(outer in 1:8){
+  for(i in 1:200){
+    TT = S %*% TT
+    TT = soft_thresh(TT,lambda=.01)
+    TT = normalize(TT)
+  }
+  plot(TT,main = paste0("iteration = ",i*outer+1))
+}
+```
 
+
+### Try posterior mean shrinkage
+
+Our EB approaches work with posterior means, so 
+I wanted to repeat the above with the posterior mean shrinkage
+operator under a point-laplace prior instead.
+This is the posterior mean with 0.5 on each component and a=3.
+
+```{r}
+x = rnorm(100)
+w = 1 # prior on non-zero component
+a = 3 # scale parameter of Laplace component
+sd = 0.1 # assumed standard deviations of "data"
+plot(x,postmean.laplace(x,sd,w,a))
+abline(a=0,b=1,col="red",lwd=2)
+plot(x,x/postmean.laplace(x,sd,w,a),main="shrinkage factor")
+```
+
+```{r}
+set.seed(1)
+TT = rnorm(nrow(S))
+TT = S %*% TT
+TT = postmean.laplace(TT,sd,w,a)
+TT = normalize(TT)
+par(mfcol=c(3,3),mai=rep(0.3,4))
+plot(TT,main="iteration = 1")
+  
+for(outer in 1:8){
+  for(i in 1:200){
+    TT = S %*% TT
+    TT = postmean.laplace(TT,1,w,a)
+    TT = normalize(TT)
+  }
+  plot(TT,main = paste0("iteration = ",i*outer+1))
+}
+```
+
+Try a different starting point:
+```{r}
+set.seed(2)
+TT = rnorm(nrow(S))
+TT = S %*% TT
+TT = postmean.laplace(TT,sd,w,a)
+TT = normalize(TT)
+par(mfcol=c(3,3),mai=rep(0.3,4))
+plot(TT,main="iteration = 1")
+  
+for(outer in 1:8){
+  for(i in 1:200){
+    TT = S %*% TT
+    TT = postmean.laplace(TT,1,w,a)
+    TT = normalize(TT)
+  }
+  plot(TT,main = paste0("iteration = ",i*outer+1))
+}
+```
+
+
+More thoughts... wondering whether the problem is partly the independence
+assumption in the VB approximation. It seems the likelihood for the eigenvector is quite flat, so we should be able to get to the sparse solution quite easily.
+But I guess the posterior on (u,v) is quite dependent on one another.
+Maybe we can make a low-rank approximation to the posterior instead of
+independence?
