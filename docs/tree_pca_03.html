@@ -401,7 +401,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2020-08-10
+<strong>Last updated:</strong> 2020-08-12
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -492,16 +492,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreece4859df60ce1dae5c4d68b62d696e891ef750c6targetblankce4859da"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/ce4859df60ce1dae5c4d68b62d696e891ef750c6" target="_blank">ce4859d</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree006a885a3decdad024867a8ec4941e21f49b6343targetblank006a885a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/006a885a3decdad024867a8ec4941e21f49b6343" target="_blank">006a885</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreece4859df60ce1dae5c4d68b62d696e891ef750c6targetblankce4859da" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree006a885a3decdad024867a8ec4941e21f49b6343targetblank006a885a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/ce4859df60ce1dae5c4d68b62d696e891ef750c6" target="_blank">ce4859d</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/006a885a3decdad024867a8ec4941e21f49b6343" target="_blank">006a885</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -695,6 +695,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/006a885a3decdad024867a8ec4941e21f49b6343/analysis/tree_pca_03.Rmd" target="_blank">006a885</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-08-12
+</td>
+<td>
+workflowr::wflow_publish(“tree_pca_03.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/159d030b88971e575b68dd2000f000b1e8ebe01d/docs/tree_pca_03.html" target="_blank">159d030</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-08-10
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/ce4859df60ce1dae5c4d68b62d696e891ef750c6/analysis/tree_pca_03.Rmd" target="_blank">ce4859d</a>
 </td>
 <td>
@@ -748,6 +782,19 @@ workflowr::wflow_publish(“tree_pca_03.Rmd”)
 </div>
 </div>
 </div>
+<pre class="r"><code>library(flashr)
+library(flashier)</code></pre>
+<pre><code>Registered S3 method overwritten by &#39;flashier&#39;:
+  method      from  
+  print.flash flashr</code></pre>
+<pre><code>
+Attaching package: &#39;flashier&#39;</code></pre>
+<pre><code>The following object is masked from &#39;package:flashr&#39;:
+
+    flash</code></pre>
+<pre class="r"><code>library(magrittr)
+library(sparsepca)
+library(EbayesThresh)</code></pre>
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
 <p>The idea here is to look at behaviour of sparse PCA algorithms on a simple tree.</p>
@@ -768,56 +815,6 @@ X[,(n+1):(2*n)] = X[,(n+1):(2*n)]+f[[4]]
 X[,(2*n+1):(3*n)] = X[,(2*n+1):(3*n)] + f[[5]]
 X[,(3*n+1):(4*n)] = X[,(3*n+1):(4*n)] + f[[6]]
 image(cor(X))</code></pre>
-<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-1">
-Past versions of unnamed-chunk-1-1.png
-</button>
-</p>
-<div id="fig-unnamed-chunk-1-1" class="collapse">
-<div class="table-responsive">
-<table class="table table-condensed table-hover">
-<thead>
-<tr>
-<th>
-Version
-</th>
-<th>
-Author
-</th>
-<th>
-Date
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a href="https://github.com/stephens999/misc/blob/d0c86e821753b5e1daa41450b24c43186b79ebe2/docs/figure/tree_pca_03.Rmd/unnamed-chunk-1-1.png" target="_blank">d0c86e8</a>
-</td>
-<td>
-Matthew Stephens
-</td>
-<td>
-2020-08-10
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-</div>
-<div id="regular-svd" class="section level2">
-<h2>Regular SVD</h2>
-<p>Regular SVD does not reproduce the tree here. Indeed we should not expect it to, because the third and fourth eigenvectors have very similar eigenvalues which makes them non-identifiable without sparsity:</p>
-<pre class="r"><code>X.svd = svd(X)
-X.svd$d[1:4]</code></pre>
-<pre><code>[1] 255.5150 237.0327 140.2663 134.5016</code></pre>
-<pre class="r"><code>par(mfcol=c(2,2))
-plot(X.svd$v[,1])
-plot(X.svd$v[,2])
-plot(X.svd$v[,3])
-plot(X.svd$v[,4])</code></pre>
 <p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
 <button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-1">
@@ -857,11 +854,60 @@ Matthew Stephens
 </div>
 </div>
 </div>
+<div id="regular-svd" class="section level2">
+<h2>Regular SVD</h2>
+<p>Regular SVD does not reproduce the tree here. Indeed we should not expect it to, because the third and fourth eigenvectors have very similar eigenvalues which makes them non-identifiable without sparsity:</p>
+<pre class="r"><code>X.svd = svd(X)
+X.svd$d[1:4]</code></pre>
+<pre><code>[1] 255.5150 237.0327 140.2663 134.5016</code></pre>
+<pre class="r"><code>par(mfcol=c(2,2))
+plot(X.svd$v[,1])
+plot(X.svd$v[,2])
+plot(X.svd$v[,3])
+plot(X.svd$v[,4])</code></pre>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-1">
+Past versions of unnamed-chunk-3-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-3-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/d0c86e821753b5e1daa41450b24c43186b79ebe2/docs/figure/tree_pca_03.Rmd/unnamed-chunk-3-1.png" target="_blank">d0c86e8</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-08-10
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
 <div id="sparse-pca-in-sparsepca-package" class="section level2">
 <h2>sparse PCA in <code>sparsepca</code> package</h2>
 <p>Try sparse PCA with default settings. It does pretty well. Maybe not as sparse as one would like.</p>
-<pre class="r"><code>library(sparsepca)
-X.spca = spca(X,10)</code></pre>
+<pre class="r"><code>X.spca = spca(X,10)</code></pre>
 <pre><code>[1] &quot;Iteration:    1, Objective: 3.50720e+02, Relative improvement Inf&quot;
 [1] &quot;Iteration:   11, Objective: 3.48231e+02, Relative improvement 6.06872e-04&quot;
 [1] &quot;Iteration:   21, Objective: 3.46219e+02, Relative improvement 5.12042e-04&quot;
@@ -967,13 +1013,13 @@ plot(X.spca$loadings[,1])
 plot(X.spca$loadings[,2])
 plot(X.spca$loadings[,3])
 plot(X.spca$loadings[,4])</code></pre>
-<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-1">
-Past versions of unnamed-chunk-3-1.png
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-1">
+Past versions of unnamed-chunk-4-1.png
 </button>
 </p>
-<div id="fig-unnamed-chunk-3-1" class="collapse">
+<div id="fig-unnamed-chunk-4-1" class="collapse">
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
 <thead>
@@ -992,7 +1038,7 @@ Date
 <tbody>
 <tr>
 <td>
-<a href="https://github.com/stephens999/misc/blob/d0c86e821753b5e1daa41450b24c43186b79ebe2/docs/figure/tree_pca_03.Rmd/unnamed-chunk-3-1.png" target="_blank">d0c86e8</a>
+<a href="https://github.com/stephens999/misc/blob/d0c86e821753b5e1daa41450b24c43186b79ebe2/docs/figure/tree_pca_03.Rmd/unnamed-chunk-4-1.png" target="_blank">d0c86e8</a>
 </td>
 <td>
 Matthew Stephens
@@ -1024,13 +1070,13 @@ plot(X.spca$loadings[,1])
 plot(X.spca$loadings[,2])
 plot(X.spca$loadings[,3])
 plot(X.spca$loadings[,4])</code></pre>
-<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-1">
-Past versions of unnamed-chunk-4-1.png
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-1">
+Past versions of unnamed-chunk-5-1.png
 </button>
 </p>
-<div id="fig-unnamed-chunk-4-1" class="collapse">
+<div id="fig-unnamed-chunk-5-1" class="collapse">
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
 <thead>
@@ -1049,7 +1095,7 @@ Date
 <tbody>
 <tr>
 <td>
-<a href="https://github.com/stephens999/misc/blob/d0c86e821753b5e1daa41450b24c43186b79ebe2/docs/figure/tree_pca_03.Rmd/unnamed-chunk-4-1.png" target="_blank">d0c86e8</a>
+<a href="https://github.com/stephens999/misc/blob/d0c86e821753b5e1daa41450b24c43186b79ebe2/docs/figure/tree_pca_03.Rmd/unnamed-chunk-5-1.png" target="_blank">d0c86e8</a>
 </td>
 <td>
 Matthew Stephens
@@ -1169,13 +1215,13 @@ plot(X.spca$loadings[,1])
 plot(X.spca$loadings[,2])
 plot(X.spca$loadings[,3])
 plot(X.spca$loadings[,4])</code></pre>
-<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-1">
-Past versions of unnamed-chunk-5-1.png
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-1">
+Past versions of unnamed-chunk-6-1.png
 </button>
 </p>
-<div id="fig-unnamed-chunk-5-1" class="collapse">
+<div id="fig-unnamed-chunk-6-1" class="collapse">
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
 <thead>
@@ -1194,7 +1240,7 @@ Date
 <tbody>
 <tr>
 <td>
-<a href="https://github.com/stephens999/misc/blob/d0c86e821753b5e1daa41450b24c43186b79ebe2/docs/figure/tree_pca_03.Rmd/unnamed-chunk-5-1.png" target="_blank">d0c86e8</a>
+<a href="https://github.com/stephens999/misc/blob/d0c86e821753b5e1daa41450b24c43186b79ebe2/docs/figure/tree_pca_03.Rmd/unnamed-chunk-6-1.png" target="_blank">d0c86e8</a>
 </td>
 <td>
 Matthew Stephens
@@ -1212,8 +1258,7 @@ Matthew Stephens
 <h2>flash</h2>
 <p>Here I try flash. (Note that setting var_type has an effect; may want to look into that more, but for now i set it constant…).</p>
 <p>The way I have the matrix set up, the columns (not the rows) are the individuals, so for a drift model the “loadings” here should be normal; for simplicity I just set them to point normal and hope it learns them to be normal.</p>
-<pre class="r"><code>library(&quot;flashr&quot;)
-X.flash = flash(X,10,ebnm_fn = list(l=&quot;ebnm_pn&quot;, f=&quot;ebnm_pn&quot;),var_type = &quot;constant&quot;)</code></pre>
+<pre class="r"><code>X.flash = flashr::flash(X,10,ebnm_fn = list(l=&quot;ebnm_pn&quot;, f=&quot;ebnm_pn&quot;),var_type = &quot;constant&quot;)</code></pre>
 <pre><code>Fitting factor/loading 1 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
 <pre><code>  Iteration      Objective   Obj Diff</code></pre>
 <pre><code>          1     -122755.15        Inf</code></pre>
@@ -1287,13 +1332,13 @@ plot(X.flash$ldf$f[,1])
 plot(X.flash$ldf$f[,2])
 plot(X.flash$ldf$f[,3])
 plot(X.flash$ldf$f[,4])</code></pre>
-<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-1">
-Past versions of unnamed-chunk-6-1.png
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-7-1">
+Past versions of unnamed-chunk-7-1.png
 </button>
 </p>
-<div id="fig-unnamed-chunk-6-1" class="collapse">
+<div id="fig-unnamed-chunk-7-1" class="collapse">
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
 <thead>
@@ -1312,7 +1357,7 @@ Date
 <tbody>
 <tr>
 <td>
-<a href="https://github.com/stephens999/misc/blob/d0c86e821753b5e1daa41450b24c43186b79ebe2/docs/figure/tree_pca_03.Rmd/unnamed-chunk-6-1.png" target="_blank">d0c86e8</a>
+<a href="https://github.com/stephens999/misc/blob/d0c86e821753b5e1daa41450b24c43186b79ebe2/docs/figure/tree_pca_03.Rmd/unnamed-chunk-7-1.png" target="_blank">d0c86e8</a>
 </td>
 <td>
 Matthew Stephens
@@ -1326,8 +1371,7 @@ Matthew Stephens
 </div>
 </div>
 <p>See if point laplace prior makes a difference. But it is basically indistinguishable.</p>
-<pre class="r"><code>library(&quot;flashr&quot;)
-X.flash = flash(X,10,ebnm_fn = list(l=&quot;ebnm_pn&quot;, f=&quot;ebnm_pl&quot;),var_type = &quot;constant&quot;)</code></pre>
+<pre class="r"><code>X.flash = flashr::flash(X,10,ebnm_fn = list(l=&quot;ebnm_pn&quot;, f=&quot;ebnm_pl&quot;),var_type = &quot;constant&quot;)</code></pre>
 <pre><code>Fitting factor/loading 1 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
 <pre><code>  Iteration      Objective   Obj Diff</code></pre>
 <pre><code>          1     -122775.18        Inf</code></pre>
@@ -1404,13 +1448,13 @@ plot(X.flash$ldf$f[,1])
 plot(X.flash$ldf$f[,2])
 plot(X.flash$ldf$f[,3])
 plot(X.flash$ldf$f[,4])</code></pre>
-<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-7-1">
-Past versions of unnamed-chunk-7-1.png
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-1">
+Past versions of unnamed-chunk-8-1.png
 </button>
 </p>
-<div id="fig-unnamed-chunk-7-1" class="collapse">
+<div id="fig-unnamed-chunk-8-1" class="collapse">
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
 <thead>
@@ -1429,7 +1473,7 @@ Date
 <tbody>
 <tr>
 <td>
-<a href="https://github.com/stephens999/misc/blob/d0c86e821753b5e1daa41450b24c43186b79ebe2/docs/figure/tree_pca_03.Rmd/unnamed-chunk-7-1.png" target="_blank">d0c86e8</a>
+<a href="https://github.com/stephens999/misc/blob/d0c86e821753b5e1daa41450b24c43186b79ebe2/docs/figure/tree_pca_03.Rmd/unnamed-chunk-8-1.png" target="_blank">d0c86e8</a>
 </td>
 <td>
 Matthew Stephens
@@ -1443,8 +1487,7 @@ Matthew Stephens
 </div>
 </div>
 <p>Try ash prior…but it looks about the same.</p>
-<pre class="r"><code>library(&quot;flashr&quot;)
-X.flash = flash(X,10,ebnm_fn = list(l=&quot;ebnm_pn&quot;, f=&quot;ebnm_ash&quot;),var_type = &quot;constant&quot;)</code></pre>
+<pre class="r"><code>X.flash = flashr::flash(X,10,ebnm_fn = list(l=&quot;ebnm_pn&quot;, f=&quot;ebnm_ash&quot;),var_type = &quot;constant&quot;)</code></pre>
 <pre><code>Fitting factor/loading 1 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
 <pre><code>  Iteration      Objective   Obj Diff</code></pre>
 <pre><code>          1     -122756.12        Inf</code></pre>
@@ -1520,46 +1563,6 @@ plot(X.flash$ldf$f[,1])
 plot(X.flash$ldf$f[,2])
 plot(X.flash$ldf$f[,3])
 plot(X.flash$ldf$f[,4])</code></pre>
-<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-1">
-Past versions of unnamed-chunk-8-1.png
-</button>
-</p>
-<div id="fig-unnamed-chunk-8-1" class="collapse">
-<div class="table-responsive">
-<table class="table table-condensed table-hover">
-<thead>
-<tr>
-<th>
-Version
-</th>
-<th>
-Author
-</th>
-<th>
-Date
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a href="https://github.com/stephens999/misc/blob/d0c86e821753b5e1daa41450b24c43186b79ebe2/docs/figure/tree_pca_03.Rmd/unnamed-chunk-8-1.png" target="_blank">d0c86e8</a>
-</td>
-<td>
-Matthew Stephens
-</td>
-<td>
-2020-08-10
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<p>In fact these all look essentially the same as the svd solution…</p>
-<pre class="r"><code>plot(X.flash$ldf$f[,1],X.svd$v[,1])</code></pre>
 <p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
 <button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-1">
@@ -1598,92 +1601,73 @@ Matthew Stephens
 </table>
 </div>
 </div>
+<p>In fact these all look essentially the same as the svd solution…</p>
+<pre class="r"><code>plot(X.flash$ldf$f[,1],X.svd$v[,1])</code></pre>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-10-1">
+Past versions of unnamed-chunk-10-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-10-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/d0c86e821753b5e1daa41450b24c43186b79ebe2/docs/figure/tree_pca_03.Rmd/unnamed-chunk-10-1.png" target="_blank">d0c86e8</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-08-10
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>plot(X.flash$ldf$f[,2],X.svd$v[,2])</code></pre>
-<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /></p>
-<p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-2">
-Past versions of unnamed-chunk-9-2.png
-</button>
-</p>
-<div id="fig-unnamed-chunk-9-2" class="collapse">
-<div class="table-responsive">
-<table class="table table-condensed table-hover">
-<thead>
-<tr>
-<th>
-Version
-</th>
-<th>
-Author
-</th>
-<th>
-Date
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a href="https://github.com/stephens999/misc/blob/d0c86e821753b5e1daa41450b24c43186b79ebe2/docs/figure/tree_pca_03.Rmd/unnamed-chunk-9-2.png" target="_blank">d0c86e8</a>
-</td>
-<td>
-Matthew Stephens
-</td>
-<td>
-2020-08-10
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-10-2.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>plot(X.flash$ldf$f[,3],X.svd$v[,3])</code></pre>
-<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-9-3.png" width="672" style="display: block; margin: auto;" /></p>
-<p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-3">
-Past versions of unnamed-chunk-9-3.png
-</button>
-</p>
-<div id="fig-unnamed-chunk-9-3" class="collapse">
-<div class="table-responsive">
-<table class="table table-condensed table-hover">
-<thead>
-<tr>
-<th>
-Version
-</th>
-<th>
-Author
-</th>
-<th>
-Date
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a href="https://github.com/stephens999/misc/blob/d0c86e821753b5e1daa41450b24c43186b79ebe2/docs/figure/tree_pca_03.Rmd/unnamed-chunk-9-3.png" target="_blank">d0c86e8</a>
-</td>
-<td>
-Matthew Stephens
-</td>
-<td>
-2020-08-10
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-10-3.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>plot(X.flash$ldf$f[,4],X.svd$v[,4])</code></pre>
-<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-9-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-10-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p>I guess maybe at the initialization the prior gets estimated close to normal, which results in no change….</p>
+</div>
+<div id="flashrflashier-point-laplace" class="section level2">
+<h2>flashr::flashier point-laplace</h2>
+<p>Jason had some luck with point laplace prior, so I thought I would add results with his code here. It did not seem to help.</p>
+<pre class="r"><code>fl_pl &lt;- flashier::flash.init(t(X)) %&gt;%
+  flashier::flash.set.verbose(0) %&gt;%
+  flashier::flash.add.greedy(Kmax = 4, 
+                   prior.family = c(prior.point.laplace(), prior.normal())) %&gt;%
+  flashier::flash.backfit(tol = 1e-4)
+
+for(i in 1:4){
+  plot(fl_pl$loadings.pm[[1]][,i])
+}</code></pre>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-4">
-Past versions of unnamed-chunk-9-4.png
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-1">
+Past versions of unnamed-chunk-11-1.png
 </button>
 </p>
-<div id="fig-unnamed-chunk-9-4" class="collapse">
+<div id="fig-unnamed-chunk-11-1" class="collapse">
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
 <thead>
@@ -1702,7 +1686,7 @@ Date
 <tbody>
 <tr>
 <td>
-<a href="https://github.com/stephens999/misc/blob/d0c86e821753b5e1daa41450b24c43186b79ebe2/docs/figure/tree_pca_03.Rmd/unnamed-chunk-9-4.png" target="_blank">d0c86e8</a>
+<a href="https://github.com/stephens999/misc/blob/d0c86e821753b5e1daa41450b24c43186b79ebe2/docs/figure/tree_pca_03.Rmd/unnamed-chunk-11-1.png" target="_blank">d0c86e8</a>
 </td>
 <td>
 Matthew Stephens
@@ -1715,7 +1699,7 @@ Matthew Stephens
 </table>
 </div>
 </div>
-<p>I guess maybe at the initialization the prior gets estimated close to normal, which results in no change….</p>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-11-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/tree_pca_03.Rmd/unnamed-chunk-11-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/tree_pca_03.Rmd/unnamed-chunk-11-4.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="add-noise" class="section level2">
 <h2>Add noise</h2>
@@ -1723,7 +1707,7 @@ Matthew Stephens
 <p>Here’s an example where it does not help;</p>
 <pre class="r"><code>set.seed(9)
 Xn = X + rnorm(4*n*p,sd=3)
-Xn.flash = flash(Xn,10,ebnm_fn = list(l=&quot;ebnm_pn&quot;, f=&quot;ebnm_ash&quot;),var_type = &quot;constant&quot;)</code></pre>
+Xn.flash = flashr::flash(Xn,10,ebnm_fn = list(l=&quot;ebnm_pn&quot;, f=&quot;ebnm_ash&quot;),var_type = &quot;constant&quot;)</code></pre>
 <pre><code>Fitting factor/loading 1 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
 <pre><code>  Iteration      Objective   Obj Diff</code></pre>
 <pre><code>          1     -207544.30        Inf</code></pre>
@@ -1835,13 +1819,13 @@ plot(Xn.flash$ldf$f[,1])
 plot(Xn.flash$ldf$f[,2])
 plot(Xn.flash$ldf$f[,3])
 plot(Xn.flash$ldf$f[,4])</code></pre>
-<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-10-1">
-Past versions of unnamed-chunk-10-1.png
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-1">
+Past versions of unnamed-chunk-12-1.png
 </button>
 </p>
-<div id="fig-unnamed-chunk-10-1" class="collapse">
+<div id="fig-unnamed-chunk-12-1" class="collapse">
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
 <thead>
@@ -1860,7 +1844,7 @@ Date
 <tbody>
 <tr>
 <td>
-<a href="https://github.com/stephens999/misc/blob/d0c86e821753b5e1daa41450b24c43186b79ebe2/docs/figure/tree_pca_03.Rmd/unnamed-chunk-10-1.png" target="_blank">d0c86e8</a>
+<a href="https://github.com/stephens999/misc/blob/d0c86e821753b5e1daa41450b24c43186b79ebe2/docs/figure/tree_pca_03.Rmd/unnamed-chunk-12-1.png" target="_blank">d0c86e8</a>
 </td>
 <td>
 Matthew Stephens
@@ -1876,7 +1860,7 @@ Matthew Stephens
 <p>Here is an example where it did help. (i had to search through several seeds to find one)</p>
 <pre class="r"><code>set.seed(5)
 Xn = X + rnorm(4*n*p,sd=3)
-Xn.flash = flash(Xn,10,ebnm_fn = list(l=&quot;ebnm_pn&quot;, f=&quot;ebnm_ash&quot;),var_type = &quot;constant&quot;)</code></pre>
+Xn.flash = flashr::flash(Xn,10,ebnm_fn = list(l=&quot;ebnm_pn&quot;, f=&quot;ebnm_ash&quot;),var_type = &quot;constant&quot;)</code></pre>
 <pre><code>Fitting factor/loading 1 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
 <pre><code>  Iteration      Objective   Obj Diff</code></pre>
 <pre><code>          1     -207818.46        Inf</code></pre>
@@ -1939,123 +1923,6 @@ plot(Xn.flash$ldf$f[,1])
 plot(Xn.flash$ldf$f[,2])
 plot(Xn.flash$ldf$f[,3])
 plot(Xn.flash$ldf$f[,4])</code></pre>
-<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-1">
-Past versions of unnamed-chunk-11-1.png
-</button>
-</p>
-<div id="fig-unnamed-chunk-11-1" class="collapse">
-<div class="table-responsive">
-<table class="table table-condensed table-hover">
-<thead>
-<tr>
-<th>
-Version
-</th>
-<th>
-Author
-</th>
-<th>
-Date
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a href="https://github.com/stephens999/misc/blob/d0c86e821753b5e1daa41450b24c43186b79ebe2/docs/figure/tree_pca_03.Rmd/unnamed-chunk-11-1.png" target="_blank">d0c86e8</a>
-</td>
-<td>
-Matthew Stephens
-</td>
-<td>
-2020-08-10
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<p>Is this because the svd happens to be sparse… looks like it. (That is, it is likely not really the noise per se that is helping here, but the initialization.)</p>
-<pre class="r"><code>Xn.svd = svd(Xn)
-Xn.svd$d[1:4]</code></pre>
-<pre><code>[1] 274.4662 252.4827 171.4019 164.3220</code></pre>
-<pre class="r"><code>par(mfcol=c(2,2))
-plot(Xn.svd$v[,1])
-plot(Xn.svd$v[,2])
-plot(Xn.svd$v[,3])
-plot(Xn.svd$v[,4])</code></pre>
-<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-1">
-Past versions of unnamed-chunk-12-1.png
-</button>
-</p>
-<div id="fig-unnamed-chunk-12-1" class="collapse">
-<div class="table-responsive">
-<table class="table table-condensed table-hover">
-<thead>
-<tr>
-<th>
-Version
-</th>
-<th>
-Author
-</th>
-<th>
-Date
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a href="https://github.com/stephens999/misc/blob/d0c86e821753b5e1daa41450b24c43186b79ebe2/docs/figure/tree_pca_03.Rmd/unnamed-chunk-12-1.png" target="_blank">d0c86e8</a>
-</td>
-<td>
-Matthew Stephens
-</td>
-<td>
-2020-08-10
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<p>Using this fit to initialize on the non-noisy data leads to a much better solution:</p>
-<pre class="r"><code>X.flash.warmstart = flash(X,K=4,f_init=Xn.flash,ebnm_fn = list(l=&quot;ebnm_pn&quot;, f=&quot;ebnm_ash&quot;),var_type = &quot;constant&quot;,backfit = TRUE,greedy = FALSE)</code></pre>
-<pre><code>Backfitting 4 factor/loading(s) (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
-<pre><code>  Iteration      Objective   Obj Diff</code></pre>
-<pre><code>          1      -22561.50        Inf</code></pre>
-<pre><code>          2      127675.68   1.50e+05</code></pre>
-<pre><code>          3      277187.43   1.50e+05</code></pre>
-<pre><code>          4      424502.25   1.47e+05</code></pre>
-<pre><code>          5      570868.91   1.46e+05</code></pre>
-<pre><code>          6      716984.12   1.46e+05</code></pre>
-<pre><code>          7      863101.91   1.46e+05</code></pre>
-<pre><code>          8     1003104.16   1.40e+05</code></pre>
-<pre><code>          9     1055225.60   5.21e+04</code></pre>
-<pre><code>         10     1055916.90   6.91e+02</code></pre>
-<pre><code>         11     1056004.19   8.73e+01</code></pre>
-<pre><code>         12     1056015.01   1.08e+01</code></pre>
-<pre><code>Warning in verbose_obj_decrease_warning(): An iteration decreased the objective.
-This happens occasionally, perhaps due to numeric reasons. You could ignore this
-warning, but you might like to check out https://github.com/stephenslab/flashr/
-issues/26 for more details.</code></pre>
-<pre><code>         13     1056000.70  -1.43e+01</code></pre>
-<pre><code>Performing nullcheck...</code></pre>
-<pre><code>  Deleting factor 1 decreases objective by 1.22e+06. Factor retained.</code></pre>
-<pre><code>  Deleting factor 2 decreases objective by 1.21e+06. Factor retained.</code></pre>
-<pre><code>  Deleting factor 3 decreases objective by 1.17e+06. Factor retained.</code></pre>
-<pre><code>  Deleting factor 4 decreases objective by 1.17e+06. Factor retained.</code></pre>
-<pre><code>  Nullcheck complete. Objective: 1056000.7</code></pre>
-<pre class="r"><code>par(mfcol=c(2,2))
-plot(X.flash.warmstart$ldf$f[,1])
-plot(X.flash.warmstart$ldf$f[,2])
-plot(X.flash.warmstart$ldf$f[,3])
-plot(X.flash.warmstart$ldf$f[,4])</code></pre>
 <p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
 <button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-13-1">
@@ -2094,6 +1961,86 @@ Matthew Stephens
 </table>
 </div>
 </div>
+<p>Is this because the svd happens to be sparse… looks like it. (That is, it is likely not really the noise per se that is helping here, but the initialization.)</p>
+<pre class="r"><code>Xn.svd = svd(Xn)
+Xn.svd$d[1:4]</code></pre>
+<pre><code>[1] 274.4662 252.4827 171.4019 164.3220</code></pre>
+<pre class="r"><code>par(mfcol=c(2,2))
+plot(Xn.svd$v[,1])
+plot(Xn.svd$v[,2])
+plot(Xn.svd$v[,3])
+plot(Xn.svd$v[,4])</code></pre>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Using this fit to initialize on the non-noisy data leads to a much better solution:</p>
+<pre class="r"><code>X.flash.warmstart = flashr::flash(X,K=4,f_init=Xn.flash,ebnm_fn = list(l=&quot;ebnm_pn&quot;, f=&quot;ebnm_ash&quot;),var_type = &quot;constant&quot;,backfit = TRUE,greedy = FALSE)</code></pre>
+<pre><code>Backfitting 4 factor/loading(s) (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
+<pre><code>  Iteration      Objective   Obj Diff</code></pre>
+<pre><code>          1      -22561.50        Inf</code></pre>
+<pre><code>          2      127675.68   1.50e+05</code></pre>
+<pre><code>          3      277187.43   1.50e+05</code></pre>
+<pre><code>          4      424502.25   1.47e+05</code></pre>
+<pre><code>          5      570868.91   1.46e+05</code></pre>
+<pre><code>          6      716984.12   1.46e+05</code></pre>
+<pre><code>          7      863101.91   1.46e+05</code></pre>
+<pre><code>          8     1003104.16   1.40e+05</code></pre>
+<pre><code>          9     1055225.60   5.21e+04</code></pre>
+<pre><code>         10     1055916.90   6.91e+02</code></pre>
+<pre><code>         11     1056004.19   8.73e+01</code></pre>
+<pre><code>         12     1056015.01   1.08e+01</code></pre>
+<pre><code>Warning in verbose_obj_decrease_warning(): An iteration decreased the objective.
+This happens occasionally, perhaps due to numeric reasons. You could ignore this
+warning, but you might like to check out https://github.com/stephenslab/flashr/
+issues/26 for more details.</code></pre>
+<pre><code>         13     1056000.70  -1.43e+01</code></pre>
+<pre><code>Performing nullcheck...</code></pre>
+<pre><code>  Deleting factor 1 decreases objective by 1.22e+06. Factor retained.</code></pre>
+<pre><code>  Deleting factor 2 decreases objective by 1.21e+06. Factor retained.</code></pre>
+<pre><code>  Deleting factor 3 decreases objective by 1.17e+06. Factor retained.</code></pre>
+<pre><code>  Deleting factor 4 decreases objective by 1.17e+06. Factor retained.</code></pre>
+<pre><code>  Nullcheck complete. Objective: 1056000.7</code></pre>
+<pre class="r"><code>par(mfcol=c(2,2))
+plot(X.flash.warmstart$ldf$f[,1])
+plot(X.flash.warmstart$ldf$f[,2])
+plot(X.flash.warmstart$ldf$f[,3])
+plot(X.flash.warmstart$ldf$f[,4])</code></pre>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-15-1">
+Past versions of unnamed-chunk-15-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-15-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/159d030b88971e575b68dd2000f000b1e8ebe01d/docs/figure/tree_pca_03.Rmd/unnamed-chunk-15-1.png" target="_blank">159d030</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-08-10
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>And the objective with warmstart is much larger, demonstrating this is a convergence problem rather than a fundamental problem with the objective function:</p>
 <pre class="r"><code>X.flash$objective</code></pre>
 <pre><code>[1] 20642.02</code></pre>
@@ -2106,9 +2053,46 @@ Matthew Stephens
 <pre class="r"><code>X2 = X- X.svd$u[,1:2] %*% diag(X.svd$d[1:2]) %*% t(X.svd$v[,1:2])
 X2.svd= svd(X2)
 plot(X2.svd$v[,1])</code></pre>
-<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Run flash. As we know, with defaults, it just gives the svd solution. That is, it does not move from the initial value. (Note: I tried decreasing tol to 1e-14 and it did not change this result, just takes much longer to converge.)</p>
-<pre class="r"><code>X2.flash = flash(X2,1,var_type=&quot;constant&quot;,ebnm_fn = list(l=&quot;ebnm_pn&quot;,f=&quot;ebnm_ash&quot;))</code></pre>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-17-1">
+Past versions of unnamed-chunk-17-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-17-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/159d030b88971e575b68dd2000f000b1e8ebe01d/docs/figure/tree_pca_03.Rmd/unnamed-chunk-17-1.png" target="_blank">159d030</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-08-10
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Run flashr::flash. As we know, with defaults, it just gives the svd solution. That is, it does not move from the initial value. (Note: I tried decreasing tol to 1e-14 and it did not change this result, just takes much longer to converge.)</p>
+<pre class="r"><code>X2.flash = flashr::flash(X2,1,var_type=&quot;constant&quot;,ebnm_fn = list(l=&quot;ebnm_pn&quot;,f=&quot;ebnm_ash&quot;))</code></pre>
 <pre><code>Fitting factor/loading 1 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
 <pre><code>  Iteration      Objective   Obj Diff</code></pre>
 <pre><code>          1      -57104.19        Inf</code></pre>
@@ -2138,7 +2122,44 @@ plot(X2.svd$v[,1])</code></pre>
 <pre><code>  Deleting factor 1 decreases objective by 2.64e+04. Factor retained.</code></pre>
 <pre><code>  Nullcheck complete. Objective: -57098.66</code></pre>
 <pre class="r"><code>plot(X2.flash$ldf$f[,1],X2.svd$v[,1])</code></pre>
-<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-16-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-18-1">
+Past versions of unnamed-chunk-18-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-18-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/159d030b88971e575b68dd2000f000b1e8ebe01d/docs/figure/tree_pca_03.Rmd/unnamed-chunk-18-1.png" target="_blank">159d030</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-08-10
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Now I’m going to try to force a sparser solution by using a fixed (sparse) prior for f, and normal prior for l (with standard deviation given by the diagonal of the svd).</p>
 <pre class="r"><code>sd_grid = seq(0,1,length=20)
 mean = rep(0,20)
@@ -2147,7 +2168,7 @@ gf = ashr::normalmix(pi,mean,sd_grid)
 
 gl = ashr::normalmix(c(1),c(0),c(sqrt(X2.svd$d[1])))
 
-X2.flash = flash(X2,1,var_type=&quot;constant&quot;,ebnm_fn = list(l=&quot;ebnm_ash&quot;,f=&quot;ebnm_ash&quot;),ebnm_param = list(l=list(g=gl,fixg=TRUE), f=list(g = gf,fixg=TRUE)))</code></pre>
+X2.flash = flashr::flash(X2,1,var_type=&quot;constant&quot;,ebnm_fn = list(l=&quot;ebnm_ash&quot;,f=&quot;ebnm_ash&quot;),ebnm_param = list(l=list(g=gl,fixg=TRUE), f=list(g = gf,fixg=TRUE)))</code></pre>
 <pre><code>Fitting factor/loading 1 (stop when difference in obj. is &lt; 1.00e-02):</code></pre>
 <pre><code>  Iteration      Objective   Obj Diff</code></pre>
 <pre><code>          1      -57723.42        Inf</code></pre>
@@ -2390,7 +2411,7 @@ X2.flash = flash(X2,1,var_type=&quot;constant&quot;,ebnm_fn = list(l=&quot;ebnm_
 <pre><code>  Deleting factor 1 decreases objective by 2.63e+04. Factor retained.</code></pre>
 <pre><code>  Nullcheck complete. Objective: -57222.2</code></pre>
 <pre class="r"><code>plot(X2.flash$fit$EF[,1],X2.svd$v[,1])</code></pre>
-<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-19-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>I’m not sure I’m doing that right, but it did not seem to work…it is shrinking everything too uniformly?</p>
 <div id="try-iterative-thresholding" class="section level3">
 <h3>Try iterative thresholding</h3>
@@ -2417,7 +2438,74 @@ for(outer in 1:8){
   }
   plot(TT,main = paste0(&quot;iteration = &quot;,i*outer+1))
 }</code></pre>
-<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-20-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Try again with smaller lambda - does not work so well, showing that lambda matters (not suprising).</p>
+<pre class="r"><code>set.seed(1)
+TT = rnorm(nrow(S))
+TT = S %*% TT
+TT = soft_thresh(TT,lambda=.01)
+TT = normalize(TT)
+par(mfcol=c(3,3),mai=rep(0.3,4))
+plot(TT,main=&quot;iteration = 1&quot;)
+  
+for(outer in 1:8){
+  for(i in 1:200){
+    TT = S %*% TT
+    TT = soft_thresh(TT,lambda=.01)
+    TT = normalize(TT)
+  }
+  plot(TT,main = paste0(&quot;iteration = &quot;,i*outer+1))
+}</code></pre>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-21-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="try-posterior-mean-shrinkage" class="section level3">
+<h3>Try posterior mean shrinkage</h3>
+<p>Our EB approaches work with posterior means, so I wanted to repeat the above with the posterior mean shrinkage operator under a point-laplace prior instead. This is the posterior mean with 0.5 on each component and a=3.</p>
+<pre class="r"><code>x = rnorm(100)
+w = 1 # prior on non-zero component
+a = 3 # scale parameter of Laplace component
+sd = 0.1 # assumed standard deviations of &quot;data&quot;
+plot(x,postmean.laplace(x,sd,w,a))
+abline(a=0,b=1,col=&quot;red&quot;,lwd=2)</code></pre>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-22-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(x,x/postmean.laplace(x,sd,w,a),main=&quot;shrinkage factor&quot;)</code></pre>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-22-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>set.seed(1)
+TT = rnorm(nrow(S))
+TT = S %*% TT
+TT = postmean.laplace(TT,sd,w,a)
+TT = normalize(TT)
+par(mfcol=c(3,3),mai=rep(0.3,4))
+plot(TT,main=&quot;iteration = 1&quot;)
+  
+for(outer in 1:8){
+  for(i in 1:200){
+    TT = S %*% TT
+    TT = postmean.laplace(TT,1,w,a)
+    TT = normalize(TT)
+  }
+  plot(TT,main = paste0(&quot;iteration = &quot;,i*outer+1))
+}</code></pre>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-23-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Try a different starting point:</p>
+<pre class="r"><code>set.seed(2)
+TT = rnorm(nrow(S))
+TT = S %*% TT
+TT = postmean.laplace(TT,sd,w,a)
+TT = normalize(TT)
+par(mfcol=c(3,3),mai=rep(0.3,4))
+plot(TT,main=&quot;iteration = 1&quot;)
+  
+for(outer in 1:8){
+  for(i in 1:200){
+    TT = S %*% TT
+    TT = postmean.laplace(TT,1,w,a)
+    TT = normalize(TT)
+  }
+  plot(TT,main = paste0(&quot;iteration = &quot;,i*outer+1))
+}</code></pre>
+<p><img src="figure/tree_pca_03.Rmd/unnamed-chunk-24-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>More thoughts… wondering whether the problem is partly the independence assumption in the VB approximation. It seems the likelihood for the eigenvector is quite flat, so we should be able to get to the sparse solution quite easily. But I guess the posterior on (u,v) is quite dependent on one another. Maybe we can make a low-rank approximation to the posterior instead of independence?</p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -2441,23 +2529,25 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] flashr_0.6-7    sparsepca_0.1.2
+[1] EbayesThresh_1.4-12 sparsepca_0.1.2     magrittr_1.5       
+[4] flashier_0.2.7      flashr_0.6-7       
 
 loaded via a namespace (and not attached):
- [1] Rcpp_1.0.5       plyr_1.8.6       pillar_1.4.6     compiler_3.6.0  
- [5] later_1.1.0.1    git2r_0.27.1     workflowr_1.6.2  tools_3.6.0     
- [9] digest_0.6.25    gtable_0.3.0     evaluate_0.14    lifecycle_0.2.0 
-[13] tibble_3.0.3     lattice_0.20-41  pkgconfig_2.0.3  rlang_0.4.7     
-[17] Matrix_1.2-18    rstudioapi_0.11  yaml_2.2.1       ebnm_0.1-24     
-[21] xfun_0.16        invgamma_1.1     dplyr_1.0.1      stringr_1.4.0   
-[25] knitr_1.29       generics_0.0.2   fs_1.4.2         vctrs_0.3.2     
-[29] tidyselect_1.1.0 rprojroot_1.3-2  grid_3.6.0       glue_1.4.1      
-[33] R6_2.4.1         rmarkdown_2.3    mixsqp_0.3-43    irlba_2.3.3     
-[37] reshape2_1.4.4   purrr_0.3.4      ggplot2_3.3.2    ashr_2.2-51     
-[41] magrittr_1.5     whisker_0.4      scales_1.1.1     backports_1.1.8 
-[45] promises_1.1.1   ellipsis_0.3.1   htmltools_0.5.0  rsvd_1.0.3      
-[49] softImpute_1.4   colorspace_1.4-1 httpuv_1.5.4     stringi_1.4.6   
-[53] munsell_0.5.0    truncnorm_1.0-8  SQUAREM_2020.3   crayon_1.3.4    </code></pre>
+ [1] wavethresh_4.6.8 softImpute_1.4   tidyselect_1.1.0 xfun_0.16       
+ [5] ashr_2.2-51      purrr_0.3.4      reshape2_1.4.4   lattice_0.20-41 
+ [9] colorspace_1.4-1 vctrs_0.3.2      generics_0.0.2   htmltools_0.5.0 
+[13] yaml_2.2.1       rlang_0.4.7      mixsqp_0.3-43    later_1.1.0.1   
+[17] pillar_1.4.6     glue_1.4.1       lifecycle_0.2.0  plyr_1.8.6      
+[21] stringr_1.4.0    munsell_0.5.0    gtable_0.3.0     workflowr_1.6.2 
+[25] rsvd_1.0.3       evaluate_0.14    knitr_1.29       httpuv_1.5.4    
+[29] invgamma_1.1     irlba_2.3.3      parallel_3.6.0   Rcpp_1.0.5      
+[33] promises_1.1.1   backports_1.1.8  scales_1.1.1     truncnorm_1.0-8 
+[37] fs_1.4.2         ggplot2_3.3.2    digest_0.6.25    stringi_1.4.6   
+[41] dplyr_1.0.1      ebnm_0.1-24      grid_3.6.0       rprojroot_1.3-2 
+[45] tools_3.6.0      tibble_3.0.3     crayon_1.3.4     whisker_0.4     
+[49] pkgconfig_2.0.3  MASS_7.3-51.6    ellipsis_0.3.1   Matrix_1.2-18   
+[53] SQUAREM_2020.3   rmarkdown_2.3    rstudioapi_0.11  R6_2.4.1        
+[57] git2r_0.27.1     compiler_3.6.0  </code></pre>
 </div>
 </div>
 </div>
