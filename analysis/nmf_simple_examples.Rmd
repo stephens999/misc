@@ -1,0 +1,170 @@
+---
+title: "nmf_simple_examples"
+author: "Matthew Stephens"
+date: "2020-10-09"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+
+```{r}
+library(NNLM)
+```
+
+# Introduction
+
+I wanted to try some simple non-negative covariance examples,
+to assess challenges of getting convergence.
+
+
+# Simple 3-factor case
+
+I set up a covariance matrix with 3 factors (columns of L).
+I add some very small noise. 
+```{r}
+set.seed(123)
+L=  matrix(0,nrow=100,ncol=3)
+L[1:50,1] = 1
+L[51:100,2] = 1
+L[26:75,3] = 1
+S = L %*% t(L) + rnorm(100*100,0,0.01)
+image(S)
+```
+
+## SVD 
+
+Start with svd: you can see the PCs kind of pick up the three factors,
+although not exactly of course (SVD is not non-negative....)
+So this should be a relatively easy case.
+```{r}
+S.svd = svd(S)
+par(mfcol=c(1,3))
+plot(S.svd$u[,1],main='first eigenvector')
+plot(S.svd$u[,2],main='second eigenvector')
+plot(S.svd$u[,3],main='third eigenvector')
+```
+
+## NMF
+
+Try non-negative matrix factorization. It works well here.
+```{r}
+S.nnmf = nnmf(S,k=3)
+par(mfcol=c(1,3))
+plot(S.nnmf$W[,1])
+plot(S.nnmf$W[,2])
+plot(S.nnmf$W[,3])
+```
+
+
+# Harder 9-factor case
+
+## Negligible noise 
+
+Now I do 9 non-negative factors, each having 20 positive
+entries (out of 100).
+
+
+```{r}
+K=9
+set.seed(1)
+L2 = matrix(0,nrow=100,ncol=K)
+for(i in 1:K){L2[sample(1:100,20),i]=1}
+S2 = L2 %*% t(L2) +rnorm(100*100,0,0.01)
+image(S2)
+```
+
+### SVD 
+
+Do svd. We see the rank 10 structure clearly, but the
+actual factors are clearly now all mixed up among the PCs.
+```{r}
+S2.svd = svd(S2)
+plot(S2.svd$d[1:30],main="eigenvalues")
+par(mfcol=c(1,3))
+plot(S2.svd$u[,1],main='first eigenvector')
+plot(S2.svd$u[,2],main='second eigenvector')
+plot(S2.svd$u[,3],main='third eigenvector')
+```
+
+### NMF 
+
+NMF -- slightly suprisingly to me it looks great! (I did
+give it the right K)
+```{r}
+S2.nnmf = nnmf(S2,k=K)
+# for each column of W find the best matching column in L
+get_bestmatch = function(L,W){
+  LW.c = (cor(L,W)) # finds correlation between columns of L and W
+  bestmatch = rep(0, ncol(W))
+  for(i in 1:ncol(W)){
+    bestmatch[i] = which.max(LW.c[,i])
+  }
+  return(bestmatch)
+}
+
+bm = get_bestmatch(L2,S2.nnmf$W)
+par(mfcol=c(3,3),mai=rep(0.25,4))
+for(i in 1:K){
+  plot(L2[,bm[i]],S2.nnmf$W[,i], main="True L vs Estimate")
+}
+
+```
+
+
+## Higher noise (NMF)
+
+Try adding some noise and running NMF. Now the results are (as expected)
+less clean. It would be interesting to look to see if
+ we can improve performance here
+ by using penalties or EB shrinkage methods.
+ 
+```{r}
+S2n = S2+rnorm(100*100,0,1)
+S2n.nnmf = nnmf(S2n,k=K)
+
+bm = get_bestmatch(L2,S2n.nnmf$W)
+par(mfcol=c(3,3),mai=rep(0.25,4))
+for(i in 1:K){
+  plot(L2[,bm[i]],S2n.nnmf$W[,i], main="True L vs Estimate")
+}
+
+```
+
+
+## Tree-like case
+
+We have found some challenges with tree-like case, so we try that here. This simulates a symmetric 4-tip tree (6 branches total),
+with a factor for each branch.
+```{r}
+set.seed(1)
+L3 = matrix(0,nrow=100,ncol=6)
+L3[1:50,1] = 1 #top split L
+L3[51:100,2] = 1 # top split R
+L3[1:25,3]  = 1
+L3[26:50,4] = 1
+L3[51:75,5] = 1
+L3[76:100,6] = 1
+S3 = L3 %*% t(L3) +rnorm(100*100,0,0.01)
+image(S3)
+```
+
+The results confirm that finding the representation that
+we want (in which each factor represents a branch) is not
+achieved by off-the-shelf methods. This is essentially
+because many factors (in the branch represenation)
+are linearly dependent with one another.
+
+Here, many of the estimated factors from NMF correlate most with
+the top split (factor 1 or 2) and have partial memberships
+that capture some of the lower splits.
+
+```{r}
+S3.nnmf = nnmf(S3,k=7)
+bm = get_bestmatch(L3,S3.nnmf$W)
+par(mfcol=c(3,3),mai=rep(0.25,4))
+for(i in 1:7){
+  plot(L3[,bm[i]],S3.nnmf$W[,i], main=paste0("True L (",bm[i], ") vs Estimate"))
+}
+```
+
