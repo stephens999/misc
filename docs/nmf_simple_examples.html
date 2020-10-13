@@ -401,7 +401,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2020-10-09
+<strong>Last updated:</strong> 2020-10-13
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -492,16 +492,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree170c0bc1ca253735387d12d490cfaf4c376670cbtargetblank170c0bca"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/170c0bc1ca253735387d12d490cfaf4c376670cb" target="_blank">170c0bc</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree051454d4f076702b38aadf1995173b1f168bcb8etargetblank051454da"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/051454d4f076702b38aadf1995173b1f168bcb8e" target="_blank">051454d</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree170c0bc1ca253735387d12d490cfaf4c376670cbtargetblank170c0bca" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree051454d4f076702b38aadf1995173b1f168bcb8etargetblank051454da" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/170c0bc1ca253735387d12d490cfaf4c376670cb" target="_blank">170c0bc</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/051454d4f076702b38aadf1995173b1f168bcb8e" target="_blank">051454d</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -696,6 +696,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/051454d4f076702b38aadf1995173b1f168bcb8e/analysis/nmf_simple_examples.Rmd" target="_blank">051454d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-10-13
+</td>
+<td>
+workflowr::wflow_publish(“nmf_simple_examples.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/ef937bb177b0e5e326d327a56f75e048446cce71/docs/nmf_simple_examples.html" target="_blank">ef937bb</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-10-09
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/170c0bc1ca253735387d12d490cfaf4c376670cb/analysis/nmf_simple_examples.Rmd" target="_blank">170c0bc</a>
 </td>
 <td>
@@ -715,7 +749,9 @@ workflowr::wflow_publish(“nmf_simple_examples.Rmd”)
 </div>
 </div>
 </div>
-<pre class="r"><code>library(NNLM)</code></pre>
+<pre class="r"><code>library(NNLM)
+library(&quot;flashier&quot;)
+library(&quot;magrittr&quot;)</code></pre>
 <div id="introduction" class="section level1">
 <h1>Introduction</h1>
 <p>I wanted to try some simple non-negative covariance examples, to assess challenges of getting convergence.</p>
@@ -731,6 +767,43 @@ L[26:75,3] = 1
 S = L %*% t(L) + rnorm(100*100,0,0.01)
 image(S)</code></pre>
 <p><img src="figure/nmf_simple_examples.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-1">
+Past versions of unnamed-chunk-2-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/ef937bb177b0e5e326d327a56f75e048446cce71/docs/figure/nmf_simple_examples.Rmd/unnamed-chunk-2-1.png" target="_blank">ef937bb</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-10-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <div id="svd" class="section level2">
 <h2>SVD</h2>
 <p>Start with svd: you can see the PCs kind of pick up the three factors, although not exactly of course (SVD is not non-negative….) So this should be a relatively easy case.</p>
@@ -740,6 +813,43 @@ plot(S.svd$u[,1],main=&#39;first eigenvector&#39;)
 plot(S.svd$u[,2],main=&#39;second eigenvector&#39;)
 plot(S.svd$u[,3],main=&#39;third eigenvector&#39;)</code></pre>
 <p><img src="figure/nmf_simple_examples.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-1">
+Past versions of unnamed-chunk-3-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-3-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/ef937bb177b0e5e326d327a56f75e048446cce71/docs/figure/nmf_simple_examples.Rmd/unnamed-chunk-3-1.png" target="_blank">ef937bb</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-10-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="nmf" class="section level2">
 <h2>NMF</h2>
@@ -750,6 +860,43 @@ plot(S.nnmf$W[,1])
 plot(S.nnmf$W[,2])
 plot(S.nnmf$W[,3])</code></pre>
 <p><img src="figure/nmf_simple_examples.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-1">
+Past versions of unnamed-chunk-4-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/ef937bb177b0e5e326d327a56f75e048446cce71/docs/figure/nmf_simple_examples.Rmd/unnamed-chunk-4-1.png" target="_blank">ef937bb</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-10-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 </div>
 <div id="harder-9-factor-case" class="section level1">
@@ -764,17 +911,128 @@ for(i in 1:K){L2[sample(1:100,20),i]=1}
 S2 = L2 %*% t(L2) +rnorm(100*100,0,0.01)
 image(S2)</code></pre>
 <p><img src="figure/nmf_simple_examples.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-1">
+Past versions of unnamed-chunk-5-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/ef937bb177b0e5e326d327a56f75e048446cce71/docs/figure/nmf_simple_examples.Rmd/unnamed-chunk-5-1.png" target="_blank">ef937bb</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-10-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <div id="svd-1" class="section level3">
 <h3>SVD</h3>
 <p>Do svd. We see the rank 10 structure clearly, but the actual factors are clearly now all mixed up among the PCs.</p>
 <pre class="r"><code>S2.svd = svd(S2)
 plot(S2.svd$d[1:30],main=&quot;eigenvalues&quot;)</code></pre>
 <p><img src="figure/nmf_simple_examples.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-1">
+Past versions of unnamed-chunk-6-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/ef937bb177b0e5e326d327a56f75e048446cce71/docs/figure/nmf_simple_examples.Rmd/unnamed-chunk-6-1.png" target="_blank">ef937bb</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-10-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>par(mfcol=c(1,3))
 plot(S2.svd$u[,1],main=&#39;first eigenvector&#39;)
 plot(S2.svd$u[,2],main=&#39;second eigenvector&#39;)
 plot(S2.svd$u[,3],main=&#39;third eigenvector&#39;)</code></pre>
 <p><img src="figure/nmf_simple_examples.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-2">
+Past versions of unnamed-chunk-6-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/ef937bb177b0e5e326d327a56f75e048446cce71/docs/figure/nmf_simple_examples.Rmd/unnamed-chunk-6-2.png" target="_blank">ef937bb</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-10-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="nmf-1" class="section level3">
 <h3>NMF</h3>
@@ -796,11 +1054,48 @@ for(i in 1:K){
   plot(L2[,bm[i]],S2.nnmf$W[,i], main=&quot;True L vs Estimate&quot;)
 }</code></pre>
 <p><img src="figure/nmf_simple_examples.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-7-1">
+Past versions of unnamed-chunk-7-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-7-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/ef937bb177b0e5e326d327a56f75e048446cce71/docs/figure/nmf_simple_examples.Rmd/unnamed-chunk-7-1.png" target="_blank">ef937bb</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-10-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 </div>
 <div id="higher-noise-nmf" class="section level2">
 <h2>Higher noise (NMF)</h2>
-<p>Try adding some noise and running NMF. Now the results are (as expected) less clean. It would be interesting to look to see if we can improve performance here by using penalties or EB shrinkage methods.</p>
+<p>Try adding some noise and running NMF. Now the results are (as expected) less clean.</p>
 <pre class="r"><code>S2n = S2+rnorm(100*100,0,1)
 S2n.nnmf = nnmf(S2n,k=K)
 
@@ -810,6 +1105,112 @@ for(i in 1:K){
   plot(L2[,bm[i]],S2n.nnmf$W[,i], main=&quot;True L vs Estimate&quot;)
 }</code></pre>
 <p><img src="figure/nmf_simple_examples.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-1">
+Past versions of unnamed-chunk-8-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-8-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/ef937bb177b0e5e326d327a56f75e048446cce71/docs/figure/nmf_simple_examples.Rmd/unnamed-chunk-8-1.png" target="_blank">ef937bb</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-10-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Here I see if I can improve performance by using EB shrinkage methods. (Could also try penalties?). In this one I just use a non-negative prior (not 0-1).</p>
+<pre class="r"><code>S2n.f &lt;- flash.init(S2n) %&gt;% flash.init.factors(list(S2n.nnmf$W,t(S2n.nnmf$H)),prior.family = prior.nonnegative()) %&gt;% flash.backfit()</code></pre>
+<pre><code>Backfitting 9 factors (tolerance: 1.49e-04)...
+  Difference between iterations is within 1.0e+01...
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+  Difference between iterations is within 1.0e-02...
+  Difference between iterations is within 1.0e-03...
+Wrapping up...
+Done.</code></pre>
+<pre class="r"><code>for(i in 1:K){
+  plot(L2[,bm[i]],S2n.f$loadings.pm[[1]][,i], main=&quot;True L vs Estimate&quot;)
+}</code></pre>
+<p><img src="figure/nmf_simple_examples.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-1">
+Past versions of unnamed-chunk-9-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/ef937bb177b0e5e326d327a56f75e048446cce71/docs/figure/nmf_simple_examples.Rmd/unnamed-chunk-9-1.png" target="_blank">ef937bb</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-10-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/nmf_simple_examples.Rmd/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/nmf_simple_examples.Rmd/unnamed-chunk-9-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/nmf_simple_examples.Rmd/unnamed-chunk-9-4.png" width="672" style="display: block; margin: auto;" /><img src="figure/nmf_simple_examples.Rmd/unnamed-chunk-9-5.png" width="672" style="display: block; margin: auto;" /><img src="figure/nmf_simple_examples.Rmd/unnamed-chunk-9-6.png" width="672" style="display: block; margin: auto;" /><img src="figure/nmf_simple_examples.Rmd/unnamed-chunk-9-7.png" width="672" style="display: block; margin: auto;" /><img src="figure/nmf_simple_examples.Rmd/unnamed-chunk-9-8.png" width="672" style="display: block; margin: auto;" /><img src="figure/nmf_simple_examples.Rmd/unnamed-chunk-9-9.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Although the plots do not look so different, the EB shrinkage ddoes consistently improves the correlations between the true values and the estimates:</p>
+<pre class="r"><code>cors = matrix(nrow=K, ncol=2)
+colnames(cors) = c(&quot;flash&quot;,&quot;nnmf&quot;)
+for(i in 1:K){
+  cors[i,] = (c(cor(L2[,bm[i]],S2n.f$loadings.pm[[1]][,i]), cor(L2[,bm[i]],S2n.nnmf$W[,i])))
+}
+print(cors,digits=2)</code></pre>
+<pre><code>      flash nnmf
+ [1,]  0.96 0.91
+ [2,]  0.95 0.92
+ [3,]  0.95 0.90
+ [4,]  0.98 0.94
+ [5,]  0.95 0.90
+ [6,]  0.95 0.89
+ [7,]  0.96 0.92
+ [8,]  0.96 0.93
+ [9,]  0.93 0.88</code></pre>
 </div>
 <div id="tree-like-case" class="section level2">
 <h2>Tree-like case</h2>
@@ -824,7 +1225,7 @@ L3[51:75,5] = 1
 L3[76:100,6] = 1
 S3 = L3 %*% t(L3) +rnorm(100*100,0,0.01)
 image(S3)</code></pre>
-<p><img src="figure/nmf_simple_examples.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/nmf_simple_examples.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>The results confirm that finding the representation that we want (in which each factor represents a branch) is not achieved by off-the-shelf methods. This is essentially because many factors (in the branch represenation) are linearly dependent with one another.</p>
 <p>Here, many of the estimated factors from NMF correlate most with the top split (factor 1 or 2) and have partial memberships that capture some of the lower splits.</p>
 <pre class="r"><code>S3.nnmf = nnmf(S3,k=7)
@@ -833,7 +1234,7 @@ par(mfcol=c(3,3),mai=rep(0.25,4))
 for(i in 1:7){
   plot(L3[,bm[i]],S3.nnmf$W[,i], main=paste0(&quot;True L (&quot;,bm[i], &quot;) vs Estimate&quot;))
 }</code></pre>
-<p><img src="figure/nmf_simple_examples.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/nmf_simple_examples.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -857,18 +1258,20 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] NNLM_0.4.4
+[1] magrittr_1.5   flashier_0.2.7 NNLM_0.4.4    
 
 loaded via a namespace (and not attached):
- [1] Rcpp_1.0.5       rstudioapi_0.11  whisker_0.4      knitr_1.29      
- [5] magrittr_1.5     workflowr_1.6.2  R6_2.4.1         rlang_0.4.7     
- [9] stringr_1.4.0    tools_3.6.0      xfun_0.16        git2r_0.27.1    
-[13] htmltools_0.5.0  ellipsis_0.3.1   yaml_2.2.1       digest_0.6.25   
-[17] rprojroot_1.3-2  tibble_3.0.3     lifecycle_0.2.0  crayon_1.3.4    
-[21] later_1.1.0.1    vctrs_0.3.4      fs_1.4.2         promises_1.1.1  
-[25] glue_1.4.2       evaluate_0.14    rmarkdown_2.3    stringi_1.4.6   
-[29] compiler_3.6.0   pillar_1.4.6     backports_1.1.10 httpuv_1.5.4    
-[33] pkgconfig_2.0.3 </code></pre>
+ [1] Rcpp_1.0.5       pillar_1.4.6     compiler_3.6.0   later_1.1.0.1   
+ [5] git2r_0.27.1     workflowr_1.6.2  tools_3.6.0      digest_0.6.25   
+ [9] evaluate_0.14    lifecycle_0.2.0  tibble_3.0.3     lattice_0.20-41 
+[13] pkgconfig_2.0.3  rlang_0.4.7      Matrix_1.2-18    rstudioapi_0.11 
+[17] parallel_3.6.0   yaml_2.2.1       ebnm_0.1-24      xfun_0.16       
+[21] invgamma_1.1     stringr_1.4.0    knitr_1.29       fs_1.4.2        
+[25] vctrs_0.3.4      rprojroot_1.3-2  grid_3.6.0       glue_1.4.2      
+[29] R6_2.4.1         rmarkdown_2.3    mixsqp_0.3-43    irlba_2.3.3     
+[33] ashr_2.2-51      whisker_0.4      backports_1.1.10 promises_1.1.1  
+[37] ellipsis_0.3.1   htmltools_0.5.0  httpuv_1.5.4     stringi_1.4.6   
+[41] truncnorm_1.0-8  SQUAREM_2020.3   crayon_1.3.4    </code></pre>
 </div>
 </div>
 </div>
