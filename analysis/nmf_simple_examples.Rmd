@@ -136,6 +136,8 @@ In this one I just use a non-negative prior (not 0-1).
 
 ```{r}
 S2n.f <- flash.init(S2n) %>% flash.init.factors(list(S2n.nnmf$W,t(S2n.nnmf$H)),prior.family = prior.nonnegative()) %>% flash.backfit()
+
+par(mfcol=c(3,3),mai=rep(0.25,4))
 for(i in 1:K){
   plot(L2[,bm[i]],S2n.f$loadings.pm[[1]][,i], main="True L vs Estimate")
 }
