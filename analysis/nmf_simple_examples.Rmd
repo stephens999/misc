@@ -10,6 +10,8 @@ editor_options:
 
 ```{r}
 library(NNLM)
+library("flashier")
+library("magrittr")
 ```
 
 # Introduction
@@ -115,9 +117,7 @@ for(i in 1:K){
 ## Higher noise (NMF)
 
 Try adding some noise and running NMF. Now the results are (as expected)
-less clean. It would be interesting to look to see if
- we can improve performance here
- by using penalties or EB shrinkage methods.
+less clean. 
  
 ```{r}
 S2n = S2+rnorm(100*100,0,1)
@@ -130,6 +130,29 @@ for(i in 1:K){
 }
 
 ```
+
+Here I see if I can improve performance by using EB shrinkage methods. (Could also try penalties?).
+In this one I just use a non-negative prior (not 0-1).
+
+```{r}
+S2n.f <- flash.init(S2n) %>% flash.init.factors(list(S2n.nnmf$W,t(S2n.nnmf$H)),prior.family = prior.nonnegative()) %>% flash.backfit()
+for(i in 1:K){
+  plot(L2[,bm[i]],S2n.f$loadings.pm[[1]][,i], main="True L vs Estimate")
+}
+
+```
+
+Although the plots do not look so different,
+the EB shrinkage ddoes consistently improves the correlations between the true values and the estimates:
+```{r}
+cors = matrix(nrow=K, ncol=2)
+colnames(cors) = c("flash","nnmf")
+for(i in 1:K){
+  cors[i,] = (c(cor(L2[,bm[i]],S2n.f$loadings.pm[[1]][,i]), cor(L2[,bm[i]],S2n.nnmf$W[,i])))
+}
+print(cors,digits=2)
+```
+
 
 
 ## Tree-like case
