@@ -162,6 +162,51 @@ ridge_em4 = function(y, X, s2, sb2,  niter=10){
 ```
 
 
+## Another redundant parameterization
+
+Here I consider
+$$y \sim N(s_b Xb, s^2 I)$$
+where
+$$b \sim N(0,s^2 \lambda^2I).$$
+
+This is like the redundant parameterization above,
+except that the prior on $b$ is scaled by the
+residual variance ($s^2$).
+This is motivated by the result in the Blasso paper that this makes
+the posterior on $s^2,b$ convex.
+
+
+```{r}
+ridge_em5 = function(y,X, s2, sb2, l2, niter=10){
+  XtX = t(X) %*% X
+  Xty = t(X) %*% y
+  yty = t(y) %*% y
+  n = length(y)
+  p = ncol(X)
+  loglik = rep(0,niter)
+  for(i in 1:niter){
+    
+    SigmaY = l2* s2* sb2 *(X %*% t(X)) + diag(s2,n)
+    loglik[i] = mvtnorm::dmvnorm(as.vector(y),sigma = SigmaY,log=TRUE)
+    
+    #V = chol2inv(chol(XtX+ diag(s2/(sb2*l2),p))) 
+    
+    Sigma1 = chol2inv(chol((sb2/s2) * XtX + diag(1/(s2*l2),p) ))  # posterior variance of b
+    mu1 = (sqrt(sb2)/s2)*as.vector(Sigma1 %*% Xty) # posterior mean of b
+    
+   
+    sb2 = (sum(mu1*Xty)/sum(diag(XtX %*% (mu1 %*% t(mu1) + Sigma1))))^2  #same as em3
+    
+    s2 = as.vector((sum((mu1^2+diag(Sigma1))/l2)+ yty + sb2*sum(diag(XtX %*% (mu1 %*% t(mu1) + Sigma1)))- 2*sqrt(sb2)*sum(Xty*mu1))/(n+p))  
+    # as in em3 but adds sum(mu1^2/l2) to numerator and p to demoninator
+     
+    l2 = mean(mu1^2+diag(Sigma1))/s2 #as in em3 but divided by s2
+   
+  }
+  return(list(s2=s2,sb2=sb2,l2=l2,loglik=loglik,postmean=mu1*sqrt(sb2)))
+}
+```
+
 ## Simple Simulations
 
 This is a simple simulation with independent design matrix.
@@ -186,6 +231,8 @@ y.em1 = ridge_em1(y,X,1,1,100)
 y.em2 = ridge_em2(y,X,1,1,100)
 y.em3 = ridge_em3(y,X,1,1,1,100)
 y.em4 = ridge_em4(y,X,1,1,100)
+y.em5 = ridge_em5(y,X,1,1,1,100)
+
 
 plot_loglik = function(res){
   maxloglik = max(res[[1]]$loglik)
@@ -205,7 +252,7 @@ plot_loglik = function(res){
   }
 
 }
-res = list(y.em1,y.em2,y.em3,y.em4)
+res = list(y.em1,y.em2,y.em3,y.em4,y.em5)
 plot_loglik(res)
 ```
 
@@ -220,8 +267,9 @@ y.em1 = ridge_em1(y,X,1,1,100)
 y.em2 = ridge_em2(y,X,1,1,100)
 y.em3 = ridge_em3(y,X,1,1,1,100)
 y.em4 = ridge_em4(y,X,1,1,100)
+y.em5 = ridge_em5(y,X,1,1,100)
 
-plot_loglik(list(y.em1,y.em2,y.em3,y.em4))
+plot_loglik(list(y.em1,y.em2,y.em3,y.em4,y.em5))
 ```
 
 ## Trendfiltering Simulations
@@ -258,12 +306,17 @@ lines(X %*% y.em3$postmean,col=3,lwd=2)
 
 y.em4 = ridge_em4(y,X,1,1,100)
 lines(X %*% y.em4$postmean,col=4,lwd=2)
+
+y.em5 = ridge_em5(y,X,1,1,1,100)
+lines(X %*% y.em4$postmean,col=5,lwd=2)
+
+
 ```
 
 
 Look at the likelihoods:
 ```{r}
-plot_loglik(list(y.em1,y.em2,y.em3,y.em4))
+plot_loglik(list(y.em1,y.em2,y.em3,y.em4,y.em5))
 ```
 
 Run the second one longer and check it:
@@ -273,13 +326,15 @@ plot_loglik(list(y.em1,y.em2,y.em3,y.em4))
 
 y.em1$sb2
 y.em2$sb2
-y.em3$sb2*y.em3$l2
+y.em3$sb2 * y.em3$l2
 y.em4$sb2 * y.em4$s2
+y.em5$sb2 * y.em5$l2 * y.em5$s2
 
 y.em1$s2
 y.em2$s2
 y.em3$s2
 y.em4$s2
+y.em5$s2
 ```
 
 
@@ -291,7 +346,8 @@ y.em1 = ridge_em1(y,X,10,1,100)
 y.em2 = ridge_em2(y,X,10,1,100)
 y.em3 = ridge_em3(y,X,10,1,1,100)
 y.em4 = ridge_em4(y,X,10,1,100)
-plot_loglik(list(y.em1,y.em2,y.em3,y.em4))
+y.em5 = ridge_em5(y,X,10,1,1,100)
+plot_loglik(list(y.em1,y.em2,y.em3,y.em4,y.em5))
 ```
 
 
@@ -301,7 +357,8 @@ y.em1 = ridge_em1(y,X,1,10,100)
 y.em2 = ridge_em2(y,X,1,10,100)
 y.em3 = ridge_em3(y,X,1,10,10,100)
 y.em4 = ridge_em4(y,X,1,10,100)
-plot_loglik(list(y.em1,y.em2,y.em3,y.em4))
+y.em5 = ridge_em5(y,X,1,10,10,100)
+plot_loglik(list(y.em1,y.em2,y.em3,y.em4,y.em5))
 ```
 
 Try starting both in wrong place. Interestingly in this example em4 seems to converge
@@ -311,7 +368,8 @@ y.em1 = ridge_em1(y,X,.1,10,100)
 y.em2 = ridge_em2(y,X,.1,10,100)
 y.em3 = ridge_em3(y,X,.1,10,10,100)
 y.em4 = ridge_em4(y,X,.1,10,100)
-plot_loglik(list(y.em1,y.em2,y.em3,y.em4))
+y.em5 = ridge_em5(y,X,.1,10,10,100)
+plot_loglik(list(y.em1,y.em2,y.em3,y.em4,y.em5))
 y.em4$s2
 y.em1$s2
 ```
@@ -346,18 +404,32 @@ lines(X %*% y.em3$postmean,col=3,lwd=2)
 y.em4 = ridge_em4(y,X,1,1,100)
 lines(X %*% y.em4$postmean,col=4,lwd=2)
 
+y.em5 = ridge_em5(y,X,1,1,1,100)
+lines(X %*% y.em5$postmean,col=5,lwd=2)
+
 ```
 
-The EM2 and EM3 converge faster here:
+The EM2 and EM3 and EM5 converge faster here:
 ```{r}
-plot_loglik(list(y.em1,y.em2,y.em3,y.em4))
+plot_loglik(list(y.em1,y.em2,y.em3,y.em4,y.em5))
 ```
 
 
 Try starting the expanded algorithm from very large lambda... it still seems to work.
 ```{r}
 y.em3b = ridge_em3(y,X,1,1,100,100)
-plot_loglik(list(y.em1,y.em2,y.em3b,y.em4))
+y.em5b = ridge_em5(y,X,1,1,100,100)
+
+plot_loglik(list(y.em1,y.em2,y.em3b,y.em4,y.em5b))
 ```
 
-The next step seems to be to combine the expanded idea with algorithm em4....
+
+### Possible next steps
+
+It might be interesting to combine the expanded idea with algorithm em4.
+
+It might also be interesting to add another redundant parameter multiplying the residual variance in the second redundant parameterization, so that some of the residual variance
+is tied to the prior variance and some is not.
+
+
+
