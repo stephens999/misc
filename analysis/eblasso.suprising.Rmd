@@ -1,0 +1,86 @@
+---
+title: "eblasso.suprising"
+author: "Matthew Stephens"
+date: "2020-11-04"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+library("ebmr.alpha")
+```
+
+
+## Introduction
+
+Here I document a result I found surprising from the (variational) 
+Empirical Bayes version of
+lasso (EBlasso). 
+
+One caveat is that this implementation is preliminary, but nonetheless
+my best guess is that it is correct.
+
+
+### Simulation
+
+First I simulate some data with highly sparse effects 
+(2 effects out of 200) and n<p.
+
+```{r}
+set.seed(100)
+n = 50
+p = 200
+X = matrix(rnorm(n*p),nrow=n,ncol=p)
+
+btrue = rep(0,p)
+btrue[1] = 1
+btrue[2] = -1
+y = X %*% btrue + rnorm(n)
+```
+
+The total variance of `y` is `r var(y)` and the residual variance is 1.
+So these two signals explain a bit over half the variance of `y`.
+
+### Fitting
+
+These two commands fit the EB ridge and EB lasso models:
+```{r}
+y.fit.ebr = ebmr(X,y, maxiter = 200, ebnv_fn = ebnv.pm)
+y.fit.eblasso = ebmr(X, y , maxiter = 200, ebnv_fn = ebnv.exp)
+```
+
+### Results
+
+Here was the suprise (to me): the residual variances are completely different.
+```{r}
+y.fit.ebr$residual_variance
+y.fit.eblasso$residual_variance
+```
+
+And eblasso is essentially interpolating the data:
+```{r}
+plot(y,X %*% coef(y.fit.eblasso), ylab="Fitted values, eblasso")
+```
+
+
+Compare the ELBOs: ridge has better elbo.
+```{r}
+y.fit.ebr$elbo
+y.fit.eblasso$elbo
+```
+
+
+Fitted coefficients (recall the first two are non-zero)
+```{r}
+plot(coef(y.fit.ebr), main="fitted coefficients, Ridge (black) and eblasso (red)",ylim=c(-0.55,0.55))
+points(coef(y.fit.eblasso),ylim=c(-0.55,0.55),col=2)
+```
+
+RMSE of fitted coefficients: blasso is better.
+```{r}
+sqrt(mean((coef(y.fit.ebr)- btrue)^2))
+sqrt(mean((coef(y.fit.eblasso)- btrue)^2))
+```
+
+
