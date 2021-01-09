@@ -1,0 +1,65 @@
+---
+title: "running01"
+author: "Matthew Stephens"
+date: "2021-01-09"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+The goal here is to take a quick look at some of my running data.
+
+# Read in data
+
+Here I read in the data and convert pace to a decimal.
+```{r}
+library(lubridate)
+df.m = read.csv("../data/running_data_matthew.csv",na.strings = "--")
+df.c = read.csv("../data/running_data_chris.csv",na.strings = "--")
+
+# change the times to decimals
+time2dec= function(x){
+  sapply(strsplit(as.character(x),":"),
+  function(x) {
+    x <- as.numeric(x)
+    x[1]+x[2]/60
+  })
+}
+df.m$Avg.Pace=time2dec(df.m$Avg.Pace)
+df.c$Avg.Pace=time2dec(df.c$Avg.Pace)
+
+#convert dates using lubridate
+# Note that the two files have slightly different date formats
+df.m$Date = as.Date(ymd_hms(df.m$Date)) #as.Date removes the time information
+df.c$Date = mdy(df.c$Date)
+```
+
+# Data Analysis
+
+
+## Pace over time
+
+Note that the gap in 2019 corresponds to an injury period.
+For MS the data before that period come from an FR70, whereas after that
+period was a FR245.
+
+One issue with these data is that I sometimes forget to switch my watch off immmediately after running, which results in slow average pace. Garmin connect displays moving pace for each activity, but it is not in the downloaded data. I need to work out how to download that.
+```{r}
+plot(df.c$Date,df.c$Avg.Pace,ylim=c(6,10),xlab="Date", ylab="Pace", main="Average Pace over time (black=MS red=CK)",col=2)
+points(df.m$Date,df.m$Avg.Pace,col=1)
+```
+
+
+## HR vs Pace
+
+As expected, HR and Pace are correlated for MS (black), with faster paces being 
+higher HR.
+But the correlation is less clear for CK (red).
+```{r}
+plot(df.m$Avg.HR,df.m$Avg.Pace,xlim=c(120,180),ylim=c(6,10),xlab="Average Heartrate (bpm)", ylab="Average Pace (min per mile)", main="Pace vs HR (black=MS red=CK)")
+points(df.c$Avg.HR,df.c$Avg.Pace,col=2)
+```
+
+
