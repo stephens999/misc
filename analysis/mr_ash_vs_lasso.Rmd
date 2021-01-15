@@ -20,6 +20,12 @@ his set-up, and then simplified. (Note that I have set the columns
 of $X$ to have norm approximately 1 to make connections with the mr.ash paper
 easier.)
 
+I ran mr.ash with both estimating the prior and fixing the prior (and residual variance) to the true value. I initialized from the solution
+obtained by lasso from glmnet. I compare the mean squared errors.
+ With estimated prior mr ash is consistently worse than lasso.
+ With the correct prior the performance is closer, but still usually worse.
+ 
+
 ```{r}
   set.seed(123)
   n <- 500
@@ -30,6 +36,7 @@ easier.)
   rmse_mrash = rep(0,nrep)
   rmse_glmnet = rep(0,nrep)
   rmse_ridge = rep(0,nrep)
+  rmse_mrash_fixprior = rep(0,nrep)
   
   for(i in 1:nrep){
     sim=list()
@@ -40,21 +47,25 @@ easier.)
 
     sim$B = B
     sim$Y = sim$X %*% sim$B
-    E = rnorm(n,sd = sqrt((1-pve)/(pve))*sd(sim$Y))
+    sigma2 = ((1-pve)/(pve))*sd(sim$Y)^2
+    E = rnorm(n,sd = sqrt(sigma2))
     sim$Y = sim$Y + E
-      
-    fit_mrash <- mr.ash.alpha::mr.ash(sim$X, sim$Y,standardize = FALSE)
-
-    fit_glmnet <- cv.glmnet(x=sim$X, y=sim$Y, family="gaussian", alpha=1, standardize=FALSE)
+    
+    fit_glmnet <- cv.glmnet(x=sim$X, y=sim$Y, family="gaussian", alpha=1, standardize=FALSE)  
+    fit_mrash <- mr.ash.alpha::mr.ash(sim$X, sim$Y,standardize = FALSE,beta.init = coef(fit_glmnet)[-1], max.iter = 10000)
+    fit_mrash_fixprior <- mr.ash.alpha::mr.ash(sim$X, sim$Y, beta.init = coef(fit_glmnet)[-1], standardize = FALSE, sa2 = c(0,1/sigma2), pi = c(0.5,0.5), update.pi=FALSE, update.sigma2 = FALSE, sigma2 = sigma2, max.iter = 10000)
+    
     #fit_ridge <- cv.glmnet(x=sim$X, y=sim$Y, family="gaussian", alpha=0, standardize=FALSE)
    
     rmse_mrash[i] = sqrt(mean((sim$B-fit_mrash$beta)^2))
+    rmse_mrash_fixprior[i] = sqrt(mean((sim$B-fit_mrash_fixprior$beta)^2))
     rmse_glmnet[i] = sqrt(mean((sim$B-coef(fit_glmnet)[-1])^2))
     #rmse_ridge[i] = sqrt(mean((sim$B-coef(fit_ridge)[-1])^2))
   }
   
-  plot(rmse_mrash,rmse_glmnet, xlim=c(0.5,0.7), ylim=c(0.5,0.7), main="red=ridge; black=lasso")
-  #points(rmse_mrash,rmse_ridge,col=2)
+  plot(rmse_mrash,rmse_glmnet, xlim=c(0.5,0.7), ylim=c(0.5,0.7), main="red=true prior; black=estimated prior")
+  
+  points(rmse_mrash_fixprior,rmse_glmnet,col=2)
   abline(a=0,b=1)
   
   
@@ -62,7 +73,7 @@ easier.)
 
 # Attempt to find better initialization
 
-Since the resut is so consistently that mr.ash is worse than lasso here, 
+Since the result is so consistently that mr.ash is worse than lasso here, 
 I'll initially just focus on the last of the simulations above. 
 
 The first thing I wanted to try was fixing the prior to the "true" value.
@@ -86,24 +97,6 @@ Reassuringly, the better solution also has better objective (but only slightly).
 ```{r}
 min(fit_trueg$varobj)
 min(fit_trueg.inittrueb$varobj)
-```
-
-Try running longer. Note that now the worse solution has
-better objective... unfortunate! One caveat is that, after discussion,
-it seems that the computation of the variational objective
-may be unreliable for fixed g.
-```{r}
-fit_trueg_long <- mr.ash.alpha::mr.ash(sim$X, sim$Y,standardize = FALSE, sa2 = c(0,1/s2), pi=c(0.5,0.5), sigma2 = s2, update.pi=FALSE, update.sigma2 = FALSE, intercept=FALSE,min.iter=1000)
-
-fit_trueg.inittrueb_long <- mr.ash.alpha::mr.ash(sim$X, sim$Y,standardize = FALSE, sa2 = c(0,1/s2), beta.init=sim$B, pi=c(0.5,0.5), sigma2 = s2, update.pi=FALSE, update.sigma2 = FALSE, intercept = FALSE,min.iter=1000)
-
-
-min(fit_trueg_long$varobj)
-min(fit_trueg.inittrueb_long$varobj)
-sqrt(mean((sim$B-fit_trueg_long$beta)^2))
-sqrt(mean((sim$B-fit_trueg.inittrueb_long$beta)^2))
-sqrt(mean((sim$B-coef(fit_glmnet)[-1])^2))
-sqrt(mean((sim$B-fit_mrash$beta)^2))
 ```
 
 
@@ -210,7 +203,7 @@ lines(sort(btilde),postmean(sort(btilde), as.vector(fit_mrash_lassoinit$pi), pri
 
 ```
 
-Interestingly the fitted pi from lasso intialization is almost identical to the
+Interestingly the fitted pi from lasso initialization is almost identical to the
 one used in lasso. So actually the prior is the same! It is the sigma2 that must be different....
 ```{r}
 plot(fit_mrash_lassoinit$pi,w)
