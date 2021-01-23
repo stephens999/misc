@@ -97,6 +97,10 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 * [Pseudo-data idea](mr_missing_data.html)
 * [Approximate Inference with missing data](mr_missing_data2.html)
 
+# Approximate message passing and related
+
+* [Compare precision and covariance for ridge regression](prec_vs_cov.html)
+
 # Depletion
 
 * [Using ash for depletion](ash-depletion.html)
