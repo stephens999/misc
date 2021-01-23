@@ -321,7 +321,7 @@ $(document).ready(function () {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2020-11-05
+<strong>Last updated:</strong> 2021-01-23
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 2 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -352,16 +352,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree25fe3ba3d65d1a49ef0a43fce8e2519a424ed208targetblank25fe3baa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/25fe3ba3d65d1a49ef0a43fce8e2519a424ed208" target="_blank">25fe3ba</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree22247d8f88366c0739199620972ee035f41c1912targetblank22247d8a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/22247d8f88366c0739199620972ee035f41c1912" target="_blank">22247d8</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree25fe3ba3d65d1a49ef0a43fce8e2519a424ed208targetblank25fe3baa" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree22247d8f88366c0739199620972ee035f41c1912targetblank22247d8a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/25fe3ba3d65d1a49ef0a43fce8e2519a424ed208" target="_blank">25fe3ba</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/22247d8f88366c0739199620972ee035f41c1912" target="_blank">22247d8</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -472,6 +472,8 @@ Untracked files:
     Untracked:  data/mat_new.csv
     Untracked:  data/matrix_lik.rds
     Untracked:  data/paintor_data/
+    Untracked:  data/running_data_chris.csv
+    Untracked:  data/running_data_matthew.csv
     Untracked:  data/temp.txt
     Untracked:  data/y.txt
     Untracked:  data/y_f.txt
@@ -552,6 +554,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/22247d8f88366c0739199620972ee035f41c1912/analysis/index.Rmd" target="_blank">22247d8</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-01-23
+</td>
+<td>
+workflowr::wflow_publish(“index.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/3514864d89b748f7eeb1bdb1b65f77a46733daa4/docs/index.html" target="_blank">3514864</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-11-05
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -2313,6 +2349,12 @@ Start workflowr project.
 <ul>
 <li><a href="mr_missing_data.html">Pseudo-data idea</a></li>
 <li><a href="mr_missing_data2.html">Approximate Inference with missing data</a></li>
+</ul>
+</div>
+<div id="approximate-message-passing-and-related" class="section level1">
+<h1>Approximate message passing and related</h1>
+<ul>
+<li><a href="prec_vs_cov.html">Compare precision and covariance for ridge regression</a></li>
 </ul>
 </div>
 <div id="depletion" class="section level1">
