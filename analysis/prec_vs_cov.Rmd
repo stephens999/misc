@@ -1,0 +1,99 @@
+---
+title: "prec_vs_cov"
+author: "Matthew Stephens"
+date: "2021-01-22"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+Here I look at the difference between the precision and covariance
+for ridge regression.
+
+With suitable scaling, the precision matrix (Omega)
+is $(X'X+I)$ and covariance (Sigma) is inverse of this.
+I'm going to look at this when the elements of $X$ are iid N(0,1).
+
+First I am going to check I have got the right formulae to compute the diagonal elements of Omega and Sigma from an SVD of X, by comparing with direct inversion:
+```{r}
+n = 10
+p = 20
+X = matrix(rnorm(n*p),nrow=n)
+
+Omega = t(X) %*% X + diag(p)
+Sigma = chol2inv(chol(Omega))
+
+compute_diags = function(X){
+  udv = svd(X)
+  d2 = udv$d^2
+  v = udv$v
+  Sigma_diag = 1 - colSums((d2/(1+d2))*t(v^2))
+  Omega_diag = 1 + colSums(d2*t(v^2))
+  return(list(Sigma_diag=Sigma_diag,Omega_diag = Omega_diag, inv_Omega_diag = 1/Omega_diag))
+}
+
+res = compute_diags(X)
+
+res$Sigma_diag - diag(Sigma)
+res$Omega_diag - diag(Omega)
+```
+
+
+# Low dimension case (n>p)
+
+If n>>p then diagonal of Sigma and inverse of diagonal of Omega are similar, and look like 1/n, independent of p.
+```{r}
+compare_means = function(n,p){
+  X = matrix(rnorm(n*p),nrow=n)
+  res = compute_diags(X)
+  lapply(res,mean)
+}
+
+
+compare_means(1000,100)
+compare_means(10000,100)
+
+
+compare_means(100,20)
+compare_means(1000,20)
+compare_means(10000,20)
+```
+
+# High dimension case (n<p)
+
+If p>n then the inverse of Omega_diag continues to look like 1/n
+but Sigma looks like 1-(n/p). 
+```{r}
+compare_means(100,100)
+compare_means(100,1000)
+compare_means(100,10000)
+compare_means(100,100000)
+
+```
+
+
+# For n=p
+
+For n=p inv_Omega looks like 1/n, Sigma looks like 1/sqrt(p) [= 1/sqrt(n)].
+```{r}
+compare_means(10,10)
+compare_means(20,20)
+compare_means(50,50)
+compare_means(100,100)
+compare_means(200,200)
+compare_means(500,500)
+compare_means(1000,1000)
+
+pvec = c(10,20,50,100,200,500,1000)
+res = rep(0,length(pvec)) 
+for(i in 1:length(pvec)){
+  res[i] = compare_means(pvec[i],pvec[i])$Sigma_diag
+}
+plot(pvec,res)
+plot(log(pvec),log(res))
+lm(log(res)~log(pvec))
+plot(pvec^(-0.5),res)
+abline(a=0,b=1)
+```
