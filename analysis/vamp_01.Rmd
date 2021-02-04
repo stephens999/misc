@@ -171,23 +171,18 @@ I'm going to give vamp both the true prior and the true residual variance.
     sim$Y = sim$Y + E
     
     fit_glmnet <- cv.glmnet(x=sim$X, y=sim$Y, family="gaussian", alpha=1, standardize=FALSE)  
-    fit_vamp <- vamp(A=sim$X, y = sim$Y, ebnm_fn = my_ebnm_fn, niter=10)
+    fit_vamp <- vamp(A=sim$X, y = sim$Y, ebnm_fn = my_ebnm_fn, theta2  = 1/sigma2, niter=10)
     
     
     rmse_glmnet[i] = sqrt(mean((sim$B-coef(fit_glmnet)[-1])^2))
     rmse_vamp[i] = sqrt(mean((sim$B-fit_vamp$x1)^2))
   }
   
-  plot(rmse_vamp,rmse_glmnet,main="vamp (true prior) vs glmnet")
+  plot(rmse_vamp,rmse_glmnet,main="vamp (true prior) vs glmnet",xlim=c(0.45,0.65),ylim=c(0.45,0.65))
   
 
   abline(a=0,b=1)
   
-  
 ```
 
-
-```{r}
-
-```
 
