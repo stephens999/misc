@@ -100,6 +100,7 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 # Approximate message passing and related
 
 * [Compare precision and covariance for ridge regression](prec_vs_cov.html)
+* [Initial try of VAMP](vamp_01.html)
 
 # Depletion
 
