@@ -1,0 +1,193 @@
+---
+title: "vamp_01"
+author: "Matthew Stephens"
+date: "2021-02-02"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+library(ebnm)
+library(glmnet)
+library(ashr)
+```
+
+## Introduction
+
+My goal here is to implement a version of VAMP in R.
+I'm using algorithm 1 from Fletcher+Schniter (which
+includes EM steps, but I am ignoring those for now.)
+
+I will try to use mostly their notation, where the model is
+$$y \sim N(Ax, 1/\theta_2)$$
+First I simulate some data under this model for testing:
+```{r}
+M = 100
+N = 10
+A = matrix(rnorm(M*N, 0,1),nrow=M)
+theta2 = 1
+x = rnorm(N)
+y = A %*% x + rnorm(M,0,sd=sqrt(1/theta2))
+
+```
+
+
+For comparison I'm going to do the ridge regression estimate.
+For prior $x \sim N(0,s_x^2)$ the posterior on $x$ is
+$x \sim N(\mu_1,\Sigma_1)$ where 
+$$\mu_1 = \theta_2 \Sigma_1 A'y$$ 
+and
+$$\Sigma_1 = (\theta_2 A'A + s_x^2 I)^{-1}.$$
+
+```{r}
+S = chol2inv(chol(theta2 * t(A) %*% A + diag(N)))
+x.rr = theta2 * S %*% t(A) %*% y
+```
+
+
+Now here is my initial implementation of vamp. Note there is no EB for now - the ebnm function has a fixed prior and just does the shrinkage.
+
+This implmentation uses the idea of performing an svd of A to improve
+efficiency per iteration. The computationally intensive part without this trick is computing the inverse of $Q$ (equations 8-10 in the EM-VAMP paper).
+Here I briefly outline this trick.
+
+Assume $A$ has SVD $A=UDV'$, so $A'A = VD^2V'$. If necessary  include 0 eigenvalues in $D$, so $V$ is a square matrix with $VV'=V'V=I$.
+Recall that 
+$$Q:=\theta_2 A'A + \gamma_2 I$$
+so 
+$$Q^{-1} = V (\theta_2 D^2 + \gamma_2 I)^{-1} V'$$
+Note that if $d=diag(D)$ then $$(\theta_2 d_k^2 + \gamma_2)^{-1}= (1/\gamma_2)(1- a_k)$$
+where $$a_k:= \theta_2 d_k^2/(\theta_2 d_k^2 + \gamma_2).$$
+
+
+So $$Q^{-1} = (1/\gamma_2)(I - V diag(a) V')$$
+and this has diagonal elements
+$$Q^{-1}_{ii} = (1/\gamma_2)(1 - \sum_k V^2_{ik} a_k)$$
+
+Note that if $d_k=0$ then $a_k=0$ so there is no need to actually compute the parts of $V$ that correspond to 0 eigenvalues.
+
+
+
+```{r}
+#' @param A an M by N matrix of covariates
+#' @param y an M vector of outcomes
+#' @param ebnm_fn a function (eg from ebnm package) that takes parameters x and s and returns posterior mean and sd under a normal means model (no eb for now!)
+vamp = function(A,y,ebnm_fn= function(x,s){ebnm_normal(x=x,s=s,mode=0,scale=1)}, r1.init = rnorm(ncol(A)), gamma1.init = 1, theta2=1, niter = 100){
+
+  # initialize
+  r1 = r1.init
+  gamma1 = gamma1.init
+  N = ncol(A)
+  A.svd = svd(A)
+  v = A.svd$v
+  d = A.svd$d
+  
+  for(k in 1:niter){
+    fit = do.call(ebnm_fn,list(x = r1,s = sqrt(1/gamma1)))
+    x1 = fit$posterior$mean
+    eta1 = 1/(mean(fit$posterior$sd^2))
+    gamma2 = eta1 - gamma1
+    r2 = (eta1 * x1 - gamma1 * r1)/gamma2
+    
+    # this is the brute force approach; superceded by the svd approach
+    #Q = theta2 * t(A) %*% A + gamma2 * diag(N)
+    #Qinv = chol2inv(chol(Q))
+    #diag_Qinv = diag(Qinv)
+    
+    # The following avoids computing Qinv explicitly
+    
+    a = theta2*d^2/(theta2*d^2 + gamma2)
+    #Qinv = (1/gamma2) * (diag(N) - v %*% diag(a) %*% t(v))
+    diag_Qinv = (1/gamma2) * (1- colSums( a * t(v^2) ))
+    
+    eta2 = 1/mean(diag_Qinv)
+    #x2 = Qinv %*% (theta2 * t(A) %*% y + gamma2 * r2)
+    temp = (theta2 * t(A) %*% y + gamma2 * r2) # temp is a vector
+    temp2= (v %*% (diag(a) %*% (t(v) %*% temp))) # matrix mult vdiag(a)v'temp efficiently
+    x2 = (1/gamma2) * (temp - temp2)
+    
+    gamma1 = eta2 - gamma2
+    
+    r1 = (eta2 * x2 - gamma2 * r2)/ gamma1
+  }
+  return(fit = list(x1=x1,x2=x2, eta1=eta1, eta2=eta2))
+}
+
+```
+
+
+
+
+Now I try this out with a normal prior (which should give same answer as ridge regression and does...)
+```{r}
+fit = vamp(A,y)
+plot(fit$x1,fit$x2, main="x1 vs x2")
+abline(a=0,b=1)
+plot(fit$x1,x.rr, main="comparison with ridge regression")
+abline(a=0,b=1)
+```
+
+Note that the $\eta$ values converge to the inverse of the mean of the digonal of the posterior variance.
+```{r}
+fit$eta1 - fit$eta2
+1/fit$eta1 - mean(diag(S))
+```
+
+## A harder example
+
+Here we try vamp on a problematic case for mean field from [here](mr_ash_vs_lasso.html)
+
+Here the prior is a 50-50 mixture of 0 and $N(0,1)$.
+I'm going to give vamp both the true prior and the true residual variance.
+
+```{r}
+  my_g = normalmix(pi=c(0.5,0.5), mean=c(0,0), sd=c(0,1))
+  my_ebnm_fn = function(x,s){ebnm(x,s,g_init=my_g,fix_g = TRUE )}
+```
+
+
+```{r}
+  set.seed(123)
+  n <- 500
+  p <- 1000
+  p_causal <- 500 # number of causal variables (simulated effects N(0,1))
+  pve <- 0.95
+  nrep = 10
+  rmse_vamp = rep(0,nrep)
+  rmse_glmnet = rep(0,nrep)
+  
+  for(i in 1:nrep){
+    sim=list()
+    sim$X =  matrix(rnorm(n*p,sd=1),nrow=n)
+    B <- rep(0,p)
+    causal_variables <- sample(x=(1:p), size=p_causal)
+    B[causal_variables] <- rnorm(n=p_causal, mean=0, sd=1)
+
+    sim$B = B
+    sim$Y = sim$X %*% sim$B
+    sigma2 = ((1-pve)/(pve))*sd(sim$Y)^2
+    E = rnorm(n,sd = sqrt(sigma2))
+    sim$Y = sim$Y + E
+    
+    fit_glmnet <- cv.glmnet(x=sim$X, y=sim$Y, family="gaussian", alpha=1, standardize=FALSE)  
+    fit_vamp <- vamp(A=sim$X, y = sim$Y, ebnm_fn = my_ebnm_fn, niter=10)
+    
+    
+    rmse_glmnet[i] = sqrt(mean((sim$B-coef(fit_glmnet)[-1])^2))
+    rmse_vamp[i] = sqrt(mean((sim$B-fit_vamp$x1)^2))
+  }
+  
+  plot(rmse_vamp,rmse_glmnet,main="vamp (true prior) vs glmnet")
+  
+
+  abline(a=0,b=1)
+  
+  
+```
+
+
+```{r}
+
+```
+
