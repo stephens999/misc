@@ -1,0 +1,44 @@
+---
+title: "ridge.nonconvex"
+author: "Matthew Stephens"
+date: "2021-02-17"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+In my investigations I found examples where EB ridge seemed to 
+converge to different hyperparameters depending on initiallization.
+I wanted to try to find a simple example of this. So that is my goal here.
+
+Here is a small simulation that illutrates this issue. The difference in elbo is not large, but it is noticeable nonetheless about (0.15 log-likelihood unit). Increasing n and p can give examples with more extreme differences.
+
+```{r}
+  library(ebmr.alpha)
+  set.seed(12)
+  n <- 100
+  p <- 200
+  p_causal <- 100 # number of causal variables (simulated effects N(0,1))
+  pve <- 0.99
+  sim=list()
+    sim$X =  matrix(rnorm(n*p,sd=1),nrow=n)
+    B <- rep(0,p)
+    causal_variables <- sample(x=(1:p), size=p_causal)
+    B[causal_variables] <- rnorm(n=p_causal, mean=0, sd=1)
+
+    sim$B = B
+    sim$Y = sim$X %*% sim$B
+    sigma2 = ((1-pve)/(pve))*sd(sim$Y)^2
+    E = rnorm(n,sd = sqrt(sigma2))
+    sim$Y = sim$Y + E
+    fit.init = ebmr.init(sim$X,sim$Y,sb2 = 1, residual_variance=1 )
+    fit.ebr = ebmr.update(fit.init, maxiter = 20, ebnv_fn = ebnv.pm)
+    
+    fit.init2 = ebmr.init(sim$X,sim$Y,sb2 = 0.1, residual_variance=0.01 )
+    fit.ebr2 = ebmr.update(fit.init2, maxiter = 20, ebnv_fn = ebnv.pm)
+    fit.ebr$elbo
+    fit.ebr2$elbo
+```
+
