@@ -492,16 +492,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreecbded11700201dde5f150759a6c237d18ef89d75targetblankcbded11a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/cbded11700201dde5f150759a6c237d18ef89d75" target="_blank">cbded11</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreefb0c630c4f80665352ed438de857c7255b8daa76targetblankfb0c630a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/fb0c630c4f80665352ed438de857c7255b8daa76" target="_blank">fb0c630</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreecbded11700201dde5f150759a6c237d18ef89d75targetblankcbded11a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreefb0c630c4f80665352ed438de857c7255b8daa76targetblankfb0c630a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/cbded11700201dde5f150759a6c237d18ef89d75" target="_blank">cbded11</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/fb0c630c4f80665352ed438de857c7255b8daa76" target="_blank">fb0c630</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -673,7 +673,7 @@ Note that any generated files, e.g. HTML, png, CSS, etc., are not included in t
 <div id="versions" class="tab-pane fade">
 
 <p>
-These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/ridge.nonconvex.Rmd</code>) and HTML (<code>docs/ridge.nonconvex.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/ridge.hyperparam.convergence.Rmd</code>) and HTML (<code>docs/ridge.hyperparam.convergence.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
 </p>
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
@@ -702,7 +702,7 @@ Message
 Rmd
 </td>
 <td>
-<a href="https://github.com/stephens999/misc/blob/cbded11700201dde5f150759a6c237d18ef89d75/analysis/ridge.nonconvex.Rmd" target="_blank">cbded11</a>
+<a href="https://github.com/stephens999/misc/blob/49831756b9c63743eb5376f8ddec4890b1884f8e/analysis/ridge.hyperparam.convergence.Rmd" target="_blank">4983175</a>
 </td>
 <td>
 Matthew Stephens
@@ -711,7 +711,7 @@ Matthew Stephens
 2021-02-17
 </td>
 <td>
-workflowr::wflow_publish(“ridge.nonconvex.Rmd”)
+workflowr::wflow_rename(“ridge.nonconvex.Rmd”, “ridge.hyperparam.convergence.Rmd”)
 </td>
 </tr>
 <tr>
@@ -719,7 +719,7 @@ workflowr::wflow_publish(“ridge.nonconvex.Rmd”)
 html
 </td>
 <td>
-<a href="https://rawcdn.githack.com/stephens999/misc/f44eef49857d0818d538b946caaa4b9b1d5ef30b/docs/ridge.nonconvex.html" target="_blank">f44eef4</a>
+<a href="https://rawcdn.githack.com/stephens999/misc/49831756b9c63743eb5376f8ddec4890b1884f8e/docs/ridge.hyperparam.convergence.html" target="_blank">4983175</a>
 </td>
 <td>
 Matthew Stephens
@@ -728,24 +728,7 @@ Matthew Stephens
 2021-02-17
 </td>
 <td>
-Build site.
-</td>
-</tr>
-<tr>
-<td>
-Rmd
-</td>
-<td>
-<a href="https://github.com/stephens999/misc/blob/82dcb90cc270fa420425e73e8513536c4e4b59a4/analysis/ridge.nonconvex.Rmd" target="_blank">82dcb90</a>
-</td>
-<td>
-Matthew Stephens
-</td>
-<td>
-2021-02-17
-</td>
-<td>
-workflowr::wflow_publish(“ridge.nonconvex.Rmd”)
+workflowr::wflow_rename(“ridge.nonconvex.Rmd”, “ridge.hyperparam.convergence.Rmd”)
 </td>
 </tr>
 </tbody>
@@ -823,7 +806,44 @@ for(i in 1:n1){
     ll[i,j] = loglik(exp(ls2.seq[i]),exp(lsb2.seq[j]))
 }
 contour(ls2.seq,lsb2.seq,ll,levels = seq(-364.2,-364.5,length=10))</code></pre>
-<p><img src="figure/ridge.nonconvex.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/ridge.hyperparam.convergence.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-1">
+Past versions of unnamed-chunk-3-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-3-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/49831756b9c63743eb5376f8ddec4890b1884f8e/docs/figure/ridge.hyperparam.convergence.Rmd/unnamed-chunk-3-1.png" target="_blank">4983175</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-02-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Since there is such a strong ridge I look at the sum and difference. The red point indicate the solutions the 2 EM runs found.</p>
 <pre class="r"><code>n1=500
 n2=500
@@ -838,7 +858,44 @@ contour(lsum,ldiff,ll,levels = seq(-364.2,-364.5,length=30),xlab=&quot;log(sb2)+
 
 points(log(yt.em1$s2)+log(yt.em1$sb2),log(yt.em1$sb2)-log(yt.em1$s2),col=2)
 points(log(yt.em2$s2)+log(yt.em2$sb2),log(yt.em2$sb2)-log(yt.em2$s2),col=2)</code></pre>
-<p><img src="figure/ridge.nonconvex.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/ridge.hyperparam.convergence.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-1">
+Past versions of unnamed-chunk-4-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/49831756b9c63743eb5376f8ddec4890b1884f8e/docs/figure/ridge.hyperparam.convergence.Rmd/unnamed-chunk-4-1.png" target="_blank">4983175</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-02-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="longer-runs-fix-the-problem" class="section level2">
 <h2>Longer runs fix the problem</h2>
@@ -849,7 +906,44 @@ yt.em2.long = ebmr.alpha:::ridge_indep_em3(ytilde, d2, ss, df, tol=1e-16, maxite
 
 plot(yt.em2.long$loglik[-1],xlab=&quot;iteration&quot;, ylab=&quot;loglik&quot;)
 points(yt.em1.long$loglik[-1],col=2)</code></pre>
-<p><img src="figure/ridge.nonconvex.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/ridge.hyperparam.convergence.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-1">
+Past versions of unnamed-chunk-5-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/49831756b9c63743eb5376f8ddec4890b1884f8e/docs/figure/ridge.hyperparam.convergence.Rmd/unnamed-chunk-5-1.png" target="_blank">4983175</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-02-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
