@@ -1,5 +1,5 @@
 ---
-title: "ridge.nonconvex"
+title: "Ridge hyperparameter estimation: convergence issues"
 author: "Matthew Stephens"
 date: "2021-02-17"
 output: workflowr::wflow_html
@@ -9,11 +9,12 @@ editor_options:
 
 ## Introduction
 
-In my investigations I found examples where EB ridge seemed to 
-converge to different hyperparameters depending on initiallization.
-I wanted to try to find a simple example of this. So that is my goal here.
+During various simulations I found examples where EB ridge seemed to 
+converge to different hyperparameters depending on initialization.
+This suggested the log-likelihood might be multi-modal.
+Here I investigate this.
 
-Here is a small simulation that illutrates this issue. The difference in elbo is not large, but it is noticeable nonetheless about (0.15 log-likelihood unit). Increasing n and p can give examples with more extreme differences.
+First I experimented to find a small simulation that exhibited this behaviour. In this example the difference in final elbo is not large, but it is noticeable nonetheless about (0.15 log-likelihood unit). Increasing n and p can give examples with more extreme differences.
 
 ```{r}
   library(ebmr.alpha)
@@ -41,4 +42,87 @@ Here is a small simulation that illutrates this issue. The difference in elbo is
     fit.ebr$elbo
     fit.ebr2$elbo
 ```
+
+
+
+To get a better idea of what is going on I try running the EM steps directly. The code uses SVD of X to turn the problem of estimating
+hyperparameters in ridge regression
+ into a different problem: estimating he hyperparmaters
+ in the independent measumrements model
+ $$ytilde_j \sim N(0, s2 * (1+sb2 d2_j))$$
+ The code in`ridge_indep_em3` fits this by EM, 
+as given in more details [here](ridge_em_svd.html).
+
+```{r}
+  Xtilde = sim$X
+  Xtilde.svd = svd(Xtilde)
+
+  # maximum likelihood estimation
+  ytilde = drop(t(Xtilde.svd$u) %*% sim$Y)
+  df = length(sim$Y) - length(ytilde)
+  ss = sum(sim$Y^2) - sum(ytilde^2)
+  d2 = Xtilde.svd$d^2
+  
+  yt.em1 = ebmr.alpha:::ridge_indep_em3(ytilde, d2, ss, df, tol=1e-8, maxiter=10000, s2.init = 1, sb2.init = 1,  update_s2=TRUE)
+  
+  yt.em2 = ebmr.alpha:::ridge_indep_em3(ytilde, d2, ss, df, tol=1e-8, maxiter=10000, s2.init = .01, sb2.init = .1,  update_s2=TRUE)
+  
+  
+  sum(dnorm(ytilde, 0, sd = sqrt(yt.em1$s2* (1+d2*yt.em1$sb2)), log=TRUE))
+  sum(dnorm(ytilde, 0, sd = sqrt(yt.em2$s2* (1+d2*yt.em2$sb2)), log=TRUE))
+```
+
+## Contour of log-likelihood
+
+Let's look at this log-likelihood surface more carefully. Here the parameters are plotted on the log scale.
+```{r}
+loglik = function(s2,sb2){
+  sum(dnorm(ytilde, 0, sd = sqrt(s2* (1+d2*sb2)), log=TRUE))
+}
+
+n1=n2=100
+ll = matrix(0,nrow=n1,ncol=n2)
+ls2.seq = seq(-4.6,1.2,length=n1)
+lsb2.seq = seq(-2,4.1,length=n2)
+for(i in 1:n1){
+  for(j in 1:n2)
+    ll[i,j] = loglik(exp(ls2.seq[i]),exp(lsb2.seq[j]))
+}
+contour(ls2.seq,lsb2.seq,ll,levels = seq(-364.2,-364.5,length=10))
+
+```
+
+Since there is such a strong ridge I look at the sum and difference.
+The red point indicate the solutions the 2 EM runs found.
+```{r}
+n1=500
+n2=500
+ll = matrix(0,nrow=n1,ncol=n2)
+lsum = seq(-.85,-0.4,length=n1)
+ldiff = seq(-6,10,length=n2)
+for(i in 1:n1){
+  for(j in 1:n2)
+    ll[i,j] = loglik(exp(0.5*(lsum[i]-ldiff[j])),exp(0.5*(lsum[i]+ldiff[j])))
+}
+contour(lsum,ldiff,ll,levels = seq(-364.2,-364.5,length=30),xlab="log(sb2)+log(s2)",ylab="log(sb2)-log(s2)")
+
+points(log(yt.em1$s2)+log(yt.em1$sb2),log(yt.em1$sb2)-log(yt.em1$s2),col=2)
+points(log(yt.em2$s2)+log(yt.em2$sb2),log(yt.em2$sb2)-log(yt.em2$s2),col=2)
+
+```
+
+## Longer runs fix the problem
+
+So, at least in this log(parameters) space the log-likelihood does not
+appear to be multimodal. This prompted me to try running the EM longer with more stringent threshold. I found it eventually converges to the same solution, but it takes many iterations:
+```{r}
+yt.em1.long = ebmr.alpha:::ridge_indep_em3(ytilde, d2, ss, df, tol=1e-16, maxiter=100000, s2.init = 1, sb2.init = 1,  update_s2=TRUE)
+  
+yt.em2.long = ebmr.alpha:::ridge_indep_em3(ytilde, d2, ss, df, tol=1e-16, maxiter=100000, s2.init = .01, sb2.init = .1,  update_s2=TRUE)
+
+plot(yt.em2.long$loglik[-1],xlab="iteration", ylab="loglik")
+points(yt.em1.long$loglik[-1],col=2)
+```
+
+
 
