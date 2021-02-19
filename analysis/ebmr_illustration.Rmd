@@ -1,0 +1,179 @@
+---
+title: "ebmr_illustration"
+author: "Matthew Stephens"
+date: "2021-02-16"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+library(ebmr.alpha)
+library(glmnet)
+```
+
+
+## Introduction
+
+The goal here is to illustrate the `ebmr.alpha` package on some examples.
+
+## Change point example
+
+First I will use the changepoint example with linear trend-filtering
+basis. I use this as a challenging example, particularly for non-convex methods: the basis is not entirely natural for the changepoint problem
+and as a result the likelihood surface is very ridged.
+
+
+```{r}
+set.seed(100)
+n = 100
+p = n
+X = matrix(0,nrow=n,ncol=n)
+for(i in 1:n){
+  X[i:n,i] = 1:(n-i+1)
+}
+btrue = rep(0,n)
+btrue[40] = 8
+btrue[41] = -8
+s2 = .4
+y = X %*% btrue + s2*rnorm(n)
+plot(y,main="true mean (black)")
+lines(X %*% btrue)
+```
+
+In the `ebmr.alpha` package the prior on the regression coefficients
+is determined by the function used to fit the "Empirical Bayes Normal Variances" model (`ebnv_fn`). We have the following cases implemented:
+
+- Normal prior (Ridge regression): `ebnv_fn = ebnv.pm` (point mass prior on w; normal prior on b)
+- Laplace prior (Bayesian Lasso): `ebnv_fn = ebnv.exp` (exponential prior on w; Laplace prior on b)
+- Mixture of normals (Ash) prior: `ebnv_fn = ebnv.np` (non-parametric prior on w; mixture of normals prior on b)
+- Mixture of Laplaces prior: `ebnv_fn = ebnv.exp_mix` (mixture of exponentials prior on w; mixture of Laplaces prior on b)
+
+For the mixture priors you can either fix the grid or update the grid each iteration using em updates. (Note: The EM versions do not really "solve" the EBNV problem because they do not find the maximum likelihood solution for the prior: they simply do a single EM iteration to update the prior grid and mixture proportions before computing posteriors.) To make the interface simpler there are helper functions defined for this: `ebnv.np.em`, `ebnv.np.fixgrid`, `ebnv.exp_mix.em` and `ebnv.exp_mix.fixgrid`. 
+
+In addition the "regular lasso" can be obtained by using `compute_mode=TRUE` with the Laplace prior.
+
+### EB Ridge and Lasso
+
+Here are the simplest three methods (Ridge, Blasso and Lasso) with non-mixture priors. You can see that the Lasso overfits, suggesting that the EB approach to selecting the hyperparameters for Lasso maybe does not do so well here.
+
+```{r}
+y.fit.ebr = ebmr(X,y, maxiter = 200, ebnv_fn = ebnv.pm)
+y.fit.eblasso = ebmr.update(y.fit.ebr, maxiter = 200, ebnv_fn = ebnv.exp)
+y.fit.eblasso.mode = ebmr.update(y.fit.eblasso, maxiter = 200, ebnv_fn = ebnv.exp, compute_mode=TRUE)
+
+plot(y,main="true (black), ridge (red), blasso (green) and lasso (blue)")
+lines(X %*% btrue)
+lines(X %*% coef(y.fit.ebr), col=2)
+lines(X %*% coef(y.fit.eblasso), col=3)
+lines(X %*% coef(y.fit.eblasso.mode), col=4)
+```
+
+
+### Ash priors (normal mixture)
+
+To get a mixture prior we have to add a prior (to set the grid)
+before running the methods.
+This interface may change, but here it is for now.
+I compare the result with fixed grid vs estimating the grid using EM.
+You can see the em update finds much better elbo, and also essentially recovers the true solution.
+
+```{r}
+y.fit.ebash.init = ebmr.set.prior(y.fit.eblasso,ebmr.alpha:::exp2np(y.fit.eblasso$g))
+y.fit.ebash.em = ebmr.update(y.fit.ebash.init, maxiter = 200, ebnv_fn = ebnv.np.em)
+y.fit.ebash.fix = ebmr.update(y.fit.ebash.init, maxiter = 200, ebnv_fn = ebnv.np.fixgrid)
+
+y.fit.ebash.fix$elbo
+y.fit.ebash.em$elbo
+
+plot(y,main="true (black), ridge (red), ash fixed grid (cyan) and em (magenta)")
+lines(X %*% btrue)
+lines(X %*% coef(y.fit.ebr), col=2)
+lines(X %*% coef(y.fit.ebash.fix), col=5,lwd=2)
+lines(X %*% coef(y.fit.ebash.em), col=6, lwd=2)
+```
+
+### Lash priors (laplace mixture)
+
+Similarly we can use a mixture of laplaces for the prior, with
+either EM update or fixed grid. Again the em update finds much better elbo, and also essentially recovers the true solution.
+
+```{r}
+y.fit.eblash.init = ebmr.set.prior(y.fit.eblasso,ebmr.alpha:::exp2np(y.fit.eblasso$g))
+y.fit.eblash.em = ebmr.update(y.fit.eblash.init, maxiter = 200, ebnv_fn = ebnv.exp_mix.em)
+y.fit.eblash.fix = ebmr.update(y.fit.eblash.init, maxiter = 200, ebnv_fn = ebnv.exp_mix.fixgrid)
+
+y.fit.eblash.fix$elbo
+y.fit.eblash.em$elbo
+
+plot(y,main="true (black), ridge (red), lash fixed grid (cyan) and em (magenta)")
+lines(X %*% btrue)
+lines(X %*% coef(y.fit.ebr), col=2)
+lines(X %*% coef(y.fit.eblash.fix), col=5,lwd=2)
+lines(X %*% coef(y.fit.eblash.em), col=6, lwd=2)
+
+```
+
+## Half-dense scenario
+
+This is another situation where we have seen mr.ash does poorly,
+[here](mr_ash_vs_lasso.html).
+
+Here I run the `ebmr` methods for max 20 iterations to keep compute time down.
+
+```{r}
+  set.seed(123)
+  n <- 500
+  p <- 1000
+  p_causal <- 500 # number of causal variables (simulated effects N(0,1))
+  pve <- 0.95
+  nrep = 10
+  rmse_ebr = rep(0,nrep)
+  rmse_glmnet = rep(0,nrep)
+  rmse_eblasso= rep(0,nrep)
+  rmse_ebash.fix = rep(0,nrep)
+  rmse_ebash.em = rep(0,nrep)
+  
+  for(i in 1:nrep){
+    sim=list()
+    sim$X =  matrix(rnorm(n*p,sd=1),nrow=n)
+    B <- rep(0,p)
+    causal_variables <- sample(x=(1:p), size=p_causal)
+    B[causal_variables] <- rnorm(n=p_causal, mean=0, sd=1)
+
+    sim$B = B
+    sim$Y = sim$X %*% sim$B
+    sigma2 = ((1-pve)/(pve))*sd(sim$Y)^2
+    E = rnorm(n,sd = sqrt(sigma2))
+    sim$Y = sim$Y + E
+    
+    fit.glmnet <- cv.glmnet(x=sim$X, y=sim$Y, family="gaussian", alpha=1, standardize=FALSE)  
+    
+    fit.ebr = ebmr(sim$X,sim$Y, maxiter = 20, ebnv_fn = ebnv.pm)
+    fit.eblasso = ebmr.update(fit.ebr, maxiter = 20, ebnv_fn = ebnv.exp)
+   
+    fit.ebash.init = ebmr.set.prior(fit.eblasso,ebmr.alpha:::exp2np(y.fit.eblasso$g))
+    fit.ebash.em = ebmr.update(fit.ebash.init, maxiter = 20, ebnv_fn = ebnv.np.em)
+    fit.ebash.fix = ebmr.update(fit.ebash.init, maxiter = 20, ebnv_fn = ebnv.np.fixgrid)
+    #rmse_mrash[i] = sqrt(mean((sim$B-fit_mrash$beta)^2))
+    #rmse_mrash_fixprior[i] = sqrt(mean((sim$B-fit_mrash_fixprior$beta)^2))
+    
+    rmse_glmnet[i] = sqrt(mean((sim$B-coef(fit.glmnet)[-1])^2))
+    rmse_ebr[i] = sqrt(mean((sim$B-coef(fit.ebr))^2))
+    rmse_eblasso[i] = sqrt(mean((sim$B-coef(fit.eblasso))^2))
+    rmse_ebash.fix[i] = sqrt(mean((sim$B-coef(fit.ebash.fix))^2))
+    rmse_ebash.em[i] = sqrt(mean((sim$B-coef(fit.ebash.em))^2))
+    
+  }
+  
+  plot(rmse_glmnet, rmse_ebr, xlim=c(0.5,0.7), ylim=c(0.5,0.7), main="red=ridge, green=eblasso")
+  
+  points(rmse_glmnet,rmse_eblasso,col=3)
+  
+  points(rmse_glmnet,rmse_ebash.fix,col=5)
+  points(rmse_glmnet,rmse_ebash.em,col=6)
+  
+  abline(a=0,b=1)
+  
+```
+
