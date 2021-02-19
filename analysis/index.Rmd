@@ -45,7 +45,9 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 
 # EBMR
 
-* [An initially suprising result for EB lasso](eblasso.suprising.html)
+* [An initially suprising overfitting result for EB lasso](eblasso.suprising.html)
+* [An illustration of ebmr with estimated grid](ebmr_illustration.html)
+
 
 # Mash
 
