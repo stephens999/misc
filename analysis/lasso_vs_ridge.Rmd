@@ -1,0 +1,95 @@
+---
+title: "lasso_vs_ridge"
+author: "Matthew Stephens"
+date: "2021-03-29"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+library(glmnet)
+```
+
+## Introduction
+
+This is to compare ridge and lasso in "half-dense" simulations
+with $n=500, s=p/2$. I compare the cases $p=1000$ vs $p=2000$
+to see if they behave differently, and confirm that indeed lasso consistently outperforms ridge for $p=1000$ but ridge is better for $p=2000$.
+ 
+ 
+## $p=1000$
+
+```{r}
+  set.seed(123)
+  n <- 500
+  p <- 1000
+  p_causal <- p/2 # number of causal variables (simulated effects N(0,1))
+  pve <- 0.95
+  nrep = 10
+  rmse_lasso = rep(0,nrep)
+  rmse_ridge = rep(0,nrep)
+  
+  for(i in 1:nrep){
+    sim=list()
+    sim$X =  matrix(rnorm(n*p,sd=1),nrow=n)
+    B <- rep(0,p)
+    causal_variables <- sample(x=(1:p), size=p_causal)
+    B[causal_variables] <- rnorm(n=p_causal, mean=0, sd=1)
+
+    sim$B = B
+    sim$Y = sim$X %*% sim$B
+    sigma2 = ((1-pve)/(pve))*sd(sim$Y)^2
+    E = rnorm(n,sd = sqrt(sigma2))
+    sim$Y = sim$Y + E
+    
+    fit_lasso <- cv.glmnet(x=sim$X, y=sim$Y, family="gaussian", alpha=1, standardize=FALSE)  
+    
+    fit_ridge <- cv.glmnet(x=sim$X, y=sim$Y, family="gaussian", alpha=0, standardize=FALSE)
+   
+    rmse_lasso[i] = sqrt(mean((sim$B-coef(fit_lasso)[-1])^2))
+    rmse_ridge[i] = sqrt(mean((sim$B-coef(fit_ridge)[-1])^2))
+  }
+  
+  plot(rmse_lasso,rmse_ridge, xlim=c(0.5,0.75), ylim=c(0.5,0.75), main="p=1000")
+  abline(a=0,b=1)
+```
+
+
+# $p=2000$
+
+```{r}
+  set.seed(123)
+  n <- 500
+  p <- 2000
+  p_causal <- p/2 # number of causal variables (simulated effects N(0,1))
+  pve <- 0.95
+  nrep = 10
+  rmse_lasso = rep(0,nrep)
+  rmse_ridge = rep(0,nrep)
+  
+  for(i in 1:nrep){
+    sim=list()
+    sim$X =  matrix(rnorm(n*p,sd=1),nrow=n)
+    B <- rep(0,p)
+    causal_variables <- sample(x=(1:p), size=p_causal)
+    B[causal_variables] <- rnorm(n=p_causal, mean=0, sd=1)
+
+    sim$B = B
+    sim$Y = sim$X %*% sim$B
+    sigma2 = ((1-pve)/(pve))*sd(sim$Y)^2
+    E = rnorm(n,sd = sqrt(sigma2))
+    sim$Y = sim$Y + E
+    
+    fit_lasso <- cv.glmnet(x=sim$X, y=sim$Y, family="gaussian", alpha=1, standardize=FALSE)  
+    
+    fit_ridge <- cv.glmnet(x=sim$X, y=sim$Y, family="gaussian", alpha=0, standardize=FALSE)
+   
+    rmse_lasso[i] = sqrt(mean((sim$B-coef(fit_lasso)[-1])^2))
+    rmse_ridge[i] = sqrt(mean((sim$B-coef(fit_ridge)[-1])^2))
+  }
+  
+  plot(rmse_lasso,rmse_ridge, xlim=c(0.5,0.75), ylim=c(0.5,0.75), main="p=2000")
+  abline(a=0,b=1)
+```
+
