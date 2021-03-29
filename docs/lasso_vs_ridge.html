@@ -492,16 +492,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreee9f5aefa9125ead0482c575c2fef60215c314155targetblanke9f5aefa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/e9f5aefa9125ead0482c575c2fef60215c314155" target="_blank">e9f5aef</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreec04d7af860c72d75c5b6a9a64e050e9c68c55b32targetblankc04d7afa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/c04d7af860c72d75c5b6a9a64e050e9c68c55b32" target="_blank">c04d7af</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreee9f5aefa9125ead0482c575c2fef60215c314155targetblanke9f5aefa" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreec04d7af860c72d75c5b6a9a64e050e9c68c55b32targetblankc04d7afa" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/e9f5aefa9125ead0482c575c2fef60215c314155" target="_blank">e9f5aef</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/c04d7af860c72d75c5b6a9a64e050e9c68c55b32" target="_blank">c04d7af</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -514,7 +514,6 @@ Ignored files:
     Ignored:    analysis/.RData
     Ignored:    analysis/.Rhistory
     Ignored:    analysis/ALStruct_cache/
-    Ignored:    analysis/figure/
     Ignored:    data/.Rhistory
     Ignored:    data/pbmc/
 
@@ -702,6 +701,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/c04d7af860c72d75c5b6a9a64e050e9c68c55b32/analysis/lasso_vs_ridge.Rmd" target="_blank">c04d7af</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-03-29
+</td>
+<td>
+workflowr::wflow_publish(“lasso_vs_ridge.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/83bde667e9a3f195cd822a94ee71adf4a47336a3/docs/lasso_vs_ridge.html" target="_blank">83bde66</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-03-29
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/e9f5aefa9125ead0482c575c2fef60215c314155/analysis/lasso_vs_ridge.Rmd" target="_blank">e9f5aef</a>
 </td>
 <td>
@@ -730,7 +763,7 @@ workflowr::wflow_publish(“lasso_vs_ridge.Rmd”)
 <p>This is to compare ridge and lasso in “half-dense” simulations with <span class="math inline">\(n=500, s=p/2\)</span>. I compare the cases <span class="math inline">\(p=1000\)</span> vs <span class="math inline">\(p=2000\)</span> to see if they behave differently, and confirm that indeed lasso consistently outperforms ridge for <span class="math inline">\(p=1000\)</span> but ridge is better for <span class="math inline">\(p=2000\)</span>.</p>
 </div>
 <div id="p1000" class="section level2">
-<h2><span class="math inline">\(p=1000\)</span></h2>
+<h2>p=1000</h2>
 <pre class="r"><code>  set.seed(123)
   n &lt;- 500
   p &lt;- 1000
@@ -764,9 +797,46 @@ workflowr::wflow_publish(“lasso_vs_ridge.Rmd”)
   plot(rmse_lasso,rmse_ridge, xlim=c(0.5,0.75), ylim=c(0.5,0.75), main=&quot;p=1000&quot;)
   abline(a=0,b=1)</code></pre>
 <p><img src="figure/lasso_vs_ridge.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-1">
+Past versions of unnamed-chunk-2-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/83bde667e9a3f195cd822a94ee71adf4a47336a3/docs/figure/lasso_vs_ridge.Rmd/unnamed-chunk-2-1.png" target="_blank">83bde66</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-03-29
+</td>
+</tr>
+</tbody>
+</table>
 </div>
-<div id="p2000" class="section level1">
-<h1><span class="math inline">\(p=2000\)</span></h1>
+</div>
+</div>
+<div id="p2000" class="section level2">
+<h2>p=2000</h2>
 <pre class="r"><code>  set.seed(123)
   n &lt;- 500
   p &lt;- 2000
@@ -800,6 +870,43 @@ workflowr::wflow_publish(“lasso_vs_ridge.Rmd”)
   plot(rmse_lasso,rmse_ridge, xlim=c(0.5,0.75), ylim=c(0.5,0.75), main=&quot;p=2000&quot;)
   abline(a=0,b=1)</code></pre>
 <p><img src="figure/lasso_vs_ridge.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-1">
+Past versions of unnamed-chunk-3-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-3-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/83bde667e9a3f195cd822a94ee71adf4a47336a3/docs/figure/lasso_vs_ridge.Rmd/unnamed-chunk-3-1.png" target="_blank">83bde66</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-03-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
