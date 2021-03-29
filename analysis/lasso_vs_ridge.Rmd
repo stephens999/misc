@@ -18,7 +18,7 @@ with $n=500, s=p/2$. I compare the cases $p=1000$ vs $p=2000$
 to see if they behave differently, and confirm that indeed lasso consistently outperforms ridge for $p=1000$ but ridge is better for $p=2000$.
  
  
-## $p=1000$
+## p=1000
 
 ```{r}
   set.seed(123)
@@ -56,7 +56,7 @@ to see if they behave differently, and confirm that indeed lasso consistently ou
 ```
 
 
-# $p=2000$
+## p=2000
 
 ```{r}
   set.seed(123)
