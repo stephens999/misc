@@ -1,0 +1,350 @@
+---
+title: "mr_ash_pen"
+author: "Matthew Stephens"
+date: "2020-05-15"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+The idea here is to code up mr.ash as a penalized method, compute gradients etc.
+
+The obvious way to write the problem is
+$$\min_b (1/2\sigma^2) ||y - Xb||_2 + \sum_j \rho_{g,s_j}(b_j)$$
+Where the penalty $\rho$ depends on the prior ($g$) and the $s_j^2=\sigma^2/(x_j'x_j)$.
+
+However, the penalty $\rho(b)$ is inconvenient to compute because it involves the inverse
+of $S$ (the posterior mean shrinkage function) which is not analytically available to us
+(at least in our current state of knowledge).
+
+A simple idea is to rewrite the problem as:
+$$\min_b (1/2\sigma^2) ||y - XS(b)||_2 + \rho(S(b))$$
+Here $S(b)$ means apply $S$ element-wise to the vector $b$.
+Because $S$ is invertible there is no loss of generality in writing the optimization this way. Furthermore, $$h(b):=\rho(S(b))$$ is easy to compute:
+
+$$h(b) = -l(b) +0.5 l'(b) - 0.5 \log (2\pi s^2)$$
+where $l(b)$ is the marginal log-likelihood function under the normal means model.
+That is $l(b) = \log(f(b))$
+where
+$$f(b) := \sum_k \pi_k N(b; 0, \sigma_k^2+s^2).$$
+
+## Code for fundamental functions
+
+Everything can be written in terms of the marginal likelihood $f$ and its first 
+two derivatives, so we code those up first. I have not been careful about numerical
+issues here.. will need to deal with those at some point.
+
+```{r}
+#y,s are vectors of length n
+#probs, sigma are vectors of length K
+# returns an n-vector of "marginal likelihoods" under mixture prior
+f = function(b, s, probs, sigma){
+  if(length(s)==1){s = rep(s,length(b))}
+  sigmamat   <- outer(s^2, sigma^2, `+`) # n time k
+  llik_mat   <- -0.5 * (log(sigmamat) + b^2 / sigmamat)
+  #llik_norms <- apply(llik_mat, 1, max)
+  #L_mat      <- exp(llik_mat - llik_norms)
+  L_mat <- exp(llik_mat)
+  return((1/sqrt(2*pi)) * as.vector(colSums(probs * t(L_mat))))
+}
+
+#returns a vector of the derivative of f evaluated at each element of y
+f_deriv = function(b, s, probs, sigma){
+  if(length(s)==1){s = rep(s,length(b))}
+  sigmamat   <- outer(s^2, sigma^2, `+`) # n time k
+  llik_mat   <- -(3/2) * log(sigmamat) -0.5* b^2 / sigmamat
+  #llik_norms <- apply(llik_mat, 1, max)
+  #L_mat      <- exp(llik_mat - llik_norms)
+  L_mat <- exp(llik_mat)
+  return((-b/sqrt(2*pi)) * as.vector(colSums(probs * t(L_mat))))
+}
+
+# returns f_deriv/b ok even if b=0
+f_deriv_over_b = function(b, s, probs, sigma){
+  if(length(s)==1){s = rep(s,length(b))}
+  sigmamat   <- outer(s^2, sigma^2, `+`) # n time k
+  llik_mat   <- -(3/2) * log(sigmamat) -0.5* b^2 / sigmamat
+  #llik_norms <- apply(llik_mat, 1, max)
+  #L_mat      <- exp(llik_mat - llik_norms)
+  L_mat <- exp(llik_mat)
+  return((-1/sqrt(2*pi)) * as.vector(colSums(probs * t(L_mat))))
+}
+
+#returns a vector of the second derivatives of f evaluated at each element of y
+f_deriv2 = function(b, s, probs, sigma){
+  if(length(s)==1){s = rep(s,length(b))}
+  sigmamat   <- outer(s^2, sigma^2, `+`) # n time k
+  llik_mat   <- -(5/2) * log(sigmamat) -0.5* b^2 / sigmamat
+  #llik_norms <- apply(llik_mat, 1, max)
+  #L_mat      <- exp(llik_mat - llik_norms)
+  L_mat <- exp(llik_mat)
+  return((b^2/sqrt(2*pi)) * as.vector(colSums(probs * t(L_mat)))+ f_deriv_over_b(b,s,probs,sigma))
+}
+```
+
+Check the derivative code numerically:
+```{r}
+n = 100
+k = 5
+b = rnorm(n)
+probs = rep(1/k,k)
+sigma = c(0,1,2,3,4,5)
+eps=1e-5
+
+plot((f(b+eps,1,probs,sigma)-f(b,1,probs,sigma))/eps, f_deriv(b,1,probs,sigma),xlab="numerical 1st derivative", ylab="analytic 1st derivative")
+abline(a=0,b=1)
+
+plot((f_deriv(b+eps,1,probs,sigma)-f_deriv(b,1,probs,sigma))/eps, f_deriv2(b,1,probs,sigma), xlab="numerical 2nd derivative", ylab="analytic 2nd derivative")
+abline(a=0,b=1)
+```
+
+Now we have $$l(b) = \log f(b)$$, 
+$$l'(b) = f'(b)/f(b)$$, $$l''(b) = (f(b)f''(b)-f'(b)^2)/f(b)^2$$,
+
+
+```{r}
+l = function(b, s, probs, sigma){
+  log(f(b,s,probs,sigma))
+}
+
+l_deriv = function(b, s, probs, sigma){
+  f_deriv(b,s,probs,sigma)/f(b,s,probs,sigma)
+}
+
+l_deriv2 = function(b, s, probs, sigma){
+  ((f_deriv2(b,s,probs,sigma)*f(b,s,probs,sigma))-f_deriv(b,s,probs,sigma)^2)/f(b,s,probs,sigma)^2
+}
+
+plot((l_deriv(b+eps,1,probs,sigma)-l_deriv(b,1,probs,sigma))/eps, l_deriv2(b,1,probs,sigma), xlab="numerical 2nd derivative", ylab="analytic 2nd derivative")
+abline(a=0,b=1)
+
+```
+
+And with these in place we can compute the shrinkage function and penalty function $h$, using
+$$h(b) = -l(b) + 0.5l'(b)-0.5\log(2\pi s^2)$$
+$$S(b) = b+ s^2l'(b)$$
+$$S'(b) = 1 + s^2 l''(b)$$.
+
+```{r}
+S = function(b, s, probs, sigma){
+  return(b + s^2 * l_deriv(b,s,probs,sigma))
+}
+S_deriv = function(b, s, probs, sigma){
+  return(1+ s^2 * l_deriv2(b,s,probs,sigma))
+}
+h = function(b,s,probs,sigma){
+  return(-l(b,s,probs,sigma) + 0.5* l_deriv(b,s,probs,sigma)-0.5*log(2*pi*s^2))
+}
+h_deriv = function(b,s,probs,sigma){
+  return(-l_deriv(b,s,probs,sigma) + 0.5*l_deriv2(b,s,probs,sigma))
+}
+
+
+plot((h(b+eps,1,probs,sigma)-h(b,1,probs,sigma))/eps, h_deriv(b,1,probs,sigma), xlab="numerical 1st derivative", ylab="analytic 1st derivative")
+abline(a=0,b=1)
+```
+
+
+## Inverting S by Newton-Raphson method
+
+One thing we might want to do is invert S.
+We don't have analytic form for this, but we can use the Newton-Raphson  method
+to solve $S(x)=y$. The iterates would be 
+$$x \leftarrow x - (S(x)-y)/S'(x)  $$
+
+
+```{r}
+y = seq(-10,10,length=100)
+x=y 
+par(mfrow=c(5,5))
+par(mar=rep(1.5,4))
+probs = rep(0.5,2)
+sigma = c(0,5)
+for(i in 1:25){
+  plot(S(x,1,probs,sigma),y)
+  x = x-(S(x,1,probs,sigma)-y)/S_deriv(x,1,probs,sigma)
+}
+plot(S(x,1,probs,sigma),y)
+plot(x,y)
+```
+
+
+
+## Optimizing the objective
+
+```{r}
+obj = function(b, y, X, residual_var, probs, sigma){
+  d = colSums(X^2)
+  s = sqrt(residual_var/d)
+  r = y - X %*% S(b,s,probs,sigma)
+  return(0.5*(1/residual_var)*sum(r^2) + sum(h(b,s,probs,sigma)))
+}
+
+obj_grad = function(b, y, X, residual_var, probs, sigma){
+  d = colSums(X^2)
+  s = sqrt(residual_var/d)
+  r = y - X %*% S(b,s,probs,sigma)
+  return((-1/residual_var)*(t(r) %*% X) * S_deriv(b,s,probs,sigma) + h_deriv(b,s,probs,sigma))
+}
+
+```
+
+Try it out on simple simulation:
+```{r}
+n = 100
+p = 20
+X = matrix(rnorm(n*p),nrow=n)
+norm = colSums(X^2)
+X = t(t(X)/sqrt(norm))
+b = rnorm(p)
+y = X %*% b + rnorm(n)
+
+(obj(b,y,X,1,probs,sigma)-obj(b+c(eps,rep(0,p-1)),y,X,1,probs,sigma))/eps
+-obj_grad(b,y,X,1,probs,sigma)[1]
+```
+
+
+
+```{r}
+b.cg.warm = optim(b,obj,gr=obj_grad,method="CG",y=y,X=X,residual_var=1, probs=probs,sigma=sigma)
+b.cg.null = optim(rep(0,p),obj,gr=obj_grad,method="CG",y=y,X=X,residual_var=1, probs=probs,sigma=sigma)
+b.bfgs.warm = optim(b,obj,gr=obj_grad,method="BFGS",y=y,X=X,residual_var=1, probs=probs,sigma=sigma)
+b.bfgs.null = optim(rep(0,p),obj,gr=obj_grad,method="BFGS",y=y,X=X,residual_var=1, probs=probs,sigma=sigma)
+
+
+b.cg.warm$value
+b.cg.null$value
+b.bfgs.warm$value
+b.bfgs.null$value
+
+plot(S(b.cg.warm$par,1,probs,sigma),b)
+```
+
+Some comments from Mihai: BFGS stores a dense approximation to the Hessian,
+so won't be good for big problems. However, "limited"-BFGS might work (L-BFGS?).
+CG needs preconditioning in general; BFGS does not because it is computing
+an approximation to the Hessian.
+
+Thoughts from me: maybe we can compute the Hessian directly and efficiently when X
+is, say, the trend filtering matrix. 
+
+Another question: if we write h as a function of pi, is h(pi) convex? Is rho(pi) convex?
+
+
+
+# Trendfiltering
+
+```{r}
+set.seed(100)
+sd = 1
+n = 100
+p = n
+X = matrix(0,nrow=n,ncol=n)
+for(i in 1:n){
+  X[i:n,i] = 1:(n-i+1)
+}
+btrue = rep(0,n)
+btrue[40] = 8
+btrue[41] = -8
+
+Y = X %*% btrue + sd*rnorm(n)
+
+```
+
+
+```{r}
+norm = colSums(X^2)
+X = t(t(X)/sqrt(norm))
+btrue = btrue * sqrt(norm)
+plot(Y)
+lines(X %*% btrue)
+```
+
+
+```{r}
+sigma=c(0,10,100,1000)
+probs=rep(1/4,4)
+b.cg.null = optim(rep(0,p),obj,gr=obj_grad,method="CG",y=Y,X=X,residual_var=1, probs=probs,sigma=sigma,control=list(maxit=1000))
+b.bfgs.null = optim(rep(0,p),obj,gr=obj_grad,method="BFGS",y=Y,X=X,residual_var=1, probs=probs,sigma=sigma,control=list(maxit=1000))
+
+plot(Y)
+lines(X %*% S(b.cg.null$par,1,probs,sigma))
+lines(X %*%  S(b.bfgs.null$par,1,probs,sigma))
+
+
+b.cg.warm = optim(btrue,obj,gr=obj_grad,method="CG",y=Y,X=X,residual_var=1, probs=probs,sigma=sigma)
+b.bfgs.warm = optim(btrue,obj,gr=obj_grad,method="BFGS",y=Y,X=X,residual_var=1, probs=probs,sigma=sigma)
+lines(X %*% S(b.cg.warm$par,1,probs,sigma))
+lines(X %*% S(b.bfgs.warm$par,1,probs,sigma),col=2)
+
+b.cg.warm$value
+b.cg.null$value
+b.bfgs.warm$value
+b.bfgs.null$value
+```
+
+This case is ridge regression, so should be convex... try it out.
+```{r}
+sigma=c(10,10)
+probs=rep(1/2,2)
+b.cg.null = optim(rep(0,p),obj,gr=obj_grad,method="CG",y=Y,X=X,residual_var=1, probs=probs,sigma=sigma,control=list(maxit=1000))
+b.bfgs.null = optim(rep(0,p),obj,gr=obj_grad,method="BFGS",y=Y,X=X,residual_var=1, probs=probs,sigma=sigma,control=list(maxit=1000))
+
+plot(Y)
+lines(X %*% S(b.cg.null$par,1,probs,sigma))
+lines(X %*%  S(b.bfgs.null$par,1,probs,sigma))
+
+b.bfgs.null$value
+b.cg.null$value
+
+
+```
+
+
+Try a prior with more overlapping components
+```{r}
+sigma=seq(0,100,length=100)
+probs=rep(1/100,100)
+b.cg.null = optim(rep(0,p),obj,gr=obj_grad,method="CG",y=Y,X=X,residual_var=1, probs=probs,sigma=sigma,control=list(maxit=1000))
+b.bfgs.null = optim(rep(0,p),obj,gr=obj_grad,method="BFGS",y=Y,X=X,residual_var=1, probs=probs,sigma=sigma,control=list(maxit=1000))
+
+plot(Y)
+lines(X %*% S(b.cg.null$par,1,probs,sigma))
+lines(X %*%  S(b.bfgs.null$par,1,probs,sigma))
+
+b.bfgs.null$value
+b.cg.null$value
+
+
+```
+
+And now revert to the sparser prior
+```{r}
+sigma=c(0,10,100,1000)
+probs=rep(1/4,4)
+b.cg.null = optim(b.cg.null$par,obj,gr=obj_grad,method="CG",y=Y,X=X,residual_var=1, probs=probs,sigma=sigma,control=list(maxit=1000))
+b.bfgs.null = optim(b.bfgs.null$par,obj,gr=obj_grad,method="BFGS",y=Y,X=X,residual_var=1, probs=probs,sigma=sigma,control=list(maxit=1000))
+plot(Y)
+lines(X %*% S(b.cg.null$par,1,probs,sigma))
+lines(X %*%  S(b.bfgs.null$par,1,probs,sigma))
+
+
+b.bfgs.null$value
+b.cg.null$value
+
+```
+
+
+```{r}
+bhat = chol2inv(chol(t(X) %*% X)) %*% t(X) %*% Y
+plot(X %*% bhat)
+lines(Y)
+b.bfgs.bhat = optim(bhat,obj,gr=obj_grad,method="BFGS",y=Y,X=X,residual_var=1, probs=probs,sigma=sigma,control=list(maxit=10000))
+b.bfgs.bhat$value
+plot(Y)
+lines(X %*%  S(as.vector(b.bfgs.null$par),1,probs,sigma))
+lines(X %*%  S(as.vector(b.bfgs.warm$par),1,probs,sigma),col=2)
+```
+
