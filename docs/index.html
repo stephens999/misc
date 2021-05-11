@@ -321,7 +321,7 @@ $(document).ready(function () {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2021-03-29
+<strong>Last updated:</strong> 2021-05-11
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 2 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -352,16 +352,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreebbeb8feba58bc96951b5e34be4f4ea7fbb6cb87dtargetblankbbeb8fea"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/bbeb8feba58bc96951b5e34be4f4ea7fbb6cb87d" target="_blank">bbeb8fe</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree8d7e6b26c937d7a992b7332c1d4e1a0be86e7261targetblank8d7e6b2a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/8d7e6b26c937d7a992b7332c1d4e1a0be86e7261" target="_blank">8d7e6b2</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreebbeb8feba58bc96951b5e34be4f4ea7fbb6cb87dtargetblankbbeb8fea" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree8d7e6b26c937d7a992b7332c1d4e1a0be86e7261targetblank8d7e6b2a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/bbeb8feba58bc96951b5e34be4f4ea7fbb6cb87d" target="_blank">bbeb8fe</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/8d7e6b26c937d7a992b7332c1d4e1a0be86e7261" target="_blank">8d7e6b2</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -374,7 +374,6 @@ Ignored files:
     Ignored:    analysis/.RData
     Ignored:    analysis/.Rhistory
     Ignored:    analysis/ALStruct_cache/
-    Ignored:    analysis/figure/
     Ignored:    data/.Rhistory
     Ignored:    data/pbmc/
 
@@ -407,7 +406,6 @@ Untracked files:
     Untracked:  analysis/mr.mash.test.Rmd
     Untracked:  analysis/mr_ash_modular.Rmd
     Untracked:  analysis/mr_ash_parameterization.Rmd
-    Untracked:  analysis/mr_ash_pen.Rmd
     Untracked:  analysis/mr_ash_ridge.Rmd
     Untracked:  analysis/mv_gaussian_message_passing.Rmd
     Untracked:  analysis/nejm.Rmd
@@ -515,7 +513,6 @@ Unstaged changes:
     Modified:   analysis/ash_delta_operator.Rmd
     Modified:   analysis/ash_pois_bcell.Rmd
     Modified:   analysis/lasso_em.Rmd
-    Modified:   analysis/lasso_vs_ridge.Rmd
     Modified:   analysis/minque.Rmd
     Modified:   analysis/mr_missing_data.Rmd
     Modified:   analysis/ridge_admm.Rmd
@@ -558,6 +555,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/8d7e6b26c937d7a992b7332c1d4e1a0be86e7261/analysis/index.Rmd" target="_blank">8d7e6b2</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-11
+</td>
+<td>
+wflow_publish(“analysis/index.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/4a66587d8886f95ed87707d914abc9d84380f2c6/docs/index.html" target="_blank">4a66587</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-03-29
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -2397,6 +2428,7 @@ Start workflowr project.
 <div id="mr-ash" class="section level1">
 <h1>Mr Ash</h1>
 <ul>
+<li><a href="mr_ash_pen.html">implementing mr ash as a penalized method</a></li>
 <li><a href="mr_ash_sca.html">coordinate ascent and parallel version</a></li>
 <li><a href="mr.ash.changepoint.html">mr.ash.alpha applied to changepoint problems</a></li>
 <li><a href="mr.ash_ridge.html">combining mr.ash and ridge regression/iterative ridge regression</a></li>
