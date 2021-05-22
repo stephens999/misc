@@ -72,6 +72,8 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 
 * [Method of moments for EbayesThresh ](ebayes.mm.html)
 
+* [flashier run on stocks data](flashier_stocks.html)
+
 # NMF
 
 * [Try NMF on a simple simulation with sparse factors](nmf_sparse.html)
