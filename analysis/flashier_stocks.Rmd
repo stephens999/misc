@@ -1,0 +1,234 @@
+---
+title: "flashier_stocks"
+author: "Matthew Stephens"
+date: "2021-05-22"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+In preparing homework for my class I ran
+flashier on some stock data.
+(Note that flash errored out here, and in any case flashier
+was quite a bit faster...)
+It got me thinking about appropriate application of flash/flashier
+for time series, so I'm reporting the results here.
+
+The data were downloaded as in https://stephens999.github.io/stat34800/stocks.html
+We probably could do with looking at a bigger dataset if
+we want to take this seriously, but I do that for now.
+
+```{r}
+# AAPL: Apple
+# NFLX: Netflix
+# AMZN: Amazon
+# MMM: 3M
+# K: Kellogs
+# O: Realty Income Corp
+# NSRGY: Nestle
+# LDSVF: Lindt
+# JPM: JP Morgan Chase
+# JNJ: Johnson and Johnson
+# TSLA: Tesla
+# V: Visa
+# PFE: Pfizer
+```
+
+
+
+```{r}
+prices = read.csv("../data/prices.csv")
+log_prices = log(prices)
+log_returns = apply(log_prices,2, diff)
+```
+
+You can see some structure in the correlation matrix: the tech companys are correlated, as are
+the PFE/JNJ and the financial companies (V,JPM).
+
+```{r}
+S = cor(log_returns)
+heatmap(S, xlab = names(prices), symm=TRUE)
+```
+
+
+### Flashier on the raw data
+
+Note I use column-specific variances. I found backfitting really increases
+the sparsity in this case (particularly in the time dimension).
+
+```{r}
+#library("flashr")
+library("ebnm")
+library("flashier")
+#fit.f = flashr::flash(as.matrix(log_prices),ebnm_fn = "ebnm_pl") ## errors out
+fit.f = flashier::flash(as.matrix(log_prices),prior.family = prior.point.laplace(), var.type = 2, backfit = TRUE)
+
+```
+
+Plot the factors. Note that factor 1 is just a trend and factor 2 looks kind of like a sine wave.... is this just an artifact of looking at time series data? This result does maybe suggest that the data are auto-correlated along the time series.
+
+```{r}
+for(i in 1:8){
+  barplot(fit.f$loadings.pm[[2]][,i], names.arg=names(prices), horiz=TRUE,las=2, main=paste0("Factor ",i))
+}
+
+for(i in 1:8){
+  plot(fit.f$loadings.pm[[1]][,i], main=paste0("Factor ",i))
+}
+```
+
+
+### JNJ issue, and residual variance
+
+I was curious when I noticed that JNJ does not seem to belong
+to any factors except the first! In fact the first factor
+seems to be exactly JNJs log returns. It is overfitting and
+giving a very small residual variance for that stock...
+
+```{r}
+fit.f$residuals.sd
+plot(fit.f$loadings.pm[[1]][,1],log_prices[,10], main="factor 1 vs JNJ log-returns")
+```
+
+Here I try using no column-specific variance to avoid that overfitting.
+I think this is a better idea.
+Now the first 3 factors kind of all look like the fourier components....
+```{r}
+fit.f2 = flashier::flash(as.matrix(log_prices),prior.family = prior.point.laplace(), var.type = 0, backfit = TRUE)
+fit.f2$residuals.sd
+
+for(i in 1:5){
+  barplot(fit.f2$loadings.pm[[2]][,i], names.arg=names(prices), horiz=TRUE,las=2, main=paste0("Factor ",i))
+}
+
+for(i in 1:5){
+  plot(fit.f2$loadings.pm[[1]][,i], main=paste0("Factor ",i))
+}
+```
+
+
+### Flashier on the correlation matrix
+
+Try factor analysis on the correlation matrix. I found it interesting
+that in the raw data analysis LDSVF was loaded on the first factor, but
+not in the correlation analysis, which I guess is because the correlation removes some of the overall mean effect and LDSVF is almost 
+independent of others
+after that is removed? 
+
+Also, I feel like the raw correlation matrix shows some additional
+structure that is likely to be real -- eg PFE and JNJ correlation -- that
+is not picked out here....but maybe that is naive on my part.
+
+```{r}
+Smiss = S
+diag(Smiss) <- NA
+S.f = flashier::flash(Smiss,prior.family = prior.point.laplace(), var.type = 0)
+for(i in 1:2){
+  barplot(S.f$loadings.pm[[2]][,i], names.arg=names(prices), horiz=TRUE,las=2, main=paste0("Factor ",i))
+}
+```
+
+
+### Flashier on the standardized raw data
+
+I was kind of surprised no factor picked out the JNJ/PFE correlation,
+so I tried rerunning on the standardized raw data. It still did
+not pick that out as a separate factor, but maybe it is naive to think
+things would be as simple as that.
+
+```{r}
+fit.f3 = flashier::flash(scale(log_prices),prior.family = prior.point.laplace(), var.type = 0, backfit = TRUE)
+for(i in 1:7){
+  barplot(fit.f3$loadings.pm[[2]][,i], names.arg=names(prices), horiz=TRUE,las=2, main=paste0("Factor ",i))
+}
+
+for(i in 1:7){
+  plot(fit.f3$loadings.pm[[1]][,i], main=paste0("Factor ",i))
+}
+```
+
+
+### Wavelet transformed data
+
+Since these are time series it would
+be nice to try wavelet transforming them before applying flashier.
+Here I explore some of these ideas.
+
+First define haar transform functions
+```{r}
+haar = function(x,scale= sqrt(2)){
+  if(length(x)==1){
+    return(x)
+  }
+  else{
+    x = matrix(x,nrow=2)
+    diff = (x[1,]-x[2,])/scale
+    sum = (x[1,]+x[2,])/scale
+    return(c(diff, haar(sum)))
+  }
+}
+
+haar_inv = function(x,scale=sqrt(2)){
+  n=length(x)
+  if(n==1){
+    return(x)
+  }
+  x = matrix(scale*x,nrow=2,byrow=TRUE)
+  smoothed = haar_inv(x[2,]) 
+  return(as.vector(rbind(smoothed+x[1,], smoothed-x[1,]))/2)
+}
+```
+
+Now I plot the above fitted factors after haar transform. As expected 
+they are sparser in that basis. 
+```{r}
+for(i in 1:7){
+  plot(haar(fit.f3$loadings.pm[[1]][1:2048,i]), main=paste0("Factor ",i, " (transformed space)"))
+}
+```
+
+Compute the haar transform of log returns:
+```{r}
+lp.h = log_returns[1:2048,]
+# do haar wavelet decomposition on log-returns and save in lp.h
+for(i in 1:ncol(log_prices)){
+  lp.h[,i] = haar(log_returns[1:2048,i])
+}
+```
+
+Quick look at correlations of the transformed data.
+```{r}
+S.h = cor(lp.h)
+heatmap(S.h, xlab = names(prices), symm=TRUE)
+```
+
+Maybe it makes sense just to do the higher scales?
+```{r}
+low_res = 2048-(0:255)
+S.h = cor(lp.h[low_res,])
+heatmap(S.h, xlab = names(prices), symm=TRUE)
+```
+
+
+I'm not quite sure of the right way to proceed here... I'm just going
+to apply flash to the wavelet transformed data, even though that does not really seem quite right (the iid prior on wavelet coefficients at different scales does not really seem sensible.)
+```{r}
+lp.h.f = flashier::flash(lp.h)
+for(i in 1:8){
+  barplot(lp.h.f$loadings.pm[[2]][,i], names.arg=names(prices), horiz=TRUE,las=2, main=paste0("Factor ",i))
+}
+
+for(i in 1:8){
+  plot(lp.h.f$loadings.pm[[1]][,i], main=paste0("Factor ",i," (transformed space)"))
+}
+
+for(i in 1:8){
+  plot(haar_inv(lp.h.f$loadings.pm[[1]][,i]), main=paste0("Factor ",i),type="l")
+}
+```
+
+Well this certainly made a difference: the first factors are no
+longer the time series type trends etc....Also they are not very
+spatially smooth. We may need to work on that.
