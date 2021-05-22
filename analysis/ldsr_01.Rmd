@@ -1,0 +1,62 @@
+---
+title: "ldsr_01"
+author: "Matthew Stephens"
+date: "2021-05-17"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+We know that 
+$$X'Y = X'X \beta + X'X b + X'E$$
+where 
+$\beta$ represents the true effects and $b = \Sigma^{-1} \Gamma \delta$
+represents the confounding effects, where $\Sigma=Cov(X)$.
+
+The key assumption of LDSC is that the prior on rows of $\Gamma$ (a p-vector
+in the case $q=1$) is
+homoskedastic. Waving our hands we can argue prior on $X'X \Sigma^{-1} \Gamma$
+is homoskedastic, since we might expect $X'X \Sigma^{-1}$ to be close to the identity. However, this is high dimensions so this I'm not sure how
+reliable this argument is. Also what if $\Sigma$ is singular? Can we make 
+these ideas rigorous?
+
+In addition, can we model the fact that $X'X \Sigma^{-1} \Gamma$ must lie in the row space of $X$ while keeping the homoskedastic nature?
+
+
+I thought I would start by looking at the distribution of 
+$$X'X \Sigma^{-1}$$ when $X$ is not full rank.
+
+```{r}
+p = 100
+n = 10
+V = matrix(rnorm(p*p),nrow=p,ncol=p)
+D = rep(1,p)
+V[,1] = c(rep(1,10),rep(0,90))
+V[,2] = c(rep(0,10),rep(1,90))
+D[1] = 100
+D[2] = 100
+V = t(D*t(V))
+Sigma = V %*% t(V)
+s = diag(Sigma)
+Sigma = (1/sqrt(s)) * Sigma
+Sigma = t((1/sqrt(s)) * t(Sigma))
+
+plot(Sigma[1,])
+
+
+X = mvtnorm::rmvnorm(n, sigma = Sigma)
+Sinv = chol2inv(chol(Sigma))
+XtXSinv = t(X) %*% X %*% Sinv
+
+plot(XtXSinv[1,])
+plot(XtXSinv[2,])
+plot(XtXSinv[1,],XtXSinv[2,])
+
+plot(XtXSinv[11,], XtXSinv[12,])
+plot(XtXSinv[1,],XtXSinv[11,])
+
+plot(XtXSinv , t(X) %*% X)
+```
+
