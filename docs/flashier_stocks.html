@@ -401,7 +401,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2021-05-22
+<strong>Last updated:</strong> 2021-05-23
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -492,16 +492,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree083b7401055edfb3d902a087878be2fb6f7f49c4targetblank083b740a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/083b7401055edfb3d902a087878be2fb6f7f49c4" target="_blank">083b740</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree749540f7800a50a902f34e8089489bbecaa7de73targetblank749540fa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/749540f7800a50a902f34e8089489bbecaa7de73" target="_blank">749540f</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree083b7401055edfb3d902a087878be2fb6f7f49c4targetblank083b740a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree749540f7800a50a902f34e8089489bbecaa7de73targetblank749540fa" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/083b7401055edfb3d902a087878be2fb6f7f49c4" target="_blank">083b740</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/749540f7800a50a902f34e8089489bbecaa7de73" target="_blank">749540f</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -612,7 +612,6 @@ Untracked files:
     Untracked:  data/mat_new.csv
     Untracked:  data/matrix_lik.rds
     Untracked:  data/paintor_data/
-    Untracked:  data/prices.csv
     Untracked:  data/running_data_chris.csv
     Untracked:  data/running_data_matthew.csv
     Untracked:  data/temp.txt
@@ -692,6 +691,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/749540f7800a50a902f34e8089489bbecaa7de73/analysis/flashier_stocks.Rmd" target="_blank">749540f</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-23
+</td>
+<td>
+workflowr::wflow_publish(“flashier_stocks.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/1cfd37481624ec7461c8d48abf9433f421ec70e1/docs/flashier_stocks.html" target="_blank">1cfd374</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-22
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/083b7401055edfb3d902a087878be2fb6f7f49c4/analysis/flashier_stocks.Rmd" target="_blank">083b740</a>
 </td>
 <td>
@@ -735,14 +768,52 @@ log_returns = apply(log_prices,2, diff)</code></pre>
 <pre class="r"><code>S = cor(log_returns)
 heatmap(S, xlab = names(prices), symm=TRUE)</code></pre>
 <p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-1">
+Past versions of unnamed-chunk-3-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-3-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1cfd37481624ec7461c8d48abf9433f421ec70e1/docs/figure/flashier_stocks.Rmd/unnamed-chunk-3-1.png" target="_blank">1cfd374</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <div id="flashier-on-the-raw-data" class="section level3">
 <h3>Flashier on the raw data</h3>
-<p>Note I use column-specific variances. I found backfitting really increases the sparsity in this case (particularly in the time dimension).</p>
+<p>Note I tried to use column-specific residual variances but it errored out. So I switched to constant variances. Backfitting seemed to clean up the factors so I did that.</p>
 <pre class="r"><code>#library(&quot;flashr&quot;)
 library(&quot;ebnm&quot;)
 library(&quot;flashier&quot;)
-#fit.f = flashr::flash(as.matrix(log_prices),ebnm_fn = &quot;ebnm_pl&quot;) ## errors out
-fit.f = flashier::flash(as.matrix(log_prices),prior.family = prior.point.laplace(), var.type = 2, backfit = TRUE)</code></pre>
+#fit.f = flashr::flash(as.matrix(log_returns),ebnm_fn = &quot;ebnm_pl&quot;) ## errors out
+#fit.f = flashier::flash(as.matrix(log_returns),prior.family = prior.point.laplace(), var.type = 2) # this produces an error
+fit.f = flashier::flash(as.matrix(log_returns),prior.family = prior.point.laplace(), var.type = 0, backfit=TRUE)</code></pre>
 <pre><code>Adding factor 1 to flash object...
 Adding factor 2 to flash object...
 Adding factor 3 to flash object...
@@ -752,10 +823,13 @@ Adding factor 6 to flash object...
 Adding factor 7 to flash object...
 Adding factor 8 to flash object...
 Adding factor 9 to flash object...
+Adding factor 10 to flash object...
+Adding factor 11 to flash object...
+Adding factor 12 to flash object...
 Factor doesn&#39;t significantly increase objective and won&#39;t be added.
 Wrapping up...
 Done.
-Backfitting 8 factors (tolerance: 5.17e-04)...
+Backfitting 11 factors (tolerance: 5.17e-04)...
   Difference between iterations is within 1.0e+03...
   Difference between iterations is within 1.0e+02...
   Difference between iterations is within 1.0e+01...
@@ -765,75 +839,647 @@ Backfitting 8 factors (tolerance: 5.17e-04)...
   Difference between iterations is within 1.0e-03...
 Wrapping up...
 Done.
-Nullchecking 8 factors...
+Nullchecking 11 factors...
 Done.</code></pre>
-<p>Plot the factors. Note that factor 1 is just a trend and factor 2 looks kind of like a sine wave…. is this just an artifact of looking at time series data? This result does maybe suggest that the data are auto-correlated along the time series.</p>
-<pre class="r"><code>for(i in 1:8){
+<p>Plot the factors.</p>
+<pre class="r"><code>for(i in 1:11){
   barplot(fit.f$loadings.pm[[2]][,i], names.arg=names(prices), horiz=TRUE,las=2, main=paste0(&quot;Factor &quot;,i))
 }</code></pre>
-<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-4.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-5.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-6.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-7.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-8.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>for(i in 1:8){
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-1">
+Past versions of unnamed-chunk-5-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1cfd37481624ec7461c8d48abf9433f421ec70e1/docs/figure/flashier_stocks.Rmd/unnamed-chunk-5-1.png" target="_blank">1cfd374</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-2">
+Past versions of unnamed-chunk-5-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1cfd37481624ec7461c8d48abf9433f421ec70e1/docs/figure/flashier_stocks.Rmd/unnamed-chunk-5-2.png" target="_blank">1cfd374</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-3">
+Past versions of unnamed-chunk-5-3.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1cfd37481624ec7461c8d48abf9433f421ec70e1/docs/figure/flashier_stocks.Rmd/unnamed-chunk-5-3.png" target="_blank">1cfd374</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-4">
+Past versions of unnamed-chunk-5-4.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-4" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1cfd37481624ec7461c8d48abf9433f421ec70e1/docs/figure/flashier_stocks.Rmd/unnamed-chunk-5-4.png" target="_blank">1cfd374</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-5.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-5">
+Past versions of unnamed-chunk-5-5.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-5" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1cfd37481624ec7461c8d48abf9433f421ec70e1/docs/figure/flashier_stocks.Rmd/unnamed-chunk-5-5.png" target="_blank">1cfd374</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-6.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-6">
+Past versions of unnamed-chunk-5-6.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-6" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1cfd37481624ec7461c8d48abf9433f421ec70e1/docs/figure/flashier_stocks.Rmd/unnamed-chunk-5-6.png" target="_blank">1cfd374</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-7.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-7">
+Past versions of unnamed-chunk-5-7.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-7" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1cfd37481624ec7461c8d48abf9433f421ec70e1/docs/figure/flashier_stocks.Rmd/unnamed-chunk-5-7.png" target="_blank">1cfd374</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-8.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-8">
+Past versions of unnamed-chunk-5-8.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-8" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1cfd37481624ec7461c8d48abf9433f421ec70e1/docs/figure/flashier_stocks.Rmd/unnamed-chunk-5-8.png" target="_blank">1cfd374</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-9.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-9">
+Past versions of unnamed-chunk-5-9.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-9" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1cfd37481624ec7461c8d48abf9433f421ec70e1/docs/figure/flashier_stocks.Rmd/unnamed-chunk-5-9.png" target="_blank">1cfd374</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-10.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-10">
+Past versions of unnamed-chunk-5-10.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-10" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1cfd37481624ec7461c8d48abf9433f421ec70e1/docs/figure/flashier_stocks.Rmd/unnamed-chunk-5-10.png" target="_blank">1cfd374</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-11.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-11">
+Past versions of unnamed-chunk-5-11.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-11" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1cfd37481624ec7461c8d48abf9433f421ec70e1/docs/figure/flashier_stocks.Rmd/unnamed-chunk-5-11.png" target="_blank">1cfd374</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>for(i in 1:11){
   plot(fit.f$loadings.pm[[1]][,i], main=paste0(&quot;Factor &quot;,i))
 }</code></pre>
-<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-9.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-10.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-11.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-12.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-13.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-14.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-15.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-16.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-12.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-12">
+Past versions of unnamed-chunk-5-12.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-12" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1cfd37481624ec7461c8d48abf9433f421ec70e1/docs/figure/flashier_stocks.Rmd/unnamed-chunk-5-12.png" target="_blank">1cfd374</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-22
+</td>
+</tr>
+</tbody>
+</table>
 </div>
-<div id="jnj-issue-and-residual-variance" class="section level3">
-<h3>JNJ issue, and residual variance</h3>
-<p>I was curious when I noticed that JNJ does not seem to belong to any factors except the first! In fact the first factor seems to be exactly JNJs log returns. It is overfitting and giving a very small residual variance for that stock…</p>
-<pre class="r"><code>fit.f$residuals.sd</code></pre>
-<pre><code>        AAPL         NFLX         AMZN          MMM            K            O 
-0.0884707914 0.1118814445 0.1212804169 0.0192397656 0.0567952716 0.0754391674 
-       NSRGY        LDSVF          JPM          JNJ         TSLA            V 
-0.0465249352 0.0689714652 0.0878101048 0.0004986196 0.0949300537 0.0393732055 
-         PFE 
-0.0577105742 </code></pre>
-<pre class="r"><code>plot(fit.f$loadings.pm[[1]][,1],log_prices[,10], main=&quot;factor 1 vs JNJ log-returns&quot;)</code></pre>
-<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Here I try using no column-specific variance to avoid that overfitting. I think this is a better idea. Now the first 3 factors kind of all look like the fourier components….</p>
-<pre class="r"><code>fit.f2 = flashier::flash(as.matrix(log_prices),prior.family = prior.point.laplace(), var.type = 0, backfit = TRUE)</code></pre>
-<pre><code>Adding factor 1 to flash object...
-Adding factor 2 to flash object...
-Adding factor 3 to flash object...
-Adding factor 4 to flash object...
-Adding factor 5 to flash object...
-Adding factor 6 to flash object...
-Factor doesn&#39;t significantly increase objective and won&#39;t be added.
-Wrapping up...
-Done.
-Backfitting 5 factors (tolerance: 5.17e-04)...
-  Difference between iterations is within 1.0e+03...
-  Difference between iterations is within 1.0e+02...
-  Difference between iterations is within 1.0e+01...
-  Difference between iterations is within 1.0e+00...
-  Difference between iterations is within 1.0e-01...
-  Difference between iterations is within 1.0e-02...
-  Difference between iterations is within 1.0e-03...
-Wrapping up...
-Done.
-Nullchecking 5 factors...
-Done.</code></pre>
-<pre class="r"><code>fit.f2$residuals.sd</code></pre>
-<pre><code>[1] 0.08518904</code></pre>
-<pre class="r"><code>for(i in 1:5){
-  barplot(fit.f2$loadings.pm[[2]][,i], names.arg=names(prices), horiz=TRUE,las=2, main=paste0(&quot;Factor &quot;,i))
-}</code></pre>
-<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-7-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-7-4.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-7-5.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>for(i in 1:5){
-  plot(fit.f2$loadings.pm[[1]][,i], main=paste0(&quot;Factor &quot;,i))
-}</code></pre>
-<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-7-6.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-7-7.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-7-8.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-7-9.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-7-10.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-13.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-13">
+Past versions of unnamed-chunk-5-13.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-13" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1cfd37481624ec7461c8d48abf9433f421ec70e1/docs/figure/flashier_stocks.Rmd/unnamed-chunk-5-13.png" target="_blank">1cfd374</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-14.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-14">
+Past versions of unnamed-chunk-5-14.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-14" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1cfd37481624ec7461c8d48abf9433f421ec70e1/docs/figure/flashier_stocks.Rmd/unnamed-chunk-5-14.png" target="_blank">1cfd374</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-15.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-15">
+Past versions of unnamed-chunk-5-15.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-15" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1cfd37481624ec7461c8d48abf9433f421ec70e1/docs/figure/flashier_stocks.Rmd/unnamed-chunk-5-15.png" target="_blank">1cfd374</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-16.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-16">
+Past versions of unnamed-chunk-5-16.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-16" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1cfd37481624ec7461c8d48abf9433f421ec70e1/docs/figure/flashier_stocks.Rmd/unnamed-chunk-5-16.png" target="_blank">1cfd374</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-17.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-18.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-19.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-20.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-21.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-5-22.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="flashier-on-the-correlation-matrix" class="section level3">
 <h3>Flashier on the correlation matrix</h3>
-<p>Try factor analysis on the correlation matrix. I found it interesting that in the raw data analysis LDSVF was loaded on the first factor, but not in the correlation analysis, which I guess is because the correlation removes some of the overall mean effect and LDSVF is almost independent of others after that is removed?</p>
-<p>Also, I feel like the raw correlation matrix shows some additional structure that is likely to be real – eg PFE and JNJ correlation – that is not picked out here….but maybe that is naive on my part.</p>
+<p>Try factor analysis on the correlation matrix. We see a lot fewer factors. I am interested why this is. I didn’t really expect such a big difference when the factors are dense, as they seem to be here (in time space).</p>
+<p>One possibility is that although the inferred factors are dense, they are long tailed and the inferred factors are driven by the outliers. It might be worth doing some simulations with dense long-tailed factors and comparing inference from correlation vs full data.</p>
+<p>Another possibility is that many of the raw data results are driven by stock-specific factors. Here stock-specific factors are not represented because I remove the diagonal. And the 2 factors identified could be thought of as 3 factors if we went non-negative… in that case the differences between the results do not look so stark.</p>
+<p>I did try running this without removing diagonal, but the stock-specific factors don’t get picked up; I think this may be due to problems converging to them (eg svd would not initialize near them…) That may suggest it could also be difficult to find other sparse factors of course (eg involving pairs of stocks).</p>
 <pre class="r"><code>Smiss = S
 diag(Smiss) &lt;- NA
-S.f = flashier::flash(Smiss,prior.family = prior.point.laplace(), var.type = 0)</code></pre>
+S.f = flashier::flash(Smiss,prior.family = prior.point.laplace(), var.type = 0, backfit=TRUE)</code></pre>
 <pre><code>Adding factor 1 to flash object...
 Adding factor 2 to flash object...
 Adding factor 3 to flash object...
 Factor doesn&#39;t significantly increase objective and won&#39;t be added.
+Wrapping up...
+Done.
+Backfitting 2 factors (tolerance: 2.52e-06)...
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+  Difference between iterations is within 1.0e-02...
+  Difference between iterations is within 1.0e-03...
+  Difference between iterations is within 1.0e-04...
+  Difference between iterations is within 1.0e-05...
 Wrapping up...
 Done.
 Nullchecking 2 factors...
@@ -841,12 +1487,231 @@ Done.</code></pre>
 <pre class="r"><code>for(i in 1:2){
   barplot(S.f$loadings.pm[[2]][,i], names.arg=names(prices), horiz=TRUE,las=2, main=paste0(&quot;Factor &quot;,i))
 }</code></pre>
-<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-1">
+Past versions of unnamed-chunk-6-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1cfd37481624ec7461c8d48abf9433f421ec70e1/docs/figure/flashier_stocks.Rmd/unnamed-chunk-6-1.png" target="_blank">1cfd374</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="flashier-on-the-covariance-matrix" class="section level3">
+<h3>Flashier on the covariance matrix</h3>
+<p>Try factor analysis on the covariance matrix. We still see a lot fewer factors.</p>
+<pre class="r"><code>S2 = cov(log_returns)
+S2.f = flashier::flash(S2,prior.family = prior.point.laplace(), var.type = 0, backfit = TRUE)</code></pre>
+<pre><code>Adding factor 1 to flash object...
+Adding factor 2 to flash object...
+Adding factor 3 to flash object...
+Adding factor 4 to flash object...
+Adding factor 5 to flash object...
+Factor doesn&#39;t significantly increase objective and won&#39;t be added.
+Wrapping up...
+Done.
+Backfitting 4 factors (tolerance: 2.52e-06)...
+  Difference between iterations is within 1.0e+01...
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+  Difference between iterations is within 1.0e-02...
+  Difference between iterations is within 1.0e-03...
+  Difference between iterations is within 1.0e-04...
+  Difference between iterations is within 1.0e-05...
+Wrapping up...
+Done.
+Nullchecking 4 factors...
+Done.</code></pre>
+<pre class="r"><code>for(i in 1:4){
+  barplot(S2.f$loadings.pm[[2]][,i], names.arg=names(prices), horiz=TRUE,las=2, main=paste0(&quot;Factor &quot;,i))
+}</code></pre>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-7-1">
+Past versions of unnamed-chunk-7-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-7-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1cfd37481624ec7461c8d48abf9433f421ec70e1/docs/figure/flashier_stocks.Rmd/unnamed-chunk-7-1.png" target="_blank">1cfd374</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-7-2">
+Past versions of unnamed-chunk-7-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-7-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1cfd37481624ec7461c8d48abf9433f421ec70e1/docs/figure/flashier_stocks.Rmd/unnamed-chunk-7-2.png" target="_blank">1cfd374</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-7-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-7-3">
+Past versions of unnamed-chunk-7-3.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-7-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1cfd37481624ec7461c8d48abf9433f421ec70e1/docs/figure/flashier_stocks.Rmd/unnamed-chunk-7-3.png" target="_blank">1cfd374</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-7-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-7-4">
+Past versions of unnamed-chunk-7-4.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-7-4" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1cfd37481624ec7461c8d48abf9433f421ec70e1/docs/figure/flashier_stocks.Rmd/unnamed-chunk-7-4.png" target="_blank">1cfd374</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="flashier-on-the-standardized-raw-data" class="section level3">
 <h3>Flashier on the standardized raw data</h3>
-<p>I was kind of surprised no factor picked out the JNJ/PFE correlation, so I tried rerunning on the standardized raw data. It still did not pick that out as a separate factor, but maybe it is naive to think things would be as simple as that.</p>
-<pre class="r"><code>fit.f3 = flashier::flash(scale(log_prices),prior.family = prior.point.laplace(), var.type = 0, backfit = TRUE)</code></pre>
+<p>Here I tried rerunning on the standardized raw data to see how that affects things.</p>
+<pre class="r"><code>fit.f3 = flashier::flash(scale(log_returns),prior.family = prior.point.laplace(), var.type = 0, backfit = TRUE)</code></pre>
 <pre><code>Adding factor 1 to flash object...
 Adding factor 2 to flash object...
 Adding factor 3 to flash object...
@@ -855,11 +1720,16 @@ Adding factor 5 to flash object...
 Adding factor 6 to flash object...
 Adding factor 7 to flash object...
 Adding factor 8 to flash object...
+Adding factor 9 to flash object...
+Adding factor 10 to flash object...
+Adding factor 11 to flash object...
+Adding factor 12 to flash object...
+Adding factor 13 to flash object...
+Adding factor 14 to flash object...
 Factor doesn&#39;t significantly increase objective and won&#39;t be added.
 Wrapping up...
 Done.
-Backfitting 7 factors (tolerance: 5.17e-04)...
-  Difference between iterations is within 1.0e+03...
+Backfitting 13 factors (tolerance: 5.17e-04)...
   Difference between iterations is within 1.0e+02...
   Difference between iterations is within 1.0e+01...
   Difference between iterations is within 1.0e+00...
@@ -868,16 +1738,92 @@ Backfitting 7 factors (tolerance: 5.17e-04)...
   Difference between iterations is within 1.0e-03...
 Wrapping up...
 Done.
-Nullchecking 7 factors...
+Nullchecking 13 factors...
 Done.</code></pre>
-<pre class="r"><code>for(i in 1:7){
+<pre class="r"><code>for(i in 1:13){
   barplot(fit.f3$loadings.pm[[2]][,i], names.arg=names(prices), horiz=TRUE,las=2, main=paste0(&quot;Factor &quot;,i))
 }</code></pre>
-<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-9-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-9-4.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-9-5.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-9-6.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-9-7.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>for(i in 1:7){
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-1">
+Past versions of unnamed-chunk-8-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-8-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1cfd37481624ec7461c8d48abf9433f421ec70e1/docs/figure/flashier_stocks.Rmd/unnamed-chunk-8-1.png" target="_blank">1cfd374</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-2">
+Past versions of unnamed-chunk-8-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-8-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1cfd37481624ec7461c8d48abf9433f421ec70e1/docs/figure/flashier_stocks.Rmd/unnamed-chunk-8-2.png" target="_blank">1cfd374</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-4.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-5.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-6.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-7.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-8.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-9.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-10.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-11.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-12.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-13.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>for(i in 1:13){
   plot(fit.f3$loadings.pm[[1]][,i], main=paste0(&quot;Factor &quot;,i))
 }</code></pre>
-<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-9-8.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-9-9.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-9-10.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-9-11.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-9-12.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-9-13.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-9-14.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-14.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-15.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-16.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-17.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-18.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-19.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-20.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-21.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-22.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-23.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-24.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-25.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-8-26.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="wavelet-transformed-data" class="section level3">
 <h3>Wavelet transformed data</h3>
@@ -904,11 +1850,11 @@ haar_inv = function(x,scale=sqrt(2)){
   smoothed = haar_inv(x[2,]) 
   return(as.vector(rbind(smoothed+x[1,], smoothed-x[1,]))/2)
 }</code></pre>
-<p>Now I plot the above fitted factors after haar transform. As expected they are sparser in that basis.</p>
-<pre class="r"><code>for(i in 1:7){
+<p>Now I plot the above fitted factors after haar transform. There isn’t an obvious decrease in sparsity (not surpising since there was not an obvious spatiol component.)</p>
+<pre class="r"><code>for(i in 1:13){
   plot(haar(fit.f3$loadings.pm[[1]][1:2048,i]), main=paste0(&quot;Factor &quot;,i, &quot; (transformed space)&quot;))
 }</code></pre>
-<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-11-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-11-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-11-4.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-11-5.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-11-6.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-11-7.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-10-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-10-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-10-4.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-10-5.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-10-6.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-10-7.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-10-8.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-10-9.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-10-10.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-10-11.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-10-12.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-10-13.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Compute the haar transform of log returns:</p>
 <pre class="r"><code>lp.h = log_returns[1:2048,]
 # do haar wavelet decomposition on log-returns and save in lp.h
@@ -918,14 +1864,51 @@ for(i in 1:ncol(log_prices)){
 <p>Quick look at correlations of the transformed data.</p>
 <pre class="r"><code>S.h = cor(lp.h)
 heatmap(S.h, xlab = names(prices), symm=TRUE)</code></pre>
-<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Maybe it makes sense just to do the higher scales?</p>
 <pre class="r"><code>low_res = 2048-(0:255)
 S.h = cor(lp.h[low_res,])
 heatmap(S.h, xlab = names(prices), symm=TRUE)</code></pre>
-<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-13-1">
+Past versions of unnamed-chunk-13-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-13-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1cfd37481624ec7461c8d48abf9433f421ec70e1/docs/figure/flashier_stocks.Rmd/unnamed-chunk-13-1.png" target="_blank">1cfd374</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>I’m not quite sure of the right way to proceed here… I’m just going to apply flash to the wavelet transformed data, even though that does not really seem quite right (the iid prior on wavelet coefficients at different scales does not really seem sensible.)</p>
-<pre class="r"><code>lp.h.f = flashier::flash(lp.h)</code></pre>
+<pre class="r"><code>lp.h.f = flashier::flash(lp.h, prior.family=prior.point.laplace(), backfit=TRUE)</code></pre>
 <pre><code>Adding factor 1 to flash object...
 Adding factor 2 to flash object...
 Adding factor 3 to flash object...
@@ -938,21 +1921,68 @@ Adding factor 9 to flash object...
 Factor doesn&#39;t significantly increase objective and won&#39;t be added.
 Wrapping up...
 Done.
+Backfitting 8 factors (tolerance: 3.97e-04)...
+  Difference between iterations is within 1.0e+02...
+  Difference between iterations is within 1.0e+01...
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+  Difference between iterations is within 1.0e-02...
+  Difference between iterations is within 1.0e-03...
+  Difference between iterations is within 1.0e-04...
+Wrapping up...
+Done.
 Nullchecking 8 factors...
 Done.</code></pre>
 <pre class="r"><code>for(i in 1:8){
   barplot(lp.h.f$loadings.pm[[2]][,i], names.arg=names(prices), horiz=TRUE,las=2, main=paste0(&quot;Factor &quot;,i))
 }</code></pre>
-<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-15-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-15-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-15-4.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-15-5.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-15-6.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-15-7.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-15-8.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-14-1">
+Past versions of unnamed-chunk-14-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-14-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1cfd37481624ec7461c8d48abf9433f421ec70e1/docs/figure/flashier_stocks.Rmd/unnamed-chunk-14-1.png" target="_blank">1cfd374</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-22
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-14-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-14-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-14-4.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-14-5.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-14-6.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-14-7.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-14-8.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>for(i in 1:8){
   plot(lp.h.f$loadings.pm[[1]][,i], main=paste0(&quot;Factor &quot;,i,&quot; (transformed space)&quot;))
 }</code></pre>
-<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-15-9.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-15-10.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-15-11.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-15-12.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-15-13.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-15-14.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-15-15.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-15-16.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-14-9.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-14-10.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-14-11.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-14-12.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-14-13.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-14-14.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-14-15.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-14-16.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>for(i in 1:8){
   plot(haar_inv(lp.h.f$loadings.pm[[1]][,i]), main=paste0(&quot;Factor &quot;,i),type=&quot;l&quot;)
 }</code></pre>
-<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-15-17.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-15-18.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-15-19.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-15-20.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-15-21.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-15-22.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-15-23.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-15-24.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Well this certainly made a difference: the first factors are no longer the time series type trends etc….Also they are not very spatially smooth. We may need to work on that.</p>
+<p><img src="figure/flashier_stocks.Rmd/unnamed-chunk-14-17.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-14-18.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-14-19.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-14-20.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-14-21.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-14-22.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-14-23.png" width="672" style="display: block; margin: auto;" /><img src="figure/flashier_stocks.Rmd/unnamed-chunk-14-24.png" width="672" style="display: block; margin: auto;" /></p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
