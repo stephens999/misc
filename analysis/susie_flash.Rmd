@@ -1,0 +1,106 @@
+---
+title: "susie_flash"
+author: "Matthew Stephens"
+date: "2021-05-23"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+My idea here is to look at using flash, with
+susie to solve the ebnm problem.
+Susie is very sparse, so the idea is that this might
+provide a good solution for very sparse factors. This is potentially
+helpful because in some applications we have problems where the prior
+and factors start off dense (from PCA initialization say),
+and then it can't move away from that solution.
+
+```{r}
+library(susieR)
+library(flashier)
+```
+
+### Try flashier
+
+I coded up an ebnm function based on susie (which assumes only
+a small number of values are non-zero).
+
+```{r}
+ebnm_susie = function(x,s, g_init,fix_g, output){
+  z = x/s
+  fit.susie = susieR::susie_rss(z, R = diag(length(z)))
+  posterior <- list(mean = drop(s*susie_get_posterior_mean(fit.susie)), sd = drop(s*susie_get_posterior_sd(fit.susie)))
+  posterior$second_moment = posterior$mean^2 + posterior$sd^2
+  return(list(posterior=posterior, log_likelihood = susie_get_objective(fit.susie), fitted_g = "susie"))
+}
+```
+
+Now I run it on data with 10 independent variables. So the
+covariance will be close to the identity. My idea is that
+it should pick up the 10 variables as sparse "factors".
+(This is a bit weird compared with regular factor analysis, but
+I think it should work that way in principle.)
+However, it stopped after fitting one factor for reasons I don't understand yet.
+
+
+```{r}
+n = 100
+p = 10
+x = matrix(rnorm(n*p),nrow=n,ncol=p)
+S = cov(x)
+S.f = flashier::flash(S, prior.family = as.prior(ebnm_susie),  backfit=FALSE, var.type=2)
+S.f$loadings.pm
+```
+
+
+### Try flashr
+
+Here I tried `flashr` instead (which requires a different output format
+for the ebnm function, unfortunately). It seems to kind of work.
+```{r}
+ebnm_susie2 = function(x,s, ebnm_param, output=NULL){
+  z = x/s
+  fit.susie = susieR::susie_rss(drop(z), R = diag(length(drop(z))))
+  posterior <- list(mean = s*susie_get_posterior_mean(fit.susie), sd = s*susie_get_posterior_sd(fit.susie))
+  posterior$second_moment = posterior$mean^2 + posterior$sd^2
+  return(list(postmean = drop(posterior$mean), postmean2 = drop(posterior$second_moment), penloglik = drop(susie_get_objective(fit.susie)), fitted.g = NULL))
+}
+fit.flash = flashr::flash(S,ebnm_fn = "ebnm_susie2")
+image(fit.flash$ldf$l)
+image(fit.flash$ldf$f)
+```
+
+
+## Block structure
+
+Now I simulate data with a strong block structure.
+It finds the blocks, but it fits each block using multiple factors, presumably
+because it is "over-shrinking" each factor so it needs
+to add more factors to compensate.
+
+```{r}
+x1 = rnorm(n)
+x2 = rnorm(n)
+x = cbind(x1,x1,x1,x2,x2,x2,x2,x2)
+S = cov(x)
+image(S)
+fit.flash = flashr::flash(S,ebnm_fn = "ebnm_susie2")
+fit.flash$ldf$f
+
+```
+
+
+Try looking at rank 1 solution.. indeed it is underfitting... 
+Maybe because the residual variance is too big because the signal
+has not yet been removed? Maybe adding a diagonal
+element could help with this? (ie Y = LDF' + E where D is a 
+diagonal matrix estimated as a free parameter?)
+
+```{r}
+fit.flash = flashr::flash(S,ebnm_fn = "ebnm_susie2", Kmax=1)
+flashr::flash_get_fitted_values(fit.flash)
+fit.flash$ldf$l
+```
+
