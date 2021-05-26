@@ -1,0 +1,38 @@
+---
+title: "lasso_complexity"
+author: "Matthew Stephens"
+date: "2021-05-26"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+I was suprised to hear that lasso complexity for full solution path
+is O(np min(n,p)). I always thought it was O(np) per iteration and
+did not think about how the number of iterations required might increase with n and p. I wanted to do a quick simulation check. 
+
+```{r}
+library("glmnet")
+n_seq = c(100, 200, 500, 1000, 2000, 5000, 10000)
+p = 10000
+nmax = 10000
+X = matrix(rnorm(nmax*p),nrow=nmax)
+b = rnorm(p)
+time = c()
+
+for(n in n_seq){
+  
+  y = X[1:n,] %*% b + rnorm(n)
+  time = c(time,system.time(fit <- glmnet(X[1:n,],y))[1]) # user time
+  #print(time)
+  
+}
+
+plot(log(n_seq),log(time), main = "log-time vs log(n)")
+
+slope = (log(time)[7]-log(time)[1])/(log(n_seq)[7]-log(n_seq)[1])
+print(slope)
+```
+
