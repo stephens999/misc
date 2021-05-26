@@ -13,6 +13,9 @@ I was suprised to hear that lasso complexity for full solution path
 is O(np min(n,p)). I always thought it was O(np) per iteration and
 did not think about how the number of iterations required might increase with n and p. I wanted to do a quick simulation check. 
 
+Empirically the log-log plot for time vs n is approximately linear with slope near 1.25, suggesting a practical scaling of O(n^1.25 p). Of course
+this is very much just a quick initial assessment.
+
 ```{r}
 library("glmnet")
 n_seq = c(100, 200, 500, 1000, 2000, 5000, 10000)
@@ -30,7 +33,7 @@ for(n in n_seq){
   
 }
 
-plot(log(n_seq),log(time), main = "log-time vs log(n)")
+plot(log(n_seq),log(time), main = "log(user time) vs log(n)")
 
 slope = (log(time)[7]-log(time)[1])/(log(n_seq)[7]-log(n_seq)[1])
 print(slope)
