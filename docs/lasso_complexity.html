@@ -492,16 +492,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree840b89edec8b4ecce820a70504aee9885b2de3d5targetblank840b89ea"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/840b89edec8b4ecce820a70504aee9885b2de3d5" target="_blank">840b89e</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreeedacee4fdae36e98ad895389811ef7bdf7b842abtargetblankedacee4a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/edacee4fdae36e98ad895389811ef7bdf7b842ab" target="_blank">edacee4</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree840b89edec8b4ecce820a70504aee9885b2de3d5targetblank840b89ea" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreeedacee4fdae36e98ad895389811ef7bdf7b842abtargetblankedacee4a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/840b89edec8b4ecce820a70504aee9885b2de3d5" target="_blank">840b89e</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/edacee4fdae36e98ad895389811ef7bdf7b842ab" target="_blank">edacee4</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -691,6 +691,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/edacee4fdae36e98ad895389811ef7bdf7b842ab/analysis/lasso_complexity.Rmd" target="_blank">edacee4</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-26
+</td>
+<td>
+workflowr::wflow_publish(“lasso_complexity.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/84f23cb55b84cb5c8cb0bd691aa51f17192c7e24/docs/lasso_complexity.html" target="_blank">84f23cb</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-26
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/840b89edec8b4ecce820a70504aee9885b2de3d5/analysis/lasso_complexity.Rmd" target="_blank">840b89e</a>
 </td>
 <td>
@@ -746,9 +780,10 @@ wflow_publish(“lasso_complexity.Rmd”)
 </div>
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
-<p>I was suprised to hear that lasso complexity for full solution path is O(np min(n,p)). I always thought it was O(np) per iteration and did not think about how the number of iterations required might increase with n and p. I wanted to do a quick simulation check.</p>
+<p>I was suprised to hear that (“worst case”) lasso complexity for full solution path is O(np min(n,p)). I always thought it was O(np) per iteration and did not think about how the number of iterations required might increase with n and p. I wanted to do a quick simulation check.</p>
 <p>Empirically the log-log plot for time vs n is approximately linear with slope near 1.25, suggesting a practical scaling of O(n^1.25 p). Of course this is very much just a quick initial assessment.</p>
-<pre class="r"><code>library(&quot;glmnet&quot;)</code></pre>
+<pre class="r"><code>set.seed(123)
+library(&quot;glmnet&quot;)</code></pre>
 <pre><code>Warning: package &#39;glmnet&#39; was built under R version 3.6.2</code></pre>
 <pre><code>Loading required package: Matrix</code></pre>
 <pre><code>Loaded glmnet 4.1</code></pre>
@@ -793,6 +828,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/84f23cb55b84cb5c8cb0bd691aa51f17192c7e24/docs/figure/lasso_complexity.Rmd/unnamed-chunk-1-1.png" target="_blank">84f23cb</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-26
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/222582b9b60b5f6edb84813e61bc43906eabc520/docs/figure/lasso_complexity.Rmd/unnamed-chunk-1-1.png" target="_blank">222582b</a>
 </td>
 <td>
@@ -809,7 +855,61 @@ Matthew Stephens
 <pre class="r"><code>slope = (log(time)[7]-log(time)[1])/(log(n_seq)[7]-log(n_seq)[1])
 print(slope)</code></pre>
 <pre><code>user.self 
- 1.260601 </code></pre>
+   1.2732 </code></pre>
+</div>
+<div id="comparison-with-susie" class="section level2">
+<h2>Comparison with Susie</h2>
+<p>Just for interest I ran susie on the same datasets, but it is a bit slow for “dense” scenarios like this so I reduced p to 5k to save some time.</p>
+<pre class="r"><code>set.seed(123)
+library(&quot;susieR&quot;)
+n_seq = c(100, 200, 500, 1000, 2000, 5000)
+p = 5000
+nmax = max(n_seq)
+X = matrix(rnorm(nmax*p),nrow=nmax)
+b = rnorm(p)
+time = c()
+time.susie = c()
+
+for(n in n_seq){
+  
+  y = X[1:n,] %*% b + rnorm(n)
+  time.susie = c(time.susie,system.time(fit &lt;- susie(X[1:n,],y))[1]) # user time
+  time = c(time, system.time(fit &lt;- glmnet(X[1:n,],y))[1])
+  #print(time.susie)
+  
+}
+
+plot(log(n_seq),log(time.susie), main = &quot;red=susie; black=lasso&quot;,col=2,ylim=c(-3.5,4))
+points(log(n_seq),log(time))</code></pre>
+<p><img src="figure/lasso_complexity.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>For the largest dataset here susie is slower than a single fit of lasso (complete solution path) by a factor of 7.5335772. This is without CV for lasso though, so with 5-fold or 10-fold CV the times would be comparable.</p>
+</div>
+<div id="sparser-case" class="section level2">
+<h2>Sparser case</h2>
+<p>Here I simulate data with only 5 non-zero effects to see how it changes things. Here for the largest data-sets the two running times are similar (so susie would be faster if we did 5-fold CV for lasso).</p>
+<pre class="r"><code>set.seed(123)
+n_seq = c(100, 200, 500, 1000, 2000, 5000)
+p = 5000
+nmax = max(n_seq)
+X = matrix(rnorm(nmax*p),nrow=nmax)
+b = rep(0,p)
+b[1:5] = rnorm(5)
+
+time = c()
+time.susie = c()
+
+for(n in n_seq){
+  
+  y = X[1:n,] %*% b + rnorm(n)
+  time.susie = c(time.susie,system.time(fit &lt;- susie(X[1:n,],y))[1]) # user time
+  time = c(time, system.time(fit &lt;- glmnet(X[1:n,],y))[1])
+  #print(time.susie)
+  
+}
+
+plot(log(n_seq),log(time.susie), main = &quot;red=susie; black=lasso&quot;,col=2,ylim=c(-3.5,4))
+points(log(n_seq),log(time))</code></pre>
+<p><img src="figure/lasso_complexity.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -833,20 +933,23 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] glmnet_4.1    Matrix_1.2-18
+[1] susieR_0.11.26 glmnet_4.1     Matrix_1.2-18 
 
 loaded via a namespace (and not attached):
- [1] Rcpp_1.0.6       pillar_1.4.6     compiler_3.6.0   later_1.1.0.1   
- [5] git2r_0.27.1     workflowr_1.6.2  iterators_1.0.12 tools_3.6.0     
- [9] digest_0.6.27    evaluate_0.14    lifecycle_1.0.0  tibble_3.0.4    
-[13] lattice_0.20-41  pkgconfig_2.0.3  rlang_0.4.10     foreach_1.5.0   
-[17] rstudioapi_0.13  yaml_2.2.1       xfun_0.16        stringr_1.4.0   
-[21] knitr_1.29       fs_1.5.0         vctrs_0.3.8      rprojroot_1.3-2 
-[25] grid_3.6.0       glue_1.4.2       R6_2.4.1         survival_3.2-3  
-[29] rmarkdown_2.3    magrittr_2.0.1   whisker_0.4      backports_1.1.10
-[33] promises_1.1.1   codetools_0.2-16 ellipsis_0.3.1   htmltools_0.5.0 
-[37] splines_3.6.0    shape_1.4.4      httpuv_1.5.4     stringi_1.4.6   
-[41] crayon_1.3.4    </code></pre>
+ [1] Rcpp_1.0.6       plyr_1.8.6       pillar_1.4.6     compiler_3.6.0  
+ [5] later_1.1.0.1    git2r_0.27.1     workflowr_1.6.2  iterators_1.0.12
+ [9] tools_3.6.0      digest_0.6.27    gtable_0.3.0     evaluate_0.14   
+[13] lifecycle_1.0.0  tibble_3.0.4     lattice_0.20-41  pkgconfig_2.0.3 
+[17] rlang_0.4.10     foreach_1.5.0    rstudioapi_0.13  yaml_2.2.1      
+[21] xfun_0.16        dplyr_1.0.2      stringr_1.4.0    knitr_1.29      
+[25] generics_0.0.2   fs_1.5.0         vctrs_0.3.8      tidyselect_1.1.0
+[29] rprojroot_1.3-2  grid_3.6.0       reshape_0.8.8    glue_1.4.2      
+[33] R6_2.4.1         survival_3.2-3   rmarkdown_2.3    mixsqp_0.3-43   
+[37] irlba_2.3.3      purrr_0.3.4      ggplot2_3.3.2    magrittr_2.0.1  
+[41] whisker_0.4      scales_1.1.1     backports_1.1.10 promises_1.1.1  
+[45] codetools_0.2-16 ellipsis_0.3.1   htmltools_0.5.0  splines_3.6.0   
+[49] colorspace_1.4-1 shape_1.4.4      httpuv_1.5.4     stringi_1.4.6   
+[53] munsell_0.5.0    crayon_1.3.4    </code></pre>
 </div>
 </div>
 
