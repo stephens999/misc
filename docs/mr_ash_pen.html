@@ -401,7 +401,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2021-05-11
+<strong>Last updated:</strong> 2021-05-28
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -492,16 +492,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreef77f070ae876c3a547d64aed3851eab4cc9accbbtargetblankf77f070a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/f77f070ae876c3a547d64aed3851eab4cc9accbb" target="_blank">f77f070</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreee31a06c2c7b3865bb41f2c2ab7e6600bae7f0e81targetblanke31a06ca"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/e31a06c2c7b3865bb41f2c2ab7e6600bae7f0e81" target="_blank">e31a06c</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreef77f070ae876c3a547d64aed3851eab4cc9accbbtargetblankf77f070a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreee31a06c2c7b3865bb41f2c2ab7e6600bae7f0e81targetblanke31a06ca" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/f77f070ae876c3a547d64aed3851eab4cc9accbb" target="_blank">f77f070</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/e31a06c2c7b3865bb41f2c2ab7e6600bae7f0e81" target="_blank">e31a06c</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -649,15 +649,6 @@ Untracked files:
     Untracked:  output/test5.log.txt
     Untracked:  output/test5.param.txt
 
-Unstaged changes:
-    Modified:   analysis/ash_delta_operator.Rmd
-    Modified:   analysis/ash_pois_bcell.Rmd
-    Modified:   analysis/lasso_em.Rmd
-    Modified:   analysis/minque.Rmd
-    Modified:   analysis/mr_missing_data.Rmd
-    Modified:   analysis/ridge_admm.Rmd
-    Modified:   analysis/vamp_01.Rmd
-
 </code></pre>
 <p>
 Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
@@ -700,6 +691,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/e31a06c2c7b3865bb41f2c2ab7e6600bae7f0e81/analysis/mr_ash_pen.Rmd" target="_blank">e31a06c</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-28
+</td>
+<td>
+workflowr::wflow_publish(“analysis/mr_ash_pen.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/800415b1f1f350532cba5e91065d552c4816535a/docs/mr_ash_pen.html" target="_blank">800415b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-11
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/f77f070ae876c3a547d64aed3851eab4cc9accbb/analysis/mr_ash_pen.Rmd" target="_blank">f77f070</a>
 </td>
 <td>
@@ -722,107 +747,264 @@ wflow_publish(“analysis/mr_ash_pen.Rmd”)
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
 <p>The idea here is to code up mr.ash as a penalized method, compute gradients etc.</p>
-<p>The obvious way to write the problem is <span class="math display">\[\min_b (1/2\sigma^2) ||y - Xb||_2 + \sum_j \rho_{g,s_j}(b_j)\]</span> Where the penalty <span class="math inline">\(\rho\)</span> depends on the prior (<span class="math inline">\(g\)</span>) and the <span class="math inline">\(s_j^2=\sigma^2/(x_j&#39;x_j)\)</span>.</p>
-<p>However, the penalty <span class="math inline">\(\rho(b)\)</span> is inconvenient to compute because it involves the inverse of <span class="math inline">\(S\)</span> (the posterior mean shrinkage function) which is not analytically available to us (at least in our current state of knowledge).</p>
-<p>A simple idea is to rewrite the problem as: <span class="math display">\[\min_b (1/2\sigma^2) ||y - XS(b)||_2 + \rho(S(b))\]</span> Here <span class="math inline">\(S(b)\)</span> means apply <span class="math inline">\(S\)</span> element-wise to the vector <span class="math inline">\(b\)</span>. Because <span class="math inline">\(S\)</span> is invertible there is no loss of generality in writing the optimization this way. Furthermore, <span class="math display">\[h(b):=\rho(S(b))\]</span> is easy to compute:</p>
-<p><span class="math display">\[h(b) = -l(b) +0.5 l&#39;(b) - 0.5 \log (2\pi s^2)\]</span> where <span class="math inline">\(l(b)\)</span> is the marginal log-likelihood function under the normal means model. That is <span class="math inline">\(l(b) = \log(f(b))\)</span> where <span class="math display">\[f(b) := \sum_k \pi_k N(b; 0, \sigma_k^2+s^2).\]</span></p>
+<p>The penalized version of the mr.ash problem is (see Theorem 6 in mr.ash draft) <span class="math display">\[\min_b (1/2\sigma^2) ||y - Xb||_2 + (1/\sigma^2) \sum_j \rho_{g,s_j}(b_j) + 0.5(n-p) \log(2\pi \sigma^2)\]</span> Where the penalty <span class="math inline">\(\rho\)</span> depends on the prior (<span class="math inline">\(g\)</span>) and the <span class="math inline">\(s_j^2:=\sigma^2/(x_j&#39;x_j)\)</span>. Here I’m going to assume for simplicity that <span class="math inline">\(g\)</span> denotes the prior on b, ie not scale the prior on b by the residual variance as in the paper.</p>
+<p>The penalty <span class="math inline">\(\rho_{g,s_j}(b)\)</span> is inconvenient to compute because it involves the inverse of <span class="math inline">\(S\)</span> (the posterior mean shrinkage function) which is not analytically available to us, at least in our current state of knowledge.</p>
+<p>A simple idea is to rewrite the problem as: <span class="math display">\[\min_b (1/2\sigma^2) ||y - XS_{g,s}(b)||_2 + (1/\sigma^2) \rho_{g,s}(S_{g,s}(b)) + 0.5(n-p) \log(2\pi \sigma^2)\]</span> Here <span class="math inline">\(S_{g,s}(b)\)</span> means apply <span class="math inline">\(S\)</span> element-wise to the vector <span class="math inline">\(b\)</span>. There is a slight abuse of notation here as <span class="math inline">\(s_j\)</span> may vary across <span class="math inline">\(j\)</span>. To be explicit, the <span class="math inline">\(j\)</span>th element is <span class="math inline">\(S_{g,s}(b)\)</span> is equal to <span class="math inline">\(S_{g,s_j}(b_j)\)</span>.</p>
+<p>Because <span class="math inline">\(S_{g,s}\)</span> is invertible there is no loss of generality in writing the optimization this way. Furthermore, <span class="math display">\[h_{g,s}(b):=\rho_{g,s}(S_{g,s}(b))\]</span> is easy to compute. Indeed <span class="math display">\[h_{g,s}(b) = -s^2 l_{g,s}(b) - 0.5 s^4 [l_{g,s}&#39;(b)]^2\]</span></p>
+<p>where <span class="math inline">\(l_{g,s}(b)\)</span> is the marginal log-likelihood function under the normal means model with prior <span class="math inline">\(g\)</span> and variance <span class="math inline">\(s\)</span>. That is <span class="math inline">\(l_{g,s}(b) = \log(f(b))\)</span> where <span class="math display">\[f(b) := \sum_k \pi_k N(b; 0, \sigma_k^2+s^2).\]</span></p>
+<p>Note: Tweedie’s formula says that relates shrinkage in the normal means model <span class="math inline">\(S\)</span> to the marginal loglikelihood <span class="math inline">\(l\)</span>, via <span class="math display">\[S_{f,s^2}(b) = b + s^2 l&#39;(b)\]</span>. So the term <span class="math inline">\(s^4 [l&#39;(b)]^2\)</span> above is <span class="math inline">\((S(b)-b)^2\)</span>.</p>
+</div>
+<div id="summary-of-optimization-problem" class="section level2">
+<h2>Summary of optimization problem</h2>
+<p>I wanted to give a succinct summary of the overall optimization problem to share with others.</p>
+<p>For fixed <span class="math inline">\(\sigma^2\)</span>, and letting <span class="math inline">\(w\)</span> represent the mixture proportions in the prior <span class="math inline">\(g\)</span> (which we often denote <span class="math inline">\(\pi\)</span>) we can write it as follows.</p>
+<p>Given <span class="math inline">\(y \in R^n\)</span> and <span class="math inline">\(X \in R^{n \times p}\)</span>, <span class="math display">\[\min ||y - XS(b; w)||_2 + h(b,w)\]</span> subject to: <span class="math inline">\(w \in S_K\)</span> the simplex of dimension <span class="math inline">\(K\)</span>, and <span class="math inline">\(b \in R^p\)</span>.</p>
+<p><span class="math display">\[h(b,w) = -s^2 l_{w,s}(b) - 0.5 s^4 [l_{w,s}&#39;(b)]^2\]</span></p>
 </div>
 <div id="code-for-fundamental-functions" class="section level2">
 <h2>Code for fundamental functions</h2>
 <p>Everything can be written in terms of the marginal likelihood <span class="math inline">\(f\)</span> and its first two derivatives, so we code those up first. I have not been careful about numerical issues here.. will need to deal with those at some point.</p>
 <pre class="r"><code>#y,s are vectors of length n
-#probs, sigma are vectors of length K
+#w, sigma are vectors of length K (w are prior mixture proportions)
 # returns an n-vector of &quot;marginal likelihoods&quot; under mixture prior
-f = function(b, s, probs, sigma){
+f = function(b, s, w, sigma){
   if(length(s)==1){s = rep(s,length(b))}
   sigmamat   &lt;- outer(s^2, sigma^2, `+`) # n time k
   llik_mat   &lt;- -0.5 * (log(sigmamat) + b^2 / sigmamat)
   #llik_norms &lt;- apply(llik_mat, 1, max)
   #L_mat      &lt;- exp(llik_mat - llik_norms)
   L_mat &lt;- exp(llik_mat)
-  return((1/sqrt(2*pi)) * as.vector(colSums(probs * t(L_mat))))
+  return((1/sqrt(2*pi)) * as.vector(colSums(w * t(L_mat))))
 }
 
 #returns a vector of the derivative of f evaluated at each element of y
-f_deriv = function(b, s, probs, sigma){
+f_deriv = function(b, s, w, sigma){
   if(length(s)==1){s = rep(s,length(b))}
   sigmamat   &lt;- outer(s^2, sigma^2, `+`) # n time k
   llik_mat   &lt;- -(3/2) * log(sigmamat) -0.5* b^2 / sigmamat
   #llik_norms &lt;- apply(llik_mat, 1, max)
   #L_mat      &lt;- exp(llik_mat - llik_norms)
   L_mat &lt;- exp(llik_mat)
-  return((-b/sqrt(2*pi)) * as.vector(colSums(probs * t(L_mat))))
+  return((-b/sqrt(2*pi)) * as.vector(colSums(w * t(L_mat))))
 }
 
 # returns f_deriv/b ok even if b=0
-f_deriv_over_b = function(b, s, probs, sigma){
+f_deriv_over_b = function(b, s, w, sigma){
   if(length(s)==1){s = rep(s,length(b))}
   sigmamat   &lt;- outer(s^2, sigma^2, `+`) # n time k
   llik_mat   &lt;- -(3/2) * log(sigmamat) -0.5* b^2 / sigmamat
   #llik_norms &lt;- apply(llik_mat, 1, max)
   #L_mat      &lt;- exp(llik_mat - llik_norms)
   L_mat &lt;- exp(llik_mat)
-  return((-1/sqrt(2*pi)) * as.vector(colSums(probs * t(L_mat))))
+  return((-1/sqrt(2*pi)) * as.vector(colSums(w * t(L_mat))))
 }
 
 #returns a vector of the second derivatives of f evaluated at each element of y
-f_deriv2 = function(b, s, probs, sigma){
+f_deriv2 = function(b, s, w, sigma){
   if(length(s)==1){s = rep(s,length(b))}
   sigmamat   &lt;- outer(s^2, sigma^2, `+`) # n time k
   llik_mat   &lt;- -(5/2) * log(sigmamat) -0.5* b^2 / sigmamat
   #llik_norms &lt;- apply(llik_mat, 1, max)
   #L_mat      &lt;- exp(llik_mat - llik_norms)
   L_mat &lt;- exp(llik_mat)
-  return((b^2/sqrt(2*pi)) * as.vector(colSums(probs * t(L_mat)))+ f_deriv_over_b(b,s,probs,sigma))
+  return((b^2/sqrt(2*pi)) * as.vector(colSums(w * t(L_mat)))+ f_deriv_over_b(b,s,w,sigma))
 }</code></pre>
 <p>Check the derivative code numerically:</p>
 <pre class="r"><code>n = 100
 k = 5
 b = rnorm(n)
-probs = rep(1/k,k)
-sigma = c(0,1,2,3,4,5)
+w = rep(1/k,k)
+prior_grid = c(0,1,2,3,4,5)
 eps=1e-5
 
-plot((f(b+eps,1,probs,sigma)-f(b,1,probs,sigma))/eps, f_deriv(b,1,probs,sigma),xlab=&quot;numerical 1st derivative&quot;, ylab=&quot;analytic 1st derivative&quot;)
+plot((f(b+eps,1,w,prior_grid)-f(b,1,w,prior_grid))/eps, f_deriv(b,1,w,prior_grid),xlab=&quot;numerical 1st derivative&quot;, ylab=&quot;analytic 1st derivative&quot;)
 abline(a=0,b=1)</code></pre>
 <p><img src="figure/mr_ash_pen.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>plot((f_deriv(b+eps,1,probs,sigma)-f_deriv(b,1,probs,sigma))/eps, f_deriv2(b,1,probs,sigma), xlab=&quot;numerical 2nd derivative&quot;, ylab=&quot;analytic 2nd derivative&quot;)
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-1">
+Past versions of unnamed-chunk-2-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/800415b1f1f350532cba5e91065d552c4816535a/docs/figure/mr_ash_pen.Rmd/unnamed-chunk-2-1.png" target="_blank">800415b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-11
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>plot((f_deriv(b+eps,1,w,prior_grid)-f_deriv(b,1,w,prior_grid))/eps, f_deriv2(b,1,w,prior_grid), xlab=&quot;numerical 2nd derivative&quot;, ylab=&quot;analytic 2nd derivative&quot;)
 abline(a=0,b=1)</code></pre>
 <p><img src="figure/mr_ash_pen.Rmd/unnamed-chunk-2-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-2">
+Past versions of unnamed-chunk-2-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/800415b1f1f350532cba5e91065d552c4816535a/docs/figure/mr_ash_pen.Rmd/unnamed-chunk-2-2.png" target="_blank">800415b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-11
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Now we have <span class="math display">\[l(b) = \log f(b)\]</span>, <span class="math display">\[l&#39;(b) = f&#39;(b)/f(b)\]</span>, <span class="math display">\[l&#39;&#39;(b) = (f(b)f&#39;&#39;(b)-f&#39;(b)^2)/f(b)^2\]</span>,</p>
-<pre class="r"><code>l = function(b, s, probs, sigma){
-  log(f(b,s,probs,sigma))
+<pre class="r"><code>l = function(b, s, w, prior_grid){
+  log(f(b,s,w,prior_grid))
 }
 
-l_deriv = function(b, s, probs, sigma){
-  f_deriv(b,s,probs,sigma)/f(b,s,probs,sigma)
+l_deriv = function(b, s, w, prior_grid){
+  f_deriv(b,s,w,prior_grid)/f(b,s,w,prior_grid)
 }
 
-l_deriv2 = function(b, s, probs, sigma){
-  ((f_deriv2(b,s,probs,sigma)*f(b,s,probs,sigma))-f_deriv(b,s,probs,sigma)^2)/f(b,s,probs,sigma)^2
+l_deriv2 = function(b, s, w, prior_grid){
+  ((f_deriv2(b,s,w,prior_grid)*f(b,s,w,prior_grid))-f_deriv(b,s,w,prior_grid)^2)/f(b,s,w,prior_grid)^2
 }
 
-plot((l_deriv(b+eps,1,probs,sigma)-l_deriv(b,1,probs,sigma))/eps, l_deriv2(b,1,probs,sigma), xlab=&quot;numerical 2nd derivative&quot;, ylab=&quot;analytic 2nd derivative&quot;)
+plot((l_deriv(b+eps,1,w,prior_grid)-l_deriv(b,1,w,prior_grid))/eps, l_deriv2(b,1,w,prior_grid), xlab=&quot;numerical 2nd derivative&quot;, ylab=&quot;analytic 2nd derivative&quot;)
 abline(a=0,b=1)</code></pre>
 <p><img src="figure/mr_ash_pen.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>And with these in place we can compute the shrinkage function and penalty function <span class="math inline">\(h\)</span>, using <span class="math display">\[h(b) = -l(b) + 0.5l&#39;(b)-0.5\log(2\pi s^2)\]</span> <span class="math display">\[S(b) = b+ s^2l&#39;(b)\]</span> <span class="math display">\[S&#39;(b) = 1 + s^2 l&#39;&#39;(b)\]</span>.</p>
-<pre class="r"><code>S = function(b, s, probs, sigma){
-  return(b + s^2 * l_deriv(b,s,probs,sigma))
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-1">
+Past versions of unnamed-chunk-3-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-3-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/800415b1f1f350532cba5e91065d552c4816535a/docs/figure/mr_ash_pen.Rmd/unnamed-chunk-3-1.png" target="_blank">800415b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-11
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>And with these in place we can compute the shrinkage function and penalty function <span class="math inline">\(h\)</span>, using <span class="math display">\[h(b) = -l(b) - 0.5(l&#39;(b))^2\]</span> <span class="math display">\[S(b) = b+ s^2l&#39;(b)\]</span> <span class="math display">\[S&#39;(b) = 1 + s^2 l&#39;&#39;(b)\]</span>.</p>
+<pre class="r"><code>S = function(b, s, w, prior_grid){
+  return(b + s^2 * l_deriv(b,s,w,prior_grid))
 }
-S_deriv = function(b, s, probs, sigma){
-  return(1+ s^2 * l_deriv2(b,s,probs,sigma))
+S_deriv = function(b, s, w, prior_grid){
+  return(1+ s^2 * l_deriv2(b,s,w,prior_grid))
 }
-h = function(b,s,probs,sigma){
-  return(-l(b,s,probs,sigma) + 0.5* l_deriv(b,s,probs,sigma)-0.5*log(2*pi*s^2))
+h = function(b,s,w,prior_grid){
+  return(-s^2 * l(b,s,w,prior_grid) - 0.5 * s^4 * l_deriv(b,s,w,prior_grid)^2)
 }
-h_deriv = function(b,s,probs,sigma){
-  return(-l_deriv(b,s,probs,sigma) + 0.5*l_deriv2(b,s,probs,sigma))
+h_deriv = function(b,s,w,prior_grid){
+  return(-s^2 * l_deriv(b,s,w,prior_grid) - s^4 * l_deriv(b,s,w,prior_grid) * l_deriv2(b,s,w,prior_grid))
 }
 
 
-plot((h(b+eps,1,probs,sigma)-h(b,1,probs,sigma))/eps, h_deriv(b,1,probs,sigma), xlab=&quot;numerical 1st derivative&quot;, ylab=&quot;analytic 1st derivative&quot;)
+plot((h(b+eps,1,w,prior_grid)-h(b,1,w,prior_grid))/eps, h_deriv(b,1,w,prior_grid), xlab=&quot;numerical 1st derivative&quot;, ylab=&quot;analytic 1st derivative&quot;)
 abline(a=0,b=1)</code></pre>
 <p><img src="figure/mr_ash_pen.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-1">
+Past versions of unnamed-chunk-4-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/800415b1f1f350532cba5e91065d552c4816535a/docs/figure/mr_ash_pen.Rmd/unnamed-chunk-4-1.png" target="_blank">800415b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-11
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="inverting-s-by-newton-raphson-method" class="section level2">
 <h2>Inverting S by Newton-Raphson method</h2>
@@ -831,31 +1013,105 @@ abline(a=0,b=1)</code></pre>
 x=y 
 par(mfrow=c(5,5))
 par(mar=rep(1.5,4))
-probs = rep(0.5,2)
-sigma = c(0,5)
+w = rep(0.5,2)
+prior_grid = c(0,5)
 for(i in 1:25){
-  plot(S(x,1,probs,sigma),y)
-  x = x-(S(x,1,probs,sigma)-y)/S_deriv(x,1,probs,sigma)
+  plot(S(x,1,w,prior_grid),y)
+  x = x-(S(x,1,w,prior_grid)-y)/S_deriv(x,1,w,prior_grid)
 }</code></pre>
 <p><img src="figure/mr_ash_pen.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>plot(S(x,1,probs,sigma),y)
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-1">
+Past versions of unnamed-chunk-5-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/800415b1f1f350532cba5e91065d552c4816535a/docs/figure/mr_ash_pen.Rmd/unnamed-chunk-5-1.png" target="_blank">800415b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-11
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>plot(S(x,1,w,prior_grid),y)
 plot(x,y)</code></pre>
 <p><img src="figure/mr_ash_pen.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-2">
+Past versions of unnamed-chunk-5-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/800415b1f1f350532cba5e91065d552c4816535a/docs/figure/mr_ash_pen.Rmd/unnamed-chunk-5-2.png" target="_blank">800415b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-11
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="optimizing-the-objective" class="section level2">
 <h2>Optimizing the objective</h2>
-<pre class="r"><code>obj = function(b, y, X, residual_var, probs, sigma){
+<pre class="r"><code>obj = function(b, y, X, residual_var, w, prior_grid){
   d = colSums(X^2)
   s = sqrt(residual_var/d)
-  r = y - X %*% S(b,s,probs,sigma)
-  return(0.5*(1/residual_var)*sum(r^2) + sum(h(b,s,probs,sigma)))
+  r = y - X %*% S(b,s,w,prior_grid)
+  return(0.5*(1/residual_var)*sum(r^2) + (1/residual_var)*sum(h(b,s,w,prior_grid)))
 }
 
-obj_grad = function(b, y, X, residual_var, probs, sigma){
+obj_grad = function(b, y, X, residual_var, w, prior_grid){
   d = colSums(X^2)
   s = sqrt(residual_var/d)
-  r = y - X %*% S(b,s,probs,sigma)
-  return((-1/residual_var)*(t(r) %*% X) * S_deriv(b,s,probs,sigma) + h_deriv(b,s,probs,sigma))
+  r = y - X %*% S(b,s,w,prior_grid)
+  return((-1/residual_var)*(t(r) %*% X) * S_deriv(b,s,w,prior_grid) + (1/residual_var)* h_deriv(b,s,w,prior_grid))
 }</code></pre>
 <p>Try it out on simple simulation:</p>
 <pre class="r"><code>n = 100
@@ -866,32 +1122,70 @@ X = t(t(X)/sqrt(norm))
 b = rnorm(p)
 y = X %*% b + rnorm(n)
 
-(obj(b,y,X,1,probs,sigma)-obj(b+c(eps,rep(0,p-1)),y,X,1,probs,sigma))/eps</code></pre>
-<pre><code>[1] 0.7779563</code></pre>
-<pre class="r"><code>-obj_grad(b,y,X,1,probs,sigma)[1]</code></pre>
-<pre><code>[1] 0.7779554</code></pre>
-<pre class="r"><code>b.cg.warm = optim(b,obj,gr=obj_grad,method=&quot;CG&quot;,y=y,X=X,residual_var=1, probs=probs,sigma=sigma)
-b.cg.null = optim(rep(0,p),obj,gr=obj_grad,method=&quot;CG&quot;,y=y,X=X,residual_var=1, probs=probs,sigma=sigma)
-b.bfgs.warm = optim(b,obj,gr=obj_grad,method=&quot;BFGS&quot;,y=y,X=X,residual_var=1, probs=probs,sigma=sigma)
-b.bfgs.null = optim(rep(0,p),obj,gr=obj_grad,method=&quot;BFGS&quot;,y=y,X=X,residual_var=1, probs=probs,sigma=sigma)
+(obj(b,y,X,1,w,prior_grid)-obj(b+c(eps,rep(0,p-1)),y,X,1,w,prior_grid))/eps</code></pre>
+<pre><code>[1] 0.2996978</code></pre>
+<pre class="r"><code>-obj_grad(b,y,X,1,w,prior_grid)[1]</code></pre>
+<pre><code>[1] 0.2997033</code></pre>
+<pre class="r"><code>b.cg.warm = optim(b,obj,gr=obj_grad,method=&quot;CG&quot;,y=y,X=X,residual_var=1, w=w,prior_grid=prior_grid)
+b.cg.null = optim(rep(0,p),obj,gr=obj_grad,method=&quot;CG&quot;,y=y,X=X,residual_var=1, w=w,prior_grid=prior_grid)
+b.bfgs.warm = optim(b,obj,gr=obj_grad,method=&quot;BFGS&quot;,y=y,X=X,residual_var=1, w=w,prior_grid=prior_grid)
+b.bfgs.null = optim(rep(0,p),obj,gr=obj_grad,method=&quot;BFGS&quot;,y=y,X=X,residual_var=1, w=w,prior_grid=prior_grid)
 
 
 b.cg.warm$value</code></pre>
-<pre><code>[1] 76.12059</code></pre>
+<pre><code>[1] 94.80382</code></pre>
 <pre class="r"><code>b.cg.null$value</code></pre>
-<pre><code>[1] 76.73097</code></pre>
+<pre><code>[1] 94.80382</code></pre>
 <pre class="r"><code>b.bfgs.warm$value</code></pre>
-<pre><code>[1] 76.12059</code></pre>
+<pre><code>[1] 94.80382</code></pre>
 <pre class="r"><code>b.bfgs.null$value</code></pre>
-<pre><code>[1] 76.73097</code></pre>
-<pre class="r"><code>plot(S(b.cg.warm$par,1,probs,sigma),b)</code></pre>
+<pre><code>[1] 94.80382</code></pre>
+<pre class="r"><code>plot(S(b.cg.warm$par,1,w,prior_grid),b)</code></pre>
 <p><img src="figure/mr_ash_pen.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-1">
+Past versions of unnamed-chunk-8-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-8-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/800415b1f1f350532cba5e91065d552c4816535a/docs/figure/mr_ash_pen.Rmd/unnamed-chunk-8-1.png" target="_blank">800415b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-11
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Some comments from Mihai: BFGS stores a dense approximation to the Hessian, so won’t be good for big problems. However, “limited”-BFGS might work (L-BFGS?). CG needs preconditioning in general; BFGS does not because it is computing an approximation to the Hessian.</p>
 <p>Thoughts from me: maybe we can compute the Hessian directly and efficiently when X is, say, the trend filtering matrix.</p>
 <p>Another question: if we write h as a function of pi, is h(pi) convex? Is rho(pi) convex?</p>
 </div>
 <div id="trendfiltering" class="section level1">
 <h1>Trendfiltering</h1>
+<p>Here I try a really hard trend-filtering example.</p>
 <pre class="r"><code>set.seed(100)
 sd = 1
 n = 100
@@ -911,81 +1205,342 @@ btrue = btrue * sqrt(norm)
 plot(Y)
 lines(X %*% btrue)</code></pre>
 <p><img src="figure/mr_ash_pen.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>sigma=c(0,10,100,1000)
-probs=rep(1/4,4)
-b.cg.null = optim(rep(0,p),obj,gr=obj_grad,method=&quot;CG&quot;,y=Y,X=X,residual_var=1, probs=probs,sigma=sigma,control=list(maxit=1000))
-b.bfgs.null = optim(rep(0,p),obj,gr=obj_grad,method=&quot;BFGS&quot;,y=Y,X=X,residual_var=1, probs=probs,sigma=sigma,control=list(maxit=1000))
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-10-1">
+Past versions of unnamed-chunk-10-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-10-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/800415b1f1f350532cba5e91065d552c4816535a/docs/figure/mr_ash_pen.Rmd/unnamed-chunk-10-1.png" target="_blank">800415b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-11
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>prior_grid=c(0,10,100,1000)
+w=rep(1/4,4)
+b.cg.null = optim(rep(0,p),obj,gr=obj_grad,method=&quot;CG&quot;,y=Y,X=X,residual_var=1, w=w,prior_grid=prior_grid,control=list(maxit=1000))
+b.bfgs.null = optim(rep(0,p),obj,gr=obj_grad,method=&quot;BFGS&quot;,y=Y,X=X,residual_var=1, w=w,prior_grid=prior_grid,control=list(maxit=1000))
 
 plot(Y)
-lines(X %*% S(b.cg.null$par,1,probs,sigma))
-lines(X %*%  S(b.bfgs.null$par,1,probs,sigma))
+lines(X %*% S(b.cg.null$par,1,w,prior_grid))
+lines(X %*%  S(b.bfgs.null$par,1,w,prior_grid))
 
 
-b.cg.warm = optim(btrue,obj,gr=obj_grad,method=&quot;CG&quot;,y=Y,X=X,residual_var=1, probs=probs,sigma=sigma)
-b.bfgs.warm = optim(btrue,obj,gr=obj_grad,method=&quot;BFGS&quot;,y=Y,X=X,residual_var=1, probs=probs,sigma=sigma)
-lines(X %*% S(b.cg.warm$par,1,probs,sigma))
-lines(X %*% S(b.bfgs.warm$par,1,probs,sigma),col=2)</code></pre>
+b.cg.warm = optim(btrue,obj,gr=obj_grad,method=&quot;CG&quot;,y=Y,X=X,residual_var=1, w=w,prior_grid=prior_grid)
+b.bfgs.warm = optim(btrue,obj,gr=obj_grad,method=&quot;BFGS&quot;,y=Y,X=X,residual_var=1, w=w,prior_grid=prior_grid)
+lines(X %*% S(b.cg.warm$par,1,w,prior_grid))
+lines(X %*% S(b.bfgs.warm$par,1,w,prior_grid),col=2)</code></pre>
 <p><img src="figure/mr_ash_pen.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-1">
+Past versions of unnamed-chunk-11-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-11-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/800415b1f1f350532cba5e91065d552c4816535a/docs/figure/mr_ash_pen.Rmd/unnamed-chunk-11-1.png" target="_blank">800415b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-11
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>b.cg.warm$value</code></pre>
-<pre><code>[1] 188.198</code></pre>
+<pre><code>[1] 289.8884</code></pre>
 <pre class="r"><code>b.cg.null$value</code></pre>
-<pre><code>[1] 292.0316</code></pre>
+<pre><code>[1] 385.2665</code></pre>
 <pre class="r"><code>b.bfgs.warm$value</code></pre>
-<pre><code>[1] 188.198</code></pre>
+<pre><code>[1] 289.8891</code></pre>
 <pre class="r"><code>b.bfgs.null$value</code></pre>
-<pre><code>[1] 356.1298</code></pre>
+<pre><code>[1] 422.1747</code></pre>
 <p>This case is ridge regression, so should be convex… try it out.</p>
-<pre class="r"><code>sigma=c(10,10)
-probs=rep(1/2,2)
-b.cg.null = optim(rep(0,p),obj,gr=obj_grad,method=&quot;CG&quot;,y=Y,X=X,residual_var=1, probs=probs,sigma=sigma,control=list(maxit=1000))
-b.bfgs.null = optim(rep(0,p),obj,gr=obj_grad,method=&quot;BFGS&quot;,y=Y,X=X,residual_var=1, probs=probs,sigma=sigma,control=list(maxit=1000))
+<pre class="r"><code>prior_grid=c(10,10)
+w=rep(1/2,2)
+b.cg.null = optim(rep(0,p),obj,gr=obj_grad,method=&quot;CG&quot;,y=Y,X=X,residual_var=1, w=w,prior_grid=prior_grid,control=list(maxit=1000))
+b.bfgs.null = optim(rep(0,p),obj,gr=obj_grad,method=&quot;BFGS&quot;,y=Y,X=X,residual_var=1, w=w,prior_grid=prior_grid,control=list(maxit=1000))
 
 plot(Y)
-lines(X %*% S(b.cg.null$par,1,probs,sigma))
-lines(X %*%  S(b.bfgs.null$par,1,probs,sigma))</code></pre>
+lines(X %*% S(b.cg.null$par,1,w,prior_grid))
+lines(X %*%  S(b.bfgs.null$par,1,w,prior_grid))</code></pre>
 <p><img src="figure/mr_ash_pen.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-1">
+Past versions of unnamed-chunk-12-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/800415b1f1f350532cba5e91065d552c4816535a/docs/figure/mr_ash_pen.Rmd/unnamed-chunk-12-1.png" target="_blank">800415b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-11
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>b.bfgs.null$value</code></pre>
-<pre><code>[1] 336.7858</code></pre>
+<pre><code>[1] 428.7797</code></pre>
 <pre class="r"><code>b.cg.null$value</code></pre>
-<pre><code>[1] 336.7858</code></pre>
+<pre><code>[1] 428.7797</code></pre>
 <p>Try a prior with more overlapping components</p>
-<pre class="r"><code>sigma=seq(0,100,length=100)
-probs=rep(1/100,100)
-b.cg.null = optim(rep(0,p),obj,gr=obj_grad,method=&quot;CG&quot;,y=Y,X=X,residual_var=1, probs=probs,sigma=sigma,control=list(maxit=1000))
-b.bfgs.null = optim(rep(0,p),obj,gr=obj_grad,method=&quot;BFGS&quot;,y=Y,X=X,residual_var=1, probs=probs,sigma=sigma,control=list(maxit=1000))
+<pre class="r"><code>prior_grid=seq(0,100,length=100)
+w=rep(1/100,100)
+b.cg.null = optim(rep(0,p),obj,gr=obj_grad,method=&quot;CG&quot;,y=Y,X=X,residual_var=1, w=w,prior_grid=prior_grid,control=list(maxit=1000))
+b.bfgs.null = optim(rep(0,p),obj,gr=obj_grad,method=&quot;BFGS&quot;,y=Y,X=X,residual_var=1, w=w,prior_grid=prior_grid,control=list(maxit=1000))
 
 plot(Y)
-lines(X %*% S(b.cg.null$par,1,probs,sigma))
-lines(X %*%  S(b.bfgs.null$par,1,probs,sigma))</code></pre>
+lines(X %*% S(b.cg.null$par,1,w,prior_grid))
+lines(X %*%  S(b.bfgs.null$par,1,w,prior_grid))</code></pre>
 <p><img src="figure/mr_ash_pen.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-13-1">
+Past versions of unnamed-chunk-13-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-13-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/800415b1f1f350532cba5e91065d552c4816535a/docs/figure/mr_ash_pen.Rmd/unnamed-chunk-13-1.png" target="_blank">800415b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-11
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>b.bfgs.null$value</code></pre>
-<pre><code>[1] 369.148</code></pre>
+<pre><code>[1] 462.9663</code></pre>
 <pre class="r"><code>b.cg.null$value</code></pre>
-<pre><code>[1] 382.8293</code></pre>
+<pre><code>[1] 472.9022</code></pre>
 <p>And now revert to the sparser prior</p>
-<pre class="r"><code>sigma=c(0,10,100,1000)
-probs=rep(1/4,4)
-b.cg.null = optim(b.cg.null$par,obj,gr=obj_grad,method=&quot;CG&quot;,y=Y,X=X,residual_var=1, probs=probs,sigma=sigma,control=list(maxit=1000))
-b.bfgs.null = optim(b.bfgs.null$par,obj,gr=obj_grad,method=&quot;BFGS&quot;,y=Y,X=X,residual_var=1, probs=probs,sigma=sigma,control=list(maxit=1000))
+<pre class="r"><code>prior_grid=c(0,10,100,1000)
+w=rep(1/4,4)
+b.cg.null = optim(b.cg.null$par,obj,gr=obj_grad,method=&quot;CG&quot;,y=Y,X=X,residual_var=1, w=w,prior_grid=prior_grid,control=list(maxit=1000))
+b.bfgs.null = optim(b.bfgs.null$par,obj,gr=obj_grad,method=&quot;BFGS&quot;,y=Y,X=X,residual_var=1, w=w,prior_grid=prior_grid,control=list(maxit=1000))
 plot(Y)
-lines(X %*% S(b.cg.null$par,1,probs,sigma))
-lines(X %*%  S(b.bfgs.null$par,1,probs,sigma))</code></pre>
+lines(X %*% S(b.cg.null$par,1,w,prior_grid))
+lines(X %*%  S(b.bfgs.null$par,1,w,prior_grid))</code></pre>
 <p><img src="figure/mr_ash_pen.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-14-1">
+Past versions of unnamed-chunk-14-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-14-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/800415b1f1f350532cba5e91065d552c4816535a/docs/figure/mr_ash_pen.Rmd/unnamed-chunk-14-1.png" target="_blank">800415b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-11
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>b.bfgs.null$value</code></pre>
-<pre><code>[1] 208.9475</code></pre>
+<pre><code>[1] 302.7868</code></pre>
 <pre class="r"><code>b.cg.null$value</code></pre>
-<pre><code>[1] 215.237</code></pre>
+<pre><code>[1] 310.1688</code></pre>
+<p>Try initializing from bhat the “overfit” solution.</p>
 <pre class="r"><code>bhat = chol2inv(chol(t(X) %*% X)) %*% t(X) %*% Y
 plot(X %*% bhat)
 lines(Y)</code></pre>
 <p><img src="figure/mr_ash_pen.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>b.bfgs.bhat = optim(bhat,obj,gr=obj_grad,method=&quot;BFGS&quot;,y=Y,X=X,residual_var=1, probs=probs,sigma=sigma,control=list(maxit=10000))
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-15-1">
+Past versions of unnamed-chunk-15-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-15-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/800415b1f1f350532cba5e91065d552c4816535a/docs/figure/mr_ash_pen.Rmd/unnamed-chunk-15-1.png" target="_blank">800415b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-11
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>b.bfgs.bhat = optim(bhat,obj,gr=obj_grad,method=&quot;BFGS&quot;,y=Y,X=X,residual_var=1, w=w,prior_grid=prior_grid,control=list(maxit=10000))
 b.bfgs.bhat$value</code></pre>
-<pre><code>[1] 275.2874</code></pre>
+<pre><code>[1] 293.4889</code></pre>
 <pre class="r"><code>plot(Y)
-lines(X %*%  S(as.vector(b.bfgs.null$par),1,probs,sigma))
-lines(X %*%  S(as.vector(b.bfgs.warm$par),1,probs,sigma),col=2)</code></pre>
+lines(X %*%  S(as.vector(b.bfgs.null$par),1,w,prior_grid))
+lines(X %*%  S(as.vector(b.bfgs.warm$par),1,w,prior_grid),col=2)
+lines(X %*%  S(as.vector(b.bfgs.bhat$par),1,w,prior_grid),col=3)</code></pre>
 <p><img src="figure/mr_ash_pen.Rmd/unnamed-chunk-15-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-15-2">
+Past versions of unnamed-chunk-15-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-15-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/800415b1f1f350532cba5e91065d552c4816535a/docs/figure/mr_ash_pen.Rmd/unnamed-chunk-15-2.png" target="_blank">800415b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-05-11
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -1010,11 +1565,11 @@ attached base packages:
 
 loaded via a namespace (and not attached):
  [1] Rcpp_1.0.6       rstudioapi_0.13  whisker_0.4      knitr_1.29      
- [5] magrittr_1.5     workflowr_1.6.2  R6_2.4.1         rlang_0.4.10    
+ [5] magrittr_2.0.1   workflowr_1.6.2  R6_2.4.1         rlang_0.4.10    
  [9] stringr_1.4.0    tools_3.6.0      xfun_0.16        git2r_0.27.1    
 [13] htmltools_0.5.0  ellipsis_0.3.1   yaml_2.2.1       digest_0.6.27   
 [17] rprojroot_1.3-2  tibble_3.0.4     lifecycle_1.0.0  crayon_1.3.4    
-[21] later_1.1.0.1    vctrs_0.3.4      fs_1.5.0         promises_1.1.1  
+[21] later_1.1.0.1    vctrs_0.3.8      fs_1.5.0         promises_1.1.1  
 [25] glue_1.4.2       evaluate_0.14    rmarkdown_2.3    stringi_1.4.6   
 [29] compiler_3.6.0   pillar_1.4.6     backports_1.1.10 httpuv_1.5.4    
 [33] pkgconfig_2.0.3 </code></pre>
