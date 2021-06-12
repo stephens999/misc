@@ -1,0 +1,174 @@
+---
+title: "sinkhorn"
+author: "Matthew Stephens"
+date: "2021-04-30"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+First I wanted to compare the sinkhorn normalization to SVD and row/column sums.
+
+
+```{r}
+set.seed(1)
+p = 200
+n = 100
+mu = matrix(rexp(n*p,1)) 
+X = matrix(rpois(n*p,mu), nrow=n,ncol=p)
+```
+
+
+```{r}
+sinkhorn = function(X,niter = 10){
+  c = colMeans(X)
+  #find row and column scalings r and c
+  for(i in 1:niter){
+    r = 1/rowMeans(t(t(X)*c))
+    c = 1/colMeans(X*r)
+  }
+  Xnorm = t(t(X*sqrt(r))*sqrt(c))
+  return(list(Xnorm=Xnorm,c = c, r=r))
+}
+X.s = sinkhorn(X)
+rowMeans(t(t(X*X.s$r)*X.s$c))
+colMeans(t(t(X*X.s$r)*X.s$c))
+```
+
+
+```{r}
+X.svd = svd(X)
+plot(X.svd$u[,1],X.s$r)
+plot(X.svd$v[,1],X.s$c)
+
+plot(X.s$r, 1/rowMeans(X))
+plot(X.s$c, 1/colMeans(X))
+```
+
+
+# Try to recreate the figure from the preprint:
+
+I reproduced this simulation:
+"Figure 1 exemplifies the advantage of biwhitening on a simulated Poisson count matrix Y with m = 300, n = 1000, and r = 10. For this example, we first generated an m × r matrix B by sampling its entries independently from the log-normal distribution with mean 0 and variance 4 (i.e., from exp(2Z), where Z ∼ N (0, 1)). Then, we generated an r × n matrix C by sampling its entries independently from the uniform distribution over [0,1]. Lastly, we computed X = BC, normalized X by a scalar so that its average entry is 1, and sampled the entries of Y from the Poisson distribution as in (7). After generating Y , Algorithm 1 was applied to Y with scaling tolerance δ = 10−12."
+
+
+```{r}
+m=300
+n=1000
+r = 10
+B = exp(2*matrix(rnorm(m*r),nrow=m))
+C = matrix(runif(r*n),nrow=r)
+X = B  %*% C
+X = X/mean(X)
+Y = matrix(rpois(length(X),lambda=X), nrow=nrow(X))
+```
+
+```{r}
+Ynorm = sinkhorn(Y)$Xnorm
+Ynorm.eigen = eigen((1/n) * Ynorm %*% t(Ynorm))
+d = Ynorm.eigen$values
+hist(d[d<4],nclass=100)
+beta_plus = (1+sqrt(m/n))^2
+abline(v=beta_plus)
+sum(d>beta_plus)
+```
+
+
+# Compute eigenvalues on some real data
+
+This is a small subset of some single cell data: I extracted counts from a subset of 500 genes at 1000 cytotoxic and 10000 naive cytotoxic T cells from 10x genomics.  Note that because
+I have fewer genes than cells I make those the rows ($m<n$) by transposing the data
+```{r}
+df = read.csv("../data/cell_data.csv",sep=",")
+dim(df)
+Y = t(as.matrix(df[,-1]))
+Y.svd = svd(Y)
+hist(Y.svd$d[Y.svd$d<100], xlim = c(0,100), breaks = seq(0,100,by=1))
+```
+
+
+Now try the normalization (note that I did not try to estimate the scaling factor they use)
+```{r}
+Ynorm = sinkhorn(Y)$Xnorm
+m= nrow(Ynorm)
+n= ncol(Ynorm)
+Ynorm.eigen = eigen((1/n) * Ynorm %*% t(Ynorm))
+d = Ynorm.eigen$values
+v= Ynorm.eigen$vectors
+hist(d[d<4],nclass=100)
+beta_plus = (1+sqrt(m/n))^2
+abline(v=beta_plus)
+sum(d>beta_plus)
+
+sub = (d>beta_plus)
+Ytrunc = v[,sub] %*% diag(d[sub]) %*% t(v[,sub])
+```
+
+Try running flashr on the covariance matrix
+```{r}
+library(flashr)
+S = (1/n) * Ynorm %*% t(Ynorm)
+diag(S) <- NA
+S.flash = flash(S,K=50)
+```
+
+And on the truncated covariance
+```{r}
+Strunc = (1/n) * Ytrunc %*% t(Ytrunc)
+diag(Strunc) <- NA
+Strunc.flash = flash(Strunc,K=50)
+```
+
+Plot the factors from flash
+
+```{r}
+par(mfrow=c(3,4))
+par(mai=rep(0.1,4))
+for(i in 1:12){
+  plot(S.flash$ldf$l[,i],main=paste0(i))
+}
+```
+
+Compare factors from flash and truncated:
+```{r}
+par(mfrow=c(3,4))
+par(mai=rep(0.1,4))
+for(i in 1:12){
+  plot(S.flash$ldf$l[,i],Strunc.flash$ldf$l[,i])
+}
+```
+
+
+```{r}
+image(cor(S.flash$ldf$l[,1:12],Strunc.flash$ldf$l[,1:12]))
+plot(S.flash$ldf$l[,7],Strunc.flash$ldf$l[,6])
+```
+
+```{r}
+gene_names =colnames(df)[-1]
+gene_names[order(S.flash$ldf$l[,2])]
+```
+
+
+# Running on the cells
+
+To cluster cells (rather than genes) we need to run flash on
+the larger covarance (cell-cell).
+
+```{r}
+Scell = (1/p) * t(Ynorm) %*% Ynorm
+diag(Scell) <- NA
+Scell.flash = flash(Scell,K=50)
+```
+
+
+```{r}
+par(mfrow=c(4,4))
+par(mai=rep(0.1,4))
+for(i in 1:16){
+  plot(Scell.flash$ldf$l[,i],main=paste0(i))
+}
+```
+
