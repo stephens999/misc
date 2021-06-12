@@ -9,6 +9,10 @@ editor_options:
 
 ## Introduction
 
+I wanted to do some examination of using sinkhorn normalization
+for count/single cell data, inspired by the talk by B Landa and
+the preprint https://arxiv.org/abs/2103.13840
+
 First I wanted to compare the sinkhorn normalization to SVD and row/column sums.
 
 
@@ -155,7 +159,7 @@ gene_names[order(S.flash$ldf$l[,2])]
 # Running on the cells
 
 To cluster cells (rather than genes) we need to run flash on
-the larger covarance (cell-cell).
+the larger covariance (cell-cell).
 
 ```{r}
 Scell = (1/p) * t(Ynorm) %*% Ynorm
