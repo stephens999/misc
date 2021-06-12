@@ -19,6 +19,7 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 
 # Mr Ash
 
+* [implementing mr ash as a penalized method](mr_ash_pen.html)
 * [coordinate ascent and parallel version](mr_ash_sca.html)
 * [mr.ash.alpha applied to changepoint problems](mr.ash.changepoint.html)
 * [combining mr.ash and ridge regression/iterative ridge regression](mr.ash_ridge.html)
@@ -43,6 +44,7 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 
 * [Fit lasso by EM](lasso_em.html)
 * [teach myself ADMM (L1 and L0)](admm_01.html)
+* [check scaling of glmnet with n](lasso_complexity.html)
 
 # EBMR
 
@@ -71,6 +73,8 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 
 * [Method of moments for EbayesThresh ](ebayes.mm.html)
 
+* [flashier run on stocks data](flashier_stocks.html)
+
 # NMF
 
 * [Try NMF on a simple simulation with sparse factors](nmf_sparse.html)
@@ -96,6 +100,10 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 * [selective inference on toy example](selective_inference_toy.html)
 * [selective inference with correlated variables](selective_inference.html)
 * [hierarchical inference example](hierinf_toyexample.html)
+
+# LD score regression
+
+* [An initial look at XtX (Sigma)^{-1}](ldsr_01.html)
 
 # Missing Data in regression
 

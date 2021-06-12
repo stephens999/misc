@@ -1,0 +1,110 @@
+---
+title: "lasso_complexity"
+author: "Matthew Stephens"
+date: "2021-05-26"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+I was suprised to hear that ("worst case") 
+lasso complexity for full solution path
+is O(np min(n,p)). I always thought it was O(np) per iteration and
+did not think about how the number of iterations required might increase with n and p. I wanted to do a quick simulation check. 
+
+Empirically the log-log plot for time vs n is approximately linear with slope near 1.25, suggesting a practical scaling of O(n^1.25 p). Of course
+this is very much just a quick initial assessment.
+
+```{r}
+set.seed(123)
+library("glmnet")
+n_seq = c(100, 200, 500, 1000, 2000, 5000, 10000)
+p = 10000
+nmax = 10000
+X = matrix(rnorm(nmax*p),nrow=nmax)
+b = rnorm(p)
+time = c()
+
+for(n in n_seq){
+  
+  y = X[1:n,] %*% b + rnorm(n)
+  time = c(time,system.time(fit <- glmnet(X[1:n,],y))[1]) # user time
+  #print(time)
+  
+}
+
+plot(log(n_seq),log(time), main = "log(user time) vs log(n)")
+
+slope = (log(time)[7]-log(time)[1])/(log(n_seq)[7]-log(n_seq)[1])
+print(slope)
+```
+
+
+## Comparison with Susie
+
+Just for interest I ran susie on the same datasets, but it is
+a bit slow for "dense" scenarios like this so I reduced p to 5k
+to save some time.
+
+```{r}
+set.seed(123)
+library("susieR")
+n_seq = c(100, 200, 500, 1000, 2000, 5000)
+p = 5000
+nmax = max(n_seq)
+X = matrix(rnorm(nmax*p),nrow=nmax)
+b = rnorm(p)
+time = c()
+time.susie = c()
+
+for(n in n_seq){
+  
+  y = X[1:n,] %*% b + rnorm(n)
+  time.susie = c(time.susie,system.time(fit <- susie(X[1:n,],y))[1]) # user time
+  time = c(time, system.time(fit <- glmnet(X[1:n,],y))[1])
+  #print(time.susie)
+  
+}
+
+plot(log(n_seq),log(time.susie), main = "red=susie; black=lasso",col=2,ylim=c(-3.5,4))
+points(log(n_seq),log(time))
+
+```
+
+For the largest dataset here susie is slower than a single fit of lasso
+(complete solution path) by a factor of
+`r exp(log(time.susie[6])-log(time[6]))`. This is without CV for lasso
+though, so with 5-fold or 10-fold CV the times would be comparable.
+
+## Sparser case
+
+Here I simulate data with only 5 non-zero effects to see how
+it changes things. Here for the largest data-sets the two running
+times are similar (so susie would be faster if we did 5-fold CV for lasso).
+
+```{r}
+set.seed(123)
+n_seq = c(100, 200, 500, 1000, 2000, 5000)
+p = 5000
+nmax = max(n_seq)
+X = matrix(rnorm(nmax*p),nrow=nmax)
+b = rep(0,p)
+b[1:5] = rnorm(5)
+
+time = c()
+time.susie = c()
+
+for(n in n_seq){
+  
+  y = X[1:n,] %*% b + rnorm(n)
+  time.susie = c(time.susie,system.time(fit <- susie(X[1:n,],y))[1]) # user time
+  time = c(time, system.time(fit <- glmnet(X[1:n,],y))[1])
+  #print(time.susie)
+  
+}
+
+plot(log(n_seq),log(time.susie), main = "red=susie; black=lasso",col=2,ylim=c(-3.5,4))
+points(log(n_seq),log(time))
+```
