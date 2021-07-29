@@ -110,6 +110,11 @@ sub = (d>beta_plus)
 Ytrunc = v[,sub] %*% diag(d[sub]) %*% t(v[,sub])
 ```
 
+
+# Additional stuff
+
+All the stuff below here is a bit underdeveloped.
+
 Try running flashr on the covariance matrix
 ```{r}
 library(flashr)
