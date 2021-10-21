@@ -1,0 +1,53 @@
+---
+title: "flash_f1_size"
+author: "Matthew Stephens"
+date: "2021-10-21"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+Following up on some results from Joonsuk Kang, 
+I wanted to investigate how the "size" (PVE) of the first factor 
+affects ability to detect a second factor in a simple situation.
+
+## Simulation
+
+I'll simulate two factors, both random normal:
+
+```{r}
+library("flashr")
+n = 100
+p = 100
+k = 2
+LL = matrix(rnorm(p*k), nrow=n, ncol=k)
+FF = matrix(rnorm(p*k), nrow=p, ncol=k)
+E = matrix(rnorm(n*p),nrow=n,ncol=p)
+Y = LL %*% t(FF) + E
+svd(Y)$d[1:5] # singular values
+fit1 = flashr::flash(Y,verbose=FALSE)
+cor(flash_get_ldf(fit1)$l,LL)
+```
+
+Actually you see the non-identifiability here: because both factors
+are a similar size they have similar eigenvalues so you get the rotation-invariance issue.
+
+Now make first factor stronger. This makes the two factors identifiable and results are more accurate:
+```{r}
+FF[,1] = FF[,1]* 10
+Y = LL %*% t(FF) + E
+svd(Y)$d[1:5] # singular values
+fit1 = flashr::flash(Y, verbose=FALSE)
+cor(flash_get_ldf(fit1)$l,LL)
+```
+
+Now make first factor much stronger. It still seems to work....
+```{r}
+FF[,1] = FF[,1]* 1000
+Y = LL %*% t(FF) + E
+svd(Y)$d[1:5] # singular values
+fit1 = flashr::flash(Y,verbose=F)
+cor(flash_get_ldf(fit1)$l,LL)
+```
