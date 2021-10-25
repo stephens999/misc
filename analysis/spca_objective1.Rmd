@@ -1,0 +1,112 @@
+---
+title: "spca_objective1"
+author: "Matthew Stephens"
+date: "2021-10-25"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+My goal here is to make some notes on a specific approach to
+PCA that we could extend to sparse PCA. 
+
+In brief let $X$ be an $n \times p$ data matrix, and consider seeking matrices
+$L$ ($n \times k$) and  $F$ ($p \times k$) to 
+$$\text{min}_{L,F} ||X - LF'||_2^2 \text{ subject to } L'L=I_k$$
+Here $||A||_2^2$ denotes the squared Frobenius norm of $A$
+(the sum of squared entries of the matrix).
+
+Obviously one can write the above as
+$$\text{min}_{F} \text{min}_{L:L'L=I_k} ||X - LF'||_2^2 $$
+We will show that the inner part of this minimization:
+
+$$h(F; X):= \text{min}_{L:L'L=I_k} ||X - LF'||_2^2$$
+depends on $F$ only through $FF'$ and depends on $X$ only through $X'X$.
+Furthermore $h(F;X)=0$ if $FF'=X'X$. 
+This demonstrates that the above formulation of PCA is finding an $F$
+such that $FF'$ approximates $X'X$.
+
+
+## Notation
+
+For a matrix $A=(a_{ij})$ let $A'$ denote its transpose, and 
+$||A||_2^2$ denote the squared Frobenius norm,
+$$||A||_2^2 = \sum a_{ij}^2 = \tr(A'A)$$
+ If $A$ has svd $A=UDV'$ then let $\sigma(A)=diag(D)$ denote the vector of singular values, and $\text{Polar}(A):=UV'$ (which is the
+$U$ part of the polar decomposition of $A=UP$). If $A$ is psd then let $\sqrt{A}$ denote the matrix $A=UD^{0.5}V'$ ($=UD^{0.5}U'$ since $U=V$ for
+psd $A$). Thus if $A=UDV'$ then $\sqrt(AA')= UDU'$.
+
+Let $||A||_*$ denote the trace norm (nuclear norm) of $A$.
+$$||A||_* = \sum_i \sigma_i(A) = \sum_i \sigma_i(\sqrt{A'A}) = tr(\sqrt{A'A}) = ||\sqrt{A'A}||_*$$
+Note that the trace norm is unitarily invariant (eg see https://nhigham.com/2021/02/02/what-is-a-unitarily-invariant-norm/). 
+That is, if $U$ and $V$ are unitary (meaning $UU'=I$, and $U'U=I$) then 
+$$||U'AV||_* = ||A||_*.$$ 
+
+## Derivations
+
+Recall that we defined
+$$h(F; X) := min_{L:L'L=I_k} ||X - LF'||_2^2$$
+
+We state two key results. First, the minimum over $L$ is attained by $\hat{L}=Polar(XF)$. 
+Second $h(F;X)$ depends on $F$ only through $FF'$ and on $X$ only through $X'X$. Also if $FF'=X'X$ then $h(F;X)=0$. So $h$ is a measure of difference between $FF'$ and $X'X$.
+
+The first result follows directly from Theorem 4 in Zou et al ("Sparse Principal Components analysis), so we focus on the second.
+
+First note that if $XF=UDV'$ then $\hat{L}=Polar(XF)=UV'$ so
+$$\hat{L}F'X' = UV'VDU'=UDU'= \sqrt{XFF'X'}$$
+
+Also for any $L'L=I$ we have
+$$||X - LF'||_2^2 = \text{Tr}{(X-LF')'(X-LF')} = 
+\text{Tr}(X'X - 2X'LF' + FL'LF') = \text{Tr}(X'X - 2LF'X' + FF')$$ 
+
+Putting this together:
+$$||X - \hat{L}F'||_2^2 = \text{Tr}(X'X - 2\sqrt{XFF'X'} + FF')$$
+
+Note that $$Tr(\sqrt{XFF'X'}) = ||XF||_* = ||\sqrt{X'X}\sqrt{FF'}||_*$$
+This can be proved by the unitary property of $||.||_*$.
+
+Note: initially I mistakenly thought that this could be further simplified to
+$||\sqrt{X'X}\sqrt{FF'}||_* = \text{Tr}(\sqrt{X'X}\sqrt{FF'})$. However, this is *not*
+true because $\sqrt{X'X}\sqrt{FF'}$  is generally not SPD (and indeed, not symmetric).
+
+Here was some code I used to make some numeric checks of some of these results.
+```{r}
+n = 10
+p = 5
+k= 6
+X = matrix(rnorm(n*p),nrow=n,ncol=p)
+F = matrix(rnorm(k*p), nrow= p, ncol=k)
+
+XF = X %*% F
+norm = function(A){sum(svd(A)$d)}
+sqrt_AtA = function(A){A.e = eigen(t(A)%*%A); d = A.e$values; v = A.e$vectors; return(v %*% diag(ifelse(d>0,sqrt(d),0)) %*% t(v))}
+
+tr = function(A){return(sum(diag(A)))}
+
+norm(X %*% F) - norm(sqrt_AtA(X) %*% sqrt_AtA(t(F)))
+
+X.svd = svd(X)
+X.u = X.svd$u
+X.d = X.svd$d
+X.v = X.svd$v
+
+norm(X)
+norm(X.u %*% diag(X.d) %*% t(X.v))
+norm(diag(X.d) %*% t(X.v))
+norm(X.v %*% diag(X.d) %*% t(X.v))
+tr(X.v %*% diag(X.d) %*% t(X.v))
+
+F.svd = svd(F)
+F.u = F.svd$u
+F.d = F.svd$d
+F.v = F.svd$v
+
+norm(X %*% F)
+norm(X.u %*% diag(X.d) %*% t(X.v) %*% F.u %*% diag(F.d) %*% t(F.v))
+norm(diag(X.d) %*% t(X.v) %*% F.u %*% diag(F.d))
+norm(X.v %*% diag(X.d) %*% t(X.v) %*% F.u %*% diag(F.d) %*% t(F.u))
+
+```
+
