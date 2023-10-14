@@ -13,8 +13,8 @@
 
 <title>Home</title>
 
-<script src="site_libs/header-attrs-2.9/header-attrs.js"></script>
-<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<script src="site_libs/header-attrs-2.20/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
@@ -33,7 +33,7 @@
 <link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 
-<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
 <!-- Add a small amount of space between sections. -->
 <style type="text/css">
 div.section {
@@ -70,6 +70,7 @@ if (window.hljs) {
 
 
 
+
 <style type = "text/css">
 .main-container {
   max-width: 940px;
@@ -90,6 +91,9 @@ button.code-folding-btn:focus {
 }
 summary {
   display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
 }
 pre code {
   padding: 0;
@@ -147,11 +151,15 @@ $(document).ready(function () {
     href = "index.html";
   var menuAnchor = $('a[href="' + href + '"]');
 
-  // mark it active
-  menuAnchor.tab('show');
-
-  // if it's got a parent navbar menu mark it active as well
-  menuAnchor.closest('li.dropdown').addClass('active');
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
 
   // Navbar adjustments
   var navHeight = $(".navbar").first().height() + 15;
@@ -180,8 +188,8 @@ $(document).ready(function () {
   border-radius: 4px;
 }
 
-.tabset-dropdown > .nav-tabs > li.active:before {
-  content: "";
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
   font-family: 'Glyphicons Halflings';
   display: inline-block;
   padding: 10px;
@@ -189,16 +197,9 @@ $(document).ready(function () {
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-  content: "&#xe258;";
-  border: none;
-}
-
-.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-  content: "";
+  content: "\e258";
   font-family: 'Glyphicons Halflings';
-  display: inline-block;
-  padding: 10px;
-  border-right: 1px solid #ddd;
+  border: none;
 }
 
 .tabset-dropdown > .nav-tabs > li.active {
@@ -242,7 +243,7 @@ $(document).ready(function () {
 <div class="navbar navbar-default  navbar-fixed-top" role="navigation">
   <div class="container">
     <div class="navbar-header">
-      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
@@ -275,7 +276,9 @@ $(document).ready(function () {
 
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
-<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span>
 </button>
 </p>
 <div id="workflowr-report" class="collapse">
@@ -284,7 +287,9 @@ $(document).ready(function () {
 <a data-toggle="tab" href="#summary">Summary</a>
 </li>
 <li>
-<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -293,17 +298,27 @@ $(document).ready(function () {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2021-10-25
+<strong>Last updated:</strong> 2023-10-13
 </p>
 <p>
-<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 2 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 2
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 0
 </p>
 <p>
-<strong>Knit directory:</strong> <code>misc/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+<strong>Knit directory:</strong> <code>misc/analysis/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
 </p>
 <p>
-This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
-  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.0). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
 </p>
 <hr>
 </div>
@@ -312,31 +327,54 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div id="strongRMarkdownfilestronguptodate"
+class="panel-collapse collapse">
 <div class="panel-body">
-<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
 </div>
 </div>
 </div>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree0552feee3052ba9d40f0c6f95d0d7a90bb08d293targetblank0552feea"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/0552feee3052ba9d40f0c6f95d0d7a90bb08d293" target="_blank">0552fee</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree96b38d11088b8cc013ac80a0979dc987a93a0afdtargetblank96b38d1a">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/stephens999/misc/tree/96b38d11088b8cc013ac80a0979dc987a93a0afd" target="_blank">96b38d1</a>
+</a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree0552feee3052ba9d40f0c6f95d0d7a90bb08d293targetblank0552feea" class="panel-collapse collapse">
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree96b38d11088b8cc013ac80a0979dc987a93a0afdtargetblank96b38d1a"
+class="panel-collapse collapse">
 <div class="panel-body">
 <p>
-Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/0552feee3052ba9d40f0c6f95d0d7a90bb08d293" target="_blank">0552fee</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version
+<a href="https://github.com/stephens999/misc/tree/96b38d11088b8cc013ac80a0979dc987a93a0afd" target="_blank">96b38d1</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
 </p>
 <p>
-Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
 </p>
 <pre><code>
 Ignored files:
@@ -347,6 +385,7 @@ Ignored files:
     Ignored:    analysis/.Rhistory
     Ignored:    analysis/ALStruct_cache/
     Ignored:    data/.Rhistory
+    Ignored:    data/methylation-data-for-matthew.rds
     Ignored:    data/pbmc/
 
 Untracked files:
@@ -359,6 +398,7 @@ Untracked files:
     Untracked:  analysis/SPCAvRP.rmd
     Untracked:  analysis/admm_02.Rmd
     Untracked:  analysis/admm_03.Rmd
+    Untracked:  analysis/cholesky.Rmd
     Untracked:  analysis/compare-transformed-models.Rmd
     Untracked:  analysis/cormotif.Rmd
     Untracked:  analysis/cp_ash.Rmd
@@ -366,6 +406,7 @@ Untracked files:
     Untracked:  analysis/eb_prepilot.Rmd
     Untracked:  analysis/eb_var.Rmd
     Untracked:  analysis/ebpmf1.Rmd
+    Untracked:  analysis/ebspca_sims.Rmd
     Untracked:  analysis/fa_check_identify.Rmd
     Untracked:  analysis/fa_iterative.Rmd
     Untracked:  analysis/flash_test_tree.Rmd
@@ -375,6 +416,7 @@ Untracked files:
     Untracked:  analysis/m6amash.Rmd
     Untracked:  analysis/mash_bhat_z.Rmd
     Untracked:  analysis/mash_ieqtl_permutations.Rmd
+    Untracked:  analysis/methylation_example.Rmd
     Untracked:  analysis/mixsqp.Rmd
     Untracked:  analysis/mr.ash_lasso_init.Rmd
     Untracked:  analysis/mr.mash.test.Rmd
@@ -389,6 +431,7 @@ Untracked files:
     Untracked:  analysis/pbmc.Rmd
     Untracked:  analysis/pca_binary_weighted.Rmd
     Untracked:  analysis/pca_l1.Rmd
+    Untracked:  analysis/poisson_shrink.Rmd
     Untracked:  analysis/poisson_transform.Rmd
     Untracked:  analysis/pseudodata.Rmd
     Untracked:  analysis/qrnotes.txt
@@ -487,12 +530,15 @@ Untracked files:
     Untracked:  output/test5.param.txt
 
 Unstaged changes:
+    Modified:   .gitignore
     Modified:   analysis/mr_ash_pen.Rmd
     Modified:   analysis/susie_flash.Rmd
 
 </code></pre>
 <p>
-Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
 </p>
 </div>
 </div>
@@ -503,7 +549,11 @@ Note that any generated files, e.g. HTML, png, CSS, etc., are not included in t
 <div id="versions" class="tab-pane fade">
 
 <p>
-These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/index.Rmd</code>) and HTML (<code>docs/index.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+These are the previous versions of the repository in which changes were
+made to the R Markdown (<code>analysis/index.Rmd</code>) and HTML
+(<code>docs/index.html</code>) files. If you’ve configured a remote Git
+repository (see <code>?wflow_git_remote</code>), click on the hyperlinks
+in the table below to view the files as they were in that past version.
 </p>
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
@@ -532,6 +582,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/96b38d11088b8cc013ac80a0979dc987a93a0afd/analysis/index.Rmd" target="_blank">96b38d1</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2023-10-13
+</td>
+<td>
+workflowr::wflow_publish("analysis/index.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/2cd999cb66b83c22f80883f8f2b3a012a04eec18/docs/index.html" target="_blank">2cd999c</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2021-10-25
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/0552feee3052ba9d40f0c6f95d0d7a90bb08d293/analysis/index.Rmd" target="_blank">0552fee</a>
 </td>
 <td>
@@ -541,7 +625,7 @@ Matthew Stephens
 2021-10-25
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -575,7 +659,7 @@ Matthew Stephens
 2021-10-21
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -609,7 +693,7 @@ Matthew Stephens
 2021-10-21
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -643,7 +727,7 @@ Matthew Stephens
 2021-07-29
 </td>
 <td>
-workflowr::wflow_publish(“analysis/index.Rmd”)
+workflowr::wflow_publish("analysis/index.Rmd")
 </td>
 </tr>
 <tr>
@@ -677,7 +761,7 @@ Matthew Stephens
 2021-05-26
 </td>
 <td>
-wflow_publish(“index.Rmd”)
+wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -711,7 +795,7 @@ Matthew Stephens
 2021-05-22
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -762,7 +846,7 @@ Matthew Stephens
 2021-05-22
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -796,7 +880,7 @@ Matthew Stephens
 2021-05-11
 </td>
 <td>
-wflow_publish(“analysis/index.Rmd”)
+wflow_publish("analysis/index.Rmd")
 </td>
 </tr>
 <tr>
@@ -830,7 +914,7 @@ Matthew Stephens
 2021-03-29
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -864,7 +948,7 @@ Matthew Stephens
 2021-02-19
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -898,7 +982,7 @@ Matthew Stephens
 2021-02-17
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -932,7 +1016,7 @@ Matthew Stephens
 2021-02-04
 </td>
 <td>
-wflow_publish(“index.Rmd”)
+wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -966,7 +1050,7 @@ Matthew Stephens
 2021-01-23
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1000,7 +1084,7 @@ Matthew Stephens
 2020-11-05
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1034,7 +1118,7 @@ Matthew Stephens
 2020-10-09
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1068,7 +1152,7 @@ Matthew Stephens
 2020-10-09
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1102,7 +1186,7 @@ Matthew Stephens
 2020-08-10
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1136,7 +1220,7 @@ Matthew Stephens
 2020-08-03
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1170,7 +1254,7 @@ Matthew Stephens
 2020-07-20
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1204,7 +1288,7 @@ Matthew Stephens
 2020-06-29
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1238,7 +1322,7 @@ Matthew Stephens
 2020-06-26
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1272,7 +1356,7 @@ Matthew Stephens
 2020-06-22
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1306,7 +1390,7 @@ Matthew Stephens
 2020-06-12
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1340,7 +1424,7 @@ Matthew Stephens
 2020-06-04
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1374,7 +1458,7 @@ Matthew Stephens
 2020-06-02
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1408,7 +1492,7 @@ Matthew Stephens
 2020-05-29
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1442,7 +1526,7 @@ Matthew Stephens
 2020-05-20
 </td>
 <td>
-wflow_publish(“index.Rmd”)
+wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1476,7 +1560,7 @@ Matthew Stephens
 2020-05-05
 </td>
 <td>
-wflow_publish(“index.Rmd”)
+wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1510,7 +1594,7 @@ Matthew Stephens
 2020-03-12
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1544,7 +1628,7 @@ Matthew Stephens
 2020-03-06
 </td>
 <td>
-workflowr::wflow_publish(“../analysis/index.Rmd”)
+workflowr::wflow_publish("../analysis/index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1578,7 +1662,7 @@ Matthew Stephens
 2020-03-06
 </td>
 <td>
-workflowr::wflow_publish(“../analysis/index.Rmd”)
+workflowr::wflow_publish("../analysis/index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1612,7 +1696,7 @@ Matthew Stephens
 2019-12-04
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1646,7 +1730,7 @@ Matthew Stephens
 2019-11-02
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1680,7 +1764,7 @@ Matthew Stephens
 2019-10-30
 </td>
 <td>
-wflow_publish(“index.Rmd”)
+wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1714,7 +1798,7 @@ Matthew Stephens
 2019-10-21
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1748,7 +1832,7 @@ Matthew Stephens
 2019-10-18
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1782,7 +1866,7 @@ Matthew Stephens
 2019-10-12
 </td>
 <td>
-wflow_publish(“index.Rmd”)
+wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1816,7 +1900,7 @@ Matthew Stephens
 2019-10-07
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1850,7 +1934,7 @@ Matthew Stephens
 2019-10-05
 </td>
 <td>
-wflow_publish(“index.Rmd”)
+wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1884,7 +1968,7 @@ Matthew Stephens
 2019-07-15
 </td>
 <td>
-wflow_publish(“index.Rmd”)
+wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1918,7 +2002,7 @@ Matthew Stephens
 2019-06-25
 </td>
 <td>
-workflowr::wflow_publish(“analysis/index.Rmd”)
+workflowr::wflow_publish("analysis/index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1952,7 +2036,7 @@ Matthew Stephens
 2019-05-10
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -1986,7 +2070,7 @@ Matthew Stephens
 2019-05-10
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -2020,7 +2104,7 @@ Matthew Stephens
 2019-05-10
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -2071,7 +2155,7 @@ Matthew Stephens
 2019-04-19
 </td>
 <td>
-wflow_publish(“index.Rmd”)
+wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -2105,7 +2189,7 @@ stephens999
 2018-10-09
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -2139,7 +2223,7 @@ stephens999
 2018-10-09
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -2173,7 +2257,7 @@ stephens999
 2018-08-31
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -2207,7 +2291,7 @@ stephens999
 2018-07-14
 </td>
 <td>
-workflowr::wflow_publish(“analysis/index.Rmd”)
+workflowr::wflow_publish("analysis/index.Rmd")
 </td>
 </tr>
 <tr>
@@ -2258,7 +2342,7 @@ stephens999
 2017-12-09
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -2292,7 +2376,7 @@ stephens999
 2017-12-06
 </td>
 <td>
-workflowr::wflow_publish(c(“index.Rmd”))
+workflowr::wflow_publish(c("index.Rmd"))
 </td>
 </tr>
 <tr>
@@ -2326,7 +2410,7 @@ stephens999
 2017-11-18
 </td>
 <td>
-wflow_publish(“index.Rmd”)
+wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -2360,7 +2444,7 @@ stephens999
 2017-11-10
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -2394,7 +2478,7 @@ stephens999
 2017-10-27
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -2428,7 +2512,7 @@ stephens999
 2017-10-12
 </td>
 <td>
-workflowr::wflow_publish(“index.Rmd”)
+workflowr::wflow_publish("index.Rmd")
 </td>
 </tr>
 <tr>
@@ -2462,7 +2546,7 @@ stephens999
 2017-06-26
 </td>
 <td>
-workflowr::wflow_publish(c(“cov_udi_explore.Rmd”,
+workflowr::wflow_publish(c("cov_udi_explore.Rmd",
 </td>
 </tr>
 <tr>
@@ -2642,38 +2726,56 @@ Start workflowr project.
 </div>
 </div>
 </div>
-<p>This repo is my “catch-all” for putting things in that may relate to various ongoing projects.</p>
+<p>This repo is my “catch-all” for putting things in that may relate to
+various ongoing projects.</p>
 <div id="ash" class="section level1">
 <h1>Ash</h1>
 <ul>
-<li><a href="ash_pi0_largern.html">Null simulations with larger n=13500</a></li>
+<li><a href="ash_pi0_largern.html">Null simulations with larger
+n=13500</a></li>
 <li><a href="ash_npmle_big.html">NPMLE with larger n=100000</a></li>
-<li><a href="ash_delta_operator.html">Examine the delta operator for ash</a></li>
+<li><a href="ash_delta_operator.html">Examine the delta operator for
+ash</a></li>
 <li><a href="ash_pois_bcell.html">Ash on poisson data</a></li>
 </ul>
 </div>
 <div id="mr-ash" class="section level1">
 <h1>Mr Ash</h1>
 <ul>
-<li><a href="mr_ash_pen.html">implementing mr ash as a penalized method</a></li>
-<li><a href="mr_ash_sca.html">coordinate ascent and parallel version</a></li>
-<li><a href="mr.ash.changepoint.html">mr.ash.alpha applied to changepoint problems</a></li>
-<li><a href="mr.ash_ridge.html">combining mr.ash and ridge regression/iterative ridge regression</a></li>
-<li><a href="blasso_bimodal_example.html">bimodal example from “Bayesian lasso”" paper</a></li>
-<li><a href="mr_ash_vs_lasso.html">mr ash vs lasso: example where lasso does better</a></li>
-<li><a href="mr_ash_vs_lasso_02.html">mr ash vs lasso: follow-up checking objective fn</a></li>
-<li><a href="lasso_vs_ridge.html">lasso vs ridge: follow-up checking p=1000 vs p=2000</a></li>
+<li><a href="mr_ash_pen.html">implementing mr ash as a penalized
+method</a></li>
+<li><a href="mr_ash_sca.html">coordinate ascent and parallel
+version</a></li>
+<li><a href="mr.ash.changepoint.html">mr.ash.alpha applied to
+changepoint problems</a></li>
+<li><a href="mr.ash_ridge.html">combining mr.ash and ridge
+regression/iterative ridge regression</a></li>
+<li><a href="blasso_bimodal_example.html">bimodal example from “Bayesian
+lasso”” paper</a></li>
+<li><a href="mr_ash_vs_lasso.html">mr ash vs lasso: example where lasso
+does better</a></li>
+<li><a href="mr_ash_vs_lasso_02.html">mr ash vs lasso: follow-up
+checking objective fn</a></li>
+<li><a href="lasso_vs_ridge.html">lasso vs ridge: follow-up checking
+p=1000 vs p=2000</a></li>
 </ul>
 </div>
 <div id="ridge-regression" class="section level1">
 <h1>Ridge Regression</h1>
 <ul>
-<li><p><a href="ridge_trend_filter.html">Ridge regression for trend filtering</a></p></li>
-<li><p><a href="ridge_conjugate_gradient.html">Ridge regression via conjugate gradient</a></p></li>
-<li><p><a href="ridge_em.html">EM for hyperparameters Ridge regression</a></p></li>
-<li><p><a href="ridge_em_svd.html">EM for hyperparameters of Ridge regression using SVD</a></p></li>
-<li><p><a href="ridge.hyperparam.convergence.html">EM for hyperparameters of Ridge regression - convergence issue</a></p></li>
-<li><p><a href="ridge_admm.html">ADMM for ridge regression with heterogenous prior variances</a></p></li>
+<li><p><a href="ridge_trend_filter.html">Ridge regression for trend
+filtering</a></p></li>
+<li><p><a href="ridge_conjugate_gradient.html">Ridge regression via
+conjugate gradient</a></p></li>
+<li><p><a href="ridge_em.html">EM for hyperparameters Ridge
+regression</a></p></li>
+<li><p><a href="ridge_em_svd.html">EM for hyperparameters of Ridge
+regression using SVD</a></p></li>
+<li><p><a href="ridge.hyperparam.convergence.html">EM for
+hyperparameters of Ridge regression - convergence issue</a></p></li>
+<li><p><a href="ridge_admm.html">ADMM for ridge regression with
+heterogenous prior variances</a></p></li>
+<li><p><a href="sloppy_admm.html">Sloppy ADMM</a></p></li>
 </ul>
 </div>
 <div id="lasso" class="section level1">
@@ -2681,72 +2783,94 @@ Start workflowr project.
 <ul>
 <li><a href="lasso_em.html">Fit lasso by EM</a></li>
 <li><a href="admm_01.html">teach myself ADMM (L1 and L0)</a></li>
-<li><a href="lasso_complexity.html">check scaling of glmnet with n</a></li>
+<li><a href="lasso_complexity.html">check scaling of glmnet with
+n</a></li>
 </ul>
 </div>
 <div id="ebmr" class="section level1">
 <h1>EBMR</h1>
 <ul>
-<li><a href="eblasso.suprising.html">An initially suprising overfitting result for EB lasso</a></li>
-<li><a href="ebmr_illustration.html">An illustration of ebmr with estimated grid</a></li>
+<li><a href="eblasso.suprising.html">An initially suprising overfitting
+result for EB lasso</a></li>
+<li><a href="ebmr_illustration.html">An illustration of ebmr with
+estimated grid</a></li>
 </ul>
 </div>
 <div id="mash" class="section level1">
 <h1>Mash</h1>
 <ul>
-<li><a href="rbc_zscore_mash.html">Initial mash analysis of RBC z scores</a></li>
-<li><a href="cov_udi_explore.html">Comparing the UDI BFs from mash with originals</a></li>
+<li><a href="rbc_zscore_mash.html">Initial mash analysis of RBC z
+scores</a></li>
+<li><a href="cov_udi_explore.html">Comparing the UDI BFs from mash with
+originals</a></li>
 </ul>
 </div>
 <div id="mouthwash" class="section level1">
 <h1>Mouthwash</h1>
 <ul>
-<li><a href="vicar_t.html">Looking at how Mouthwash deals with t distributions vs normal</a></li>
+<li><a href="vicar_t.html">Looking at how Mouthwash deals with t
+distributions vs normal</a></li>
 </ul>
 </div>
 <div id="flash" class="section level1">
 <h1>Flash</h1>
 <ul>
-<li><p><a href="flash_r1vsr0_conservative.html">Illustration of conservative behaviour issue</a></p></li>
-<li><p><a href="EBflash_1d.html">Looking at differentiating the likelihood at the null</a></p></li>
+<li><p><a href="flash_r1vsr0_conservative.html">Illustration of
+conservative behaviour issue</a></p></li>
+<li><p><a href="EBflash_1d.html">Looking at differentiating the
+likelihood at the null</a></p></li>
 <li><p><a href="ssvd_gtex.html">Apply SSVD to GTEX data</a></p></li>
-<li><p><a href="ebayes.mm.html">Method of moments for EbayesThresh</a></p></li>
-<li><p><a href="flashier_stocks.html">flashier run on stocks data</a></p></li>
-<li><p><a href="spca_objective1.html">Notes on a sparse PCA objective function</a></p></li>
+<li><p><a href="ebayes.mm.html">Method of moments for
+EbayesThresh</a></p></li>
+<li><p><a href="flashier_stocks.html">flashier run on stocks
+data</a></p></li>
+<li><p><a href="spca_objective1.html">Notes on a sparse PCA objective
+function</a></p></li>
 </ul>
 </div>
 <div id="nmf" class="section level1">
 <h1>NMF</h1>
 <ul>
-<li><a href="nmf_sparse.html">Try NMF on a simple simulation with sparse factors</a></li>
-<li><a href="nmf_simple_examples.html">Run NMF on covariance matrices, including tree-like case</a></li>
+<li><a href="nmf_sparse.html">Try NMF on a simple simulation with sparse
+factors</a></li>
+<li><a href="nmf_simple_examples.html">Run NMF on covariance matrices,
+including tree-like case</a></li>
 </ul>
 </div>
 <div id="multinomial-factor-models" class="section level1">
 <h1>Multinomial factor models</h1>
 <ul>
-<li><a href="sparse_structure.html">Possible version of structure/admixture with sparsity via ARD-like prior</a></li>
+<li><a href="sparse_structure.html">Possible version of
+structure/admixture with sparsity via ARD-like prior</a></li>
 </ul>
 </div>
 <div id="weighted-svd" class="section level1">
 <h1>Weighted SVD</h1>
 <ul>
-<li><a href="wSVD.html">Outline of EM algorithm for fitting weighted SVD</a></li>
-<li><a href="plra.html">Investigation of weighted SVD for Poisson data</a></li>
+<li><a href="wSVD.html">Outline of EM algorithm for fitting weighted
+SVD</a></li>
+<li><a href="plra.html">Investigation of weighted SVD for Poisson
+data</a></li>
 <li><a href="primepca.html">Brief experiment with primePCA</a></li>
-<li><a href="softimpute_convergence_problem.html">Example of convergence problem in softimpute</a></li>
+<li><a href="softimpute_convergence_problem.html">Example of convergence
+problem in softimpute</a></li>
 </ul>
 </div>
 <div id="finemapping" class="section level1">
 <h1>Finemapping</h1>
 <ul>
 <li><a href="FMO2.html">Comparison of varbvs and varbvsmix</a></li>
-<li><a href="simple_mapping.html">A simple approach to fine mapping</a></li>
+<li><a href="simple_mapping.html">A simple approach to fine
+mapping</a></li>
 <li><a href="newVB.html">A new VB approach</a></li>
-<li><a href="newVB.ss.html">Connect new VB to single SNP Bayesian analysis</a></li>
-<li><a href="selective_inference_toy.html">selective inference on toy example</a></li>
-<li><a href="selective_inference.html">selective inference with correlated variables</a></li>
-<li><a href="hierinf_toyexample.html">hierarchical inference example</a></li>
+<li><a href="newVB.ss.html">Connect new VB to single SNP Bayesian
+analysis</a></li>
+<li><a href="selective_inference_toy.html">selective inference on toy
+example</a></li>
+<li><a href="selective_inference.html">selective inference with
+correlated variables</a></li>
+<li><a href="hierinf_toyexample.html">hierarchical inference
+example</a></li>
 </ul>
 </div>
 <div id="ld-score-regression" class="section level1">
@@ -2759,13 +2883,16 @@ Start workflowr project.
 <h1>Missing Data in regression</h1>
 <ul>
 <li><a href="mr_missing_data.html">Pseudo-data idea</a></li>
-<li><a href="mr_missing_data2.html">Approximate Inference with missing data</a></li>
+<li><a href="mr_missing_data2.html">Approximate Inference with missing
+data</a></li>
 </ul>
 </div>
-<div id="approximate-message-passing-and-related" class="section level1">
+<div id="approximate-message-passing-and-related"
+class="section level1">
 <h1>Approximate message passing and related</h1>
 <ul>
-<li><a href="prec_vs_cov.html">Compare precision and covariance for ridge regression</a></li>
+<li><a href="prec_vs_cov.html">Compare precision and covariance for
+ridge regression</a></li>
 <li><a href="vamp_01.html">Initial try of VAMP</a></li>
 </ul>
 </div>
@@ -2778,24 +2905,30 @@ Start workflowr project.
 <div id="single-cell-data" class="section level1">
 <h1>Single cell data</h1>
 <ul>
-<li><a href="simple_transform_simulation.html">explore t test on log-transformed data</a></li>
-<li><a href="sinkhorn.html">initial play with sinkhorn normalization</a></li>
+<li><a href="simple_transform_simulation.html">explore t test on
+log-transformed data</a></li>
+<li><a href="sinkhorn.html">initial play with sinkhorn
+normalization</a></li>
 </ul>
 </div>
 <div id="flash-drift" class="section level1">
 <h1>flash-drift</h1>
 <ul>
-<li><a href="tree_pca.html">look at SVD applied to tree structured data</a></li>
-<li><a href="tree_pca_02.html">Eigen-decomposition applied to some simple 4- and 8-tip trees</a></li>
-<li><a href="tree_pca_03.html">Apply sparsepca and flash to some tree data</a></li>
-<li><a href="flash_f1_size.html">Look at effect of size of first factor on flash</a></li>
+<li><a href="tree_pca.html">look at SVD applied to tree structured
+data</a></li>
+<li><a href="tree_pca_02.html">Eigen-decomposition applied to some
+simple 4- and 8-tip trees</a></li>
+<li><a href="tree_pca_03.html">Apply sparsepca and flash to some tree
+data</a></li>
+<li><a href="flash_f1_size.html">Look at effect of size of first factor
+on flash</a></li>
 </ul>
 </div>
 
 
 <!-- Adjust MathJax settings so that all math formulae are shown using
 TeX fonts only; see
-http://docs.mathjax.org/en/latest/configuration.html.  This will make
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
 the presentation more consistent at the cost of the webpage sometimes
 taking slightly longer to load. Note that this only works because the
 footer is added to webpages before the MathJax javascript. -->
