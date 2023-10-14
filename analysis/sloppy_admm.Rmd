@@ -1,0 +1,152 @@
+---
+title: "sloppy_admm"
+author: "Matthew Stephens"
+date: "2022-04-22"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+library(ebmr.alpha)
+library(ebnm)
+```
+
+## Introduction
+
+I wanted to try fitting the following model:
+
+$$Y = Xu + e$$
+
+where $$e \sim N(0,s^2)$$ and
+$$u = b + v$$
+$$v \sim N(0,s_u^2)$$
+$$b \sim g()$$
+where $g$ is a (potentially-sparse) prior to be estimated by Empirical Bayes.
+
+One motivation here is that $v$ is a set of "dense" effects, and $b$ is a set of (potentially) "sparse" effects. If $g$ is a point mass at 0 then this is ridge regression.
+If $s_u =0$ then this is a (potentially) sparse regression model. So this model generalizes sparse regression and ridge regression. (If we set $g$ as a point-normal prior then this is the BSLMM model of Zhou, Carbonetto and Stephens).
+
+But the real motivation is that I think this model might be easy to fit by using a variational approximation and an "ADMM-like" algorithm.
+
+If we integrate out $v$ then we can rewrite the prior as:
+$$u|b \sim N(b, s_u^2)$$
+and
+$$b \sim g()$$.
+
+If we make the variational approximation $q(b,u) = q_b(b)q_u(u)$
+then the update for $q_u$ is:
+$$q_u = \bar{b} + Ridge(y-X\bar{b},X,s_u^2,s^2)$$
+where $\bar{b}$ denotes the expectation of $q_b$ and $Ridge(y,X,s^2_u,s^2)$ denotes the computation of the posterior for a ridge
+regression with response $y$, covariates $X$, prior variance $s^2_u$ and error variance $s^2$.
+
+The update for $g,q_b$ is 
+$$(g,q_b) = EBNM(\bar{u}, s^2_u)$$
+
+Finally, the update for $s^2_u$ is
+$$s^2_u = (1/p)\sum_j [E(b_j^2) + E(u_j^2) - 2\bar{b}_j\bar{u}_j] = (1/p)\sum_j  [Var(b_j)+Var(u_j) + (\bar{b}_j-\bar{u}_j)^2].$$
+
+
+## Example data
+
+First I simulate some example data for testing, using a (0th order) trendfiltering
+example. This is a somewhat tricky example
+because the columns of the $X$ matrix are so correlated.
+
+```{r}
+set.seed(100)
+n = 100
+p = n
+X = matrix(0,nrow=n,ncol=n)
+for(i in 1:n){
+  X[i:n,i] = 1:(n-i+1)
+}
+btrue = rep(0,n)
+btrue[40] = 8
+btrue[41] = -8
+Y = X %*% btrue + 0.1*rnorm(n)
+
+norm = mean(Y^2) # normalize Y because it makes it easier to compare with glmnet
+Y = Y/norm
+btrue = btrue/norm
+plot(Y)
+lines(X %*% btrue)
+```
+
+
+## Ridge regression
+
+To implement these updates I need a function to perform ridge regression.
+So here I implement and test this function. 
+
+
+Here is code to fit ridge regression with fixed prior and residual variance.
+It returns the posterior mean (Eb) and the marginal posterior variances (Vb).
+```{r}
+ridge = function(y,A,prior_variance,prior_mean=rep(0,ncol(A)),residual_variance=1){
+  n = length(y)
+  p = ncol(A)
+  L = chol(t(A) %*% A + (residual_variance/prior_variance)*diag(p))
+  b = backsolve(L, t(A) %*% y + (residual_variance/prior_variance)*prior_mean, transpose=TRUE)
+  b = backsolve(L, b)
+  #b = chol2inv(L) %*% (t(A) %*% y + (residual_variance/prior_variance)*prior_mean)
+  Sigma = residual_variance * chol2inv(L) # posterior variance
+  return(list(Eb = b, Vb=diag(Sigma)))
+}
+```
+
+Here I check this code gives me the same answer as `ebmr` (which does empirical Bayes, so estimates prior and residual variance). Looks good.
+```{r}
+y.fit.ebr = ebmr(X,Y, maxiter = 200, ebnv_fn = ebnv.pm)
+plot(Y)
+lines(X %*% btrue)
+lines(X %*% y.fit.ebr$mu,col=2)
+Emu = y.fit.ebr$mu # posterior mean
+Vmu = y.fit.ebr$residual_variance * y.fit.ebr$Sigma_diag # variance 
+prior_var = y.fit.ebr$sb2 * y.fit.ebr$residual_variance   # prior variance 
+residual_var = y.fit.ebr$residual_variance # residual variance
+temp = ridge(Y, X, prior_variance= prior_var, residual_variance = residual_var)
+plot(temp$Eb, Emu)
+abline(a=0,b=1)
+plot(temp$Vb, Vmu)
+abline(a=0,b=1)
+```
+
+## The algorithm 
+
+```{r}
+sloppy_admm = function(X,y,maxiter=100){
+  y.fit.ridge = ebmr(X,y, maxiter = 100, ebnv_fn = ebnv.pm) # fit a ridge regression
+  n = nrow(X)
+  p = ncol(X)
+  
+  Eb = rep(0,p)
+  Vb = rep(0,p)
+  Eu = y.fit.ebr$mu # posterior mean
+  Vu= 0 #Vu = y.fit.ebr$residual_variance * y.fit.ebr$Sigma_diag # variance 
+  #su2 = y.fit.ebr$sb2 * y.fit.ebr$residual_variance   # prior variance 
+  s2 = y.fit.ebr$residual_variance # residual variance
+  
+  for(i in 1:maxiter){
+    su2 = mean(Vb + Vu + (Eb-Eu)^2)
+    res.ebnm = ebnm::ebnm_ash(Eu,sqrt(su2))
+    Eb = res.ebnm$posterior$mean
+    Vb = res.ebnm$posterior$sd^2
+    
+    fit.rr = ridge(y,X,su2,Eb,s2)
+    Eu = fit.rr$Eb
+    Vu = fit.rr$Vb
+  }
+  return(list(Eu=Eu,Eu.ridge = y.fit.ebr$mu))
+}
+```
+
+Here I compare the sloppy admm fit (red) with ridge(green):
+```{r}
+plot(Y)
+lines(X %*% btrue)
+res = sloppy_admm(X,Y)
+lines(X %*% res$Eu ,col=2)
+lines(X %*% res$Eu.ridge,col=3)
+```
+
