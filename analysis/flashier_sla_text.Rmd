@@ -1,0 +1,169 @@
+---
+title: "flashier_sla_text"
+author: "Matthew Stephens"
+date: "2023-10-17"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+I want to try running flashier (non-negative) on some text data and see what happens. It is also a chance to try out the flashier release to CRAN.
+
+I tried running flashier on both the log1p transformed counts directly, and log1p transform of fitted
+values from a topic model. Both produce somewhat promising results. It is hard to beat the log1p transform for simplicity and speed. 
+
+```{r}
+library(Matrix)
+library(readr)
+library(tm)
+library(fastTopics)
+library(flashier)
+library(ebpmf)
+
+sla <- read_csv("../../gsmash/data/SLA/SCC2016/Data/paperList.txt")
+sla <- sla[!is.na(sla$abstract),]
+sla$docnum = 1:nrow(sla)
+datax = readRDS('../../gsmash/data/sla_full.rds')
+dim(datax$data)
+sum(datax$data==0)/prod(dim(datax$data))
+datax$data = Matrix(datax$data,sparse = TRUE)
+```
+
+## Data filtering
+
+filter out some documents: use top 60% longest ones as in Ke and Wang 2022.
+
+```{r}
+doc_to_use = order(rowSums(datax$data),decreasing = T)[1:round(nrow(datax$data)*0.6)]
+mat = datax$data[doc_to_use,]
+sla = sla[doc_to_use,]
+samples = datax$samples
+samples = lapply(samples, function(z){z[doc_to_use]})
+```
+
+Filter out words that appear in less than 5 documents. This results in around 2000 words
+
+```{r}
+word_to_use = which(colSums(mat>0)>=5)
+mat = mat[,word_to_use]
+mat = Matrix(mat,sparse=TRUE)
+lmat = Matrix(log(mat+1),sparse=TRUE)
+```
+
+## Fit log1p counts
+
+Here I take the log(mat+1) transform and fit.
+```{r}
+set.seed(1)
+fit.nn = flash(lmat,ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=2,greedy_Kmax = 200)
+```
+
+Look at the keywords for each factor. There are many single-word factors, and not as many 
+additional factors as I would have expected.
+```{r}
+get_keywords = function(fit.nn){
+  
+  L= fit.nn$L_pm
+  F_pm = fit.nn$F_pm
+  if(is.null(L)){ # allows to deal with ebpmf fit
+    L = fit.nn$udv$u
+    F_pm = fit.nn$udv$v
+  }
+  rownames(L)<-1:nrow(L)
+
+  Lnorm = t(t(L)/apply(L,2,max))
+  Fnorm = t(t(F_pm)*apply(L,2,max))
+  khat = apply(Lnorm,1,which.max)
+  Lmax = apply(Lnorm,1,max)
+  
+  khat[Lmax<0.1] = 0
+  keyw.nn =list()
+
+  for(k in 1:ncol(Fnorm)){
+     key = Fnorm[,k]>log(2)
+    keyw.nn[[k]] = (colnames(mat)[key])[order(Fnorm[key,k],decreasing = T)]
+  }
+  return(keyw.nn)
+}
+print(get_keywords(fit.nn))
+```
+
+
+Look at fitted values: we see the fit seems to miss quite a lot of the structure in the data.
+I think this is partly because the low counts are adding noise that it is not dealing with so well.
+```{r}
+  fv= fitted(fit.nn)
+  sub = sample(1:length(fv),100000)
+  plot(lmat[sub],fv[sub])
+```
+
+## Topic model
+
+Here I fit a topic model - it seems that the log fitted values do a better job of fitting the data.
+```{r}
+library(fastTopics)
+fit_nmf_k50 = fit_poisson_nmf(mat,k=50)
+fvals.nmf = fit_nmf_k50$L %*% t(fit_nmf_k50$F)
+plot(lmat[sub],log(fvals.nmf[sub]+1))
+```
+
+Here I tried running flash on the fitted values from the topic model. 
+```{r}
+set.seed(1)
+fit.nn.nmf = flash(log(fvals.nmf+1),ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=2,greedy_Kmax = 200)
+plot(log(fvals.nmf+1)[sub],fitted(fit.nn.nmf)[sub])
+print(get_keywords(fit.nn.nmf))
+```
+
+I'm still a bit suprised the topic model fit isnt closer to the data. Some large
+word counts are pretty poorly fit. 
+```{r}
+plot(mat[sub],fvals.nmf[sub])
+```
+
+Here I increased the number of topics to 100 to try to get a better fit.
+```{r}
+fit_nmf_k100 = fit_poisson_nmf(mat,k=100,init.method="random")
+fvals.nmf.k100 = fit_nmf_k100$L %*% t(fit_nmf_k100$F)
+plot(mat[sub],fvals.nmf.k100[sub])
+plot(log(1+mat[sub]),log(1+fvals.nmf.k100[sub]))
+```
+
+I tried fitting flash to the transformed values again. This seems promising. 
+Maybe we should fit topic model with even larger k? Experiment with more pseudocounts?
+```{r}
+set.seed(1)
+fit.nn.nmf.k100 = flash(log(fvals.nmf.k100+1),ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=2,greedy_Kmax = 200)
+plot(log(1+mat[sub]),fitted(fit.nn.nmf.k100)[sub])
+print(get_keywords(fit.nn.nmf.k100))
+```
+
+## Change pseudocount
+
+Here I wanted to see what happens if I change the pseudocount. At first I tried 0.001 after looking at some plots but it was very different from 1, so I tried 0.1. It is still interestingly quite different from 1 - much more keywords per topic. 
+```{r}
+plot(log(1+mat[sub]),log(0.001+fvals.nmf.k100[sub]))
+set.seed(1)
+Y = Matrix(log(1+fvals.nmf.k100/0.1)) # do it this way so non-negative
+fit.nn.nmf.k100.001 = flash(Y,ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=2,greedy_Kmax = 100)
+print(get_keywords(fit.nn.nmf.k100.001))
+```
+
+## Anscombe transform
+
+Try the anscombe transformation
+```{r}
+fit.nn.a = flash(sqrt(mat+3/8),ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=2,greedy_Kmax = 200)
+print(get_keywords(fit.nn.a))
+```
+
+
+```{r}
+fv= fitted(fit.nn.a)
+sub = sample(1:length(fv),100000)
+plot(sqrt(mat+3/8)[sub],fv[sub])
+```
+
+
