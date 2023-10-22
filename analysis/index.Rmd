@@ -77,6 +77,9 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 * [flashier run on stocks data](flashier_stocks.html)
 * [Notes on a sparse PCA objective function](spca_objective1.html)
 
+* [Notes on the log1p transform for count/Poisson data](flashier_log1p.html)
+
+
 
 # NMF
 
