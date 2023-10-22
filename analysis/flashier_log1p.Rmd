@@ -1,0 +1,135 @@
+---
+title: "flashier_log1p"
+author: "Matthew Stephens"
+date: "2023-10-21"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+library(flashier)
+```
+
+## Introduction
+
+When applied to (log1p-transformed) Poisson data, flashier often overestimates the rank (too many factors). However this is usually
+in simulations where the underlying low-rank structure is the log-mean
+(or maybe the mean). In practice we don't know if the low-rank
+structure is in the log mean or some other function of the mean -
+for example, in the log1p(mean). Motivated by this,
+ I look at how (nonnegative) flashier behaves on log1p transformed data when the underlying log1p(mu) is itself low rank with non-negative factors.
+
+## log1p mean and variance
+
+I want to start by studying the mean and variance of log(1+X)
+
+By Taylor series of $f(x) = log(1+x)$ we have
+$$\log(1+X) \approx \log(1+\mu) + (X-\mu)f'(\mu) + 0.5 (X-\mu)^2 f''(\mu)$$ 
+so
+$$E(\log(1+X)) = \log(1+\mu) - 0.5 \mu/(1+\mu)^2$$
+For small $\mu$ this is approximately $\mu/2$ and for large $\mu$ it is $\log(1+\mu)$.
+
+Rearranging the above gives
+$$(log(1+X) - log(1+\mu))^2 \approx (X-\mu)^2 f'(\mu)^2$$
+so
+$$var(log(1+X)) \approx \mu/(1+\mu)^2.$$
+
+We can check the accuracy by simulation. It matches pretty well.  Also, I note that the standard deviation is not *that* variable for mu in the range exp(-5) to exp(3). (a factor of just under 10 variation in standard deviation, so not entirely negligible, but it could be worse). 
+This might suggest we might get away without taking account of variation in standard error, which is practically very convenient.
+
+```{r}
+mm = exp(seq(-5,3,length=9))
+m = v =mm
+for(i in 1:length(mm)){
+  x = rpois(100000,mm[i])
+  m[i] = mean(log(1+x))
+  v[i] = var(log(1+x))
+}
+plot(mm,m)
+lines(mm, log(1+mm) - 0.5*mm/(1+mm)^2 )
+
+plot(mm,sqrt(v))
+lines(mm, sqrt(mm)/(1+mm))
+abline(v=1)
+```
+
+
+### log(c+X)
+
+We can extend this to $log(c+X)$. By Taylor series we have:
+$$E(log(c+X)) = log(c+\mu) - 0.5 \mu/(c+\mu)^2$$
+and
+$$Var(log(c+X)) \approx \mu/(c+\mu)^2.$$
+
+```{r}
+c=0.1
+mm = exp(seq(-5,3,length=9))
+mc = vc =mm
+for(i in 1:length(mm)){
+  x = rpois(100000,mm[i])
+  mc[i] = mean(log(c+x))
+  vc[i] = var(log(c+x))
+}
+
+plot(mm, log(c+mm) - 0.5*mm/(c+mm)^2,type="l" )
+points(mm,mc)
+    
+plot(mm,sqrt(vc))
+lines(mm, sqrt(mm)/(c+mm))
+```
+
+Interesting that (unless I made a mistake) the mean is quite off for
+small mu and the variance is also off.
+I need to understand this better.
+However, I do note again that the standard deviation doesn't vary too much with mm.
+
+
+## Simple simulation
+
+I do a simple simulation where $log(1+\mu) =LF'$ where $L$ and $F$ are non-negative
+and $LF'$ is rank 4..
+
+```{r}
+set.seed(1)
+n= 1000
+p = 200
+K = 4
+LL = matrix(runif(n*K),nrow=n)
+FF = matrix(runif(p*K),nrow=p)
+mu = matrix(exp(LL %*% t(FF))-1,ncol=p, nrow=n)
+X= matrix(rpois(n*p,mu), ncol=p, nrow=n)
+hist(mu)
+mean(X>0)
+```
+
+Try flashier
+```{r}
+fit.nn.1 = flash(log(X+1),ebnm_fn = ebnm_point_exponential,var_type=2,backfit=TRUE)
+```
+The greedy approach fits 6 factors, but the backfitting ends up
+with 5 factors. And one of the factors is capturing a single row.
+
+```{r}
+plot(fit.nn.1$F_pm[,4])
+which.max(fit.nn.1$F_pm[,4])
+plot(fit.nn.1$L_pm[,4])
+plot(X[,54])
+fit.nn.1$flash_fit$tau[54]
+```
+
+So it seems the extra factor here is due to flash converging to a solution
+that picks out one column, and sets its variance close to 0 (tau is very big). And the null check does not work because the flash objective goes
+to infinity as tau goes to infinity with a perfect fit to the column. We could probably avoid this by setting a minimum tau somehow (or regularizing it).
+
+After experimenting I found that S=0.5 fixed it (but smaller values of S do not).
+```{r}
+fit.nn.1 = flash(log(X+1),ebnm_fn = ebnm_point_exponential,var_type=2,backfit=TRUE, S=0.5)
+```
+
+We need more investigation, but maybe flash can do OK with
+estimating the rank if the true log(1+mu) is low rank and we fix the
+issue with outlying factors capturing a single column.
+
+
+
