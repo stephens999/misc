@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Matthew Stephens" />
+
+<meta name="date" content="2023-10-27" />
+
+<title>mr.ash.debug</title>
+
+<script src="site_libs/header-attrs-2.20/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">misc</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/stephens999/misc">source</a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">mr.ash.debug</h1>
+<h4 class="author">Matthew Stephens</h4>
+<h4 class="date">2023-10-27</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2023-10-27
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>misc/analysis/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.0). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed1code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(1)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed1code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(1)</code> was run prior to running the
+code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreea6608e4591a31248522a3e0dfe1f8adc2578394ftargetblanka6608e4a">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/stephens999/misc/tree/a6608e4591a31248522a3e0dfe1f8adc2578394f" target="_blank">a6608e4</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreea6608e4591a31248522a3e0dfe1f8adc2578394ftargetblanka6608e4a"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/stephens999/misc/tree/a6608e4591a31248522a3e0dfe1f8adc2578394f" target="_blank">a6608e4</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.RData
+    Ignored:    analysis/.Rhistory
+    Ignored:    analysis/ALStruct_cache/
+    Ignored:    data/.Rhistory
+    Ignored:    data/methylation-data-for-matthew.rds
+    Ignored:    data/pbmc/
+
+Untracked files:
+    Untracked:  .dropbox
+    Untracked:  Icon
+    Untracked:  analysis/GHstan.Rmd
+    Untracked:  analysis/GTEX-cogaps.Rmd
+    Untracked:  analysis/PACS.Rmd
+    Untracked:  analysis/Rplot.png
+    Untracked:  analysis/SPCAvRP.rmd
+    Untracked:  analysis/admm_02.Rmd
+    Untracked:  analysis/admm_03.Rmd
+    Untracked:  analysis/cholesky.Rmd
+    Untracked:  analysis/compare-transformed-models.Rmd
+    Untracked:  analysis/cormotif.Rmd
+    Untracked:  analysis/cp_ash.Rmd
+    Untracked:  analysis/eQTL.perm.rand.pdf
+    Untracked:  analysis/eb_prepilot.Rmd
+    Untracked:  analysis/eb_var.Rmd
+    Untracked:  analysis/ebpmf1.Rmd
+    Untracked:  analysis/ebpmf_sla_text.Rmd
+    Untracked:  analysis/ebspca_sims.Rmd
+    Untracked:  analysis/explore_psvd.Rmd
+    Untracked:  analysis/fa_check_identify.Rmd
+    Untracked:  analysis/fa_iterative.Rmd
+    Untracked:  analysis/flash_test_tree.Rmd
+    Untracked:  analysis/flash_tree.Rmd
+    Untracked:  analysis/flashier_newgroups.Rmd
+    Untracked:  analysis/greedy_ebpmf_exploration_00.Rmd
+    Untracked:  analysis/ieQTL.perm.rand.pdf
+    Untracked:  analysis/lasso_em_03.Rmd
+    Untracked:  analysis/m6amash.Rmd
+    Untracked:  analysis/mash_bhat_z.Rmd
+    Untracked:  analysis/mash_ieqtl_permutations.Rmd
+    Untracked:  analysis/methylation_example.Rmd
+    Untracked:  analysis/mixsqp.Rmd
+    Untracked:  analysis/mr.ash_lasso_init.Rmd
+    Untracked:  analysis/mr.mash.test.Rmd
+    Untracked:  analysis/mr_ash_modular.Rmd
+    Untracked:  analysis/mr_ash_parameterization.Rmd
+    Untracked:  analysis/mr_ash_ridge.Rmd
+    Untracked:  analysis/mv_gaussian_message_passing.Rmd
+    Untracked:  analysis/nejm.Rmd
+    Untracked:  analysis/nmf_bg.Rmd
+    Untracked:  analysis/normal_conditional_on_r2.Rmd
+    Untracked:  analysis/normalize.Rmd
+    Untracked:  analysis/pbmc.Rmd
+    Untracked:  analysis/pca_binary_weighted.Rmd
+    Untracked:  analysis/pca_l1.Rmd
+    Untracked:  analysis/poisson_nmf_approx.Rmd
+    Untracked:  analysis/poisson_shrink.Rmd
+    Untracked:  analysis/poisson_transform.Rmd
+    Untracked:  analysis/pseudodata.Rmd
+    Untracked:  analysis/qrnotes.txt
+    Untracked:  analysis/ridge_iterative_02.Rmd
+    Untracked:  analysis/ridge_iterative_splitting.Rmd
+    Untracked:  analysis/samps/
+    Untracked:  analysis/sc_bimodal.Rmd
+    Untracked:  analysis/shrinkage_comparisons_changepoints.Rmd
+    Untracked:  analysis/susie_en.Rmd
+    Untracked:  analysis/susie_z_investigate.Rmd
+    Untracked:  analysis/svd-timing.Rmd
+    Untracked:  analysis/temp.RDS
+    Untracked:  analysis/temp.Rmd
+    Untracked:  analysis/test-figure/
+    Untracked:  analysis/test.Rmd
+    Untracked:  analysis/test.Rpres
+    Untracked:  analysis/test.md
+    Untracked:  analysis/test_qr.R
+    Untracked:  analysis/test_sparse.Rmd
+    Untracked:  analysis/tree_dist_top_eigenvector.Rmd
+    Untracked:  analysis/z.txt
+    Untracked:  code/multivariate_testfuncs.R
+    Untracked:  code/rqb.hacked.R
+    Untracked:  data/4matthew/
+    Untracked:  data/4matthew2/
+    Untracked:  data/E-MTAB-2805.processed.1/
+    Untracked:  data/ENSG00000156738.Sim_Y2.RDS
+    Untracked:  data/GDS5363_full.soft.gz
+    Untracked:  data/GSE41265_allGenesTPM.txt
+    Untracked:  data/Muscle_Skeletal.ACTN3.pm1Mb.RDS
+    Untracked:  data/Thyroid.FMO2.pm1Mb.RDS
+    Untracked:  data/bmass.HaemgenRBC2016.MAF01.Vs2.MergedDataSources.200kRanSubset.ChrBPMAFMarkerZScores.vs1.txt.gz
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.PreviousSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/eb_prepilot/
+    Untracked:  data/finemap_data/fmo2.sim/b.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/data
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.ld
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.z
+    Untracked:  data/finemap_data/fmo2.sim/pos.txt
+    Untracked:  data/logm.csv
+    Untracked:  data/m.cd.RDS
+    Untracked:  data/m.cdu.old.RDS
+    Untracked:  data/m.new.cd.RDS
+    Untracked:  data/m.old.cd.RDS
+    Untracked:  data/mainbib.bib.old
+    Untracked:  data/mat.csv
+    Untracked:  data/mat.txt
+    Untracked:  data/mat_new.csv
+    Untracked:  data/matrix_lik.rds
+    Untracked:  data/paintor_data/
+    Untracked:  data/running_data_chris.csv
+    Untracked:  data/running_data_matthew.csv
+    Untracked:  data/temp.txt
+    Untracked:  data/y.txt
+    Untracked:  data/y_f.txt
+    Untracked:  data/zscore_jointLCLs_m6AQTLs_susie_eQTLpruned.rds
+    Untracked:  data/zscore_jointLCLs_random.rds
+    Untracked:  explore_udi.R
+    Untracked:  output/fit.k10.rds
+    Untracked:  output/fit.varbvs.RDS
+    Untracked:  output/glmnet.fit.RDS
+    Untracked:  output/test.bv.txt
+    Untracked:  output/test.gamma.txt
+    Untracked:  output/test.hyp.txt
+    Untracked:  output/test.log.txt
+    Untracked:  output/test.param.txt
+    Untracked:  output/test2.bv.txt
+    Untracked:  output/test2.gamma.txt
+    Untracked:  output/test2.hyp.txt
+    Untracked:  output/test2.log.txt
+    Untracked:  output/test2.param.txt
+    Untracked:  output/test3.bv.txt
+    Untracked:  output/test3.gamma.txt
+    Untracked:  output/test3.hyp.txt
+    Untracked:  output/test3.log.txt
+    Untracked:  output/test3.param.txt
+    Untracked:  output/test4.bv.txt
+    Untracked:  output/test4.gamma.txt
+    Untracked:  output/test4.hyp.txt
+    Untracked:  output/test4.log.txt
+    Untracked:  output/test4.param.txt
+    Untracked:  output/test5.bv.txt
+    Untracked:  output/test5.gamma.txt
+    Untracked:  output/test5.hyp.txt
+    Untracked:  output/test5.log.txt
+    Untracked:  output/test5.param.txt
+
+Unstaged changes:
+    Modified:   .gitignore
+    Modified:   analysis/flashier_sla_text.Rmd
+    Modified:   analysis/index.Rmd
+    Modified:   analysis/mr_ash_pen.Rmd
+    Modified:   analysis/susie_flash.Rmd
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown (<code>analysis/mr.ash.debug.Rmd</code>) and HTML
+(<code>docs/mr.ash.debug.html</code>) files. If you’ve configured a
+remote Git repository (see <code>?wflow_git_remote</code>), click on the
+hyperlinks in the table below to view the files as they were in that
+past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/a6608e4591a31248522a3e0dfe1f8adc2578394f/analysis/mr.ash.debug.Rmd" target="_blank">a6608e4</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2023-10-27
+</td>
+<td>
+workflowr::wflow_publish("analysis/mr.ash.debug.Rmd")
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>I wrote this to debug mr.ash behavior and dependence on scaling of X
+and y. This resulted in a bug fix to mr.ash.alpha, so now this page
+documents the correct behavior of modified code.</p>
+<p>First I simulate some data</p>
+<pre class="r"><code>library(mr.ash.alpha)
+set.seed(1)
+n = 100
+p = 10
+X = matrix(rnorm(n*p),ncol=p)
+beta = rep(0,p)
+beta[1] = 1
+y = X %*% beta + rnorm(n)</code></pre>
+</div>
+<div id="mr.ash.alpha" class="section level2">
+<h2>Mr.ash.alpha</h2>
+<p>Here I run <code>mr.ash.alphs::mr.ash</code> on the data, and on
+scaled versions of the data, scaling X by 10 and y by 2:</p>
+<pre class="r"><code>res.mr.ash = mr.ash(X,y)</code></pre>
+<pre><code>Mr.ASH terminated at iteration 1000.</code></pre>
+<pre class="r"><code>full.post = get.full.posterior(res.mr.ash)
+
+res.mr.ash2 = mr.ash(X*10,y*2)</code></pre>
+<pre><code>Mr.ASH terminated at iteration 218.</code></pre>
+<pre class="r"><code>full.post2 = get.full.posterior(res.mr.ash2)</code></pre>
+<p>Compare the point estimates output by mr.ash with the posterior mean
+from the full posterior computation. We see they match.</p>
+<pre class="r"><code>plot(res.mr.ash$b,rowSums(full.post$m * full.post$phi))</code></pre>
+<p><img src="figure/mr.ash.debug.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(res.mr.ash2$b,rowSums(full.post2$m * full.post2$phi))</code></pre>
+<p><img src="figure/mr.ash.debug.Rmd/unnamed-chunk-3-2.png" width="672" style="display: block; margin: auto;" /></p>
+<div id="scaling-of-main-outputs-from-mr.ash" class="section level3">
+<h3>Scaling of main outputs from mr.ash</h3>
+<p>Check how the main estimates output by mr.ash change with the
+scaling. We see that the estimated beta scales with <span
+class="math inline">\(y/X\)</span> as expected. The residual variance
+scales with <span class="math inline">\(y^2\)</span>, as expected. The
+grid scales with 1/X^2, which is (scale of beta)^2/(scale of sigma2), so
+also appropriate.</p>
+<pre class="r"><code>res.mr.ash2$beta/res.mr.ash$beta # 0.2 = scale of y/X </code></pre>
+<pre><code>           [,1]
+ [1,] 0.1999127
+ [2,] 0.2023838
+ [3,] 0.2027636
+ [4,] 0.2032143
+ [5,] 0.2035546
+ [6,] 0.2026850
+ [7,] 0.2030517
+ [8,] 0.2027936
+ [9,] 0.2024179
+[10,] 0.2030022</code></pre>
+<pre class="r"><code>res.mr.ash2$sigma2/res.mr.ash$sigma2 # 4 = 2^2</code></pre>
+<pre><code>[1] 4.000865</code></pre>
+<pre class="r"><code>res.mr.ash2$data$sa2/res.mr.ash$data$sa2 # 0.01 = 1/(scale of X^2)</code></pre>
+<pre><code> [1]  NaN 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01
+[16] 0.01 0.01 0.01 0.01 0.01</code></pre>
+</div>
+<div id="scaling-of-posterior-outputs-from-get.full.posterior"
+class="section level3">
+<h3>Scaling of posterior outputs from get.full.posterior</h3>
+<p>Here i check the scaling of the posterior outputs. The posterior
+variance scales with y<sup>2/X</sup>2 which is scale of beta^2, which
+makes sense. The posterior mean scales with (y/X), also correct. Finally
+phi should not change with scaling but it does.</p>
+<pre class="r"><code>full.post2$m/full.post$m # 0.2 = scale of sigma^2*  = y^3/X </code></pre>
+<pre><code>      [,1]      [,2]      [,3]      [,4]      [,5]      [,6]      [,7]
+ [1,]  NaN 0.1999992 0.1999992 0.1999992 0.1999992 0.1999992 0.1999992
+ [2,]  NaN 0.2000048 0.2000048 0.2000048 0.2000048 0.2000048 0.2000048
+ [3,]  NaN 0.1999442 0.1999442 0.1999442 0.1999442 0.1999442 0.1999442
+ [4,]  NaN 0.2004313 0.2004313 0.2004313 0.2004313 0.2004313 0.2004313
+ [5,]  NaN 0.2004064 0.2004064 0.2004064 0.2004064 0.2004064 0.2004064
+ [6,]  NaN 0.2000713 0.2000713 0.2000713 0.2000713 0.2000713 0.2000713
+ [7,]  NaN 0.2001268 0.2001268 0.2001268 0.2001268 0.2001268 0.2001268
+ [8,]  NaN 0.2000154 0.2000154 0.2000154 0.2000154 0.2000154 0.2000154
+ [9,]  NaN 0.1999615 0.1999615 0.1999615 0.1999615 0.1999615 0.1999615
+[10,]  NaN 0.2001460 0.2001460 0.2001460 0.2001460 0.2001460 0.2001460
+           [,8]      [,9]     [,10]     [,11]     [,12]     [,13]     [,14]
+ [1,] 0.1999992 0.1999992 0.1999992 0.1999992 0.1999992 0.1999992 0.1999992
+ [2,] 0.2000048 0.2000048 0.2000048 0.2000048 0.2000048 0.2000048 0.2000048
+ [3,] 0.1999442 0.1999442 0.1999442 0.1999442 0.1999442 0.1999442 0.1999442
+ [4,] 0.2004313 0.2004313 0.2004313 0.2004313 0.2004313 0.2004313 0.2004313
+ [5,] 0.2004064 0.2004064 0.2004064 0.2004064 0.2004064 0.2004064 0.2004064
+ [6,] 0.2000713 0.2000713 0.2000713 0.2000713 0.2000713 0.2000713 0.2000713
+ [7,] 0.2001268 0.2001268 0.2001268 0.2001268 0.2001268 0.2001268 0.2001268
+ [8,] 0.2000154 0.2000154 0.2000154 0.2000154 0.2000154 0.2000154 0.2000154
+ [9,] 0.1999615 0.1999615 0.1999615 0.1999615 0.1999615 0.1999615 0.1999615
+[10,] 0.2001460 0.2001460 0.2001460 0.2001460 0.2001460 0.2001460 0.2001460
+          [,15]     [,16]     [,17]     [,18]     [,19]     [,20]
+ [1,] 0.1999992 0.1999992 0.1999992 0.1999992 0.1999992 0.1999992
+ [2,] 0.2000048 0.2000048 0.2000048 0.2000048 0.2000048 0.2000048
+ [3,] 0.1999442 0.1999442 0.1999442 0.1999442 0.1999442 0.1999442
+ [4,] 0.2004313 0.2004313 0.2004313 0.2004313 0.2004313 0.2004313
+ [5,] 0.2004064 0.2004064 0.2004064 0.2004064 0.2004064 0.2004064
+ [6,] 0.2000713 0.2000713 0.2000713 0.2000713 0.2000713 0.2000713
+ [7,] 0.2001268 0.2001268 0.2001268 0.2001268 0.2001268 0.2001268
+ [8,] 0.2000154 0.2000154 0.2000154 0.2000154 0.2000154 0.2000154
+ [9,] 0.1999615 0.1999615 0.1999615 0.1999615 0.1999615 0.1999615
+[10,] 0.2001460 0.2001460 0.2001460 0.2001460 0.2001460 0.2001460</code></pre>
+<pre class="r"><code>full.post2$s2/full.post$s2 #0.04 = scale of sigma^2/scale of X^2 = scale of betq^2 </code></pre>
+<pre><code>      [,1]       [,2]       [,3]       [,4]       [,5]       [,6]       [,7]
+ [1,]  NaN 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+ [2,]  NaN 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+ [3,]  NaN 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+ [4,]  NaN 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+ [5,]  NaN 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+ [6,]  NaN 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+ [7,]  NaN 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+ [8,]  NaN 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+ [9,]  NaN 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+[10,]  NaN 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+            [,8]       [,9]      [,10]      [,11]      [,12]      [,13]
+ [1,] 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+ [2,] 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+ [3,] 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+ [4,] 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+ [5,] 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+ [6,] 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+ [7,] 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+ [8,] 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+ [9,] 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+[10,] 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+           [,14]      [,15]      [,16]      [,17]      [,18]      [,19]
+ [1,] 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+ [2,] 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+ [3,] 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+ [4,] 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+ [5,] 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+ [6,] 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+ [7,] 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+ [8,] 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+ [9,] 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+[10,] 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865 0.04000865
+           [,20]
+ [1,] 0.04000865
+ [2,] 0.04000865
+ [3,] 0.04000865
+ [4,] 0.04000865
+ [5,] 0.04000865
+ [6,] 0.04000865
+ [7,] 0.04000865
+ [8,] 0.04000865
+ [9,] 0.04000865
+[10,] 0.04000865</code></pre>
+<pre class="r"><code>full.post2$phi/full.post$phi</code></pre>
+<pre><code>           [,1]     [,2]     [,3]      [,4]      [,5]      [,6]      [,7]
+ [1,] 1.0065060 16853871 1.058385 1.0043840 1.0034415 1.0028226 1.0025272
+ [2,] 0.9990900 16738133 1.052325 0.9997989 0.9997622 0.9997781 0.9999174
+ [3,] 0.9992772 16741361 1.052541 1.0000167 0.9999895 1.0000119 1.0001558
+ [4,] 0.9992776 16741443 1.052556 1.0000397 1.0000185 1.0000449 1.0001914
+ [5,] 0.9993073 16742219 1.052638 1.0001431 1.0001382 1.0001747 1.0003275
+ [6,] 0.9992066 16740434 1.052517 1.0000252 1.0000206 1.0000581 1.0002120
+ [7,] 0.9992834 16741652 1.052583 1.0000773 1.0000640 1.0000954 1.0002451
+ [8,] 0.9992275 16740559 1.052495 0.9999767 0.9999523 0.9999766 1.0001217
+ [9,] 0.9991042 16737711 1.052216 0.9996309 0.9995515 0.9995407 0.9996631
+[10,] 0.9992655 16741469 1.052587 1.0000942 1.0000903 1.0001278 1.0002815
+          [,8]     [,9]    [,10]    [,11]    [,12]    [,13]    [,14]    [,15]
+ [1,] 1.002583 1.002945 1.003548 1.004454 1.005946 1.008749 18.51958 275942.5
+ [2,] 1.000273 1.000846 1.001600 1.002616 1.004190 1.007053 18.48936 275503.2
+ [3,] 1.000514 1.001089 1.001845 1.002863 1.004438 1.007303 18.49395 275571.7
+ [4,] 1.000552 1.001128 1.001885 1.002903 1.004478 1.007344 18.49472 275583.1
+ [5,] 1.000692 1.001271 1.002030 1.003050 1.004626 1.007493 18.49747 275624.2
+ [6,] 1.000577 1.001157 1.001916 1.002937 1.004514 1.007380 18.49540 275593.4
+ [7,] 1.000607 1.001185 1.001943 1.002963 1.004538 1.007404 18.49583 275599.8
+ [8,] 1.000481 1.001057 1.001813 1.002831 1.004406 1.007271 18.49337 275563.1
+ [9,] 1.000007 1.000572 1.001321 1.002333 1.003903 1.006764 18.48402 275423.3
+[10,] 1.000646 1.001226 1.001985 1.003006 1.004582 1.007449 18.49666 275612.2
+         [,16]    [,17]     [,18]    [,19]   [,20]
+ [1,] 48993.68 1.396030 0.6951408 766.8210 4716277
+ [2,] 48917.22 1.393887 0.6940880 765.6728 4709283
+ [3,] 48929.40 1.394234 0.6942612 765.8640 4710459
+ [4,] 48931.43 1.394292 0.6942902 765.8960 4710657
+ [5,] 48938.75 1.394501 0.6943944 766.0112 4711366
+ [6,] 48933.29 1.394346 0.6943170 765.9259 4710841
+ [7,] 48934.41 1.394377 0.6943326 765.9429 4710946
+ [8,] 48927.87 1.394191 0.6942396 765.8402 4710313
+ [9,] 48902.98 1.393480 0.6938849 765.4483 4707900
+[10,] 48936.63 1.394441 0.6943644 765.9781 4711162</code></pre>
+<p>I think the differences in phi are due to small differences in
+estimated pis. Here I make the pis the same and check it works.</p>
+<pre class="r"><code>res.mr.ash2$pi = res.mr.ash$pi
+full.post = get.full.posterior(res.mr.ash)
+full.post2 = get.full.posterior(res.mr.ash2)
+full.post2$phi/full.post$phi</code></pre>
+<pre><code>           [,1]      [,2]      [,3]      [,4]      [,5]      [,6]      [,7]
+ [1,] 1.0059894 1.0054725 1.0042972 1.0031062 1.0021869 1.0015428 1.0011016
+ [2,] 1.0000032 0.9999937 0.9999729 0.9999529 0.9999381 0.9999281 0.9999213
+ [3,] 1.0000006 0.9999967 0.9999883 0.9999808 0.9999755 0.9999720 0.9999698
+ [4,] 0.9999999 1.0000004 1.0000016 1.0000026 1.0000034 1.0000039 1.0000043
+ [5,] 0.9999980 1.0000152 1.0000480 1.0000745 1.0000915 1.0001021 1.0001087
+ [6,] 0.9999974 1.0000086 1.0000332 1.0000567 1.0000739 1.0000856 1.0000934
+ [7,] 0.9999990 1.0000062 1.0000208 1.0000335 1.0000421 1.0000477 1.0000512
+ [8,] 1.0000004 0.9999982 0.9999939 0.9999903 0.9999878 0.9999862 0.9999852
+ [9,] 1.0000127 0.9999638 0.9998653 0.9997802 0.9997227 0.9996859 0.9996623
+[10,] 0.9999977 1.0000119 1.0000411 1.0000671 1.0000851 1.0000967 1.0001042
+           [,8]      [,9]     [,10]     [,11]     [,12]     [,13]     [,14]
+ [1,] 1.0007968 1.0005822 1.0004277 1.0003140 1.0002286 1.0001634 1.0001126
+ [2,] 0.9999167 0.9999135 0.9999113 0.9999096 0.9999083 0.9999074 0.9999066
+ [3,] 0.9999683 0.9999672 0.9999665 0.9999659 0.9999655 0.9999652 0.9999650
+ [4,] 1.0000045 1.0000047 1.0000048 1.0000049 1.0000049 1.0000050 1.0000050
+ [5,] 1.0001131 1.0001161 1.0001181 1.0001196 1.0001207 1.0001216 1.0001222
+ [6,] 1.0000987 1.0001024 1.0001050 1.0001069 1.0001084 1.0001094 1.0001103
+ [7,] 1.0000536 1.0000552 1.0000564 1.0000572 1.0000578 1.0000583 1.0000587
+ [8,] 0.9999845 0.9999841 0.9999837 0.9999835 0.9999833 0.9999832 0.9999831
+ [9,] 0.9996466 0.9996359 0.9996283 0.9996228 0.9996187 0.9996156 0.9996132
+[10,] 1.0001093 1.0001127 1.0001152 1.0001170 1.0001183 1.0001193 1.0001201
+          [,15]     [,16]     [,17]     [,18]     [,19]     [,20]
+ [1,] 1.0000726 1.0000405 1.0000147 0.9999935 0.9999761 0.9999616
+ [2,] 0.9999061 0.9999056 0.9999052 0.9999049 0.9999047 0.9999044
+ [3,] 0.9999648 0.9999647 0.9999646 0.9999645 0.9999644 0.9999643
+ [4,] 1.0000050 1.0000051 1.0000051 1.0000051 1.0000051 1.0000051
+ [5,] 1.0001227 1.0001231 1.0001235 1.0001237 1.0001239 1.0001241
+ [6,] 1.0001110 1.0001115 1.0001119 1.0001123 1.0001126 1.0001128
+ [7,] 1.0000589 1.0000592 1.0000593 1.0000595 1.0000596 1.0000597
+ [8,] 0.9999830 0.9999829 0.9999829 0.9999829 0.9999828 0.9999828
+ [9,] 0.9996113 0.9996098 0.9996086 0.9996076 0.9996068 0.9996062
+[10,] 1.0001207 1.0001212 1.0001216 1.0001219 1.0001222 1.0001224</code></pre>
+</div>
+<div id="notes-on-code" class="section level3">
+<h3>Notes on code</h3>
+<p>Here was the old code for computing the posterior:</p>
+<pre class="r"><code>get.full.posterior
+function (fit) 
+{
+  r = fit$data$y - fit$data$X %*% fit$beta
+  bw = as.vector((t(fit$data$X) %*% r) + fit$data$w * fit$beta)
+  s2 = fit$sigma2/outer(fit$data$w, 1/fit$data$sa2, &quot;+&quot;)
+  
+  m = bw * s2
+  phi = -log(1 + outer(fit$data$w, fit$data$sa2))/2 + m * (bw/2/fit$sigma2)
+  phi = c(fit$pi) * t(exp(phi - apply(phi, 1, max)))
+  phi = t(phi)/colSums(phi)
+  return(list(phi = phi, m = m, s2 = s2))
+}</code></pre>
+<p>The code for s2 matches the equation after (73) in Kim et al.</p>
+<p>The code for m seems wrong; it should be bw*s2/fit$sigma2</p>
+<p>The code for phi is weird, but I think it is correct. Here I fix the
+code for m.</p>
+<pre class="r"><code>get.full.posterior2 &lt;-
+function (fit) 
+{
+  r = fit$data$y - fit$data$X %*% fit$beta
+  bw = as.vector((t(fit$data$X) %*% r) + fit$data$w * fit$beta)
+  s2 = fit$sigma2/outer(fit$data$w, 1/fit$data$sa2, &quot;+&quot;)
+  
+  m = bw * s2/fit$sigma2
+  b = bw/fit$data$w
+  
+  phi = -log(1 + outer(fit$data$w, fit$data$sa2))/2 + m * (bw/2/fit$sigma2)
+  
+  #phi = -log(1 + outer(fit$data$w, fit$data$sa2))/2 -(0.5/fit$sigma2)* b^2/outer(1/fit$data$w, fit$data$sa2, &quot;+&quot;)
+  phi = c(fit$pi) * t(exp(phi - apply(phi, 1, max)))
+  phi = t(phi)/colSums(phi)
+  return(list(phi = phi, m = m, s2 = s2))
+}</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.2.1 (2022-06-23)
+Platform: x86_64-apple-darwin17.0 (64-bit)
+Running under: macOS Big Sur ... 10.16
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.2/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/4.2/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] mr.ash.alpha_0.1-43
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_1.0.11      highr_0.10       pillar_1.9.0     compiler_4.2.1  
+ [5] bslib_0.4.2      later_1.3.0      jquerylib_0.1.4  git2r_0.31.0    
+ [9] workflowr_1.7.0  tools_4.2.1      digest_0.6.33    lattice_0.20-45 
+[13] jsonlite_1.8.7   evaluate_0.22    lifecycle_1.0.3  tibble_3.2.1    
+[17] pkgconfig_2.0.3  rlang_1.1.1      Matrix_1.5-3     cli_3.6.1       
+[21] rstudioapi_0.14  yaml_2.3.7       xfun_0.37        fastmap_1.1.1   
+[25] stringr_1.5.0    knitr_1.42       fs_1.6.3         vctrs_0.6.4     
+[29] sass_0.4.5       grid_4.2.1       rprojroot_2.0.3  glue_1.6.2      
+[33] R6_2.5.1         fansi_1.0.5      rmarkdown_2.20   magrittr_2.0.3  
+[37] whisker_0.4.1    promises_1.2.0.1 htmltools_0.5.4  httpuv_1.6.9    
+[41] utf8_1.2.3       stringi_1.7.12   cachem_1.0.7    </code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
