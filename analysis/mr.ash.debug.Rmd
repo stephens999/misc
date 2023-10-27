@@ -1,0 +1,127 @@
+---
+title: "mr.ash.debug"
+author: "Matthew Stephens"
+date: "2023-10-27"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+I wrote this to debug mr.ash behavior and dependence on scaling of X and y. This resulted in a bug fix to mr.ash.alpha, so now this page documents the correct behavior of modified code.
+
+First I simulate some data
+```{r}
+library(mr.ash.alpha)
+set.seed(1)
+n = 100
+p = 10
+X = matrix(rnorm(n*p),ncol=p)
+beta = rep(0,p)
+beta[1] = 1
+y = X %*% beta + rnorm(n)
+```
+
+
+## Mr.ash.alpha
+
+Here I run `mr.ash.alphs::mr.ash` on the data, and on scaled versions of the data, scaling X by 10 and y by 2:
+```{r}
+res.mr.ash = mr.ash(X,y)
+full.post = get.full.posterior(res.mr.ash)
+
+res.mr.ash2 = mr.ash(X*10,y*2)
+full.post2 = get.full.posterior(res.mr.ash2)
+```
+
+Compare the point estimates output by mr.ash with the posterior mean from the full posterior computation. We see they match.
+```{r}
+plot(res.mr.ash$b,rowSums(full.post$m * full.post$phi))
+plot(res.mr.ash2$b,rowSums(full.post2$m * full.post2$phi))
+```
+
+### Scaling of main outputs from mr.ash
+
+Check how the main estimates output by mr.ash change with the scaling.
+We see that the estimated beta scales with $y/X$ as expected.
+The residual variance scales with $y^2$, as expected.
+The grid scales with 1/X^2, which is (scale of beta)^2/(scale of sigma2),
+so also appropriate. 
+```{r}
+res.mr.ash2$beta/res.mr.ash$beta # 0.2 = scale of y/X 
+res.mr.ash2$sigma2/res.mr.ash$sigma2 # 4 = 2^2
+res.mr.ash2$data$sa2/res.mr.ash$data$sa2 # 0.01 = 1/(scale of X^2)
+```
+
+### Scaling of posterior outputs from get.full.posterior
+
+Here i check the scaling of the posterior outputs. The posterior
+variance scales with y^2/X^2 which is scale of beta^2, which makes sense.
+The posterior mean scales with (y/X), also correct.
+ Finally phi should not change with scaling but it does.
+```{r}
+full.post2$m/full.post$m # 0.2 = scale of sigma^2*  = y^3/X 
+full.post2$s2/full.post$s2 #0.04 = scale of sigma^2/scale of X^2 = scale of betq^2 
+full.post2$phi/full.post$phi
+```
+
+I think the differences in phi are due to small differences in estimated pis. Here I make the pis the same and check it works.
+```{r}
+res.mr.ash2$pi = res.mr.ash$pi
+full.post = get.full.posterior(res.mr.ash)
+full.post2 = get.full.posterior(res.mr.ash2)
+full.post2$phi/full.post$phi
+```
+
+
+### Notes on code
+
+Here was the old code for computing the posterior:
+```{r eval=FALSE}
+get.full.posterior
+function (fit) 
+{
+  r = fit$data$y - fit$data$X %*% fit$beta
+  bw = as.vector((t(fit$data$X) %*% r) + fit$data$w * fit$beta)
+  s2 = fit$sigma2/outer(fit$data$w, 1/fit$data$sa2, "+")
+  
+  m = bw * s2
+  phi = -log(1 + outer(fit$data$w, fit$data$sa2))/2 + m * (bw/2/fit$sigma2)
+  phi = c(fit$pi) * t(exp(phi - apply(phi, 1, max)))
+  phi = t(phi)/colSums(phi)
+  return(list(phi = phi, m = m, s2 = s2))
+}
+
+```
+
+The code for s2 matches the equation after (73) in Kim et al.
+
+The code for m seems wrong; it should be bw*s2/fit$sigma2
+
+The code for phi is weird, but I think it is correct.
+Here I fix the code for m.
+```{r eval=FALSE}
+get.full.posterior2 <-
+function (fit) 
+{
+  r = fit$data$y - fit$data$X %*% fit$beta
+  bw = as.vector((t(fit$data$X) %*% r) + fit$data$w * fit$beta)
+  s2 = fit$sigma2/outer(fit$data$w, 1/fit$data$sa2, "+")
+  
+  m = bw * s2/fit$sigma2
+  b = bw/fit$data$w
+  
+  phi = -log(1 + outer(fit$data$w, fit$data$sa2))/2 + m * (bw/2/fit$sigma2)
+  
+  #phi = -log(1 + outer(fit$data$w, fit$data$sa2))/2 -(0.5/fit$sigma2)* b^2/outer(1/fit$data$w, fit$data$sa2, "+")
+  phi = c(fit$pi) * t(exp(phi - apply(phi, 1, max)))
+  phi = t(phi)/colSums(phi)
+  return(list(phi = phi, m = m, s2 = s2))
+}
+```
+
+
+
+
+
