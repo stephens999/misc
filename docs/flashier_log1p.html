@@ -378,7 +378,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2023-10-21
+<strong>Last updated:</strong> 2023-11-06
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -509,15 +509,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree38c2d39d9ceb4030832a3966324dc7e2f656417etargetblank38c2d39a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree7f572ae7374992dc0a274c46c1c5dff05c771134targetblank7f572aea">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/stephens999/misc/tree/38c2d39d9ceb4030832a3966324dc7e2f656417e" target="_blank">38c2d39</a>
+<a href="https://github.com/stephens999/misc/tree/7f572ae7374992dc0a274c46c1c5dff05c771134" target="_blank">7f572ae</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree38c2d39d9ceb4030832a3966324dc7e2f656417etargetblank38c2d39a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree7f572ae7374992dc0a274c46c1c5dff05c771134targetblank7f572aea"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -527,7 +527,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/stephens999/misc/tree/38c2d39d9ceb4030832a3966324dc7e2f656417e" target="_blank">38c2d39</a>.
+<a href="https://github.com/stephens999/misc/tree/7f572ae7374992dc0a274c46c1c5dff05c771134" target="_blank">7f572ae</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -753,6 +753,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/7f572ae7374992dc0a274c46c1c5dff05c771134/analysis/flashier_log1p.Rmd" target="_blank">7f572ae</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2023-11-06
+</td>
+<td>
+workflowr::wflow_publish("flashier_log1p.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/342338ef4fc8e21bb7db32f315574d6d7ac699e4/docs/flashier_log1p.html" target="_blank">342338e</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2023-10-21
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/38c2d39d9ceb4030832a3966324dc7e2f656417e/analysis/flashier_log1p.Rmd" target="_blank">38c2d39</a>
 </td>
 <td>
@@ -775,6 +809,7 @@ wflow_publish("flashier_log1p.Rmd")
 <pre class="r"><code>library(flashier)</code></pre>
 <pre><code>Loading required package: ebnm</code></pre>
 <pre><code>Loading required package: magrittr</code></pre>
+<pre><code>Loading required package: ggplot2</code></pre>
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
 <p>When applied to (log1p-transformed) Poisson data, flashier often
@@ -818,10 +853,84 @@ for(i in 1:length(mm)){
 plot(mm,m)
 lines(mm, log(1+mm) - 0.5*mm/(1+mm)^2 )</code></pre>
 <p><img src="figure/flashier_log1p.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-1">
+Past versions of unnamed-chunk-2-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/342338ef4fc8e21bb7db32f315574d6d7ac699e4/docs/figure/flashier_log1p.Rmd/unnamed-chunk-2-1.png" target="_blank">342338e</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2023-10-21
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>plot(mm,sqrt(v))
 lines(mm, sqrt(mm)/(1+mm))
 abline(v=1)</code></pre>
 <p><img src="figure/flashier_log1p.Rmd/unnamed-chunk-2-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-2">
+Past versions of unnamed-chunk-2-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/342338ef4fc8e21bb7db32f315574d6d7ac699e4/docs/figure/flashier_log1p.Rmd/unnamed-chunk-2-2.png" target="_blank">342338e</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2023-10-21
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <div id="logcx" class="section level3">
 <h3>log(c+X)</h3>
 <p>We can extend this to <span class="math inline">\(log(c+X)\)</span>.
@@ -840,13 +949,148 @@ for(i in 1:length(mm)){
 plot(mm, log(c+mm) - 0.5*mm/(c+mm)^2,type=&quot;l&quot; )
 points(mm,mc)</code></pre>
 <p><img src="figure/flashier_log1p.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-1">
+Past versions of unnamed-chunk-3-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-3-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/342338ef4fc8e21bb7db32f315574d6d7ac699e4/docs/figure/flashier_log1p.Rmd/unnamed-chunk-3-1.png" target="_blank">342338e</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2023-10-21
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>plot(mm,sqrt(vc))
 lines(mm, sqrt(mm)/(c+mm))</code></pre>
 <p><img src="figure/flashier_log1p.Rmd/unnamed-chunk-3-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-2">
+Past versions of unnamed-chunk-3-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-3-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/342338ef4fc8e21bb7db32f315574d6d7ac699e4/docs/figure/flashier_log1p.Rmd/unnamed-chunk-3-2.png" target="_blank">342338e</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2023-10-21
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Interesting that (unless I made a mistake) the mean is quite off for
 small mu and the variance is also off. I need to understand this better.
 However, I do note again that the standard deviation doesn’t vary too
 much with mm.</p>
+</div>
+<div id="log1cx" class="section level3">
+<h3>log(1+cX)</h3>
+<p>Here I instead extend this to <span
+class="math inline">\(log(1+cX)\)</span> (which is sparse). By Taylor
+series we have: <span class="math display">\[E(log(1+cX)) = log(1+c\mu)
+- 0.5 c^2 \mu /(1+c\mu)^2\]</span> and <span
+class="math display">\[Var(log(c+X)) \approx \mu
+c^2/(1+c\mu)^2.\]</span></p>
+<pre class="r"><code>c=10
+mm = exp(seq(-5,3,length=9))
+mc = vc =mm
+for(i in 1:length(mm)){
+  x = rpois(100000,mm[i])
+  mc[i] = mean(log(1+c*x))
+  vc[i] = var(log(1+c*x))
+}
+
+plot(mm, log(1+c*mm) - 0.5*c^2 * mm/(1+c*mm)^2,type=&quot;l&quot; )
+points(mm,mc)</code></pre>
+<p><img src="figure/flashier_log1p.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-1">
+Past versions of unnamed-chunk-4-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/342338ef4fc8e21bb7db32f315574d6d7ac699e4/docs/figure/flashier_log1p.Rmd/unnamed-chunk-4-1.png" target="_blank">342338e</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2023-10-21
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>plot(mm,sqrt(vc))
+lines(mm, c *sqrt(mm)/(1+c*mm))</code></pre>
+<p><img src="figure/flashier_log1p.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 </div>
 <div id="simple-simulation" class="section level2">
@@ -864,7 +1108,7 @@ FF = matrix(runif(p*K),nrow=p)
 mu = matrix(exp(LL %*% t(FF))-1,ncol=p, nrow=n)
 X= matrix(rpois(n*p,mu), ncol=p, nrow=n)
 hist(mu)</code></pre>
-<p><img src="figure/flashier_log1p.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/flashier_log1p.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>mean(X&gt;0)</code></pre>
 <pre><code>[1] 0.744955</code></pre>
 <p>Try flashier</p>
@@ -897,13 +1141,13 @@ Done.</code></pre>
 <p>The greedy approach fits 6 factors, but the backfitting ends up with
 5 factors. And one of the factors is capturing a single row.</p>
 <pre class="r"><code>plot(fit.nn.1$F_pm[,4])</code></pre>
-<p><img src="figure/flashier_log1p.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/flashier_log1p.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>which.max(fit.nn.1$F_pm[,4])</code></pre>
 <pre><code>[1] 55</code></pre>
 <pre class="r"><code>plot(fit.nn.1$L_pm[,4])</code></pre>
-<p><img src="figure/flashier_log1p.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/flashier_log1p.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>plot(X[,54])</code></pre>
-<p><img src="figure/flashier_log1p.Rmd/unnamed-chunk-6-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/flashier_log1p.Rmd/unnamed-chunk-7-3.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>fit.nn.1$flash_fit$tau[54]</code></pre>
 <pre><code>[1] 4.274929</code></pre>
 <p>So it seems the extra factor here is due to flash converging to a
@@ -960,25 +1204,25 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] flashier_1.0.7 magrittr_2.0.3 ebnm_1.0-55   
+[1] flashier_1.0.0 ggplot2_3.4.3  magrittr_2.0.3 ebnm_1.0-55   
 
 loaded via a namespace (and not attached):
- [1] softImpute_1.4-1  tidyselect_1.2.0  xfun_0.37         bslib_0.4.2      
- [5] purrr_1.0.2       ashr_2.2-63       splines_4.2.1     lattice_0.20-45  
- [9] colorspace_2.1-0  vctrs_0.6.4       generics_0.1.3    htmltools_0.5.4  
-[13] yaml_2.3.7        utf8_1.2.3        rlang_1.1.1       mixsqp_0.3-48    
-[17] jquerylib_0.1.4   later_1.3.0       pillar_1.9.0      glue_1.6.2       
-[21] trust_0.1-8       lifecycle_1.0.3   stringr_1.5.0     munsell_0.5.0    
-[25] gtable_0.3.4      workflowr_1.7.0   evaluate_0.22     knitr_1.42       
-[29] fastmap_1.1.1     httpuv_1.6.9      invgamma_1.1      parallel_4.2.1   
-[33] irlba_2.3.5.1     fansi_1.0.5       highr_0.10        Rcpp_1.0.11      
-[37] promises_1.2.0.1  scales_1.2.1      cachem_1.0.7      horseshoe_0.2.0  
-[41] jsonlite_1.8.7    truncnorm_1.0-9   fs_1.6.3          deconvolveR_1.2-1
-[45] ggplot2_3.4.3     digest_0.6.33     stringi_1.7.12    dplyr_1.1.3      
-[49] rprojroot_2.0.3   grid_4.2.1        cli_3.6.1         tools_4.2.1      
-[53] sass_0.4.5        tibble_3.2.1      tidyr_1.3.0       whisker_0.4.1    
-[57] pkgconfig_2.0.3   Matrix_1.5-3      SQUAREM_2021.1    rmarkdown_2.20   
-[61] rstudioapi_0.14   R6_2.5.1          git2r_0.31.0      compiler_4.2.1   </code></pre>
+ [1] Rcpp_1.0.11       horseshoe_0.2.0   invgamma_1.1      lattice_0.20-45  
+ [5] tidyr_1.3.0       rprojroot_2.0.3   digest_0.6.33     utf8_1.2.3       
+ [9] truncnorm_1.0-9   R6_2.5.1          evaluate_0.22     highr_0.10       
+[13] pillar_1.9.0      rlang_1.1.1       rstudioapi_0.14   irlba_2.3.5.1    
+[17] whisker_0.4.1     jquerylib_0.1.4   Matrix_1.5-3      rmarkdown_2.20   
+[21] splines_4.2.1     stringr_1.5.0     munsell_0.5.0     mixsqp_0.3-48    
+[25] compiler_4.2.1    httpuv_1.6.9      xfun_0.37         pkgconfig_2.0.3  
+[29] SQUAREM_2021.1    htmltools_0.5.4   tidyselect_1.2.0  tibble_3.2.1     
+[33] workflowr_1.7.0   fansi_1.0.5       dplyr_1.1.3       withr_2.5.1      
+[37] later_1.3.0       grid_4.2.1        jsonlite_1.8.7    gtable_0.3.4     
+[41] lifecycle_1.0.3   git2r_0.31.0      scales_1.2.1      cli_3.6.1        
+[45] stringi_1.7.12    cachem_1.0.7      fs_1.6.3          promises_1.2.0.1 
+[49] bslib_0.4.2       generics_0.1.3    vctrs_0.6.4       trust_0.1-8      
+[53] tools_4.2.1       glue_1.6.2        softImpute_1.4-1  purrr_1.0.2      
+[57] parallel_4.2.1    fastmap_1.1.1     yaml_2.3.7        colorspace_2.1-0 
+[61] ashr_2.2-63       deconvolveR_1.2-1 knitr_1.42        sass_0.4.5       </code></pre>
 </div>
 </div>
 
