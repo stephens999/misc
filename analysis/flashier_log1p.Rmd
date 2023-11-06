@@ -85,6 +85,33 @@ I need to understand this better.
 However, I do note again that the standard deviation doesn't vary too much with mm.
 
 
+### log(1+cX)
+
+Here I instead extend this to $log(1+cX)$ (which is sparse). 
+By Taylor series we have:
+$$E(log(1+cX)) = log(1+c\mu) - 0.5 c^2 \mu /(1+c\mu)^2$$
+and
+$$Var(log(c+X)) \approx \mu c^2/(1+c\mu)^2.$$
+
+```{r}
+c=10
+mm = exp(seq(-5,3,length=9))
+mc = vc =mm
+for(i in 1:length(mm)){
+  x = rpois(100000,mm[i])
+  mc[i] = mean(log(1+c*x))
+  vc[i] = var(log(1+c*x))
+}
+
+plot(mm, log(1+c*mm) - 0.5*c^2 * mm/(1+c*mm)^2,type="l" )
+points(mm,mc)
+    
+plot(mm,sqrt(vc))
+lines(mm, c *sqrt(mm)/(1+c*mm))
+```
+
+
+
 ## Simple simulation
 
 I do a simple simulation where $log(1+\mu) =LF'$ where $L$ and $F$ are non-negative
