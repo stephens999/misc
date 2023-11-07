@@ -21,6 +21,7 @@ library(tm)
 library(fastTopics)
 library(flashier)
 library(ebpmf)
+library(RcppML)
 
 sla <- read_csv("../../gsmash/data/SLA/SCC2016/Data/paperList.txt")
 sla <- sla[!is.na(sla$abstract),]
@@ -43,38 +44,65 @@ samples = datax$samples
 samples = lapply(samples, function(z){z[doc_to_use]})
 ```
 
-Filter out words that appear in less than 5 documents. This results in around 2000 words
-
+Filter out words that appear in less than 5 documents. 
+Note: if you don't do this you can still get real factors that capture
+very rare words co-occuring. Eg two authors that are cited together.
+If you are interested in those factors, no need to filter...
 ```{r}
-word_to_use = which(colSums(mat>0)>=5)
+word_to_use = which(colSums(mat>0)>4)
 mat = mat[,word_to_use]
 mat = Matrix(mat,sparse=TRUE)
-lmat = Matrix(log(mat+1),sparse=TRUE)
 ```
 
-## Fit log1p counts
+I tried both the log1p transform both with and without normalizing
+by the size factor, based on size of document. I also tried $log(10x+1)$,
+which is equivalent to $log(x+0.1)$ (pseudocount of 0.1).
+```{r}
+docsize = rowSums(mat)
+lmat = Matrix(log(mat+1),sparse=TRUE)
 
-Here I take the log(mat+1) transform and fit.
+c = docsize/mean(docsize)
+lmat_c = Matrix(log(mat/c+1),sparse=TRUE)
+lmat_c_01 = Matrix(log(10*mat/c+1),sparse=TRUE)
+```
+
+
+
+## Fit log1p transformed data
+
+I fit with a little stabilization (S=0.01 or S=0.05) to avoid tau blowing up. tau gets very big when a factor picks out a single word, so this tends to reduce single-word factors that capture a single word. (But, interestingly, with var_type=0 you also get a lot of single word factors, perhaps for a different reason?)
 ```{r}
 set.seed(1)
-fit.nn = flash(lmat,ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=2,greedy_Kmax = 200)
+fit.nn = flash(lmat,ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=2,greedy_Kmax = 200, S=0.01)
+
+fit.nn.c = flash(lmat_c,ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=2,greedy_Kmax = 200, S=0.01)
+
+fit.nn.c.01 = flash(lmat_c_01,ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=2,greedy_Kmax = 200, S=0.01)
+
+fit.nn.c.01.2 = flash(lmat_c_01,ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=2,greedy_Kmax = 200, S=0.05)
+
+fit.nn.ml = nmf(lmat,k = 100)
+fit.nn.ml.c = nmf(lmat_c, k=100)
 ```
 
 Look at the keywords for each factor. There are many single-word factors, and not as many 
 additional factors as I would have expected.
 ```{r}
-get_keywords = function(fit.nn){
-  
-  L= fit.nn$L_pm
-  F_pm = fit.nn$F_pm
-  if(is.null(L)){ # allows to deal with ebpmf fit
-    L = fit.nn$udv$u
-    F_pm = fit.nn$udv$v
+get_keywords = function(fit,thresh = 2){
+  if("flash" %in% class(fit)){
+    LL <- fit$L_pm
+    FF = fit$F_pm
   }
-  rownames(L)<-1:nrow(L)
+  
+  if("nmf" %in% class(fit)){ # deals with RcppML::nmf fit
+    LL = fit@w
+    FF = t(fit@d*fit@h) 
+  }
+  
+  rownames(LL)<-1:nrow(LL)
 
-  Lnorm = t(t(L)/apply(L,2,max))
-  Fnorm = t(t(F_pm)*apply(L,2,max))
+  Lnorm = t(t(LL)/apply(LL,2,max))
+  Fnorm = t(t(FF)*apply(LL,2,max))
   khat = apply(Lnorm,1,which.max)
   Lmax = apply(Lnorm,1,max)
   
@@ -82,48 +110,55 @@ get_keywords = function(fit.nn){
   keyw.nn =list()
 
   for(k in 1:ncol(Fnorm)){
-     key = Fnorm[,k]>log(2)
+     key = Fnorm[,k]>log(thresh)
     keyw.nn[[k]] = (colnames(mat)[key])[order(Fnorm[key,k],decreasing = T)]
   }
   return(keyw.nn)
 }
 print(get_keywords(fit.nn))
+print(get_keywords(fit.nn.c))
+print(get_keywords(fit.nn.c.01))
+print(get_keywords(fit.nn.c.01.2))
+print(get_keywords(fit.nn.ml))
+print(get_keywords(fit.nn.ml.c))
 ```
 
+So the ml fit captures a lot of "single-word" factors. If you look at the loadings, each factor is loaded on quite a lot of documents. So what seems to be happening is that it chooses to fit single common words to explain lots of documents, rather than a small set of words to explain a small set of documents...
 
-Look at fitted values: we see the fit seems to miss quite a lot of the structure in the data.
-I think this is partly because the low counts are adding noise that it is not dealing with so well.
+Look at fitted values; to my eye the large values don't seem to be very well fit. I think this is partly because the low counts are adding noise that it is not dealing with so well.
 ```{r}
-  fv= fitted(fit.nn)
+  fv= fitted(fit.nn.c)
   sub = sample(1:length(fv),100000)
-  plot(lmat[sub],fv[sub])
+  plot(lmat_c[sub],fv[sub])
 ```
+
+Look at the ml fit -- it looks to be an even worse fit.
+```{r}
+  fv= fit.nn.ml@w %*% (fit.nn.ml.c@d*fit.nn.ml.c@h)
+  plot(lmat_c[sub],fv[sub])
+```
+
+And indeed the ml fit is actually less good by Frob norm than the flash fit! This could be because of the greedy procedure, or the var_type, as well as the normalization.
+```{r}
+mean((lmat_c-fit.nn.ml@w %*% (fit.nn.ml.c@d*fit.nn.ml.c@h))^2)
+mean((lmat_c-fitted(fit.nn.c))^2)
+```
+
+## Constant variance
+
+I thought I would try constant variance flash to see what happens (no need to regularize tau this way). It turns out to fit a very large number of single word factors... I ran it with Kmax=200 and it fit all 200 factors. I do just 30 here to illustrate more quickly. You can see it reduces the mean squared error compared with the "maximum likelihood" perhaps suggesting the greedy approach helps find a better fit?
+```{r}
+set.seed(1)
+fit.nn.c.v0 = flash(lmat_c,ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=0,greedy_Kmax = 30)
+print(get_keywords(fit.nn.c.v0))
+mean((lmat_c-fitted(fit.nn.c.v0))^2)
+```
+
 
 ## Topic model
 
-Here I fit a topic model - it seems that the log fitted values do a better job of fitting the data.
-```{r}
-library(fastTopics)
-fit_nmf_k50 = fit_poisson_nmf(mat,k=50)
-fvals.nmf = fit_nmf_k50$L %*% t(fit_nmf_k50$F)
-plot(lmat[sub],log(fvals.nmf[sub]+1))
-```
 
-Here I tried running flash on the fitted values from the topic model. 
-```{r}
-set.seed(1)
-fit.nn.nmf = flash(log(fvals.nmf+1),ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=2,greedy_Kmax = 200)
-plot(log(fvals.nmf+1)[sub],fitted(fit.nn.nmf)[sub])
-print(get_keywords(fit.nn.nmf))
-```
-
-I'm still a bit suprised the topic model fit isnt closer to the data. Some large
-word counts are pretty poorly fit. 
-```{r}
-plot(mat[sub],fvals.nmf[sub])
-```
-
-Here I increased the number of topics to 100 to try to get a better fit.
+Here I fit a topic model with k= 100; this yields a visually better fit to large values.
 ```{r}
 fit_nmf_k100 = fit_poisson_nmf(mat,k=100,init.method="random")
 fvals.nmf.k100 = fit_nmf_k100$L %*% t(fit_nmf_k100$F)
@@ -131,34 +166,32 @@ plot(mat[sub],fvals.nmf.k100[sub])
 plot(log(1+mat[sub]),log(1+fvals.nmf.k100[sub]))
 ```
 
-I tried fitting flash to the transformed values again. This seems promising. 
-Maybe we should fit topic model with even larger k? Experiment with more pseudocounts?
+I tried fitting flash to the transform of the fitted values. The rationale here is to use topic modelling to "denoise" the data and then 
+transform the denoised data. However, there are computational issues with this approach in general... it seems like it will not be tractible in general because it cannot exploit sparsity, which is essential for big datasets. The keywords seem promising. 
+Maybe we should experiment some more(?)
 ```{r}
 set.seed(1)
-fit.nn.nmf.k100 = flash(log(fvals.nmf.k100+1),ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=2,greedy_Kmax = 200)
+fit.nn.nmf.k100 = flash(log(fvals.nmf.k100+1),ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=2,greedy_Kmax = 200,S=0.01)
 plot(log(1+mat[sub]),fitted(fit.nn.nmf.k100)[sub])
 print(get_keywords(fit.nn.nmf.k100))
 ```
 
-## Change pseudocount
 
-Here I wanted to see what happens if I change the pseudocount. At first I tried 0.001 after looking at some plots but it was very different from 1, so I tried 0.1. It is still interestingly quite different from 1 - much more keywords per topic. 
 ```{r}
-plot(log(1+mat[sub]),log(0.001+fvals.nmf.k100[sub]))
-set.seed(1)
-Y = Matrix(log(1+fvals.nmf.k100/0.1)) # do it this way so non-negative
-fit.nn.nmf.k100.001 = flash(Y,ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=2,greedy_Kmax = 100)
-print(get_keywords(fit.nn.nmf.k100.001))
+  fv= fitted(fit.nn.nmf.k100)
+  sub = sample(1:length(fv),100000)
+  plot(lmat_c[sub],fv[sub])
 ```
+
+
 
 ## Anscombe transform
 
-Try the anscombe transformation
+This is a very brief look at the anscombe transformation for comparison:
 ```{r}
-fit.nn.a = flash(sqrt(mat+3/8),ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=2,greedy_Kmax = 200)
+fit.nn.a = flash(sqrt(mat+3/8),ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=2,greedy_Kmax = 200, S=0.01)
 print(get_keywords(fit.nn.a))
 ```
-
 
 ```{r}
 fv= fitted(fit.nn.a)
