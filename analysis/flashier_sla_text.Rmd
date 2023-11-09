@@ -434,6 +434,33 @@ compare(fit.nn.s.1,fit.nn.s.1.2)
 ```
 
 
+## Adding a factor
+
+I was struck by the "mri" factor in the fit with pseudocount =0.01 that did not appear in the fit with 0.1. This factor makes a lot of sense so I thought maybe this is just a failure to "find" this factor in the fit with pseudocount = 0.1, rather than an indication of its absense in that data set. Here I confirm this by adding this factor and backfitting - the new factor is kept indicating that it improves the ELBO. 
+```{r}
+fit.nn.s.01.b = flash_factors_init(fit.nn.s.01,init = list(u = cbind(fit.nn.s.001$L_pm[,64]) ,d=cbind(c(1),drop=FALSE), v=cbind(fit.nn.s.001$F_pm[,64]) ))
+fit.nn.s.01.b %>% flash_backfit(kset=109)
+get_keywords(fit.nn.s.01.b)[109]
+```
+
+## Adding factors from 0.01 fit to 0.1 fit
+
+I wondered how many of the differences are due to this kind of issue. So I tried adding all the factors from the 0.01 fit that did not appear in the original 0.1 fit and backfitting. I tried adding them all at once and backfitting but my initial attempt at that gave an error (I may not have done it correctly though), so here i add them one at a time. Most (but not all) are kept, indicating that maybe many of the differences between the runs are simply due to the runs finding different solutions, rather than due to differences in the structure present by pseudocount.
+```{r}
+fit1 = fit.nn.s.01
+fit2 = fit.nn.s.001
+cc = cor(fit1$F_pm,fit2$F_pm)
+spec2 = which(apply(cc,2,max)<0.9)
+fit.nn.s.01.2 = fit.nn.s.01
+for(i in spec2){
+  init = list(u = cbind(fit2$L_pm[,i]),d= diag(1, nrow=1), v = cbind(fit2$F_pm[,i]))
+  fit.nn.s.01.2 <- flash_factors_init(fit.nn.s.01.2, init = init, ebnm_fn= ebnm_point_exponential) 
+  fit.nn.s.01.2 <- flash_backfit(fit.nn.s.01.2,kset=fit.nn.s.01.2$n_factors)
+}
+fit.nn.s.01.2 <- flash_nullcheck(fit.nn.s.01.2)
+get_keywords(fit.nn.s.01.2,docfilter = 1)
+```
+
 
 ## Constant variance
 
