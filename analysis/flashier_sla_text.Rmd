@@ -54,41 +54,76 @@ mat = mat[,word_to_use]
 mat = Matrix(mat,sparse=TRUE)
 ```
 
-I tried both the log1p transform both with and without normalizing
-by the size factor, based on size of document. I also tried $log(10x+1)$,
-which is equivalent to $log(x+0.1)$ (pseudocount of 0.1).
+I tried both the log1p transform on its own (no normalization for document size).
+
+I also tried normalizing for document size, and different pseudocounts, (10, 1, 0.1, 0.01) where the first and last I expected to be too big/small (but in fact the results with 0.01 look quite reasonable in many ways).
+Note that to keep things sparse I use log(1+X/c) where c is the pseudo-count.
 ```{r}
-docsize = rowSums(mat)
 lmat = Matrix(log(mat+1),sparse=TRUE)
 
-c = docsize/mean(docsize)
-lmat_c = Matrix(log(mat/c+1),sparse=TRUE)
-lmat_c_01 = Matrix(log(10*mat/c+1),sparse=TRUE)
+docsize = rowSums(mat)
+s = docsize/mean(docsize)
+lmat_s_10 = Matrix(log(0.1*mat/s+1),sparse=TRUE)
+lmat_s_1 = Matrix(log(mat/s+1),sparse=TRUE)
+lmat_s_01 = Matrix(log(10*mat/s+1),sparse=TRUE)
+lmat_s_001 = Matrix(log(100*mat/s+1),sparse=TRUE)
 ```
 
 
+In addition to the pseudocount, we also have to choose how to regularize the estimates of tau (column-wise precision). It turns out this can have
+quite a bit effect on results. If tau is not regularized then typically some tau get very big (very small variance) and, intuitively, one is going to "overfit" some words. In the following I implement a rule of thumb based on Jason's work: I compute the standard deviation of the transformed data for a Poisson random variable of rate $\mu=4/n$. The 4 comes from the fact that we filtered words that occured in less than 4 documents, so this is a lower bound on the average $\mu$ for each word.
+(I ignore variation in document size in this calculation). I think this rule of thumb could be justified as a realistic lower bound on the variance you would expect under a Poisson distribution for the data.
+(There are reasons to believe that text data may be underdispersed relative to Poisson, but I will ignore this for now.)
+```{r}
+mhat = 4/nrow(lmat)
+xx = rpois(1e7,mhat) # random poisson
+S10 = sd(log(0.1*xx+1))
+S1 = sd(log(xx+1)) # sd of log(X+1)
+S01 = sd(log(10*xx+1)) # sd if log(10X+1)
+S001 = sd(log(100*xx+1)) # sd if log(10X+1)
+print(c(S10,S1,S01,S001))
+```
 
 ## Fit log1p transformed data
 
-I fit with a little stabilization (S=0.01 or S=0.05) to avoid tau blowing up. tau gets very big when a factor picks out a single word, so this tends to reduce single-word factors that capture a single word. (But, interestingly, with var_type=0 you also get a lot of single word factors, perhaps for a different reason?)
+I fit each of the four different pseudocounts here. For comparison I also looked at the maximum likelihood estimates (Frobenius norm minimization, which assumes constant column variances).
 ```{r}
 set.seed(1)
-fit.nn = flash(lmat,ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=2,greedy_Kmax = 200, S=0.01)
+fit.nn = flash(lmat,ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=2,greedy_Kmax = 200, S=S1)
 
-fit.nn.c = flash(lmat_c,ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=2,greedy_Kmax = 200, S=0.01)
+set.seed(1)
+fit.nn.s.10 = flash(lmat_s_10,ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=2,greedy_Kmax = 200, S=S10)
+  
+set.seed(1)
+fit.nn.s.1 = flash(lmat_s_1,ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=2,greedy_Kmax = 200, S=S1)
 
-fit.nn.c.01 = flash(lmat_c_01,ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=2,greedy_Kmax = 200, S=0.01)
+set.seed(1)
+fit.nn.s.01 = flash(lmat_s_01,ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=2,greedy_Kmax = 200, S=S01)
 
-fit.nn.c.01.2 = flash(lmat_c_01,ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=2,greedy_Kmax = 200, S=0.05)
+set.seed(1)
+fit.nn.s.001 = flash(lmat_s_001,ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=2,greedy_Kmax = 200, S=S001)
 
+set.seed(1)
 fit.nn.ml = nmf(lmat,k = 100)
-fit.nn.ml.c = nmf(lmat_c, k=100)
+
+set.seed(1)
+fit.nn.ml.s.1 = nmf(lmat_s_1, k=100)
+
+
+saveRDS(fit.nn,file='../output/fit.nn.rds')
+saveRDS(fit.nn.s.10,file='../output/fit.nn.s.10.rds')
+saveRDS(fit.nn.s.1,file='../output/fit.nn.s.1.rds')
+saveRDS(fit.nn.s.01,file='../output/fit.nn.s.01.rds')
+saveRDS(fit.nn.s.001,file='../output/fit.nn.s.001.rds')
 ```
 
-Look at the keywords for each factor. There are many single-word factors, and not as many 
-additional factors as I would have expected.
+Look at the keywords for each factor. We see that the flash fits capture more interesting keywords than the ml fits. Generally the flash keywords seem to make some sense for all levels of the pseudocount (although I had to drop the keyword threshold for large pseudocounts).
+
+The ml fits capture a lot of "single-word" factors. It turns out that each factor is loaded on quite a lot of documents (not shown here). So what seems to be happening is that it chooses to fit single common words to explain lots of documents, rather than a small set of words to explain a small set of documents (which is perhaps what we want!)
 ```{r}
-get_keywords = function(fit,thresh = 2){
+# sets keywords to NA if number of document membership 
+# in the factor does not exceeed docfilter
+get_keywords = function(fit,thresh = 2,docfilter=0){
   if("flash" %in% class(fit)){
     LL <- fit$L_pm
     FF = fit$F_pm
@@ -110,48 +145,304 @@ get_keywords = function(fit,thresh = 2){
   keyw.nn =list()
 
   for(k in 1:ncol(Fnorm)){
-     key = Fnorm[,k]>log(thresh)
-    keyw.nn[[k]] = (colnames(mat)[key])[order(Fnorm[key,k],decreasing = T)]
+     if(sum(Lnorm[,k]>0.5)> docfilter){
+      key = Fnorm[,k]>log(thresh)
+     
+      keyw.nn[[k]] = (colnames(mat)[key])[order(Fnorm[key,k],decreasing = T)]
+     } else { 
+       keyw.nn[[k]] = NA
+     }
   }
   return(keyw.nn)
 }
 print(get_keywords(fit.nn))
-print(get_keywords(fit.nn.c))
-print(get_keywords(fit.nn.c.01))
-print(get_keywords(fit.nn.c.01.2))
+print(get_keywords(fit.nn.s.10,1.2)) #there are no keywords at the default threshold
+print(get_keywords(fit.nn.s.1))
+print(get_keywords(fit.nn.s.01))
+print(get_keywords(fit.nn.s.001))
 print(get_keywords(fit.nn.ml))
-print(get_keywords(fit.nn.ml.c))
+print(get_keywords(fit.nn.ml.s.1))
 ```
 
-So the ml fit captures a lot of "single-word" factors. If you look at the loadings, each factor is loaded on quite a lot of documents. So what seems to be happening is that it chooses to fit single common words to explain lots of documents, rather than a small set of words to explain a small set of documents...
-
-Look at fitted values; to my eye the large values don't seem to be very well fit. I think this is partly because the low counts are adding noise that it is not dealing with so well.
+It turns out that the flash fit (with psedocount =1) is actually
+a better fit by Frobenius norm than the maximum likelihood fit! Maybe
+the greedy approach of flash is helping it to find better solutions?
+In general these plots don't really show very close correspondence between the data and the fit. 
 ```{r}
-  fv= fitted(fit.nn.c)
+  fv= fitted(fit.nn.s.10)
   sub = sample(1:length(fv),100000)
-  plot(lmat_c[sub],fv[sub])
+  plot(lmat_s_10[sub],fv[sub],main="flash fit (pseudocount 10)")
+  
+  fv= fitted(fit.nn.s.1)
+  plot(lmat_s_1[sub],fv[sub],main="flash fit (pseudocount 1)")
+
+  fv= fitted(fit.nn.s.01)
+  plot(lmat_s_01[sub],fv[sub],main="flash fit (pseudocount 0.1)")
+  
+  fv= fitted(fit.nn.s.001)
+  plot(lmat_s_001[sub],fv[sub],main="flash fit (pseudocount 0.01)")
+  
+  fv= fit.nn.ml@w %*% (fit.nn.ml.s.1@d*fit.nn.ml.s.1@h)
+  plot(lmat_s_1[sub],fv[sub], main = "mle fit")
+  
+  mean((lmat_s_1-fit.nn.ml@w %*% (fit.nn.ml.s.1@d*fit.nn.ml.s.1@h))^2)
+  mean((lmat_s_1-fitted(fit.nn.s.1))^2)
 ```
 
-Look at the ml fit -- it looks to be an even worse fit.
+
+## Comparing the fits
+
+It is hard to go through all the different keyword lists,
+so I tried comparing fits pairwise. The idea is to focus on factors being found by one fit and not the other when trying to assess
+ whether you prefer one fit or the other.
+
+First I compare pseudocount 1 and 10:
 ```{r}
-  fv= fit.nn.ml@w %*% (fit.nn.ml.c@d*fit.nn.ml.c@h)
-  plot(lmat_c[sub],fv[sub])
+cc = cor(fit.nn.s.1$F_pm,fit.nn.s.10$F_pm)
+sum(cc>0.9)
 ```
 
-And indeed the ml fit is actually less good by Frob norm than the flash fit! This could be because of the greedy procedure, or the var_type, as well as the normalization.
+See which ones are fit-specific
 ```{r}
-mean((lmat_c-fit.nn.ml@w %*% (fit.nn.ml.c@d*fit.nn.ml.c@h))^2)
-mean((lmat_c-fitted(fit.nn.c))^2)
+spec1 = apply(cc,1,max)<0.9
+spec2 = apply(cc,2,max)<0.9
+print(get_keywords(fit.nn.s.1)[spec1])
+print(get_keywords(fit.nn.s.10,1.2)[spec2])
 ```
+
+Here I compare the fits with lower pseudocounts.
+```{r}
+compare = function(fit1,fit2){
+  cc = cor(fit1$F_pm,fit2$F_pm)
+  spec1 = apply(cc,1,max)<0.9
+  spec2 = apply(cc,2,max)<0.9
+  print(get_keywords(fit1)[spec1])
+  print(get_keywords(fit2)[spec2])
+}
+```
+
+Pseudocount 1 vs 0.1:
+
+```{r}
+compare(fit.nn.s.1,fit.nn.s.01)
+```
+
+Pseudocount 0.1 vs 0.01. The 0.01 are not as bad as I expected.
+```{r}
+compare(fit.nn.s.01,fit.nn.s.001)
+```
+
+
+Overall the results for pseudocounts 0.01-1 look kind of reasonable...
+
+
+## Looking at memberships
+
+Looking at the non-zero memberships, it seems all four pseudo-counts result in similar overall levels of sparsity of $L$.
+```{r}
+hist_lnorm = function(fit,...){
+  LL = fit$L_pm
+  Lnorm = t(t(LL)/apply(LL,2,max))
+  hist(Lnorm[Lnorm>0.01],...)
+}
+hist_lnorm(fit.nn.s.10,main="pseudocount=10",ylim=c(0,800),nclass=20)
+hist_lnorm(fit.nn.s.1,main="pseudocount=1",ylim=c(0,800),nclass=20)
+hist_lnorm(fit.nn.s.01,main="pseudocount=0.1",ylim=c(0,800),nclass=20)
+hist_lnorm(fit.nn.s.001,main="pseudocount=0.01",ylim=c(0,800),nclass=20)
+```
+
+Here I threshold the normalized L values at 0.2 to get an idea of how many factors are present per document. All the documents are loaded on the first factor so the ones that load on only one factor can be thought of as not really being assigned to any topic.
+```{r}
+LL = fit.nn.s.01$L_pm
+FF = fit.nn.s.01$F_pm
+Lnorm = t(t(LL)/apply(LL,2,max))
+Fnorm = t(t(FF)*apply(LL,2,max))
+
+nfac = rowSums(Lnorm>0.2)
+hist(nfac,breaks = seq(0.5,9.5,length=10))
+```
+
+Here I make an initial structure plot of the results.
+```{r}
+structure_plot_general = function(Lhat,Fhat,grouping,title=NULL,
+                                  loadings_order = 'embed',
+                                  print_plot=FALSE,
+                                  seed=12345,
+                                  n_samples = NULL,
+                                  gap=40,
+                                  std_L_method = 'sum_to_1',
+                                  show_legend=TRUE,
+                                  K = NULL
+                                  ){
+  set.seed(seed)
+  #s       <- apply(Lhat,2,max)
+  #Lhat    <-   t(t(Lhat) / s)
+
+  if(is.null(n_samples)&all(loadings_order == "embed")){
+    n_samples = 2000
+  }
+
+  if(std_L_method=='sum_to_1'){
+    Lhat = Lhat/rowSums(Lhat)
+  }
+  if(std_L_method=='row_max_1'){
+    Lhat = Lhat/c(apply(Lhat,1,max))
+  }
+  if(std_L_method=='col_max_1'){
+    Lhat = apply(Lhat,2,function(z){z/max(z)})
+  }
+  if(std_L_method=='col_norm_1'){
+    Lhat = apply(Lhat,2,function(z){z/norm(z,'2')})
+  }
+  
+  if(!is.null(K)){
+    Lhat = Lhat[,1:K]
+    Fhat = Fhat[,1:K]
+  }
+  Fhat = matrix(1,nrow=3,ncol=ncol(Lhat))
+  if(is.null(colnames(Lhat))){
+    colnames(Lhat) <- paste0("k",1:ncol(Lhat))
+  }
+  fit_list     <- list(L = Lhat,F = Fhat)
+  class(fit_list) <- c("multinom_topic_model_fit", "list")
+  p <- structure_plot(fit_list,grouping = grouping,
+                      loadings_order = loadings_order,
+                      n = n_samples,gap = gap,verbose=F) +
+    labs(y = "loading",color = "dim",fill = "dim") + ggtitle(title)
+  if(!show_legend){
+    p <- p + theme(legend.position="none")
+  }
+  if(print_plot){
+    print(p)
+  }
+  return(p)
+}
+```
+
+This is structure plot (with first common factor set to 0)
+```{r}
+Lnorm0=Lnorm
+Fnorm0=Fnorm
+Lnorm0[,1]=0
+Fnorm0[,1]=0
+structure_plot_general(Lnorm0,Fnorm0)
+```
+
+```{r}
+structure_plot_general(Lnorm,Fnorm,std_L_method = "col_max_1")
+```
+
+
+### Repeat for smaller pseudocount
+
+
+```{r}
+LL = fit.nn.s.001$L_pm
+FF = fit.nn.s.001$F_pm
+Lnorm = t(t(LL)/apply(LL,2,max))
+Fnorm = t(t(FF)*apply(LL,2,max))
+
+nfac = rowSums(Lnorm>0.2)
+hist(nfac,breaks = seq(0.5,9.5,length=10))
+```
+
+This is structure plot (with first common factor set to 0)
+```{r}
+Lnorm0=Lnorm
+Fnorm0=Fnorm
+Lnorm0[,1]=0
+Fnorm0[,1]=0
+structure_plot_general(Lnorm0,Fnorm0)
+```
+
+Here without making the columns sum to 1. It is interesting that the 
+plot seems to make the memberships here look more "binary" than for the
+larger pseudo-count. 
+```{r}
+structure_plot_general(Lnorm,Fnorm,std_L_method = "col_max_1")
+```
+
+
+
+
+## Thresholding factors
+
+One thing I noticed is that some factors have a single document that is "driving" them (membership 1 in the normalized L), and no other document that has appreciable membership (say 0.5) even though several documents will have membership. For example, take topic 86 in the 01 fit. From the
+keywords it looks like  "recommender system" factor, but also a "nearest neighbor" factor. It seems to be driven by a single document that has both those features.
+```{r}
+get_keywords(fit.nn.s.01)[86]
+LL = fit.nn.s.01$L_pm
+FF = fit.nn.s.01$F_pm
+Lnorm = t(t(LL)/apply(LL,2,max))
+Fnorm = t(t(FF)*apply(LL,2,max))
+Lnorm0=Lnorm
+Fnorm0=Fnorm
+Lnorm0[,1]=0
+Fnorm0[,1]=0
+
+plot(Lnorm[,86])
+order(Lnorm[,86],decreasing = TRUE)[1:4]
+sla[1181,]$abstract
+sla[1395,]$abstract
+sla[1460,]$abstract
+sla[1024,]$abstract
+```
+It seems that this factor is being "polluted" by the strongest single document - it is perhaps actually a "nearest neighbor" factor, not a "recommender system" factor.  
+
+Here I look at some other factors that have a single outlying document to see what they look like
+```{r}
+which(colSums(Lnorm0>0.5)==1)
+get_keywords(fit.nn.s.01)[colSums(Lnorm0>0.5)==1]
+plot(Lnorm[,17])
+order(Lnorm[,17],decreasing = TRUE)[1:4]
+sla[1789,]$abstract
+sla[475,]$abstract
+sla[792,]$abstract
+sla[1781,]$abstract
+```
+
+```{r}
+plot(Lnorm[,69])
+order(Lnorm[,69],decreasing = TRUE)[1:4]
+sla[1867,]$abstract
+sla[288,]$abstract
+sla[1751,]$abstract
+sla[1258,]$abstract
+```
+
+Generally speaking it seems that these factors are not very interpretable, and should perhaps be filtered out. That is what
+motivated me to implement the 'docfilter' variable in the 'get_keywords" function. 
+```{r}
+print(get_keywords(fit.nn.s.1,docfilter = 1))
+print(get_keywords(fit.nn.s.01,docfilter = 1))
+print(get_keywords(fit.nn.s.001,docfilter = 1))
+```
+
+For the future: it seems worth looking at whether generalized binary priors on L might help with this, since they might help avoid this kind of fit. 
+I also wonder whether document-specific variances could help model outlying documents better.
+
+
+
+
+## Backfitting
+
+I try backfitting one fit - it did not change things much.
+(When i tried backfitting the results with pseudocount 0.1 I got an error.)
+```{r}
+fit.nn.s.1.2 = flash_backfit(fit.nn.s.1)
+compare(fit.nn.s.1,fit.nn.s.1.2)
+```
+
+
 
 ## Constant variance
 
 I thought I would try constant variance flash to see what happens (no need to regularize tau this way). It turns out to fit a very large number of single word factors... I ran it with Kmax=200 and it fit all 200 factors. I do just 30 here to illustrate more quickly. You can see it reduces the mean squared error compared with the "maximum likelihood" perhaps suggesting the greedy approach helps find a better fit?
 ```{r}
 set.seed(1)
-fit.nn.c.v0 = flash(lmat_c,ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=0,greedy_Kmax = 30)
-print(get_keywords(fit.nn.c.v0))
-mean((lmat_c-fitted(fit.nn.c.v0))^2)
+fit.nn.s.v0 = flash(lmat_s_1,ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_exponential),var_type=0,greedy_Kmax = 30)
+print(get_keywords(fit.nn.s.v0))
+mean((lmat_s_1-fitted(fit.nn.s.v0))^2)
 ```
 
 
@@ -180,7 +471,7 @@ print(get_keywords(fit.nn.nmf.k100))
 ```{r}
   fv= fitted(fit.nn.nmf.k100)
   sub = sample(1:length(fv),100000)
-  plot(lmat_c[sub],fv[sub])
+  plot(lmat_s_1[sub],fv[sub])
 ```
 
 
