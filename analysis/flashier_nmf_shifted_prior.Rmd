@@ -1,0 +1,140 @@
+---
+title: "flashier_nmf_shifted_prior"
+author: "Matthew Stephens"
+date: "2023-11-10"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+I wanted to try out the idea of using a shifted prior when doing NMF.
+The idea is that when greedily adding factors you can simultaneously "shift" the baseline factor so that it adjusts for the factors you add.
+However, this simple idea does not work very well in practice in this example, probably due to convergence issues (that may not be so easy to solve).
+
+## Read in the data and filter
+
+These steps are following ones in other files. I copy and pasted so there is more code here than I actually need....
+```{r}
+library(Matrix)
+library(readr)
+library(tm)
+library(fastTopics)
+library(flashier)
+library(ebpmf)
+library(RcppML)
+
+sla <- read_csv("../../gsmash/data/SLA/SCC2016/Data/paperList.txt")
+sla <- sla[!is.na(sla$abstract),]
+sla$docnum = 1:nrow(sla)
+datax = readRDS('../../gsmash/data/sla_full.rds')
+dim(datax$data)
+sum(datax$data==0)/prod(dim(datax$data))
+datax$data = Matrix(datax$data,sparse = TRUE)
+```
+
+filtering
+
+```{r}
+doc_to_use = order(rowSums(datax$data),decreasing = T)[1:round(nrow(datax$data)*0.6)]
+mat = datax$data[doc_to_use,]
+sla = sla[doc_to_use,]
+samples = datax$samples
+samples = lapply(samples, function(z){z[doc_to_use]})
+```
+
+Filter out words that appear in less than 5 documents. 
+Note: if you don't do this you can still get real factors that capture
+very rare words co-occuring. Eg two authors that are cited together.
+If you are interested in those factors, no need to filter...
+```{r}
+word_to_use = which(colSums(mat>0)>4)
+mat = mat[,word_to_use]
+mat = Matrix(mat,sparse=TRUE)
+```
+
+
+```{r}
+lmat = Matrix(log(mat+1),sparse=TRUE)
+
+docsize = rowSums(mat)
+s = docsize/mean(docsize)
+lmat_s_10 = Matrix(log(0.1*mat/s+1),sparse=TRUE)
+lmat_s_1 = Matrix(log(mat/s+1),sparse=TRUE)
+lmat_s_01 = Matrix(log(10*mat/s+1),sparse=TRUE)
+lmat_s_001 = Matrix(log(100*mat/s+1),sparse=TRUE)
+```
+
+
+Compute minimum variances/standard deviations.
+```{r}
+mhat = 4/nrow(lmat)
+xx = rpois(1e7,mhat) # random poisson
+S10 = sd(log(0.1*xx+1))
+S1 = sd(log(xx+1)) # sd of log(X+1)
+S01 = sd(log(10*xx+1)) # sd if log(10X+1)
+S001 = sd(log(100*xx+1)) # sd if log(10X+1)
+print(c(S10,S1,S01,S001))
+```
+
+## Shifted point exponential
+
+Define a function that estimates the mode instead of fixing it to 0.
+```{r}
+ebnm_shift_point_exponential = function(x,s,g_init,fix_g,output){ebnm_point_exponential(x,s,g_init=g_init, fix_g = fix_g, output=output, mode="estimate")}
+```
+
+The problems comes up on the second factor so I fit 2 factors.
+```{r}
+set.seed(1)
+fit.1 = flash(lmat_s_1,ebnm_fn = ebnm_shift_point_exponential, S=S1, greedy_Kmax = 2)
+```
+
+Here we see that the L and F are non-sparse and far from non-negative.
+The fitted gs are shifted exponentials (essentially no point mass). 
+Possibly flash is initializing using an unconstrained fit, so essentially PCA. Maybe part of a solution could be to initialize to non-negative?
+```{r}
+plot(fit.1$L_pm[,2])
+plot(fit.1$F_pm[,2])
+fit.1$F_ghat[2]
+fit.1$L_ghat[2]
+```
+
+Here I try initializing using point exponential and then relaxing.
+```{r}
+fit.nn = flash(lmat_s_1,ebnm_fn = ebnm_point_exponential, S=S1, greedy_Kmax = 2)
+fit.2 = flash_init(lmat_s_1, S=S1)
+fit.2 = flash_factors_init(fit.2, fit.nn, ebnm_fn = ebnm_shift_point_exponential)
+fit.2 = flash_backfit(fit.2)
+```
+
+We can see the original non-negative fit produces very sparse factors:
+```{r}
+plot(fit.nn$L_pm[,2])
+plot(fit.nn$F_pm[,2])
+```
+
+But the refit produces something much less sparse, again with no point mass at 0.
+```{r}
+plot(fit.2$L_pm[,2])
+plot(fit.2$F_pm[,2])
+fit.2$L_ghat[2]
+fit.2$F_ghat[2]
+```
+
+I thought this might still be a convergence issue, but it seems that
+the elbo is better for the relaxed fit.
+```{r}
+fit.2$elbo - fit.nn$elbo
+```
+
+Here is a direct comparison of the two fits; quite a big difference.
+```{r}
+plot(fit.2$L_pm[,1],fit.nn$L_pm[,1])
+plot(fit.2$L_pm[,2],fit.nn$L_pm[,2])
+
+plot(fit.2$F_pm[,1],fit.nn$F_pm[,1])
+plot(fit.2$F_pm[,2],fit.nn$F_pm[,2])
+```
+
