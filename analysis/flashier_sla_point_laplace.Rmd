@@ -1,0 +1,259 @@
+---
+title: "flashier_sla_point_laplace"
+author: "Matthew Stephens"
+date: "2023-11-10"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+I want to try running flashier semi-NMF (point-exponential on L, point Laplace on F) on the text data to see how it differs from [flashier NMF](flashier_sla_text.html).
+
+
+## Read data and filter, as before
+
+```{r}
+library(Matrix)
+library(readr)
+library(tm)
+library(fastTopics)
+library(flashier)
+library(ebpmf)
+library(RcppML)
+
+sla <- read_csv("../../gsmash/data/SLA/SCC2016/Data/paperList.txt")
+sla <- sla[!is.na(sla$abstract),]
+sla$docnum = 1:nrow(sla)
+datax = readRDS('../../gsmash/data/sla_full.rds')
+dim(datax$data)
+sum(datax$data==0)/prod(dim(datax$data))
+datax$data = Matrix(datax$data,sparse = TRUE)
+```
+
+filter out some documents: use top 60% longest ones as in Ke and Wang 2022.
+
+```{r}
+doc_to_use = order(rowSums(datax$data),decreasing = T)[1:round(nrow(datax$data)*0.6)]
+mat = datax$data[doc_to_use,]
+sla = sla[doc_to_use,]
+samples = datax$samples
+samples = lapply(samples, function(z){z[doc_to_use]})
+```
+
+Filter out words that appear in less than 5 documents. 
+Note: if you don't do this you can still get real factors that capture
+very rare words co-occuring. Eg two authors that are cited together.
+If you are interested in those factors, no need to filter...
+```{r}
+word_to_use = which(colSums(mat>0)>4)
+mat = mat[,word_to_use]
+mat = Matrix(mat,sparse=TRUE)
+```
+
+Compute log-normalized data with different pseudocounts.
+```{r}
+lmat = Matrix(log(mat+1),sparse=TRUE)
+
+docsize = rowSums(mat)
+s = docsize/mean(docsize)
+lmat_s_10 = Matrix(log(0.1*mat/s+1),sparse=TRUE)
+lmat_s_1 = Matrix(log(mat/s+1),sparse=TRUE)
+lmat_s_01 = Matrix(log(10*mat/s+1),sparse=TRUE)
+lmat_s_001 = Matrix(log(100*mat/s+1),sparse=TRUE)
+```
+
+
+Compute S0 values (min Tau).
+```{r}
+mhat = 4/nrow(lmat)
+xx = rpois(1e7,mhat) # random poisson
+S10 = sd(log(0.1*xx+1))
+S1 = sd(log(xx+1)) # sd of log(X+1)
+S01 = sd(log(10*xx+1)) # sd if log(10X+1)
+S001 = sd(log(100*xx+1)) # sd if log(10X+1)
+print(c(S10,S1,S01,S001))
+```
+
+## Fit data
+
+I'll start with pseudocount 0.1 and 0.01.
+
+```{r}
+set.seed(1)
+fit.snn.s.01 = flash(lmat_s_01,ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_laplace),var_type=2,greedy_Kmax = 200, S=S01)
+
+saveRDS(fit.snn.s.01,file='../output/fit.snn.s.01.rds')
+
+set.seed(1)
+fit.snn.s.001 = flash(lmat_s_001,ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_laplace),var_type=2,greedy_Kmax = 200, S=S001)
+
+saveRDS(fit.snn.s.001,file='../output/fit.snn.s.001.rds')
+```
+
+
+## Analysis for 0.01
+
+Look at the keywords for each factor. I also look at the "negative" keywords - those that are depleted in each factor.
+```{r}
+# sets keywords to NA if number of document membership 
+# in the factor does not exceeed docfilter
+# set neg=TRUE to recover "depleted" words (when F can be negative as in
+# semi-NMF)
+get_keywords = function(fit,thresh = 2,docfilter=0,neg=FALSE){
+  if("flash" %in% class(fit)){
+    LL <- fit$L_pm
+    FF = fit$F_pm
+  }
+  
+  if("nmf" %in% class(fit)){ # deals with RcppML::nmf fit
+    LL = fit@w
+    FF = t(fit@d*fit@h) 
+  }
+  
+  rownames(LL)<-1:nrow(LL)
+
+  Lnorm = t(t(LL)/apply(LL,2,max))
+  Fnorm = t(t(FF)*apply(LL,2,max))
+  khat = apply(Lnorm,1,which.max)
+  Lmax = apply(Lnorm,1,max)
+  
+  khat[Lmax<0.1] = 0
+  keyw.nn =list()
+
+  for(k in 1:ncol(Fnorm)){
+     if(sum(Lnorm[,k]>0.5)> docfilter){
+      key = Fnorm[,k]>log(thresh)
+      if(neg){
+        key = Fnorm[,k]< -log(thresh)
+      }
+     
+      keyw.nn[[k]] = (colnames(mat)[key])[order(Fnorm[key,k],decreasing = T)]
+     } else { 
+       keyw.nn[[k]] = NA
+     }
+  }
+  return(keyw.nn)
+}
+
+kw = get_keywords(fit.snn.s.01,docfilter = 1)
+kw.neg = get_keywords(fit.snn.s.01,neg=TRUE,docfilter=1)
+kw
+kw.neg
+cbind(kw,kw.neg)
+```
+
+These look pretty useful. Immediately one notices that most factors
+do not have appreciable "negative" keywords, which is kind of nice. 
+There are a few, however. For example, factor 15. This factor is actually dense in L and seems to just be an "additional" adjustment for libary size...
+```{r}
+kw[15]
+kw.neg[15]
+plot(fit.snn.s.01$L_pm[,15])
+```
+
+Here I look for other "dense" factors.
+```{r}
+LL = fit.snn.s.01$L_pm
+Lnorm = t(t(LL)/apply(LL,2,max))
+ndoc = apply(Lnorm>0.05,2,sum)
+plot(ndoc)
+abline(h=200)
+which(ndoc>200)
+kw[ndoc>200]
+kw.neg[ndoc>200]
+```
+
+Of these, a couple are maybe a bit different than than the others.
+Factor 62 picks out documents that contain the phrase "maximum likelihood estimate", and Factor 81 is generically about consistency and asymptotic normal, so picks out a bunch of abstracts around that general theme. 
+```{r}
+kw[62]
+plot(LL[,62])
+kw[81]
+plot(LL[,81])
+```
+
+Some of the keywords look quite specialized, and sometimes a bit eclectic. Eg look at 132. It turns out to be driven by just two papers, which is not suprising. And the papers that have weak loadings on this factor (near 0.2) don't have much to do with the main keywords. 
+```{r}
+kw[132]
+plot(Lnorm[,132])
+sla$abstract[Lnorm[,132]>0.5]
+sla$abstract[Lnorm[,132]>0.2]
+```
+
+Based on this maybe we want to focus on factors that are driven by more than a couple of documents:
+```{r}
+kw.3 = get_keywords(fit.snn.s.01,docfilter = 3)
+kw.3
+```
+
+There are still a few factors that look a bit odd. And example is 52.
+You can see the mix of keywords suggest two different uses of the word "stop": sequential stopping rules and traffic stops; the abstracts of the heavily-loaded documents confirm this. It is interesting to think about how one might avoid this conflation - it seems possible to separate out these two types of abstract.
+```{r}
+kw.3[[52]]
+sla$abstract[Lnorm[,52]>0.5]
+```
+
+## Analysis for 0.001
+
+This fit had more factors -- indeed it used all 200 I gave it.
+
+I go straight to filtering to factors driven by at least 3 documents.
+```{r}
+kw.3 = get_keywords(fit.snn.s.001,docfilter = 3)
+kw.neg.3 = get_keywords(fit.snn.s.001,neg=TRUE,docfilter=3)
+kw.3
+kw.neg.3
+cbind(kw.3,kw.neg.3)
+```
+
+
+```{r}
+LL = fit.snn.s.001$L_pm
+Lnorm = t(t(LL)/apply(LL,2,max))
+ndoc = apply(Lnorm>0.05,2,sum)
+plot(ndoc)
+abline(h=200)
+which(ndoc>200)
+kw.3[ndoc>200]
+kw.neg.3[ndoc>200]
+```
+
+My overall impression is that there is a lot of good signal here, but maybe also some more factors that are not the kind of thing we are looking for.  For example, factor 45 is dense, with a mode away from 0 and mostly negative "keywords". It isn't really the kind of thing we are looking for (and indeed there are no positive keywords, so maybe that is enough to ignore it). That said, this kind of factor is still the exception rather than the norm.
+```{r}
+kw.3[45]
+kw.neg.3[45]
+plot(Lnorm[,45])
+plot(fit.snn.s.001$F_pm[,45])
+```
+
+
+## With non-negative initialization
+
+The above uses the default initialization, which I believe will initialize with L non-negative but F unconstrained.  Here, to encourage the non-negative fits, I try initializing with both non-negative.
+
+```{r}
+nmf_init_fn <- function(f) {
+  nmf_res <- RcppML::nmf(resid(f), k = 1, verbose = FALSE)
+  return(list(as.vector(nmf_res$w), as.vector(nmf_res$h)))
+}
+
+set.seed(1)
+fit.snn.s.01.nninit = flash_init(lmat_s_01, var_type=2, S=S01) %>% flash_greedy(ebnm_fn = c(ebnm::ebnm_point_exponential,ebnm::ebnm_point_laplace), Kmax = 200, init_fn = nmf_init_fn)
+
+saveRDS(fit.snn.s.01.nninit,file='../output/fit.snn.s.01.nninit.rds')
+
+```
+
+My overall impression is that this is closer to the original non-negative results. Overall I feel the semi-nonnegative results (with default initialization) may extract more information, at a cost of having some additional factors that are not very interpretable (but this might not be a big deal if they are easy
+ to filter out).  
+```{r}
+kw = get_keywords(fit.snn.s.01.nninit,docfilter = 3)
+kw.neg = get_keywords(fit.snn.s.01.nninit,neg=TRUE,docfilter=3)
+kw
+kw.neg
+cbind(kw,kw.neg)
+```
+
+
