@@ -80,6 +80,7 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 * [Notes on the log1p transform for count/Poisson data](flashier_log1p.html)
 
 * [Initial runs of flashier on text data](flashier_sla_text.html)
+* [Flashier semi-NMF on text data](flashier_sla_point_Laplace.html)
 * [Try at using shifted exponential prior in flashier (did not work as I expected)](flashier_nmf_shifted_prior.html)
 
 # NMF
