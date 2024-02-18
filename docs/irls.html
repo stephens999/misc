@@ -509,15 +509,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreee0a1a4850083cf7ed1b5f8351766102bb5b83ca9targetblanke0a1a48a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreeae34e79828146bb17bb38b693881b66a14de8b78targetblankae34e79a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/stephens999/misc/tree/e0a1a4850083cf7ed1b5f8351766102bb5b83ca9" target="_blank">e0a1a48</a>
+<a href="https://github.com/stephens999/misc/tree/ae34e79828146bb17bb38b693881b66a14de8b78" target="_blank">ae34e79</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreee0a1a4850083cf7ed1b5f8351766102bb5b83ca9targetblanke0a1a48a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreeae34e79828146bb17bb38b693881b66a14de8b78targetblankae34e79a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -527,7 +527,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/stephens999/misc/tree/e0a1a4850083cf7ed1b5f8351766102bb5b83ca9" target="_blank">e0a1a48</a>.
+<a href="https://github.com/stephens999/misc/tree/ae34e79828146bb17bb38b693881b66a14de8b78" target="_blank">ae34e79</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -767,6 +767,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/ae34e79828146bb17bb38b693881b66a14de8b78/analysis/irls.Rmd" target="_blank">ae34e79</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2024-02-18
+</td>
+<td>
+workflowr::wflow_publish("irls.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/fd42591524e8b96683d584082e923f743015c321/docs/irls.html" target="_blank">fd42591</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2024-02-18
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/e0a1a4850083cf7ed1b5f8351766102bb5b83ca9/analysis/irls.Rmd" target="_blank">e0a1a48</a>
 </td>
 <td>
@@ -788,7 +822,18 @@ workflowr::wflow_publish("irls.Rmd")
 </div>
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
-<p>I wanted to use IRLS to fit a simple logistic regression.</p>
+<p>I wanted to use IRLS to fit a simple logistic regression. The
+following code does so for all columns of X simultaneously. That is, it
+fits y ~ mu + b Xj for j= 1…p.</p>
+</div>
+<div id="single-vector-x" class="section level2">
+<h2>Single vector x</h2>
+<p>I start by writing a function to fit a single vector x. The code is
+based on the IRLS algorithm for logistic regression, as described in the
+book “Elements of Statistical Learning” by Hastie, Tibshirani and
+Friedman (2009), section 4.4.1, written in a way that it makes it easy
+to vectorize/repeat over the columns of a matrix X via matrix
+multiplications. (See below)</p>
 <pre class="r"><code>logistic_IRLS_simple &lt;- function(x, y, max_iter = 100, tolerance = 1e-6) {
   # Initialize coefficients
   mu &lt;- 0
@@ -862,6 +907,97 @@ Coefficients:
 Degrees of Freedom: 9999 Total (i.e. Null);  9998 Residual
 Null Deviance:      54.67 
 Residual Deviance: 40.21    AIC: 44.21</code></pre>
+</div>
+<div id="matrix-version" class="section level1">
+<h1>Matrix version</h1>
+<p>I now write a function that repeats the above for all columns of X
+simultaneously via vector/matrix operations.</p>
+<pre class="r"><code>logistic_IRLS_simple_matrix &lt;- function(X, y, max_iter = 100, tolerance = 1e-6) {
+  # Initialize coefficients
+  p &lt;- ncol(X)
+  mu &lt;- rep(0,p)
+  beta &lt;- rep(0,p)
+  converged &lt;- FALSE
+  
+  for (iter in 1:max_iter) {
+    eta &lt;- t(mu + t(X) * beta)  # Linear predictor
+    pi &lt;- exp(eta) / (1 + exp(eta))  # Predicted probabilities
+
+    # Weights for IRLS 
+    w &lt;- pi * (1 - pi)
+
+    # Working response variable
+    z &lt;- eta + (y - pi) / (pi * (1 - pi)) 
+
+    # Weighted least squares update
+    #These are the elements of the X&#39;X matrix (a b) (c d)
+    a = colSums(w)
+    b = colSums(w*X)
+    c = b
+    d = colSums(w*X^2)
+    
+    wz = colSums(w*z)
+    wxz = colSums(w*X*z)
+    
+    new_mu &lt;- (d*wz - b*wxz) / (a*d - b*c)
+    new_beta &lt;- (-c*wz + a*wxz) /  (a*d - b*c)
+
+    # Check for convergence
+    if (all(abs(new_beta - beta) &lt; tolerance)) {
+      converged = TRUE
+      break
+    }
+
+    beta &lt;- new_beta
+    mu &lt;- new_mu
+  }
+
+  # Return fitted coefficients
+  return(list(mu = mu, beta = beta, converged = converged, iter=iter))
+}</code></pre>
+<p>Now I test the function with some simulated data. It seems to
+work.</p>
+<pre class="r"><code>set.seed(1)
+n &lt;- 10000
+X &lt;- cbind(rnorm(n), rnorm(n))
+eta &lt;- 10 + 2*X[,1] + 3*X[,2]
+pi &lt;- exp(eta) / (1 + exp(eta))
+y &lt;- rbinom(n, 1, pi)
+
+glm(y~X[,1], family = binomial)</code></pre>
+<pre><code>
+Call:  glm(formula = y ~ X[, 1], family = binomial)
+
+Coefficients:
+(Intercept)       X[, 1]  
+      6.084        1.427  
+
+Degrees of Freedom: 9999 Total (i.e. Null);  9998 Residual
+Null Deviance:      764.1 
+Residual Deviance: 639.4    AIC: 643.4</code></pre>
+<pre class="r"><code>glm(y~X[,2], family = binomial)</code></pre>
+<pre><code>
+Call:  glm(formula = y ~ X[, 2], family = binomial)
+
+Coefficients:
+(Intercept)       X[, 2]  
+      7.214        2.211  
+
+Degrees of Freedom: 9999 Total (i.e. Null);  9998 Residual
+Null Deviance:      764.1 
+Residual Deviance: 521.9    AIC: 525.9</code></pre>
+<pre class="r"><code>logistic_IRLS_simple_matrix(X, y)</code></pre>
+<pre><code>$mu
+[1] 6.083537 7.213586
+
+$beta
+[1] 1.427305 2.211099
+
+$converged
+[1] TRUE
+
+$iter
+[1] 10</code></pre>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
