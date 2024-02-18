@@ -1,0 +1,73 @@
+---
+title: "irls"
+author: "Matthew Stephens"
+date: "2024-02-17"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+I wanted to use IRLS to fit a simple logistic regression.
+
+```{r}
+logistic_IRLS_simple <- function(x, y, max_iter = 100, tolerance = 1e-6) {
+  # Initialize coefficients
+  mu <- 0
+  beta <- 0
+  converged <- FALSE
+  
+  for (iter in 1:max_iter) {
+    eta <- mu + x * beta  # Linear predictor
+    pi <- exp(eta) / (1 + exp(eta))  # Predicted probabilities
+
+    # Weights for IRLS 
+    w <- pi * (1 - pi)
+
+    # Working response variable
+    z <- eta + (y - pi) / (pi * (1 - pi)) 
+
+    # Weighted least squares update
+    #These are the elements of the X'X matrix (a b) (c d)
+    a = sum(w)
+    b = sum(w*x)
+    c = sum(w*x)
+    d = sum(w*x^2)
+    
+    wz = sum(w*z)
+    wxz = sum(w*x*z)
+    
+    new_mu <- (d*wz - b*wxz) / (a*d - b*c)
+    new_beta <- (-c*wz + a*wxz) /  (a*d - b*c)
+
+    # Check for convergence
+    if (all(abs(new_beta - beta) < tolerance)) {
+      converged = TRUE
+      break
+    }
+
+    beta <- new_beta
+    mu <- new_mu
+  }
+
+  # Return fitted coefficients
+  return(list(mu = mu, beta = beta, converged = converged, iter=iter))
+}
+```
+
+
+Now I want to test the function with some simulated data.
+Simulate a simple logistic regression:
+```{r}
+set.seed(1)
+n <- 10000
+x <- rnorm(n)
+eta <- 10 + 2*x
+pi <- exp(eta) / (1 + exp(eta))
+y <- rbinom(n, 1, pi)
+logistic_IRLS_simple(x, y)
+
+glm(y~x, family = binomial)
+```
+
