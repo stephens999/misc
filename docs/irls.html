@@ -378,7 +378,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2024-02-18
+<strong>Last updated:</strong> 2024-02-21
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -509,15 +509,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreeae34e79828146bb17bb38b693881b66a14de8b78targetblankae34e79a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree23487aaf3b5e9738118f2e7045d3b541581a5c30targetblank23487aaa">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/stephens999/misc/tree/ae34e79828146bb17bb38b693881b66a14de8b78" target="_blank">ae34e79</a>
+<a href="https://github.com/stephens999/misc/tree/23487aaf3b5e9738118f2e7045d3b541581a5c30" target="_blank">23487aa</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreeae34e79828146bb17bb38b693881b66a14de8b78targetblankae34e79a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree23487aaf3b5e9738118f2e7045d3b541581a5c30targetblank23487aaa"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -527,7 +527,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/stephens999/misc/tree/ae34e79828146bb17bb38b693881b66a14de8b78" target="_blank">ae34e79</a>.
+<a href="https://github.com/stephens999/misc/tree/23487aaf3b5e9738118f2e7045d3b541581a5c30" target="_blank">23487aa</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -767,6 +767,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/23487aaf3b5e9738118f2e7045d3b541581a5c30/analysis/irls.Rmd" target="_blank">23487aa</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2024-02-21
+</td>
+<td>
+workflowr::wflow_publish("irls.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/2efb143628bb37fbe300cdb2c5f689ce9dc30a2b/docs/irls.html" target="_blank">2efb143</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2024-02-18
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/ae34e79828146bb17bb38b693881b66a14de8b78/analysis/irls.Rmd" target="_blank">ae34e79</a>
 </td>
 <td>
@@ -834,7 +868,7 @@ book “Elements of Statistical Learning” by Hastie, Tibshirani and
 Friedman (2009), section 4.4.1, written in a way that it makes it easy
 to vectorize/repeat over the columns of a matrix X via matrix
 multiplications. (See below)</p>
-<pre class="r"><code>logistic_IRLS_simple &lt;- function(x, y, max_iter = 100, tolerance = 1e-6) {
+<pre class="r"><code>logistic_IRLS_simple &lt;- function(x, y, max_iter = 100, tolerance = 1e-6, lambda=0) {
   # Initialize coefficients
   mu &lt;- 0
   beta &lt;- 0
@@ -855,7 +889,7 @@ multiplications. (See below)</p>
     a = sum(w)
     b = sum(w*x)
     c = sum(w*x)
-    d = sum(w*x^2)
+    d = sum(w*x^2) + lambda
     
     wz = sum(w*z)
     wxz = sum(w*x*z)
@@ -881,38 +915,95 @@ simple logistic regression:</p>
 <pre class="r"><code>set.seed(1)
 n &lt;- 10000
 x &lt;- rnorm(n)
-eta &lt;- 10 + 2*x
+eta &lt;- 5 + 2*x
 pi &lt;- exp(eta) / (1 + exp(eta))
 y &lt;- rbinom(n, 1, pi)
 logistic_IRLS_simple(x, y)</code></pre>
 <pre><code>$mu
-[1] 10.77451
+[1] 5.043687
 
 $beta
-[1] 2.297807
+[1] 2.046827
 
 $converged
 [1] TRUE
 
 $iter
-[1] 14</code></pre>
+[1] 9</code></pre>
 <pre class="r"><code>glm(y~x, family = binomial)</code></pre>
 <pre><code>
 Call:  glm(formula = y ~ x, family = binomial)
 
 Coefficients:
 (Intercept)            x  
-     10.775        2.298  
+      5.044        2.047  
 
 Degrees of Freedom: 9999 Total (i.e. Null);  9998 Residual
-Null Deviance:      54.67 
-Residual Deviance: 40.21    AIC: 44.21</code></pre>
+Null Deviance:      2994 
+Residual Deviance: 1998     AIC: 2002</code></pre>
+<p>And compare with glmnet. Note that glmnet requires two variables so I
+add an intercept. One thing I don’t understand: I tried setting
+“intercept=FALSE” but and not penalizing the intercept but it produced
+different results, which was unexpected.</p>
+<pre class="r"><code>library(glmnet)</code></pre>
+<pre><code>Loading required package: Matrix</code></pre>
+<pre><code>Loaded glmnet 4.1-8</code></pre>
+<pre class="r"><code>fit = glmnet(cbind(rep(1,n),x), y, family=&quot;binomial&quot;,alpha=0, lambda=1/n)
+fit$beta</code></pre>
+<pre><code>2 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+        s0
+  .       
+x 2.031983</code></pre>
+<pre class="r"><code>logistic_IRLS_simple(x, y, lambda=1)</code></pre>
+<pre><code>$mu
+[1] 5.024606
+
+$beta
+[1] 2.033247
+
+$converged
+[1] TRUE
+
+$iter
+[1] 9</code></pre>
+<pre class="r"><code>fit = glmnet(cbind(rep(1,n),x), y, family=&quot;binomial&quot;,alpha=0, lambda=10/n)
+fit$beta</code></pre>
+<pre><code>2 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+        s0
+  .       
+x 1.920453</code></pre>
+<pre class="r"><code>logistic_IRLS_simple(x, y, lambda=10)</code></pre>
+<pre><code>$mu
+[1] 4.872961
+
+$beta
+[1] 1.923797
+
+$converged
+[1] TRUE
+
+$iter
+[1] 9</code></pre>
+<pre class="r"><code>fit2 = glmnet(cbind(rep(1,n),x), y, family=&quot;binomial&quot;,alpha=0, lambda=10/n, penalty.factor = c(0,1), intercept = FALSE)
+
+coef(fit2)</code></pre>
+<pre><code>3 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+                   s0
+(Intercept) .        
+            .        
+x           0.2065842</code></pre>
+<pre class="r"><code>coef(fit)</code></pre>
+<pre><code>3 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+                  s0
+(Intercept) 4.868390
+            .       
+x           1.920453</code></pre>
 </div>
 <div id="matrix-version" class="section level1">
 <h1>Matrix version</h1>
 <p>I now write a function that repeats the above for all columns of X
 simultaneously via vector/matrix operations.</p>
-<pre class="r"><code>logistic_IRLS_simple_matrix &lt;- function(X, y, max_iter = 100, tolerance = 1e-6) {
+<pre class="r"><code>logistic_IRLS_simple_matrix &lt;- function(X, y, max_iter = 100, tolerance = 1e-6, lambda = 0) {
   # Initialize coefficients
   p &lt;- ncol(X)
   mu &lt;- rep(0,p)
@@ -934,7 +1025,7 @@ simultaneously via vector/matrix operations.</p>
     a = colSums(w)
     b = colSums(w*X)
     c = b
-    d = colSums(w*X^2)
+    d = colSums(w*X^2) + lambda
     
     wz = colSums(w*z)
     wxz = colSums(w*X*z)
@@ -1021,17 +1112,22 @@ locale:
 attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
+other attached packages:
+[1] glmnet_4.1-8 Matrix_1.6-4
+
 loaded via a namespace (and not attached):
- [1] Rcpp_1.0.12       rstudioapi_0.15.0 whisker_0.4.1     knitr_1.45       
- [5] magrittr_2.0.3    workflowr_1.7.1   R6_2.5.1          rlang_1.1.2      
- [9] fastmap_1.1.1     fansi_1.0.6       stringr_1.5.1     tools_4.2.1      
-[13] xfun_0.41         utf8_1.2.4        cli_3.6.2         git2r_0.33.0     
-[17] jquerylib_0.1.4   htmltools_0.5.7   rprojroot_2.0.4   yaml_2.3.8       
-[21] digest_0.6.33     tibble_3.2.1      lifecycle_1.0.4   later_1.3.2      
-[25] sass_0.4.8        vctrs_0.6.5       fs_1.6.3          promises_1.2.1   
-[29] cachem_1.0.8      glue_1.6.2        evaluate_0.23     rmarkdown_2.25   
-[33] stringi_1.8.3     bslib_0.6.1       compiler_4.2.1    pillar_1.9.0     
-[37] jsonlite_1.8.8    httpuv_1.6.13     pkgconfig_2.0.3  </code></pre>
+ [1] Rcpp_1.0.12       pillar_1.9.0      compiler_4.2.1    bslib_0.6.1      
+ [5] later_1.3.2       jquerylib_0.1.4   git2r_0.33.0      workflowr_1.7.1  
+ [9] iterators_1.0.14  tools_4.2.1       digest_0.6.33     lattice_0.22-5   
+[13] jsonlite_1.8.8    evaluate_0.23     lifecycle_1.0.4   tibble_3.2.1     
+[17] pkgconfig_2.0.3   rlang_1.1.2       foreach_1.5.2     cli_3.6.2        
+[21] rstudioapi_0.15.0 yaml_2.3.8        xfun_0.41         fastmap_1.1.1    
+[25] stringr_1.5.1     knitr_1.45        fs_1.6.3          vctrs_0.6.5      
+[29] sass_0.4.8        rprojroot_2.0.4   grid_4.2.1        glue_1.6.2       
+[33] R6_2.5.1          fansi_1.0.6       survival_3.5-7    rmarkdown_2.25   
+[37] magrittr_2.0.3    whisker_0.4.1     splines_4.2.1     codetools_0.2-19 
+[41] promises_1.2.1    htmltools_0.5.7   shape_1.4.6       httpuv_1.6.13    
+[45] utf8_1.2.4        stringi_1.8.3     cachem_1.0.8     </code></pre>
 </div>
 </div>
 
