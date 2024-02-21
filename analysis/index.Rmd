@@ -139,5 +139,9 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 * [Apply sparsepca and flash to some tree data](tree_pca_03.html)
 * [Look at effect of size of first factor on flash](flash_f1_size.html)
 
+# IRLS
+
+* [implementation of irls for logistic regression](irls.html)
+
 [rmarkdown]: http://rmarkdown.rstudio.com/rmarkdown_websites.htm
 [rstudio]: https://www.rstudio.com/products/rstudio/download/preview/
