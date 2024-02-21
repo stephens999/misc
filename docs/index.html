@@ -13,7 +13,7 @@
 
 <title>Home</title>
 
-<script src="site_libs/header-attrs-2.20/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.25/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
@@ -298,7 +298,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2023-11-11
+<strong>Last updated:</strong> 2024-02-21
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -316,7 +316,7 @@ title="This is the local directory in which the code in this file was executed."
 This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
 analysis was created with <a
   href="https://github.com/workflowr/workflowr">workflowr</a> (version
-1.7.0). The <em>Checks</em> tab describes the reproducibility checks
+1.7.1). The <em>Checks</em> tab describes the reproducibility checks
 that were applied when the results were created. The <em>Past
 versions</em> tab lists the development history.
 </p>
@@ -345,15 +345,15 @@ results.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree52387ae1eec1aaa91a007037e3e7b21ba9129f1ctargetblank52387aea">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreee5e386d69a40ecf55be675cba3f105a52806fe36targetblanke5e386da">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/stephens999/misc/tree/52387ae1eec1aaa91a007037e3e7b21ba9129f1c" target="_blank">52387ae</a>
+<a href="https://github.com/stephens999/misc/tree/e5e386d69a40ecf55be675cba3f105a52806fe36" target="_blank">e5e386d</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree52387ae1eec1aaa91a007037e3e7b21ba9129f1ctargetblank52387aea"
+id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreee5e386d69a40ecf55be675cba3f105a52806fe36targetblanke5e386da"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -363,7 +363,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/stephens999/misc/tree/52387ae1eec1aaa91a007037e3e7b21ba9129f1c" target="_blank">52387ae</a>.
+<a href="https://github.com/stephens999/misc/tree/e5e386d69a40ecf55be675cba3f105a52806fe36" target="_blank">e5e386d</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -398,6 +398,7 @@ Untracked files:
     Untracked:  analysis/SPCAvRP.rmd
     Untracked:  analysis/admm_02.Rmd
     Untracked:  analysis/admm_03.Rmd
+    Untracked:  analysis/cache/
     Untracked:  analysis/cholesky.Rmd
     Untracked:  analysis/compare-transformed-models.Rmd
     Untracked:  analysis/cormotif.Rmd
@@ -414,6 +415,9 @@ Untracked files:
     Untracked:  analysis/flash_test_tree.Rmd
     Untracked:  analysis/flash_tree.Rmd
     Untracked:  analysis/flashier_newgroups.Rmd
+    Untracked:  analysis/flashier_nmf_triples.Rmd
+    Untracked:  analysis/flashier_pbmc.Rmd
+    Untracked:  analysis/flashier_snn_shifted_prior.Rmd
     Untracked:  analysis/greedy_ebpmf_exploration_00.Rmd
     Untracked:  analysis/ieQTL.perm.rand.pdf
     Untracked:  analysis/lasso_em_03.Rmd
@@ -516,6 +520,8 @@ Untracked files:
     Untracked:  output/fit.snn.s.01.rds
     Untracked:  output/fit.varbvs.RDS
     Untracked:  output/glmnet.fit.RDS
+    Untracked:  output/snn07.txt
+    Untracked:  output/snn34.txt
     Untracked:  output/test.bv.txt
     Untracked:  output/test.gamma.txt
     Untracked:  output/test.hyp.txt
@@ -592,6 +598,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/e5e386d69a40ecf55be675cba3f105a52806fe36/analysis/index.Rmd" target="_blank">e5e386d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2024-02-21
+</td>
+<td>
+workflowr::wflow_publish("index.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/681a57b1a6fac832554625bf56ed4f5fd7199298/docs/index.html" target="_blank">681a57b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2023-11-11
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -3116,6 +3156,13 @@ simple 4- and 8-tip trees</a></li>
 data</a></li>
 <li><a href="flash_f1_size.html">Look at effect of size of first factor
 on flash</a></li>
+</ul>
+</div>
+<div id="irls" class="section level1">
+<h1>IRLS</h1>
+<ul>
+<li><a href="irls.html">implementation of irls for logistic
+regression</a></li>
 </ul>
 </div>
 
