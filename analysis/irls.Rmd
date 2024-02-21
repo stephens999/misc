@@ -19,7 +19,7 @@ I start by writing a function to fit a single vector x.
 The code is based on the IRLS algorithm for logistic regression, as described in the book "Elements of Statistical Learning" by Hastie, Tibshirani and Friedman (2009), section 4.4.1, written in a way that it makes it easy to vectorize/repeat over the columns of a matrix X via matrix multiplications. (See below)
 
 ```{r}
-logistic_IRLS_simple <- function(x, y, max_iter = 100, tolerance = 1e-6) {
+logistic_IRLS_simple <- function(x, y, max_iter = 100, tolerance = 1e-6, lambda=0) {
   # Initialize coefficients
   mu <- 0
   beta <- 0
@@ -40,7 +40,7 @@ logistic_IRLS_simple <- function(x, y, max_iter = 100, tolerance = 1e-6) {
     a = sum(w)
     b = sum(w*x)
     c = sum(w*x)
-    d = sum(w*x^2)
+    d = sum(w*x^2) + lambda
     
     wz = sum(w*z)
     wxz = sum(w*x*z)
@@ -70,11 +70,31 @@ Simulate a simple logistic regression:
 set.seed(1)
 n <- 10000
 x <- rnorm(n)
-eta <- 10 + 2*x
+eta <- 5 + 2*x
 pi <- exp(eta) / (1 + exp(eta))
 y <- rbinom(n, 1, pi)
 logistic_IRLS_simple(x, y)
 glm(y~x, family = binomial)
+```
+
+And compare with glmnet. Note that glmnet requires two variables so I add an intercept. One thing I don't understand: I tried setting "intercept=FALSE" but and not penalizing the intercept but it produced
+different results, which was unexpected.
+
+```{r}
+library(glmnet)
+fit = glmnet(cbind(rep(1,n),x), y, family="binomial",alpha=0, lambda=1/n)
+fit$beta
+logistic_IRLS_simple(x, y, lambda=1)
+
+fit = glmnet(cbind(rep(1,n),x), y, family="binomial",alpha=0, lambda=10/n)
+fit$beta
+logistic_IRLS_simple(x, y, lambda=10)
+
+
+fit2 = glmnet(cbind(rep(1,n),x), y, family="binomial",alpha=0, lambda=10/n, penalty.factor = c(0,1), intercept = FALSE)
+
+coef(fit2)
+coef(fit)
 ```
 
 
@@ -82,7 +102,7 @@ glm(y~x, family = binomial)
 
 I now write a function that repeats the above for all columns of X simultaneously via vector/matrix operations.
 ```{r}
-logistic_IRLS_simple_matrix <- function(X, y, max_iter = 100, tolerance = 1e-6) {
+logistic_IRLS_simple_matrix <- function(X, y, max_iter = 100, tolerance = 1e-6, lambda = 0) {
   # Initialize coefficients
   p <- ncol(X)
   mu <- rep(0,p)
@@ -104,7 +124,7 @@ logistic_IRLS_simple_matrix <- function(X, y, max_iter = 100, tolerance = 1e-6) 
     a = colSums(w)
     b = colSums(w*X)
     c = b
-    d = colSums(w*X^2)
+    d = colSums(w*X^2) + lambda
     
     wz = colSums(w*z)
     wxz = colSums(w*X*z)
