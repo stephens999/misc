@@ -1,0 +1,146 @@
+---
+title: "flashier_pbmc_purified"
+author: "Matthew Stephens"
+date: "2024-04-04"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+I run flashier (sparse EBNMF) on the purified pbmcs. I use some code from Eric Weine to plot the results.
+
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(purrr)
+library(stringr)
+library(Matrix)
+library(flashier)
+library(ggplot2)
+```
+
+Load the data (in a sparse matrix called counts)
+```{r}
+load("../data/pbmc_purified.RData")
+```
+
+```{r}
+lcounts = counts
+lcounts@x = log(counts@x + 1)
+```
+
+Run flashier
+```{r}
+fit1 = flash(lcounts,S = 0.01, ebnm_fn = ebnm_point_exponential, var_type = 2)
+saveRDS(fit1,file='../output/fit.nn.pbmc.purified.rds')
+```
+
+Note that the first factor is "intercept-like", capturing library size and some kind of background expression,
+```{r}
+plot(fit1$L_pm[,1],rowSums(lcounts),main="loadings for factor 1 vs rowSums of lcounts")
+```
+
+
+Here I am using Eric's code to plot a heatmap of the results, ordered by cell type
+```{r}
+FF_log1p = fit1$L_pm
+FF_log1p <- scale(FF_log1p, center = FALSE, scale = apply(FF_log1p, 2, max))
+colnames(FF_log1p) <- paste0("k", 1:ncol(FF_log1p))
+
+cell.type <- samples$celltype
+
+# Downsample the number of cells and sort them using tSNE.
+set.seed(8675309)
+cell.idx <- numeric(0)
+cell.types <- levels(cell.type)
+for (i in 1:length(cell.types)) {
+  which.idx <- which(cell.type == cell.types[i])
+  # Downsample common cell types.
+  if (length(which.idx) > 1250) {
+    which.idx <- sample(which.idx, 1250)
+  }
+  # Don't include rare cell types.
+  if (length(which.idx) > 20) {
+    # Sort using tsne.
+    tsne.res <- Rtsne::Rtsne(
+      FF_log1p[which.idx, ],
+      dims = 1,
+      pca = FALSE,
+      normalize = FALSE,
+      perplexity = min(100, floor((length(which.idx) - 1) / 3) - 1),
+      theta = 0.1,
+      max_iter = 1000,
+      eta = 200,
+      check_duplicates = FALSE
+    )$Y[, 1]
+    which.idx <- which.idx[order(tsne.res)]
+    cell.idx <- c(cell.idx, which.idx)
+  }
+}
+
+cell.type <- cell.type[cell.idx]
+cell.type <- droplevels(cell.type)
+
+FF_log1p <- FF_log1p[cell.idx, ]
+
+make.heatmap.tib <- function(FF) {
+  tib <- as_tibble(scale(FF, center = FALSE, scale = apply(FF, 2, max))) %>%
+    mutate(Cell.type = cell.type) %>%
+    arrange(Cell.type) %>%
+    mutate(Cell.idx = row_number())
+  
+  tib <- tib %>%
+    pivot_longer(
+      -c(Cell.idx, Cell.type),
+      names_to = "Factor",
+      values_to = "Loading",
+      values_drop_na = TRUE
+    ) %>%
+    mutate(Factor = as.numeric(str_extract(Factor, "[0-9]+")))
+  
+  return(tib)
+}
+
+log1p_tib <- make.heatmap.tib(FF_log1p)
+heatmap.tib = log1p_tib
+
+tib <- heatmap.tib %>%
+  group_by(Cell.type, Cell.idx) %>%
+  summarize()
+
+cell_type_breaks <- c(1, which(tib$Cell.type[-1] != tib$Cell.type[-nrow(tib)]))
+label_pos <- cell_type_breaks / 2 + c(cell_type_breaks[-1], nrow(tib)) / 2
+
+plt <- ggplot(heatmap.tib, aes(x = Factor, y = -Cell.idx, fill = Loading)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "firebrick") +
+  labs(y = "") +
+  scale_y_continuous(breaks = -label_pos,
+                     minor_breaks = NULL,
+                     labels = levels(cell.type)) +
+  scale_x_continuous(breaks = seq(0, 30, 5)) +
+  theme_minimal() +
+  geom_hline(yintercept = -cell_type_breaks, size = 0.1) +
+  theme(legend.position = "none", 
+        strip.text = element_text(size = 16)) 
+
+plt
+```
+
+List driving genes:
+```{r}
+for(k in 1:18){
+  print(paste0("factor ",k))
+  print(genes$symbol[order(fit1$F_pm[,k],decreasing =TRUE)[1:50]])
+}
+```
+
+I tried backfitting but it gave a memory error. We should look into that.
+```{r}
+#fit2 = flash_backfit(fit1)
+```
+
+
