@@ -298,7 +298,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2024-02-21
+<strong>Last updated:</strong> 2024-04-04
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -345,15 +345,15 @@ results.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreee5e386d69a40ecf55be675cba3f105a52806fe36targetblanke5e386da">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreea30976c080f925e5095b8b1d4abba79e072f0a81targetblanka30976ca">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/stephens999/misc/tree/e5e386d69a40ecf55be675cba3f105a52806fe36" target="_blank">e5e386d</a>
+<a href="https://github.com/stephens999/misc/tree/a30976c080f925e5095b8b1d4abba79e072f0a81" target="_blank">a30976c</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreee5e386d69a40ecf55be675cba3f105a52806fe36targetblanke5e386da"
+id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreea30976c080f925e5095b8b1d4abba79e072f0a81targetblanka30976ca"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -363,7 +363,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/stephens999/misc/tree/e5e386d69a40ecf55be675cba3f105a52806fe36" target="_blank">e5e386d</a>.
+<a href="https://github.com/stephens999/misc/tree/a30976c080f925e5095b8b1d4abba79e072f0a81" target="_blank">a30976c</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -387,6 +387,7 @@ Ignored files:
     Ignored:    data/.Rhistory
     Ignored:    data/methylation-data-for-matthew.rds
     Ignored:    data/pbmc/
+    Ignored:    data/pbmc_purified.RData
 
 Untracked files:
     Untracked:  .dropbox
@@ -449,6 +450,7 @@ Untracked files:
     Untracked:  analysis/samps/
     Untracked:  analysis/sc_bimodal.Rmd
     Untracked:  analysis/shrinkage_comparisons_changepoints.Rmd
+    Untracked:  analysis/susie_cov.Rmd
     Untracked:  analysis/susie_en.Rmd
     Untracked:  analysis/susie_z_investigate.Rmd
     Untracked:  analysis/svd-timing.Rmd
@@ -471,6 +473,7 @@ Untracked files:
     Untracked:  data/GDS5363_full.soft.gz
     Untracked:  data/GSE41265_allGenesTPM.txt
     Untracked:  data/Muscle_Skeletal.ACTN3.pm1Mb.RDS
+    Untracked:  data/P.rds
     Untracked:  data/Thyroid.FMO2.pm1Mb.RDS
     Untracked:  data/bmass.HaemgenRBC2016.MAF01.Vs2.MergedDataSources.200kRanSubset.ChrBPMAFMarkerZScores.vs1.txt.gz
     Untracked:  data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt
@@ -510,6 +513,7 @@ Untracked files:
     Untracked:  data/zscore_jointLCLs_random.rds
     Untracked:  explore_udi.R
     Untracked:  output/fit.k10.rds
+    Untracked:  output/fit.nn.pbmc.purified.rds
     Untracked:  output/fit.nn.rds
     Untracked:  output/fit.nn.s.001.rds
     Untracked:  output/fit.nn.s.01.rds
@@ -598,6 +602,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/a30976c080f925e5095b8b1d4abba79e072f0a81/analysis/index.Rmd" target="_blank">a30976c</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2024-04-04
+</td>
+<td>
+workflowr::wflow_publish("index.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/79fdd5d3fbc2ce5540069ae15e33c56a35d74cf0/docs/index.html" target="_blank">79fdd5d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2024-02-21
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -3143,6 +3181,8 @@ ridge regression</a></li>
 log-transformed data</a></li>
 <li><a href="sinkhorn.html">initial play with sinkhorn
 normalization</a></li>
+<li><a href="flashier_pbmc_purified.html">flashier on pbmc_purified
+data</a></li>
 </ul>
 </div>
 <div id="flash-drift" class="section level1">
