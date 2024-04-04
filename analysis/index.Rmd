@@ -131,6 +131,8 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 
 * [explore t test on log-transformed data](simple_transform_simulation.html)
 * [initial play with sinkhorn normalization](sinkhorn.html)
+* [flashier on pbmc_purified data](flashier_pbmc_purified.html)
+
 
 # flash-drift
 
