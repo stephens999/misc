@@ -134,13 +134,64 @@ List driving genes:
 ```{r}
 for(k in 1:18){
   print(paste0("factor ",k))
-  print(genes$symbol[order(fit1$F_pm[,k],decreasing =TRUE)[1:50]])
+  key = fit1$F_pm[,k]>1
+  vals = fit1$F_pm[key,k]
+  print(genes$symbol[key][order(vals,decreasing =TRUE)])
 }
 ```
 
-I tried backfitting but it gave a memory error. We should look into that.
+I tried backfitting but it gave a memory error. Setting extrapolate=FALSE fixes this 
+(apparently extrapolation makes a copy of some big things so uses more memory).
+
 ```{r}
-#fit2 = flash_backfit(fit1)
+fit2 = flash_backfit(fit1, extrapolate=FALSE)
+saveRDS(fit2,file='../output/fit2.nn.pbmc.purified.rds')
+```
+
+Same idea: plot the results using Eric's code
+
+```{r}
+FF_log1p = fit2$L_pm
+FF_log1p <- scale(FF_log1p, center = FALSE, scale = apply(FF_log1p, 2, max))
+colnames(FF_log1p) <- paste0("k", 1:ncol(FF_log1p))
+
+FF_log1p <- FF_log1p[cell.idx, ]
+
+
+log1p_tib <- make.heatmap.tib(FF_log1p)
+heatmap.tib = log1p_tib
+
+tib <- heatmap.tib %>%
+  group_by(Cell.type, Cell.idx) %>%
+  summarize()
+
+cell_type_breaks <- c(1, which(tib$Cell.type[-1] != tib$Cell.type[-nrow(tib)]))
+label_pos <- cell_type_breaks / 2 + c(cell_type_breaks[-1], nrow(tib)) / 2
+
+plt <- ggplot(heatmap.tib, aes(x = Factor, y = -Cell.idx, fill = Loading)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "firebrick") +
+  labs(y = "") +
+  scale_y_continuous(breaks = -label_pos,
+                     minor_breaks = NULL,
+                     labels = levels(cell.type)) +
+  scale_x_continuous(breaks = seq(0, 30, 5)) +
+  theme_minimal() +
+  geom_hline(yintercept = -cell_type_breaks, size = 0.1) +
+  theme(legend.position = "none", 
+        strip.text = element_text(size = 16)) 
+
+plt
+```
+
+List driving genes:
+```{r}
+for(k in 1:18){
+  print(paste0("factor ",k))
+  key = fit2$F_pm[,k]>1
+  vals = fit2$F_pm[key,k]
+  print(genes$symbol[key][order(vals,decreasing =TRUE)])
+}
 ```
 
 
