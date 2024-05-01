@@ -109,6 +109,12 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 * [selective inference with correlated variables](selective_inference.html)
 * [hierarchical inference example](hierinf_toyexample.html)
 
+
+# Logistic regression
+
+* [Logistic regression z scores decrease as effect size increases](logistic_z_scores.html)
+
+
 # LD score regression
 
 * [An initial look at XtX (Sigma)^{-1}](ldsr_01.html)
