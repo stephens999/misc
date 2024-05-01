@@ -1,0 +1,108 @@
+---
+title: "logistic_z_scores"
+author: "Matthew Stephens"
+date: "2024-05-01"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+library(ggplot2)
+library(dplyr)
+set.seed(1)
+```
+
+## Introduction
+
+I want to document an unexpected phenomena I saw when computing z score for logistic regression: when the effect size increases the z scores eventually start decreasing.
+
+## Simulation code 
+
+First I set up some simulation code for simple logistic regression.
+We have $x_i \sim N(0,1)$ and $y_i \sim Bernoulli(\frac{e^{x_i b}}{1+e^{x_i b}})$. I set up this code to do some comparisons between
+linear and logistic regression, so it returns more things than we need here.
+
+```{r}
+#' simulate data and return dataframe of results from linear and logistic regression
+#' @param n sample size
+#' @param b effect size
+#' @param nsim number of simulations
+simdata = function(n,b,binarize_x=FALSE){
+  x = rnorm(n)
+  if(binarize_x){
+    x = (x > 0) - ( x < 0 )
+  }
+  y = rbinom(n, 1, exp(x*b)/(1+exp(x*b)))
+  coeff.log = summary(glm(y ~ x, family=binomial))$coef
+  coeff.lin = summary(glm(y ~ x, family=gaussian))$coef
+  z.log = coeff.log[2,3] # z score
+  bhat.log = coeff.log[2,1] # estimated effect size
+  s.log = coeff.log[2,2] # standard error
+  z.lin = coeff.lin[2,3] # z score
+  s.lin = coeff.lin[2,2]
+  bhat.lin = coeff.lin[2,1]
+  
+  # these are the normal log-likelihood ratios
+  nllr.lin = dnorm(bhat.lin,mean = bhat.lin, sd = s.lin, log=TRUE)-dnorm(bhat.lin, mean = 0, sd = s.lin,log=TRUE)
+  nllr.log = dnorm(bhat.log,mean = bhat.log, sd = s.log, log=TRUE)-dnorm(bhat.log, mean = 0, sd = s.log,log=TRUE)
+  
+  # these are the logistic/binomial log-likelihood ratios
+  llr.lin = sum(dbinom(y, size=1, prob=1/(1+exp(-x*bhat.lin)), log=TRUE) - dbinom(y, size=1, prob=0.5, log=TRUE))
+  
+  llr.log = sum(dbinom(y, size=1, prob=1/(1+exp(-x*bhat.log)), log=TRUE) - dbinom(y, size=1, prob=0.5, log=TRUE))
+  
+  return(data.frame(n=n, b=b, z.log=z.log, s.log=s.log, bhat.log=bhat.log, z.lin=z.lin, s.lin=s.lin, bhat.lin=bhat.lin, nllr.lin = nllr.lin, nllr.log = nllr.log, llr.lin = llr.lin, llr.log = llr.log))
+}
+
+dsimdata = function(design){
+  design %>% rowwise() %>% mutate(simdata(n,b))
+}
+
+```
+
+## Simulate Data
+
+I simulate data with two different sample sizes and effect sizes that are
+$b \sim N(0,sd=2)$. The z scores increase with b, but then start to decrease. 
+
+```{r}
+sim1 = dsimdata(data.frame(n=1000,b=rnorm(50,0,2)))
+sim2 = dsimdata(data.frame(n=10000,b=rnorm(50,0,2)))
+sim3 = dsimdata(data.frame(n=100000,b=rnorm(50,0,2)))
+ggplot(rbind(sim1,sim2,sim3), 
+       mapping = aes(b, z.log)) +
+  geom_point(mapping = aes(color = b, shape=as.factor(n))) + 
+   ylab("z score (logistic regression)")
+```
+
+### Try binary x
+
+I repated this with binary x to see if it changes things. It seems to be the same story. 
+
+```{r}
+sim1b = dsimdata(data.frame(n=1000,b=rnorm(50,0,2), binarize_x = TRUE))
+sim2b = dsimdata(data.frame(n=10000,b=rnorm(50,0,2), binarize_x = TRUE))
+sim3b = dsimdata(data.frame(n=100000,b=rnorm(50,0,2), binarize_x = TRUE))
+ggplot(rbind(sim1b,sim2b,sim3b), 
+       mapping = aes(b, z.log)) +
+  geom_point(mapping = aes(color = b, shape=as.factor(n))) +
+  ylab("z score (logistic regression)")
+```
+
+
+### Single simulation 
+
+Just to emphasize: this phenomena seems not to be related to problems of separation or even small counts, since it occurs even with large n at  moderate b.
+
+Here is a single simulation to illustrate that we have large counts in all four groups when n=100k and b=2.5.
+```{r}
+n = 100000
+b = 2.5
+x = rnorm(n)
+x = (x>0) - (x<0) # binarize x
+y = rbinom(n, 1, exp(x*b)/(1+exp(x*b)))
+table(x,y)
+```
+
+
