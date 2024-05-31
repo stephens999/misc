@@ -1,0 +1,92 @@
+---
+title: "tree_ebcd"
+author: "Matthew Stephens"
+date: "2024-05-31"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+I want to understand what the EBCD solution for $Z$ looks like in the case of a tree (where factors in $L$ are linearly dependent), and compare it with the "ridgeless regression" solution (ridge regression with a very small penalty). I also look at orthogonalizing the ridgeless regression solution. It turns out that the orthogonal estimates are considerably further from the true values than the ridgeless solution.
+
+It makes me want to reassess the possibility of doing a version of EBMF with sparse prior on L and normal prior on Z, integrating out $Z$ (jointly across all factors) by exploiting the fact that p(Z|L,X) is analytically available for a normal prior on Z.
+That is, something like a variational approximation of the form q(L,Z) = q(l1)...q(lk) q(Z). I think Jason Willwerscheid 
+
+
+
+## Background
+
+The EBCD model is $X=ZL' + E$ where $X$ is $p \times n$, $Z$ is $p \times k$, and $L$ is $n \times k$, and $Z'Z=I_k$ and the error matrix $E$ has constant error terms.
+
+Given $L$ the EBCD solution is $\hat{Z} = Polar.U(XL)$. 
+
+Also, given $L$ the ridgeless regression solution is $\hat{Z} = (XL)(L'L + \lambda I)^{-1}$ with $\lambda \to 0$.
+
+Here I compute these estimates on simulated data.
+
+## Simulate data
+
+```{r}
+# set up L to be a tree with 4 tips and 7 branches (including top shared branch)
+set.seed(1)
+L = cbind(c(1,1,1,1),c(1,1,0,0),c(0,0,1,1),diag(4))
+p = 1000
+Z = matrix(rnorm(7*p)/sqrt(p),ncol=7)
+X = Z %*% t(L)
+```
+
+Now let's compute the EBCD solution for $Z$ given $L$.
+```{r}
+Polar.U = function(X) {
+  svdX = svd(X)
+  U = svdX$u
+  V = svdX$v
+  Z = U %*% V
+  return(Z)
+}
+
+Zhat_EBCD = Polar.U(X %*% L)
+```
+
+And the ridgeless regression solution for $Z$ given $L$. I use $lambda=1e-6$.
+```{r}
+Zhat_ridgeless = X %*% L %*% solve(t(L) %*% L + 1e-6*diag(7)) 
+```
+
+Now let's compare the two solutions.
+```{r}
+plot(Zhat_EBCD,Zhat_ridgeless)
+```
+
+We can also orthogonalize the ridgeless solution:
+```{r}
+plot(Zhat_EBCD,Polar.U(Zhat_ridgeless))
+```
+
+## Comparison with true $Z$
+
+Compare the estimates with the truth, it is clear that the orthogonal solutions are not as close to the truth as the (non-orthogonal) ridgeless solution.
+```{r}
+plot(Z,Zhat_EBCD)
+plot(Z,Zhat_ridgeless)
+plot(Z,Polar.U(Zhat_ridgeless))
+```
+
+## Estimates of $L$ from estimated $Z$
+
+The maximum likelihood estimate for $L$ is $X'Z(Z'Z)^-1$, or just $X'Z$ for the case where $Z$ is orthogonal. We can see that the estimates for $L$ from these estimated $Z$s are very different from the true $L$. 
+```{r}
+t(X) %*% Z # use true Z for comparison
+t(X) %*% Zhat_EBCD
+t(X) %*% Polar.U(Zhat_ridgeless)
+```
+
+The use of Zhat_ridgeless directly gives a good estimate of $L$ (the MLE from Zhat_ridgeless gives essentially the exact answer, presumably because it is just inverting the process that gave Zhat_ridgeless).
+```{r}
+t(X) %*% Zhat_ridgeless 
+t(X) %*% Zhat_ridgeless %*% solve(t(Zhat_ridgeless) %*% Zhat_ridgeless + 1e-6*diag(7))
+```
+
+
