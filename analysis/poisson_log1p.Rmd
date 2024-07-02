@@ -1,0 +1,87 @@
+---
+title: "poisson_log1p"
+author: "Matthew Stephens"
+date: "2024-07-02"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+I wanted to look at normal approximation to the Poisson log-likelihood with the log1p link.
+
+The model is:
+$$Y \sim Poisson(\lambda)$$
+
+$$\log(1+\lambda) = b, (b>0)$$
+So 
+$$Y | b \sim Poisson(\exp(b)-1)$$
+The log-likelihood is 
+$$l(b) = Y \log(\exp(b)-1) - (\exp(b)-1)$$
+The derivative of the log-likelihood is
+$$l'(b) = Y \frac{\exp(b)}{\exp(b)-1} - \exp(b)$$
+The second derivative of the log-likelihood is
+$$l''(b) = Y \frac{-exp(b)}{(\exp(b)-1)^2} - \exp(b) = -exp(b)(Y/(exp(b)-1)^2 + 1)$$
+
+Writing the RHS in terms of $\lambda = exp(b)-1$ we have
+$$l''(b) = -(\lambda+1)[Y/\lambda^2 + 1]$$
+Also the mle for b is $\hat{b} = log(1+Y)$
+
+This suggests the normal approximation to the likelihood of
+$l(b) \approx N(b; \hat{b}, s^2)$
+where $$s^2 = -1/l''(\hat{b}) = 1/(\hat{\lambda}+1)[Y/\hat{\lambda}^2 + 1] = 1/(Y+1)(1/Y+1)=Y/(1+Y)^2 \quad (Y>0)$$
+and $s^2 = 1$ for $Y=0$.
+
+
+# Plots
+
+First we plot the log-likelihood for $Y=1$ as a function of $b$.
+Then we overlay the normal approximation to the log-likelihood for $Y=1$.
+
+```{r}
+b = seq(0,3,length=100)
+loglik = function(b,Y) {
+  if(Y==0){
+    return(-(exp(b)-1))} 
+  else 
+    return(Y*log(exp(b)-1) - (exp(b)-1))
+}
+
+y = 1
+ll = loglik(b,y)
+plot(b,ll-max(ll),type="l",xlab="b",ylab="log-likelihood",main="log-likelihood for Y=1")
+s2 = y/(1+y)^2
+bhat = log(y+1)
+ll_approx = dnorm(b,bhat,sqrt(s2),log=TRUE)
+lines(b,ll_approx-max(ll_approx),col="red")
+```
+
+Do the same for $y=2$:
+```{r}
+y = 2
+ll = loglik(b,y)
+plot(b,ll-max(ll),type="l",xlab="b",ylab="log-likelihood",main="log-likelihood for Y=2")
+s2 = y/(1+y)^2
+bhat = log(y+1)
+ll_approx = dnorm(b,bhat,sqrt(s2),log=TRUE)
+lines(b,ll_approx-max(ll_approx),col="red")
+```
+
+For $Y=0$ we see a problem: the derivative of the log-likelihood does not vanish at $b=0$ (it is -1). So we need to modify the normal approximation to be $N(-1,1)$ rather than $N(0,1)$.
+
+```{r}
+b = seq(0,1,length=100)
+y = 0
+ll = loglik(b,y)
+plot(b,ll-max(ll),type="l",xlab="b",ylab="log-likelihood",main="log-likelihood for Y=0")
+s2 = 1
+bhat = -1
+ll_approx = dnorm(b,bhat,sqrt(s2),log=TRUE)
+
+lines(b,ll_approx-max(ll_approx),col="red")
+```
+
+
+
+
