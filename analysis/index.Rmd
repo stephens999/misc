@@ -149,6 +149,9 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 * [Eigen-decomposition applied to some simple 4- and 8-tip trees](tree_pca_02.html)
 * [Apply sparsepca and flash to some tree data](tree_pca_03.html)
 * [Look at effect of size of first factor on flash](flash_f1_size.html)
+* [Flash-cov on overlapping groups](flash_cov_overlapping_groups.html)
+* [A look at estimates of the latent factors on trees](tree_ebcd.html)
+
 
 # IRLS
 
