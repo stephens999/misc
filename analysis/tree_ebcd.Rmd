@@ -11,8 +11,11 @@ editor_options:
 
 I want to understand what the EBCD solution for $Z$ looks like in the case of a tree (where factors in $L$ are linearly dependent), and compare it with the "ridgeless regression" solution (ridge regression with a very small penalty). I also look at orthogonalizing the ridgeless regression solution. It turns out that the orthogonal estimates are considerably further from the true values than the ridgeless solution.
 
-It makes me want to reassess the possibility of doing a version of EBMF with sparse prior on L and normal prior on Z, integrating out $Z$ (jointly across all factors) by exploiting the fact that p(Z|L,X) is analytically available for a normal prior on Z.
-That is, something like a variational approximation of the form q(L,Z) = q(l1)...q(lk) q(Z). I think Jason Willwerscheid 
+This result made me reassess the possibility of doing a version of EBMF with sparse prior on L and normal prior on Z, integrating out $Z$ (jointly across all factors) by exploiting the fact that p(Z|L,X) is analytically available for a normal prior on Z.
+That is, something like a variational approximation of the form q(L,Z) = q(l1)...q(lk) q(Z). I realized that we have essentially done this in Joe Marcus's thesis work flash-drift (it is also closely related to
+Bishop's original variational PCA work). On looking at flash-drift again I now believe that it provides a covariance decomposition (and the result depends on the data only through XX'), which I think I had not realized before. I think we should go back and
+assess flash-drift more carefully, and include it in any comparisons of covariance decomposition methods.
+
 
 
 
