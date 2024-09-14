@@ -378,7 +378,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2024-05-31
+<strong>Last updated:</strong> 2024-09-14
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -509,15 +509,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree23a05b58e02720d6628539e7310ae4ab65982942targetblank23a05b5a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree596ea6a74a9d19d16f36ca163a6ffa99882ec036targetblank596ea6aa">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/stephens999/misc/tree/23a05b58e02720d6628539e7310ae4ab65982942" target="_blank">23a05b5</a>
+<a href="https://github.com/stephens999/misc/tree/596ea6a74a9d19d16f36ca163a6ffa99882ec036" target="_blank">596ea6a</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree23a05b58e02720d6628539e7310ae4ab65982942targetblank23a05b5a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree596ea6a74a9d19d16f36ca163a6ffa99882ec036targetblank596ea6aa"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -527,7 +527,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/stephens999/misc/tree/23a05b58e02720d6628539e7310ae4ab65982942" target="_blank">23a05b5</a>.
+<a href="https://github.com/stephens999/misc/tree/596ea6a74a9d19d16f36ca163a6ffa99882ec036" target="_blank">596ea6a</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -721,6 +721,7 @@ Unstaged changes:
     Modified:   .gitignore
     Modified:   analysis/flashier_log1p.Rmd
     Modified:   analysis/flashier_sla_text.Rmd
+    Modified:   analysis/index.Rmd
     Modified:   analysis/logistic_z_scores.Rmd
     Modified:   analysis/mr_ash_pen.Rmd
     Modified:   analysis/susie_flash.Rmd
@@ -774,6 +775,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/596ea6a74a9d19d16f36ca163a6ffa99882ec036/analysis/tree_ebcd.Rmd" target="_blank">596ea6a</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2024-09-14
+</td>
+<td>
+workflowr::wflow_publish("analysis/tree_ebcd.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/7ee00c03db2efef0ade06b4ce680b5b7a8fdc2da/docs/tree_ebcd.html" target="_blank">7ee00c0</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2024-05-31
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/23a05b58e02720d6628539e7310ae4ab65982942/analysis/tree_ebcd.Rmd" target="_blank">23a05b5</a>
 </td>
 <td>
@@ -803,12 +838,19 @@ dependent), and compare it with the “ridgeless regression” solution
 orthogonalizing the ridgeless regression solution. It turns out that the
 orthogonal estimates are considerably further from the true values than
 the ridgeless solution.</p>
-<p>It makes me want to reassess the possibility of doing a version of
+<p>This result made me reassess the possibility of doing a version of
 EBMF with sparse prior on L and normal prior on Z, integrating out <span
 class="math inline">\(Z\)</span> (jointly across all factors) by
 exploiting the fact that p(Z|L,X) is analytically available for a normal
 prior on Z. That is, something like a variational approximation of the
-form q(L,Z) = q(l1)…q(lk) q(Z). I think Jason Willwerscheid</p>
+form q(L,Z) = q(l1)…q(lk) q(Z). I realized that we have essentially done
+this in Joe Marcus’s thesis work flash-drift (it is also closely related
+to Bishop’s original variational PCA work). On looking at flash-drift
+again I now believe that it provides a covariance decomposition (and the
+result depends on the data only through XX’), which I think I had not
+realized before. I think we should go back and assess flash-drift more
+carefully, and include it in any comparisons of covariance decomposition
+methods.</p>
 </div>
 <div id="background" class="section level2">
 <h2>Background</h2>
@@ -856,9 +898,83 @@ class="math inline">\(lambda=1e-6\)</span>.</p>
 <p>Now let’s compare the two solutions.</p>
 <pre class="r"><code>plot(Zhat_EBCD,Zhat_ridgeless)</code></pre>
 <p><img src="figure/tree_ebcd.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-1">
+Past versions of unnamed-chunk-4-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/7ee00c03db2efef0ade06b4ce680b5b7a8fdc2da/docs/figure/tree_ebcd.Rmd/unnamed-chunk-4-1.png" target="_blank">7ee00c0</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2024-05-31
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>We can also orthogonalize the ridgeless solution:</p>
 <pre class="r"><code>plot(Zhat_EBCD,Polar.U(Zhat_ridgeless))</code></pre>
 <p><img src="figure/tree_ebcd.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-1">
+Past versions of unnamed-chunk-5-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/7ee00c03db2efef0ade06b4ce680b5b7a8fdc2da/docs/figure/tree_ebcd.Rmd/unnamed-chunk-5-1.png" target="_blank">7ee00c0</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2024-05-31
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="comparison-with-true-z" class="section level2">
 <h2>Comparison with true <span class="math inline">\(Z\)</span></h2>
@@ -867,10 +983,121 @@ solutions are not as close to the truth as the (non-orthogonal)
 ridgeless solution.</p>
 <pre class="r"><code>plot(Z,Zhat_EBCD)</code></pre>
 <p><img src="figure/tree_ebcd.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-1">
+Past versions of unnamed-chunk-6-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/7ee00c03db2efef0ade06b4ce680b5b7a8fdc2da/docs/figure/tree_ebcd.Rmd/unnamed-chunk-6-1.png" target="_blank">7ee00c0</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2024-05-31
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>plot(Z,Zhat_ridgeless)</code></pre>
 <p><img src="figure/tree_ebcd.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-2">
+Past versions of unnamed-chunk-6-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/7ee00c03db2efef0ade06b4ce680b5b7a8fdc2da/docs/figure/tree_ebcd.Rmd/unnamed-chunk-6-2.png" target="_blank">7ee00c0</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2024-05-31
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>plot(Z,Polar.U(Zhat_ridgeless))</code></pre>
 <p><img src="figure/tree_ebcd.Rmd/unnamed-chunk-6-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-3">
+Past versions of unnamed-chunk-6-3.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/7ee00c03db2efef0ade06b4ce680b5b7a8fdc2da/docs/figure/tree_ebcd.Rmd/unnamed-chunk-6-3.png" target="_blank">7ee00c0</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2024-05-31
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="estimates-of-l-from-estimated-z" class="section level2">
 <h2>Estimates of <span class="math inline">\(L\)</span> from estimated
