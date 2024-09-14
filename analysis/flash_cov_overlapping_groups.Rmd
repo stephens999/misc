@@ -1,0 +1,156 @@
+---
+title: "flash_cov_overlapping_groups"
+author: "Matthew Stephens"
+date: "2024-07-31"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+I wanted to examine how applying flash to gram matrix works in some simple simulations involving overlapping groups (L is binary, F is normal). I simulate binary factors, and use point-exponential priors.
+The results are somewhat promising (after back-fitting). Even when it doesn't separate the groups, each factor captures a small number of groups. It suggests one could maybe do some post-processing/follow up to try to split these compound factors into multiple factors, one for each group.
+
+## Three overlapping groups
+
+I simulate some data with 3 overlapping groups, each containing a random
+1/10 of the observations (so the groups do not overlap too much).
+I start with very little noise.
+
+```{r}
+set.seed(1)
+library(flashier)
+n = 100
+p = 1000
+k = 3
+L= matrix(rbinom(k*n,1,0.1),nrow=n)
+F = matrix(rnorm(k*p),nrow=p)
+X = L %*% t(F) + rnorm(n*p,0,0.001)
+plot(rowSums(L))
+```
+
+I fit with both greedy and backfitting:
+```{r}
+fit = flash(X %*% t(X), ebnm_fn = ebnm_point_exponential)
+fit.bf = flash(X %*% t(X), ebnm_fn = ebnm_point_exponential, backfit =TRUE)
+```
+
+The greedy fit starts by initially picking out multiple groups (it is strongly correlated with how many groups each sample is in):
+```{r}
+plot(rowSums(L),fit$L_pm[,1])
+```
+
+But the backfitting helps fix this: now the estimated L is almost binary and picks out the groups correctly (groups 2 and 3 are switched):
+```{r}
+plot(rowSums(L), fit.bf$L_pm[,1])
+plot(L[,1],fit.bf$L_pm[,1])
+plot(L[,2],fit.bf$L_pm[,3])
+plot(L[,3],fit.bf$L_pm[,2])
+```
+
+Try point laplace to see what happens. In this case it basically explains everything with 2 factors (3rd factor has small contribution) and the first factor is capturing the number of groups - backfitting does not work as with point exponential here.
+```{r}
+fit.pl.bf = flash(X %*% t(X), ebnm_fn = ebnm_point_laplace, backfit =TRUE)
+fit.pl.bf
+plot(rowSums(L),fit.pl.bf$L_pm[,1])
+```
+
+
+
+## 10 overlapping groups
+
+Now I try something more challenging with 10 groups:
+```{r}
+set.seed(1)
+k=10
+L= matrix(rbinom(k*n,1,0.1),nrow=n)
+F = matrix(rnorm(k*p),nrow=p)
+X = L %*% t(F) + rnorm(n*p,0,0.001)
+plot(rowSums(L))
+```
+
+Fit greedy and backfitting:
+```{r}
+fit = flash(X %*% t(X), ebnm_fn = ebnm_point_exponential)
+fit.bf = flash(X %*% t(X), ebnm_fn = ebnm_point_exponential, backfit =TRUE)
+```
+
+Even with backfitting, some of the groups are put into the same factors (it uses 6 factors for 10 groups); maybe not suprising because the prior allows non-binary factors which can capture binary things...
+```{r}
+par(mfcol=c(2,3))
+for(i in 1:6){
+  plot(fit.bf$L_pm[,i])
+}
+```
+
+Examining the correlations of each factor with each group, we see the 6 inferred factors collectively pick out 10 groups, and each one picks out 1-3 groups, as follows: 
+
+factor | group
+
+1 | 3,7,8
+
+2 | 5
+
+3 | 6,10
+
+4 | 1,2
+
+5 | 9
+
+6 | 4
+
+```{r}
+cor(L, fit.bf$L_pm)
+```
+
+## Hierarchical groups
+
+One thing I wondered: we found that it was helpful for trees to seek a divergence factorization before the drift factorization, but now I'm not entirely clear why this is. (I have some vague justifications, including the fact that the resulting L vectors are closer to orthogonal, but overall I'm not really sure why point-exponential does not work so well). So here I try the point exponential with hierarchical groups.
+
+
+I generate some splits 
+```{r}
+k = 6
+set.seed(1)
+l1 = rep(c(1,0),c(n/2,n/2))
+l2 = rep(c(0,1),c(n/2,n/2))
+l3 = rep(c(1,0,0,0),c(n/4,n/4,n/4,n/4))
+l4 = rep(c(0,1,0,0),c(n/4,n/4,n/4,n/4))
+l5 = rep(c(0,0,1,0),c(n/4,n/4,n/4,n/4))
+l6 = rep(c(0,0,0,1),c(n/4,n/4,n/4,n/4))
+L = cbind(l1,l2,l3,l4,l5,l6)
+F = matrix(rnorm(k*p),nrow=p)
+X = L %*% t(F) + rnorm(n*p,0,0.001)
+fit = flash(X %*% t(X),ebnm_fn = ebnm_point_exponential, backfit=TRUE )
+```
+
+We see that the fit stops after 2 factors. Here I plot the image of the residuals. Green is negative numbers and red is positive.
+```{r}
+normalize = function(x){x/max(abs(x))}
+image( normalize(residuals(fit)), levels=seq(-1,1,length=21),
+      col= rgb(red = c(seq(0,1,length=10),1,rep(1,length=10)), 
+               green = c(rep(1,length=10),1,seq(1,0,length=10)), 
+               blue = c(seq(0,1,length=10),1,seq(1,0,length=10))) )
+```
+
+We see the problem: essentially flash removes "too much" of the top branch, and can't recover because of the non-negative constraint
+(and, possibly, an over-estimated residual variance?). Indeed, it seems the power method which is used to initialize does not find a non-negative initial vector. This seems like a useful case study to try to fix. 
+
+I tried fixing the residual variance to see if it helped, but no luck:
+```{r}
+fit = flash(X %*% t(X),ebnm_fn = ebnm_point_exponential, backfit=TRUE, var_type = NULL, S = 0.001 )
+```
+
+Try point Laplace: it also doesn't work here (doesn't find sparse solutions) perhaps because the small residual variance makes the fitting sticky, and the initializations are not sparse enough?
+```{r}
+fit = flash(X %*% t(X),ebnm_fn = ebnm_point_laplace, backfit=TRUE)
+plot(fit$L_pm[,1])
+plot(fit$L_pm[,2])
+plot(fit$L_pm[,3])
+plot(fit$L_pm[,4])
+```
+
+I feel we might want to invest more in some simple ways to find sparse initial solutions to initialize flashier with - eg using an L1 penalty and computing the full solution path? (We could implement L1 penalty both for the data matrix X and the covariance matrix XtX?) We also need to understand the implications of over-removing the top branch and maybe somehow to fix that. Maybe ideas related to nonnegative matrix under-approximation,
+or to neighbor-joining (which has to work out how to collapse two nodes into a single node) can help? Something to think about: in a tree, does it help to find the sparsest factors first, rather than the top branch, more similar to neighbor joining?
+
