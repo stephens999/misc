@@ -151,7 +151,7 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 * [Look at effect of size of first factor on flash](flash_f1_size.html)
 * [Flash-cov on overlapping groups](flash_cov_overlapping_groups.html)
 * [A look at estimates of the latent factors on trees](tree_ebcd.html)
-
+* [Outline of a method for building trees topdown using flash](flash_tree.html)
 
 # IRLS
 
