@@ -1,0 +1,44 @@
+---
+title: "flash_tree"
+author: "Matthew Stephens"
+date: "2020-08-03"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+I wanted to outline the idea of applying flash to infer a tree-like structure.
+
+
+Suppose we have a function
+`flash_1pc(X,w)` that takes as input an $n \times p$ matrix $X$ and 
+an $n$-vector of weights $w$ and produces a variational fit to the following model:
+$$X_{ij} = w_i(\mu_j + l_i f_j) + e_{ij}$$
+with $l_i \sim g_l()$ and $f_j \sim N(0,\sigma^2_f)$ (or maybe more general $g_f()$), and $e_{ij} \sim N(0,\sigma^2)$.
+
+
+By a fit we mean at least estimates $\hat{\mu},\hat{l},\hat{f}$, and possibly estimates $\hat{g}_l,\hat{\sigma}, \hat{\sigma_l}$. 
+For convenience we also assume that it returns a matrix of expected residuals $R_{ij} = X_{ij}-w_i(\hat{\mu}_j+\hat{l}_i \hat{f}_j)$.
+
+Now  consider applying this function recursively as follows:
+```
+flash_tree = function(X,w){
+  if(w==0) return(list(fit_pc=NULL, fit_neg=NULL, fit_pos = NULL)) # end recursion
+  
+  fit_pc = flash_1pc(X,w)
+  w = w * fit_pc$EL
+  w_pos = ifelse(w>0, w, 0) # set nnegative weights to 0
+  w_neg = ifelse(w<0, -w, 0) # set non-negative weights to 0, and make negative weights positive
+  
+  fit_pos = flash_tree(fit_pc$R,w_pos)
+  fit_neg = flash_tree(fit_pc$R,w_neg)
+  return(list(fit_pc = fit_pc, fit_neg = fit_neg, fit_pos = fit_pos))
+}
+```
+
+$$Tree(X,w) = 1\mu + l_+ (f_+' + Tree(R, w=l_+)) + l_- (f_-' + Tree(R, w=l_-))$$
+The recursion ends at tips where the tree fit yields $\hat{g}_l==\delta_0,\hat{l}==0$.
+
+
