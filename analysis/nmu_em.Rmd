@@ -9,16 +9,15 @@ editor_options:
 
 ## Introduction
 
-My goal is to fit a version of the non-negative matrix underapproximation using an EM algorithm.  
+My goal is to fit a version of the non-negative matrix underapproximation using an EM algorithm. 
 
-The model is:
-$$A \sim uv' + b + e$$
-where $b \sim Exp(\lambda)$ and $e \sim N(0,sigma^2)$.
-Or in other words, $A \sim N(uv' + b,\sigma^2)$. If $\sigma^2=0$ then the mle for u,v should be a feasible solution to the underapproximation problem. Introducing $\sigma$ allows us to implement an EM algorithm. 
+The model for a data matrix $A$ is:
+$$A = uv' + b + e$$
+where $b_{ij} \sim Exp(\lambda)$, $e_{ij} \sim N(0,sigma^2)$, and $u,v$ are non-negative vectors to be estimated. Alternatively we could write $A \sim N(uv' + b,\sigma^2)$. 
 
-More generally, the intuition is that if $sigma^2$ is very small (compared with $1/\lambda$) then this will approximately solve (a version of) the non-negative matrix underapproximation problem. If $1/\lambda$ is very small compared with $\sigma$ then it will be closer to regular NMF.
+If $\sigma^2=0$ then the mle for $u,v$ (integrating out $b,e$) should be a feasible solution to the underapproximation problem. However, introducing $\sigma>0$ is useful because it allows us to implement an EM algorithm. If $sigma^2$ is very small (compared with $1/\lambda$) then this will approximately solve (a version of) the non-negative matrix underapproximation problem. On the other hand, if $1/\lambda$ is very small compared with $\sigma$ then it will be closer to regular NMF.
 
-NOTE: we could even use this idea within flashier to put priors on u and v...
+NOTE: We could potentially use this idea within flashier to put priors on $u$ and $v$. Also, for modelling a symmetric matrix $A$ we could instead fit $A \sim N(uu'+b, \sigma^2)$. 
 
 The ELBO is
 $$F(u,v,q)= E_q((-1/2\sigma^2)||A-uv'-b||_2^2) + D_{KL}(q,g)$$
@@ -26,45 +25,27 @@ where $g$ is the prior on $b$,
 $$g(b)=\lambda \exp(-\lambda b).$$
 Here $q$ plays the role of the (approximate) posterior distribution on $b$.
 
-Given $q$, this is minimized for $u,v$ by solving 
-$$\min_{u,v} ||A-\bar{b} - uv'||_2^2$$
-For now we will do this approximately, by thresholding the rank 1 svd of $A-\bar{b}$. NOTE: I do this currently by thresholding udv'; I could instead try thresholding u and v (which is more in keeping with requiring them to be non-negative) and should probably try that later.
+Given $q$, the ELBO is minimized for $u,v$ by solving 
+$$\min_{u,v} ||A-\bar{b} - uv'||_2^2.$$ Alternatively, any step that reduces this objective function will increase the ELBO. Here we will apply the truncated power method to achieve this.
 
-Given $u,v$ this is minimized by for each $b_{ij}$ by solving
+Given $u,v$ the ELBO is minimized by for each $b_{ij}$ by solving
 $$q(b) \propto g(b) \exp((-1/2\sigma^2)(x_{ij}-b)^2) \propto \exp((-1/2\sigma^2)[b^2-2(x_{ij}-\lambda \sigma^2)b])$$
 where $x_{ij} = A_ij - u_i v_j$. This is a truncated normal distribution, 
 $$  q(b_{ij}) = N_+(x_{ij}-\lambda \sigma^2, \sigma^2)$$.
+Fortunately, the mean of this distribution is easily computed.
 
-Example:
-Suppose $\sigma$ is very small. Suppose $x=-0.5$, and we have $x \sim N(b,\sigma^2)$ and $b \sim Exp(1)$. 
+Note: if $\sigma$ is very small then the mean of this truncated normal looks close to $(x)_+$.
 ```{r}
-  x=-0.5
-  b = seq(0,1,length=100)
-  logprior = dexp(b,log=TRUE)
-  loglik = dnorm(-0.5,b,sd=1,log=TRUE)
-  plot(exp(logprior+loglik))
-  
-  loglik = dnorm(-0.5,b, sd=0.1, log=TRUE)
-  plot(exp(logprior+loglik))
-  
-
-  sigma=1  
-  x = seq(-0.5,0.5,length=20)
-  plot(x,truncnorm::etruncnorm(0,Inf,x-sigma^2,sigma))
-  
   sigma=0.01  
   x = seq(-0.5,0.5,length=20)
   plot(x,truncnorm::etruncnorm(0,Inf,x-sigma^2,sigma))
-  
-  
 ```
 
 
+## Implementation (symmetric A)
 
 
-### Approach 1: thresholding M
-
-Let's try. First I simulate some data for testing -
+I'm going to try the symmetric case ($A$ symmetric; $u=v$). First I simulate some non-negative data for testing. A is a block covariance matrix of 0s and 1s plus non-negative noise.
 ```{r}
 set.seed(1)
 n = 10
@@ -73,199 +54,80 @@ x = cbind(c(rep(1,n),rep(0,n)), c(rep(0,n),rep(1,n)))
 E = matrix(0.1*rexp(2*n*2*n),nrow=2*n)
 E = E+t(E) #symmetric errors
 A = x %*% t(x) + E
-
-
+image(A)
 ```
 
-This is a first try with lambda=sigma=1. This didn't do exactly what I wanted (which is an under-approximation), but maybe not surprising as lambda and sigma are similar.
-```{r}
-lambda = 1
-sigma = 1
-b = matrix(0,nrow=nrow(A),ncol=ncol(A))
 
-for(i in 1:maxiter){
-  A.svd = svd(A-b)
-  M = A.svd$d[1]* A.svd$u[,1] %*% t(A.svd$v[,1])
-  M = ifelse(M<0,0,M)
-  b = matrix(truncnorm::etruncnorm(a=0,mean= A-M-lambda*sigma^2,sd=sigma),nrow=2*n)
+I'm going to solve the symmetric nmf method by the thresholded power iteration, 
+$$u \leftarrow (Au)_+$$
+Note: this is not an algorithm I can find a reference for but I believe it is true that, on rescaling u to have unit norm, this iteration decreases $||A-uu'||$ subject to $u>0$ $||u||=1$. Then you can set $d=u'Au$ to minimize $||A-duu'||^2$.
+
+
+```{r}
+#truncate and normalize function
+trunc_and_norm = function(u){
+  uplus = ifelse(u>0,u,0)
+  if(!all(uplus==0))
+    uplus = uplus/sqrt(sum(uplus^2))
+  return(uplus)
 }
-image(M)
-```
 
-Now I try sigma small, to try to put the errors in the exponential part and force
-an underapproximation. This work better, but it is not strictly an underapproximation.
-```{r}
-lambda = 1
-sigma = .1
-b = matrix(0,nrow=nrow(A),ncol=ncol(A))
+nmu_em = function(A, lambda=1, sigma=1, maxiter=100){
+  b = matrix(0,nrow=nrow(A),ncol=ncol(A))
 
-for(i in 1:maxiter){
-  A.svd = svd(A-b)
-  M = A.svd$d[1]* A.svd$u[,1] %*% t(A.svd$v[,1])
-  M = ifelse(M<0,0,M)
-  b = matrix(truncnorm::etruncnorm(a=0,mean= A-M-lambda*sigma^2,sd=sigma),nrow=2*n)
-}
-image(M)
-min(A-b)
-min(A-A.svd$d[1]* A.svd$u[,1] %*% t(A.svd$v[,1]))
-```
-
-
-```{r}
-lambda = 1
-sigma = .01
-b = matrix(0,nrow=nrow(A),ncol=ncol(A))
-
-for(i in 1:maxiter){
-  A.svd = svd(A-b)
-  M = A.svd$d[1]* A.svd$u[,1] %*% t(A.svd$v[,1])
-  M = ifelse(M<0,0,M)
-  b = matrix(truncnorm::etruncnorm(a=0,mean= A-M-lambda*sigma^2,sd=sigma),nrow=2*n)
-}
-image(M)
-min(A-b)
-min(A-A.svd$d[1]* A.svd$u[,1] %*% t(A.svd$v[,1]))
-```
-
-So this is still not an underapproximation (and also u and v are not non-negative).
-```{r}
-A.svd$u[,1]
-```
-
-Before moving on to thresholding u and v, I note that the result can
-depend on the scale of lambda, sigma. We might want to frame the problem a bit differently to avoid that... eg by $A = \sigma(uv'+b+e)$ where $e \sim N(0,1)$ and $b \sim Exp(\lambda)$. This would make the approach scale invariant, which seems preferable. Interestingly this one is an underapproximation. It might be worth investigating a bit more when both lambda and sigma are big... 
-
-```{r}
-lambda = 100
-sigma = 100
-b = matrix(0,nrow=nrow(A),ncol=ncol(A))
-
-for(i in 1:maxiter){
-  A.svd = svd(A-b)
-  M = A.svd$d[1]* A.svd$u[,1] %*% t(A.svd$v[,1])
-  M = ifelse(M<0,0,M)
-  b = matrix(truncnorm::etruncnorm(a=0,mean= A-M-lambda*sigma^2,sd=sigma),nrow=2*n)
-}
-image(M)
-min(A-b)
-min(A-A.svd$d[1]* A.svd$u[,1] %*% t(A.svd$v[,1]))
-```
-
-### Approach 2: thresholding u,v
-
-First I'm going to solve nmf by power method. The initialization here shoudl probably be checked more carefully.
-```{r}
-# solves the rank 1 symmetric nmf problem by performing niter iterations of the (thresholded) power method
-# init should be a list with named element u that is used for initialization
-# if not supplied uses svd followed by truncation to initialize u.
-symnmf_r1 = function(A,init = NULL, niter=1){
-  
-  if(is.null(init)){ #initialize by thresholding first singular vector
-    A.svd = svd(A)
-    u = A.svd$u[,1]  #note that thresholding u and -u give different results, so i try both ways and choose whichever gives the larger value of u'Au
-    u0a = ifelse(u<0,0,u)
-    if(!all(u0a==0))
-      u0a = u0a/sqrt(sum(u0a^2))
-     
-    u0b = ifelse(u>0,0,-u) #corresponds to using -u instead of u
-    if(!all(u0b==0))
-      u0b = u0b/sqrt(sum(u0b^2))
-    
-    fa = t(u0a) %*% A %*% u0a
-    fb = t(u0b) %*% A %*% u0b
-    
-    if(fa>fb)
-      u = u0a
-    else
-      u = u0b
-  } 
-  else {
-    u = init$u
+  # initialize u by svd (check both u and -u since either could work)
+  u = svd(A)$u[,1]
+  u1 = trunc_and_norm(u)
+  u2 = trunc_and_norm(-u)
+  if(t(u1) %*% A %*% u1 > t(u2) %*% A %*% u2){
+    u = u1
+  } else {
+    u = u2
   }
-  
-  for(i in 1:niter){
-    u = A %*% u
-    u = ifelse(u<0,0,u)
-    u = u/sqrt(sum(u^2))
+
+  d = drop(t(u) %*% (A-b) %*% u)
+
+  for(i in 1:maxiter){
+    u = trunc_and_norm((A-b) %*% u)
+    d = drop(t(u) %*% (A-b) %*% u)
+    b = matrix(truncnorm::etruncnorm(a=0,mean= A-d*u %*% t(u)-lambda*sigma^2,sd=sigma),nrow=2*n)
   }
-  
-  u = u/sqrt(sum(u^2))
-  
-  v = (A %*% u)
-  v = ifelse(v<0,0,v)
-  d = sqrt(sum(v^2))
-  v = v/sqrt(sum(v^2))
-  return(list(u=u,d=d,v=v))
+
+  d = drop(t(u) %*% (A-b) %*% u)
+  return(list(u=u, d=d, b=b))
 }
 
-  
-B = A-min(A)
-temp = symnmf_r1(B)
-temp2 = symnmf_r1(A)
 ```
 
 ```{r}
-lambda = 1
-sigma = 1
-b = matrix(0,nrow=nrow(A),ncol=ncol(A))
-temp = symnmf_r1(A-b)
-
-for(i in 1:maxiter){
-  b = matrix(truncnorm::etruncnorm(a=0,mean= A-temp$d*temp$u %*% t(temp$v)-lambda*sigma^2,sd=sigma),nrow=2*n)
-  temp = symnmf_r1(A-b,temp)
-}
-image(temp$d*temp$u %*% t(temp$v))
-min(A- temp$d*temp$u %*% t(temp$v))
-hist(A- temp$d*temp$u %*% t(temp$v))
+fit = nmu_em(A, 1, 1)
+image(fit$u %*% t(fit$u))
+min(A- fit$d * fit$u %*% t(fit$u))
+hist(A- fit$d * fit$u %*% t(fit$u))
 ```
+
 
 ```{r}
-lambda = 1
-sigma = .1
-b = matrix(0,nrow=nrow(A),ncol=ncol(A))
-temp = symnmf_r1(A-b)
-
-for(i in 1:maxiter){
-  b = matrix(truncnorm::etruncnorm(a=0,mean= A-temp$d*temp$u %*% t(temp$v)-lambda*sigma^2,sd=sigma),nrow=2*n)
-  temp = symnmf_r1(A-b,temp)
-}
-image(temp$d*temp$u %*% t(temp$v))
-min(A- temp$d*temp$u %*% t(temp$v))
-hist(A- temp$d*temp$u %*% t(temp$v))
+fit = nmu_em(A, 1, 0.1)
+image(fit$u %*% t(fit$u))
+min(A- fit$d * fit$u %*% t(fit$u))
+hist(A- fit$d * fit$u %*% t(fit$u))
 ```
 
+Note: if lambda is too small then the fit gets absorbed into u instead of b. This makes sense.
 ```{r}
-lambda = 1
-sigma = .01
-b = matrix(0,nrow=nrow(A),ncol=ncol(A))
-temp = symnmf_r1(A-b)
-
-for(i in 1:maxiter){
-  b = matrix(truncnorm::etruncnorm(a=0,mean= A-temp$d*temp$u %*% t(temp$v)-lambda*sigma^2,sd=sigma),nrow=2*n)
-  temp = symnmf_r1(A-b,temp)
-}
-image(temp$d*temp$u %*% t(temp$v))
-min(A- temp$d*temp$u %*% t(temp$v))
-hist(A- temp$d*temp$u %*% t(temp$v))
-plot(A-temp$d * temp$u %*% t(temp$v), b)
+fit = nmu_em(A, .1, 1)
+image(fit$u %*% t(fit$u))
+image(fit$b)
 ```
 
+More generally, if lambda and sigma are not appropriate this is unlikely to work well:
 ```{r}
-lambda = 100
-sigma = 100
-b = matrix(0,nrow=nrow(A),ncol=ncol(A))
-temp = symnmf_r1(A-b)
-
-for(i in 1:maxiter){
-  b = matrix(truncnorm::etruncnorm(a=0,mean= A-temp$d*temp$u %*% t(temp$v)-lambda*sigma^2,sd=sigma),nrow=2*n)
-  temp = symnmf_r1(A-b,temp)
-}
-image(temp$d*temp$u %*% t(temp$v))
-min(A- temp$d*temp$u %*% t(temp$v))
-hist(A- temp$d*temp$u %*% t(temp$v))
+fit = nmu_em(A, 100, 100)
+image(fit$u %*% t(fit$u))
+image(fit$b)
 ```
 
-All these look pretty good, except the last one (which is a bit weird anyway).
 
 Note: i did try applying this, accidentally, to a matrix where some A were negative, so there is no underapproximation solution. It still did something sensible!
 
@@ -274,58 +136,111 @@ Note: i did try applying this, accidentally, to a matrix where some A were negat
 
 Note that
 $$E(A-uv') = 1/\lambda$$ and 
-$$E(A-uv')^2) = 1/\lambda^2 + \sigma^2$$.
+$$E(A-uv')^2 = 1/\lambda^2 + \sigma^2$$.
 
 So a method of moments suggests estimating $\lambda = 1/mean(A-uv')$
 and $\sigma^2 = mean((A-uv')^2) - mean(A-uv')^2 = var(A-uv')$.
 
+The following code implements this idea (repeats fitting nmu 5  times, re-estimating lambda and sigma using the above after each time).
+Note that this is really just a first try. I think in practice, if we want an underapproximation, then we will want to do something to ensure that. Here I just initialize sigma to be small, but we need to think more about this, especially since we would like the method to be invariant to scaling of $A$.
+
+One possibility would be to initialize sigma to be the estimate based on the first PC, 
+`sigma= sqrt(mean((A - A.svd$d[1] * u %*% t(u))^2))`  
+but maybe that is still too big since what we really want is that sigma is the residual when all of the (nonnegative) factors are taken out. Another possibility is to fix sigma by guessing that, say, the nonnegative factors will, in total, explain 99% of the variance. 
+
 ```{r}
-for(j in 1:10){
-  lambda = 1/mean(A-temp$d*temp$u %*% t(temp$v))
-  sigma = sd(A-temp$d*temp$u %*% t(temp$v))
+nmu_em_estlambda = function(A, maxiter=100, lambda=1, sigma=0.1){
   b = matrix(0,nrow=nrow(A),ncol=ncol(A))
 
-  for(i in 1:maxiter){
-    temp = symnmf_r1(A-b)
-    b = matrix(truncnorm::etruncnorm(a=0,mean= A-temp$d*temp$u %*% t(temp$v)-lambda*sigma^2,sd=sigma),nrow=2*n)
+  # initialize u by svd (check both u and -u since either could work)
+  A.svd = svd(A)
+  u = A.svd$u[,1]
+  
+  u1 = trunc_and_norm(u)
+  u2 = trunc_and_norm(-u)
+  if(t(u1) %*% A %*% u1 > t(u2) %*% A %*% u2){
+    u = u1
+  } else {
+    u = u2
   }
-}
 
-image(temp$d*temp$u %*% t(temp$v))
-min(A- temp$d*temp$u %*% t(temp$v))
-hist(A- temp$d*temp$u %*% t(temp$v))
-lambda
-sigma
+  d = drop(t(u) %*% (A-b) %*% u)
+  
+  for(j in 1:5){
+    for(i in 1:maxiter){
+      u = trunc_and_norm((A-b) %*% u)
+      d = drop(t(u) %*% (A-b) %*% u)
+      b = matrix(truncnorm::etruncnorm(a=0,mean= A-d*u %*% t(u)-lambda*sigma^2,sd=sigma),nrow=2*n)
+    } 
+    lambda = 1/mean(A-d * u %*% t(u))
+    sigma = sd(A-d * u %*% t(u))
+  }
+  d = drop(t(u) %*% (A-b) %*% u)
+  return(list(u=u, d=d, b=b, lambda=lambda, sigma=sigma))
+}
 ```
 
-## Reducing sigma
 
-I'd like to try to get an actual under-approximation by reducing sigma.
-Here I will iteratively reduce sigma. (NOTE: i did this when I was
-not getting an underapproximation due to A having negative values.. might not
-be necessary...)
-
+Try it out:
 ```{r}
-lambda = 1
-sigma = 1
-b = matrix(0,nrow=nrow(A),ncol=ncol(A))
-
-for(i in 1:100){
-  temp = symnmf_r1(A-b)
-  b = matrix(truncnorm::etruncnorm(a=0,mean= A-temp$d*temp$u %*% t(temp$v)-lambda*sigma^2,sd=sigma),nrow=2*n)
-  sigma = sigma/1.1
-}
-
-image(temp$d*temp$u %*% t(temp$v))
-min(A- temp$d*temp$u %*% t(temp$v))
-hist(A- temp$d*temp$u %*% t(temp$v))
+fit = nmu_em_estlambda(A)
+fit$lambda
+fit$sigma
+image(fit$u %*% t(fit$u))
 ```
 
 
+## A tree
 
-## scaling solution
+Try a tree, and iteratively removing factors. We can see this gives something close to the result we want. 
+```{r}
+set.seed(1)
+n = 40
+x = cbind(c(rep(1,n),rep(0,n)), c(rep(0,n),rep(1,n)), c(rep(1,n/2),rep(0,3*n/2)), c(rep(0,n/2), rep(1,n/2), rep(0,n)), c(rep(0,n),rep(1,n/2),rep(0,n/2)), c(rep(0,3*n/2),rep(1,n/2)))
+E = matrix(0.1*rexp(2*n*2*n),nrow=2*n)
+E = E+t(E) #symmetric errors
+A = x %*% t(x) + E
+image(A)
+fit = nmu_em_estlambda(A)
+fit$lambda
+fit$sigma
+image(fit$u %*% t(fit$u))
 
-Now I am going to try
+A = A-fit$d*fit$u %*% t(fit$u)
+fit = nmu_em_estlambda(A)
+image(fit$u %*% t(fit$u))
+
+A = A-fit$d*fit$u %*% t(fit$u)
+fit = nmu_em_estlambda(A)
+image(fit$u %*% t(fit$u))
+
+A = A-fit$d*fit$u %*% t(fit$u)
+fit = nmu_em_estlambda(A)
+image(fit$u %*% t(fit$u))
+
+A = A-fit$d*fit$u %*% t(fit$u)
+fit = nmu_em_estlambda(A)
+image(fit$u %*% t(fit$u))
+
+A = A-fit$d*fit$u %*% t(fit$u)
+fit = nmu_em_estlambda(A)
+image(fit$u %*% t(fit$u))
+
+A = A-fit$d*fit$u %*% t(fit$u)
+fit = nmu_em_estlambda(A)
+image(fit$u %*% t(fit$u))
+```
+
+
+## Further thoughts; scaling 
+
+I'm not entirely satisfied with the way we estimate lambda,sigma - that needs some thought I think.
+
+Also, I note that the result can
+depend on the scale of $A,\lambda, \sigma$. We might want to frame the problem a bit differently to avoid that... eg by $A = \sigma(uv'+b+e)$ where $e \sim N(0,1)$ and $b \sim Exp(\lambda)$. This could help make the approach scale invariant -- that is, multiplying A by a constant would effectively not change the solution --  which seems desirable. (Another simpler way to do this would be to simply to scale A to have mean squared values of 1 before proceeding.)
+
+
+We could try
 $$A = \sigma(uv' + b + e)$$
 where $u,v$ non-negative, $e \sim N(0,1)$ and $b\sim Exp(lambda)$.
 
