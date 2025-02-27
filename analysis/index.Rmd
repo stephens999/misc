@@ -90,7 +90,7 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 
 * [Try NMF on a simple simulation with sparse factors](nmf_sparse.html)
 * [Run NMF on covariance matrices, including tree-like case](nmf_simple_examples.html)
-* [Non-negatve matrix underapproximation via EM](nmf_em.html)
+* [Non-negatve matrix underapproximation via EM](nmu_em.html)
 
 # Multinomial factor models
 
