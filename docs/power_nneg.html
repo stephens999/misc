@@ -509,15 +509,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree5f92e993bba7b005861d8e21654f2c20e75f7a2ftargetblank5f92e99a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree5d10e5348ff0a2b5b441dae07dfb10a8a5bfeed9targetblank5d10e53a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/stephens999/misc/tree/5f92e993bba7b005861d8e21654f2c20e75f7a2f" target="_blank">5f92e99</a>
+<a href="https://github.com/stephens999/misc/tree/5d10e5348ff0a2b5b441dae07dfb10a8a5bfeed9" target="_blank">5d10e53</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree5f92e993bba7b005861d8e21654f2c20e75f7a2ftargetblank5f92e99a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree5d10e5348ff0a2b5b441dae07dfb10a8a5bfeed9targetblank5d10e53a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -527,7 +527,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/stephens999/misc/tree/5f92e993bba7b005861d8e21654f2c20e75f7a2f" target="_blank">5f92e99</a>.
+<a href="https://github.com/stephens999/misc/tree/5d10e5348ff0a2b5b441dae07dfb10a8a5bfeed9" target="_blank">5d10e53</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -575,6 +575,7 @@ Untracked files:
     Untracked:  analysis/eb_var.Rmd
     Untracked:  analysis/ebpmf1.Rmd
     Untracked:  analysis/ebpmf_sla_text.Rmd
+    Untracked:  analysis/ebpower.Rmd
     Untracked:  analysis/ebspca_sims.Rmd
     Untracked:  analysis/explore_psvd.Rmd
     Untracked:  analysis/fa_check_identify.Rmd
@@ -777,6 +778,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/5d10e5348ff0a2b5b441dae07dfb10a8a5bfeed9/analysis/power_nneg.Rmd" target="_blank">5d10e53</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-03-09
+</td>
+<td>
+workflowr::wflow_publish("power_nneg.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/be86679fa00f93ebd391cef99308372b657bfad5/docs/power_nneg.html" target="_blank">be86679</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-03-09
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/5f92e993bba7b005861d8e21654f2c20e75f7a2f/analysis/power_nneg.Rmd" target="_blank">5f92e99</a>
 </td>
 <td>
@@ -842,7 +877,7 @@ sym_nmf_update_r1= function(S,v,d,lambda=0){
 }
 
 compute_sqerr = function(S,fit){
-  sum((A-fit$v %*% diag(fit$d,nrow=length(fit$d)) %*% t(fit$v))^2)
+  sum((S-fit$v %*% diag(fit$d,nrow=length(fit$d)) %*% t(fit$v))^2)
 }</code></pre>
 </div>
 <div id="tree-structured-data" class="section level2">
@@ -856,6 +891,43 @@ E = E+t(E) #symmetric errors
 A = x %*% t(x) + E
 image(A)</code></pre>
 <p><img src="figure/power_nneg.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-1">
+Past versions of unnamed-chunk-2-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/be86679fa00f93ebd391cef99308372b657bfad5/docs/figure/power_nneg.Rmd/unnamed-chunk-2-1.png" target="_blank">be86679</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-03-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <div id="rank-1-fit" class="section level3">
 <h3>Rank 1 fit</h3>
 <p>Here I fit a single factor with no penalty. It finds the solution
@@ -880,10 +952,121 @@ for(i in 2:100){
 }
 plot(err)</code></pre>
 <p><img src="figure/power_nneg.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-1">
+Past versions of unnamed-chunk-3-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-3-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/be86679fa00f93ebd391cef99308372b657bfad5/docs/figure/power_nneg.Rmd/unnamed-chunk-3-1.png" target="_blank">be86679</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-03-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>plot(fit$v[,1],svd(A)$v[,1])</code></pre>
 <p><img src="figure/power_nneg.Rmd/unnamed-chunk-3-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-2">
+Past versions of unnamed-chunk-3-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-3-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/be86679fa00f93ebd391cef99308372b657bfad5/docs/figure/power_nneg.Rmd/unnamed-chunk-3-2.png" target="_blank">be86679</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-03-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>plot(fit$v)</code></pre>
 <p><img src="figure/power_nneg.Rmd/unnamed-chunk-3-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-3">
+Past versions of unnamed-chunk-3-3.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-3-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/be86679fa00f93ebd391cef99308372b657bfad5/docs/figure/power_nneg.Rmd/unnamed-chunk-3-3.png" target="_blank">be86679</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-03-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="add-penalty" class="section level3">
 <h3>Add penalty</h3>
@@ -914,8 +1097,82 @@ for(i in 2:100){
 }
 plot(err)</code></pre>
 <p><img src="figure/power_nneg.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-1">
+Past versions of unnamed-chunk-4-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/be86679fa00f93ebd391cef99308372b657bfad5/docs/figure/power_nneg.Rmd/unnamed-chunk-4-1.png" target="_blank">be86679</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-03-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>plot(fit$v)</code></pre>
 <p><img src="figure/power_nneg.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-2">
+Past versions of unnamed-chunk-4-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/be86679fa00f93ebd391cef99308372b657bfad5/docs/figure/power_nneg.Rmd/unnamed-chunk-4-2.png" target="_blank">be86679</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-03-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="run-multiple-factors" class="section level3">
 <h3>Run multiple factors</h3>
@@ -945,17 +1202,165 @@ for(i in 2:10){
 }
 plot(err)</code></pre>
 <p><img src="figure/power_nneg.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-1">
+Past versions of unnamed-chunk-5-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/be86679fa00f93ebd391cef99308372b657bfad5/docs/figure/power_nneg.Rmd/unnamed-chunk-5-1.png" target="_blank">be86679</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-03-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>par(mfcol=c(3,3),mai=rep(0.1,4))
 for(i in 1:9){plot(fit$v[,i],main=paste0(fit$d[i]))}</code></pre>
 <p><img src="figure/power_nneg.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-2">
+Past versions of unnamed-chunk-5-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/be86679fa00f93ebd391cef99308372b657bfad5/docs/figure/power_nneg.Rmd/unnamed-chunk-5-2.png" target="_blank">be86679</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-03-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This shows that the solution being found has smaller error than the
 true value, so in that sense things seem to be working as desired.</p>
 <pre class="r"><code>par(mfcol=c(1,1),mai=c(0.4,0.4,0.4,0.4))
 fitted = fit$v %*% diag(fit$d) %*% t(fit$v)
 plot(as.vector(fitted),as.vector(A))</code></pre>
 <p><img src="figure/power_nneg.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-1">
+Past versions of unnamed-chunk-6-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/be86679fa00f93ebd391cef99308372b657bfad5/docs/figure/power_nneg.Rmd/unnamed-chunk-6-1.png" target="_blank">be86679</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-03-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>plot(as.vector(x %*% t(x)),as.vector(A))</code></pre>
 <p><img src="figure/power_nneg.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-2">
+Past versions of unnamed-chunk-6-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/be86679fa00f93ebd391cef99308372b657bfad5/docs/figure/power_nneg.Rmd/unnamed-chunk-6-2.png" target="_blank">be86679</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-03-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>compute_sqerr(A,fit)</code></pre>
 <pre><code>[1] 133.0117</code></pre>
 <pre class="r"><code>compute_sqerr(A,fit=list(v=x,d=rep(1,6)))</code></pre>
