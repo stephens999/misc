@@ -42,7 +42,7 @@ sym_nmf_update_r1= function(S,v,d,lambda=0){
 }
 
 compute_sqerr = function(S,fit){
-  sum((A-fit$v %*% diag(fit$d,nrow=length(fit$d)) %*% t(fit$v))^2)
+  sum((S-fit$v %*% diag(fit$d,nrow=length(fit$d)) %*% t(fit$v))^2)
 }
 ```
 
