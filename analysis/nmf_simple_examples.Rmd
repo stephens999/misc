@@ -9,7 +9,7 @@ editor_options:
 
 
 ```{r}
-library(NNLM)
+library(NNLM) # library(devtools); install_github('linxihui/NNLM')
 library("flashier")
 library("magrittr")
 ```
@@ -135,22 +135,21 @@ Here I see if I can improve performance by using EB shrinkage methods. (Could al
 In this one I just use a non-negative prior (not 0-1).
 
 ```{r}
-S2n.f <- flash.init(S2n) %>% flash.init.factors(list(S2n.nnmf$W,t(S2n.nnmf$H)),prior.family = prior.nonnegative()) %>% flash.backfit()
+S2n.f <- flash_init(S2n) %>% flash_factors_init(list(S2n.nnmf$W,t(S2n.nnmf$H)),ebnm_fn = ebnm_point_exponential) %>% flash_backfit()
 
 par(mfcol=c(3,3),mai=rep(0.25,4))
 for(i in 1:K){
-  plot(L2[,bm[i]],S2n.f$loadings.pm[[1]][,i], main="True L vs Estimate")
+  plot(L2[,bm[i]],S2n.f$L_pm[,i], main="True L vs Estimate")
 }
 
 ```
 
-Although the plots do not look so different,
-the EB shrinkage ddoes consistently improves the correlations between the true values and the estimates:
+Here I check whether the EB shrinkage improves the correlations between the true values and the estimates:
 ```{r}
 cors = matrix(nrow=K, ncol=2)
 colnames(cors) = c("flash","nnmf")
 for(i in 1:K){
-  cors[i,] = (c(cor(L2[,bm[i]],S2n.f$loadings.pm[[1]][,i]), cor(L2[,bm[i]],S2n.nnmf$W[,i])))
+  cors[i,] = (c(cor(L2[,bm[i]],S2n.f$L_pm[,i]), cor(L2[,bm[i]],S2n.nnmf$W[,i])))
 }
 print(cors,digits=2)
 ```
@@ -177,19 +176,17 @@ image(S3)
 The results confirm that finding the representation that
 we want (in which each factor represents a branch) is not
 achieved by off-the-shelf methods. This is essentially
-because many factors (in the branch represenation)
-are linearly dependent with one another.
-
-Here, many of the estimated factors from NMF correlate most with
-the top split (factor 1 or 2) and have partial memberships
-that capture some of the lower splits.
+because many factors (in the branch representation)
+are linearly dependent with one another; indeed I believe there effectively
+exists a rank 4 nmf solution to this data. An open question is
+whether using a binary
+prior can give us the tree result.
 
 ```{r}
 S3.nnmf = nnmf(S3,k=7)
-bm = get_bestmatch(L3,S3.nnmf$W)
 par(mfcol=c(3,3),mai=rep(0.25,4))
 for(i in 1:7){
-  plot(L3[,bm[i]],S3.nnmf$W[,i], main=paste0("True L (",bm[i], ") vs Estimate"))
+  plot(S3.nnmf$W[,i])
 }
 ```
 
