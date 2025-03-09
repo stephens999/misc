@@ -1,0 +1,161 @@
+---
+title: "power_nneg"
+author: "Matthew Stephens"
+date: "2025-03-03"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+I want to implement a version of the power method for symmetric nmf with $L1$ penalty.
+
+The idea is that given symmetric matrix $S$ and approximation $V D V'$ we update the $k$th column of $V$ by $V_k = [(S-UD_UU')V_k-\lambda]_+$ where $U$ is the matrix $V$ with the $k$th column removed and $D_U$ is the matrix $D$ with the $k$th row and column removed. Then we normalize $V_k$ and set $d_k = V_k'(S-U D_U U')V_k$.
+
+```{r}
+# minimize ||S - vDv'|| + \lambda \sum abs(v) subject to v>0 
+# lambda is the strength of the L1 penalty
+sym_nmf_update = function(S,v,d,lambda=0){
+  K = ncol(v)
+  for(k in 1:K){
+    U = v[,-k,drop=FALSE]
+    D = diag(d[-k],nrow=length(d[-k]))
+    
+    newv = pmax(S %*% v[,k,drop=FALSE] - U %*% D %*% t(U) %*% v[,k,drop=FALSE] - lambda,0)
+    if(!all(newv==0)){
+      v[,k] = newv/sqrt(sum(newv^2))
+    } else {
+      v[,k] = newv
+    }
+    d[k] = t(v[,k]) %*% S %*% v[,k] - t(v[,k]) %*% U %*% D %*% t(U) %*% v[,k] 
+  }
+  return(list(v=v,d=d))
+}
+
+# this is a simplified version for the rank 1 update for testing
+sym_nmf_update_r1= function(S,v,d,lambda=0){
+  v = pmax(S %*% v - lambda,0)
+  v = v/sqrt(sum(v^2))
+  d = t(v) %*% S %*% v
+  return(list(v=cbind(v),d=as.vector(d)))
+}
+
+compute_sqerr = function(S,fit){
+  sum((A-fit$v %*% diag(fit$d,nrow=length(fit$d)) %*% t(fit$v))^2)
+}
+```
+
+## Tree structured data
+
+Simulate some data from a tree structure.
+```{r}
+set.seed(1)
+n = 40
+x = cbind(c(rep(1,n),rep(0,n)), c(rep(0,n),rep(1,n)), c(rep(1,n/2),rep(0,3*n/2)), c(rep(0,n/2), rep(1,n/2), rep(0,n)), c(rep(0,n),rep(1,n/2),rep(0,n/2)), c(rep(0,3*n/2),rep(1,n/2)))
+E = matrix(0.1*rexp(2*n*2*n),nrow=2*n)
+E = E+t(E) #symmetric errors
+A = x %*% t(x) + E
+image(A)
+```
+
+### Rank 1 fit
+
+Here I fit a single factor with no penalty. It finds the solution where everything is approximately equal.This is also the leading eigenvector of A, which we know to be the correct solution (because it is non-negative in this case).
+
+```{r}
+set.seed(1)
+K = 1
+v = matrix(nrow=2*n,ncol=K)
+for(k in 1:K){
+  v[,k] = pmax(cbind(rnorm(2*n)),0) # initialize v
+  v[,k] = v[,k]/sum(v[,k]^2)
+}
+d = rep(1,K)
+
+fit = list(v=v,d=d)
+err = rep(0,10)
+err[1] = compute_sqerr(A,fit)
+for(i in 2:100){
+  fit = sym_nmf_update(A,fit$v,fit$d)
+  err[i] = compute_sqerr(A,fit)
+}
+plot(err)
+plot(fit$v[,1],svd(A)$v[,1])
+plot(fit$v)
+```
+
+### Add penalty
+
+Try with penalty, we are able to find a sparse solution. Note that running with penalty =2 from the start gave an error because it zeroed everything out. I had to initialize with no penalty to get it to run. It is clear that setting the penalty could be a delicate issue.
+
+```{r}
+set.seed(1)
+K = 1
+v = matrix(nrow=2*n,ncol=K)
+for(k in 1:K){
+  v[,k] = pmax(cbind(rnorm(2*n)),0) # initialize v
+  v[,k] = v[,k]/sum(v[,k]^2)
+}
+d = rep(1,K)
+
+fit = list(v=v,d=d)
+err = rep(0,10)
+err[1] = compute_sqerr(A,fit)
+for(i in 2:100){
+  fit = sym_nmf_update(A,fit$v,fit$d,lambda=0)
+  err[i] = compute_sqerr(A,fit)
+}
+
+for(i in 2:100){
+  fit = sym_nmf_update(A,fit$v,fit$d,lambda=2)
+  err[i] = compute_sqerr(A,fit)
+}
+plot(err)
+plot(fit$v)
+```
+
+### Run multiple factors
+
+Here I run with no penalty and $K=9$. It basically finds a rank 4 solution
+(plus 2 factors with very small weight, and 3 zero factors). Note that these solutions are already sparse (even without penalty), but not "approximately binary". This example illustrates that, to get a tree when the truth is a tree, 
+you need to assume more than just nonnegative and sparse. Whether it is enough
+to assume (approximate) binary as well is an open question.
+
+```{r}
+set.seed(1)
+K = 9
+V = matrix(rnorm(K*2*n),ncol=K)
+for(k in 1:K){
+  V[,k] = pmax(V[,k],0) # initialize V
+  V[,k] = V[,k]/sum(V[,k]^2)
+}
+d = rep(1,K)
+
+fit = list(v=V,d=d)
+err = rep(0,10)
+err[1] = sum((A-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
+for(i in 2:10){
+  fit = sym_nmf_update(A,fit$v,fit$d)
+  err[i] = sum((A-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
+}
+plot(err)
+
+par(mfcol=c(3,3),mai=rep(0.1,4))
+for(i in 1:9){plot(fit$v[,i],main=paste0(fit$d[i]))}
+```
+
+
+This shows that the solution being found has smaller error
+than the true value, so in that sense things seem to be working as desired.
+```{r}
+par(mfcol=c(1,1),mai=c(0.4,0.4,0.4,0.4))
+fitted = fit$v %*% diag(fit$d) %*% t(fit$v)
+plot(as.vector(fitted),as.vector(A))
+plot(as.vector(x %*% t(x)),as.vector(A))
+
+compute_sqerr(A,fit)
+compute_sqerr(A,fit=list(v=x,d=rep(1,6)))
+```
+
+
