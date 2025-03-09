@@ -15,20 +15,30 @@
 
 <title>nmf_simple_examples</title>
 
-<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
-<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
 <link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
 <script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 
-<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
 <!-- Add a small amount of space between sections. -->
 <style type="text/css">
 div.section {
@@ -36,12 +46,18 @@ div.section {
 }
 </style>
 
-<style type="text/css">code{white-space: pre;}</style>
+
+
 <style type="text/css">
-  pre:not([class]) {
-    background-color: white;
-  }
-</style>
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
 <script type="text/javascript">
 if (window.hljs) {
   hljs.configure({languages: []});
@@ -54,32 +70,8 @@ if (window.hljs) {
 
 
 
-<style type="text/css">
-h1 {
-  font-size: 34px;
-}
-h1.title {
-  font-size: 38px;
-}
-h2 {
-  font-size: 30px;
-}
-h3 {
-  font-size: 24px;
-}
-h4 {
-  font-size: 18px;
-}
-h5 {
-  font-size: 16px;
-}
-h6 {
-  font-size: 12px;
-}
-.table th:not([align]) {
-  text-align: left;
-}
-</style>
+
+
 
 
 
@@ -89,10 +81,6 @@ h6 {
   max-width: 940px;
   margin-left: auto;
   margin-right: auto;
-}
-code {
-  color: inherit;
-  background-color: rgba(0, 0, 0, 0.04);
 }
 img {
   max-width:100%;
@@ -109,40 +97,16 @@ button.code-folding-btn:focus {
 summary {
   display: list-item;
 }
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
 </style>
 
 
 <style type="text/css">
-/* padding for bootstrap navbar */
-body {
-  padding-top: 51px;
-  padding-bottom: 40px;
-}
-/* offset scroll position for anchor links (for fixed navbar)  */
-.section h1 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
-.section h2 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
-.section h3 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
-.section h4 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
-.section h5 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
-.section h6 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
 .dropdown-submenu {
   position: relative;
 }
@@ -170,7 +134,7 @@ body {
   margin-right: -10px;
 }
 .dropdown-submenu:hover>a:after {
-  border-left-color: #ffffff;
+  border-left-color: #adb5bd;
 }
 .dropdown-submenu.pull-left {
   float: none;
@@ -182,7 +146,7 @@ body {
 }
 </style>
 
-<script>
+<script type="text/javascript">
 // manage active state of menu based on current page
 $(document).ready(function () {
   // active menu anchor
@@ -192,11 +156,28 @@ $(document).ready(function () {
     href = "index.html";
   var menuAnchor = $('a[href="' + href + '"]');
 
-  // mark it active
-  menuAnchor.parent().addClass('active');
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
 
-  // if it's got a parent navbar menu mark it active as well
-  menuAnchor.closest('li.dropdown').addClass('active');
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
 });
 </script>
 
@@ -208,13 +189,12 @@ $(document).ready(function () {
   max-height: 500px;
   min-height: 44px;
   overflow-y: auto;
-  background: white;
   border: 1px solid #ddd;
   border-radius: 4px;
 }
 
-.tabset-dropdown > .nav-tabs > li.active:before {
-  content: "";
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
   font-family: 'Glyphicons Halflings';
   display: inline-block;
   padding: 10px;
@@ -222,16 +202,9 @@ $(document).ready(function () {
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-  content: "&#xe258;";
-  border: none;
-}
-
-.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-  content: "";
+  content: "\e258";
   font-family: 'Glyphicons Halflings';
-  display: inline-block;
-  padding: 10px;
-  border-right: 1px solid #ddd;
+  border: none;
 }
 
 .tabset-dropdown > .nav-tabs > li.active {
@@ -334,7 +307,7 @@ div.tocify {
 
 
 <!-- setup 3col/9col grid for toc_float and main content  -->
-<div class="row-fluid">
+<div class="row">
 <div class="col-xs-12 col-sm-4 col-md-3">
 <div id="TOC" class="tocify">
 </div>
@@ -348,7 +321,7 @@ div.tocify {
 <div class="navbar navbar-default  navbar-fixed-top" role="navigation">
   <div class="container">
     <div class="navbar-header">
-      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
@@ -370,7 +343,7 @@ div.tocify {
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-<div class="fluid-row" id="header">
+<div id="header">
 
 
 
@@ -383,7 +356,9 @@ div.tocify {
 
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
-<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span>
 </button>
 </p>
 <div id="workflowr-report" class="collapse">
@@ -392,7 +367,9 @@ div.tocify {
 <a data-toggle="tab" href="#summary">Summary</a>
 </li>
 <li>
-<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -401,17 +378,27 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2020-10-13
+<strong>Last updated:</strong> 2025-03-09
 </p>
 <p>
-<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 0
 </p>
 <p>
-<strong>Knit directory:</strong> <code>misc/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+<strong>Knit directory:</strong> <code>misc/analysis/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
 </p>
 <p>
-This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
-  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.1). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
 </p>
 <hr>
 </div>
@@ -420,91 +407,138 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div id="strongRMarkdownfilestronguptodate"
+class="panel-collapse collapse">
 <div class="panel-body">
-<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
 </div>
 </div>
 </div>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
 </p>
 </div>
 <div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
 <div class="panel-body">
-<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
 </div>
 </div>
 </div>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed1code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(1)</code> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed1code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(1)</code> </a>
 </p>
 </div>
-<div id="strongSeedstrongcodesetseed1code" class="panel-collapse collapse">
+<div id="strongSeedstrongcodesetseed1code"
+class="panel-collapse collapse">
 <div class="panel-body">
-<p>The command <code>set.seed(1)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+<p>The command <code>set.seed(1)</code> was run prior to running the
+code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
 </div>
 </div>
 </div>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
 </p>
 </div>
-<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
 <div class="panel-body">
-<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
 </div>
 </div>
 </div>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
 </p>
 </div>
 <div id="strongCachestrongnone" class="panel-collapse collapse">
 <div class="panel-body">
-<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
 </div>
 </div>
 </div>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
 </p>
 </div>
 <div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
 <div class="panel-body">
-<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
 </div>
 </div>
 </div>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree3304a12022eb0e8e5d96296e67bb712edef11327targetblank3304a12a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/3304a12022eb0e8e5d96296e67bb712edef11327" target="_blank">3304a12</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree2cfe5b88c216645f776649ecfeaf99567c55706ctargetblank2cfe5b8a">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/stephens999/misc/tree/2cfe5b88c216645f776649ecfeaf99567c55706c" target="_blank">2cfe5b8</a>
+</a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree3304a12022eb0e8e5d96296e67bb712edef11327targetblank3304a12a" class="panel-collapse collapse">
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree2cfe5b88c216645f776649ecfeaf99567c55706ctargetblank2cfe5b8a"
+class="panel-collapse collapse">
 <div class="panel-body">
 <p>
-Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/3304a12022eb0e8e5d96296e67bb712edef11327" target="_blank">3304a12</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version
+<a href="https://github.com/stephens999/misc/tree/2cfe5b88c216645f776649ecfeaf99567c55706c" target="_blank">2cfe5b8</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
 </p>
 <p>
-Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
 </p>
 <pre><code>
 Ignored files:
@@ -515,7 +549,9 @@ Ignored files:
     Ignored:    analysis/.Rhistory
     Ignored:    analysis/ALStruct_cache/
     Ignored:    data/.Rhistory
+    Ignored:    data/methylation-data-for-matthew.rds
     Ignored:    data/pbmc/
+    Ignored:    data/pbmc_purified.RData
 
 Untracked files:
     Untracked:  .dropbox
@@ -525,8 +561,12 @@ Untracked files:
     Untracked:  analysis/PACS.Rmd
     Untracked:  analysis/Rplot.png
     Untracked:  analysis/SPCAvRP.rmd
+    Untracked:  analysis/abf_comparisons.Rmd
     Untracked:  analysis/admm_02.Rmd
     Untracked:  analysis/admm_03.Rmd
+    Untracked:  analysis/bispca.Rmd
+    Untracked:  analysis/cache/
+    Untracked:  analysis/cholesky.Rmd
     Untracked:  analysis/compare-transformed-models.Rmd
     Untracked:  analysis/cormotif.Rmd
     Untracked:  analysis/cp_ash.Rmd
@@ -534,32 +574,49 @@ Untracked files:
     Untracked:  analysis/eb_prepilot.Rmd
     Untracked:  analysis/eb_var.Rmd
     Untracked:  analysis/ebpmf1.Rmd
+    Untracked:  analysis/ebpmf_sla_text.Rmd
+    Untracked:  analysis/ebspca_sims.Rmd
+    Untracked:  analysis/explore_psvd.Rmd
+    Untracked:  analysis/fa_check_identify.Rmd
+    Untracked:  analysis/fa_iterative.Rmd
+    Untracked:  analysis/flash_cov_overlapping_groups_init.Rmd
     Untracked:  analysis/flash_test_tree.Rmd
-    Untracked:  analysis/flash_tree.Rmd
+    Untracked:  analysis/flashier_newgroups.Rmd
+    Untracked:  analysis/flashier_nmf_triples.Rmd
+    Untracked:  analysis/flashier_pbmc.Rmd
+    Untracked:  analysis/flashier_snn_shifted_prior.Rmd
+    Untracked:  analysis/greedy_ebpmf_exploration_00.Rmd
     Untracked:  analysis/ieQTL.perm.rand.pdf
     Untracked:  analysis/lasso_em_03.Rmd
     Untracked:  analysis/m6amash.Rmd
     Untracked:  analysis/mash_bhat_z.Rmd
     Untracked:  analysis/mash_ieqtl_permutations.Rmd
+    Untracked:  analysis/methylation_example.Rmd
     Untracked:  analysis/mixsqp.Rmd
     Untracked:  analysis/mr.ash_lasso_init.Rmd
     Untracked:  analysis/mr.mash.test.Rmd
     Untracked:  analysis/mr_ash_modular.Rmd
     Untracked:  analysis/mr_ash_parameterization.Rmd
-    Untracked:  analysis/mr_ash_pen.Rmd
     Untracked:  analysis/mr_ash_ridge.Rmd
+    Untracked:  analysis/mv_gaussian_message_passing.Rmd
     Untracked:  analysis/nejm.Rmd
+    Untracked:  analysis/nmf_bg.Rmd
+    Untracked:  analysis/nonneg_underapprox.Rmd
     Untracked:  analysis/normal_conditional_on_r2.Rmd
     Untracked:  analysis/normalize.Rmd
     Untracked:  analysis/pbmc.Rmd
+    Untracked:  analysis/pca_binary_weighted.Rmd
+    Untracked:  analysis/pca_l1.Rmd
+    Untracked:  analysis/poisson_nmf_approx.Rmd
+    Untracked:  analysis/poisson_shrink.Rmd
     Untracked:  analysis/poisson_transform.Rmd
-    Untracked:  analysis/pseudodata.Rmd
     Untracked:  analysis/qrnotes.txt
     Untracked:  analysis/ridge_iterative_02.Rmd
     Untracked:  analysis/ridge_iterative_splitting.Rmd
     Untracked:  analysis/samps/
     Untracked:  analysis/sc_bimodal.Rmd
     Untracked:  analysis/shrinkage_comparisons_changepoints.Rmd
+    Untracked:  analysis/susie_cov.Rmd
     Untracked:  analysis/susie_en.Rmd
     Untracked:  analysis/susie_z_investigate.Rmd
     Untracked:  analysis/svd-timing.Rmd
@@ -571,6 +628,7 @@ Untracked files:
     Untracked:  analysis/test.md
     Untracked:  analysis/test_qr.R
     Untracked:  analysis/test_sparse.Rmd
+    Untracked:  analysis/tree_dist_top_eigenvector.Rmd
     Untracked:  analysis/z.txt
     Untracked:  code/multivariate_testfuncs.R
     Untracked:  code/rqb.hacked.R
@@ -581,6 +639,7 @@ Untracked files:
     Untracked:  data/GDS5363_full.soft.gz
     Untracked:  data/GSE41265_allGenesTPM.txt
     Untracked:  data/Muscle_Skeletal.ACTN3.pm1Mb.RDS
+    Untracked:  data/P.rds
     Untracked:  data/Thyroid.FMO2.pm1Mb.RDS
     Untracked:  data/bmass.HaemgenRBC2016.MAF01.Vs2.MergedDataSources.200kRanSubset.ChrBPMAFMarkerZScores.vs1.txt.gz
     Untracked:  data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt
@@ -611,6 +670,8 @@ Untracked files:
     Untracked:  data/mat_new.csv
     Untracked:  data/matrix_lik.rds
     Untracked:  data/paintor_data/
+    Untracked:  data/running_data_chris.csv
+    Untracked:  data/running_data_matthew.csv
     Untracked:  data/temp.txt
     Untracked:  data/y.txt
     Untracked:  data/y_f.txt
@@ -618,8 +679,20 @@ Untracked files:
     Untracked:  data/zscore_jointLCLs_random.rds
     Untracked:  explore_udi.R
     Untracked:  output/fit.k10.rds
+    Untracked:  output/fit.nn.pbmc.purified.rds
+    Untracked:  output/fit.nn.rds
+    Untracked:  output/fit.nn.s.001.rds
+    Untracked:  output/fit.nn.s.01.rds
+    Untracked:  output/fit.nn.s.1.rds
+    Untracked:  output/fit.nn.s.10.rds
+    Untracked:  output/fit.snn.s.001.rds
+    Untracked:  output/fit.snn.s.01.nninit.rds
+    Untracked:  output/fit.snn.s.01.rds
     Untracked:  output/fit.varbvs.RDS
+    Untracked:  output/fit2.nn.pbmc.purified.rds
     Untracked:  output/glmnet.fit.RDS
+    Untracked:  output/snn07.txt
+    Untracked:  output/snn34.txt
     Untracked:  output/test.bv.txt
     Untracked:  output/test.gamma.txt
     Untracked:  output/test.hyp.txt
@@ -647,16 +720,19 @@ Untracked files:
     Untracked:  output/test5.param.txt
 
 Unstaged changes:
-    Modified:   analysis/ash_delta_operator.Rmd
-    Modified:   analysis/ash_pois_bcell.Rmd
-    Modified:   analysis/lasso_em.Rmd
-    Modified:   analysis/minque.Rmd
-    Modified:   analysis/mr_missing_data.Rmd
-    Modified:   analysis/ridge_admm.Rmd
+    Modified:   .gitignore
+    Modified:   analysis/flashier_log1p.Rmd
+    Modified:   analysis/flashier_sla_text.Rmd
+    Modified:   analysis/logistic_z_scores.Rmd
+    Modified:   analysis/mr_ash_pen.Rmd
+    Modified:   analysis/nmu_em.Rmd
+    Modified:   analysis/susie_flash.Rmd
 
 </code></pre>
 <p>
-Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
 </p>
 </div>
 </div>
@@ -667,7 +743,12 @@ Note that any generated files, e.g. HTML, png, CSS, etc., are not included in t
 <div id="versions" class="tab-pane fade">
 
 <p>
-These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/nmf_simple_examples.Rmd</code>) and HTML (<code>docs/nmf_simple_examples.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+These are the previous versions of the repository in which changes were
+made to the R Markdown (<code>analysis/nmf_simple_examples.Rmd</code>)
+and HTML (<code>docs/nmf_simple_examples.html</code>) files. If you’ve
+configured a remote Git repository (see <code>?wflow_git_remote</code>),
+click on the hyperlinks in the table below to view the files as they
+were in that past version.
 </p>
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
@@ -696,6 +777,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/2cfe5b88c216645f776649ecfeaf99567c55706c/analysis/nmf_simple_examples.Rmd" target="_blank">2cfe5b8</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-03-09
+</td>
+<td>
+workflowr::wflow_publish("analysis/nmf_simple_examples.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/d2a32e8eb6daee38b6ce625d5d2dfddfe8071861/docs/nmf_simple_examples.html" target="_blank">d2a32e8</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-10-13
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/3304a12022eb0e8e5d96296e67bb712edef11327/analysis/nmf_simple_examples.Rmd" target="_blank">3304a12</a>
 </td>
 <td>
@@ -705,7 +820,7 @@ Matthew Stephens
 2020-10-13
 </td>
 <td>
-workflowr::wflow_publish(“nmf_simple_examples.Rmd”)
+workflowr::wflow_publish("nmf_simple_examples.Rmd")
 </td>
 </tr>
 <tr>
@@ -739,7 +854,7 @@ Matthew Stephens
 2020-10-13
 </td>
 <td>
-workflowr::wflow_publish(“nmf_simple_examples.Rmd”)
+workflowr::wflow_publish("nmf_simple_examples.Rmd")
 </td>
 </tr>
 <tr>
@@ -773,7 +888,7 @@ Matthew Stephens
 2020-10-09
 </td>
 <td>
-workflowr::wflow_publish(“nmf_simple_examples.Rmd”)
+workflowr::wflow_publish("nmf_simple_examples.Rmd")
 </td>
 </tr>
 </tbody>
@@ -783,16 +898,20 @@ workflowr::wflow_publish(“nmf_simple_examples.Rmd”)
 </div>
 </div>
 </div>
-<pre class="r"><code>library(NNLM)
-library(&quot;flashier&quot;)
-library(&quot;magrittr&quot;)</code></pre>
+<pre class="r"><code>library(NNLM) # library(devtools); install_github(&#39;linxihui/NNLM&#39;)
+library(&quot;flashier&quot;)</code></pre>
+<pre><code>Loading required package: ebnm</code></pre>
+<pre><code>Loading required package: magrittr</code></pre>
+<pre class="r"><code>library(&quot;magrittr&quot;)</code></pre>
 <div id="introduction" class="section level1">
 <h1>Introduction</h1>
-<p>I wanted to try some simple non-negative covariance examples, to assess challenges of getting convergence.</p>
+<p>I wanted to try some simple non-negative covariance examples, to
+assess challenges of getting convergence.</p>
 </div>
 <div id="simple-3-factor-case" class="section level1">
 <h1>Simple 3-factor case</h1>
-<p>I set up a covariance matrix with 3 factors (columns of L). I add some very small noise.</p>
+<p>I set up a covariance matrix with 3 factors (columns of L). I add
+some very small noise.</p>
 <pre class="r"><code>set.seed(123)
 L=  matrix(0,nrow=100,ncol=3)
 L[1:50,1] = 1
@@ -840,7 +959,9 @@ Matthew Stephens
 </div>
 <div id="svd" class="section level2">
 <h2>SVD</h2>
-<p>Start with svd: you can see the PCs kind of pick up the three factors, although not exactly of course (SVD is not non-negative….) So this should be a relatively easy case.</p>
+<p>Start with svd: you can see the PCs kind of pick up the three
+factors, although not exactly of course (SVD is not non-negative….) So
+this should be a relatively easy case.</p>
 <pre class="r"><code>S.svd = svd(S)
 par(mfcol=c(1,3))
 plot(S.svd$u[,1],main=&#39;first eigenvector&#39;)
@@ -937,7 +1058,8 @@ Matthew Stephens
 <h1>Harder 9-factor case</h1>
 <div id="negligible-noise" class="section level2">
 <h2>Negligible noise</h2>
-<p>Now I do 9 non-negative factors, each having 20 positive entries (out of 100).</p>
+<p>Now I do 9 non-negative factors, each having 20 positive entries (out
+of 100).</p>
 <pre class="r"><code>K=9
 set.seed(1)
 L2 = matrix(0,nrow=100,ncol=K)
@@ -984,7 +1106,8 @@ Matthew Stephens
 </div>
 <div id="svd-1" class="section level3">
 <h3>SVD</h3>
-<p>Do svd. We see the rank 10 structure clearly, but the actual factors are clearly now all mixed up among the PCs.</p>
+<p>Do svd. We see the rank 10 structure clearly, but the actual factors
+are clearly now all mixed up among the PCs.</p>
 <pre class="r"><code>S2.svd = svd(S2)
 plot(S2.svd$d[1:30],main=&quot;eigenvalues&quot;)</code></pre>
 <p><img src="figure/nmf_simple_examples.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
@@ -1070,7 +1193,8 @@ Matthew Stephens
 </div>
 <div id="nmf-1" class="section level3">
 <h3>NMF</h3>
-<p>NMF – slightly suprisingly to me it looks great! (I did give it the right K)</p>
+<p>NMF – slightly suprisingly to me it looks great! (I did give it the
+right K)</p>
 <pre class="r"><code>S2.nnmf = nnmf(S2,k=K)
 # for each column of W find the best matching column in L
 get_bestmatch = function(L,W){
@@ -1129,7 +1253,8 @@ Matthew Stephens
 </div>
 <div id="higher-noise-nmf" class="section level2">
 <h2>Higher noise (NMF)</h2>
-<p>Try adding some noise and running NMF. Now the results are (as expected) less clean.</p>
+<p>Try adding some noise and running NMF. Now the results are (as
+expected) less clean.</p>
 <pre class="r"><code>S2n = S2+rnorm(100*100,0,1)
 S2n.nnmf = nnmf(S2n,k=K)
 
@@ -1176,19 +1301,22 @@ Matthew Stephens
 </table>
 </div>
 </div>
-<p>Here I see if I can improve performance by using EB shrinkage methods. (Could also try penalties?). In this one I just use a non-negative prior (not 0-1).</p>
-<pre class="r"><code>S2n.f &lt;- flash.init(S2n) %&gt;% flash.init.factors(list(S2n.nnmf$W,t(S2n.nnmf$H)),prior.family = prior.nonnegative()) %&gt;% flash.backfit()</code></pre>
+<p>Here I see if I can improve performance by using EB shrinkage
+methods. (Could also try penalties?). In this one I just use a
+non-negative prior (not 0-1).</p>
+<pre class="r"><code>S2n.f &lt;- flash_init(S2n) %&gt;% flash_factors_init(list(S2n.nnmf$W,t(S2n.nnmf$H)),ebnm_fn = ebnm_point_exponential) %&gt;% flash_backfit()</code></pre>
 <pre><code>Backfitting 9 factors (tolerance: 1.49e-04)...
   Difference between iterations is within 1.0e+01...
   Difference between iterations is within 1.0e+00...
   Difference between iterations is within 1.0e-01...
   Difference between iterations is within 1.0e-02...
   Difference between iterations is within 1.0e-03...
+  Difference between iterations is within 1.0e-04...
 Wrapping up...
 Done.</code></pre>
 <pre class="r"><code>par(mfcol=c(3,3),mai=rep(0.25,4))
 for(i in 1:K){
-  plot(L2[,bm[i]],S2n.f$loadings.pm[[1]][,i], main=&quot;True L vs Estimate&quot;)
+  plot(L2[,bm[i]],S2n.f$L_pm[,i], main=&quot;True L vs Estimate&quot;)
 }</code></pre>
 <p><img src="figure/nmf_simple_examples.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
@@ -1215,6 +1343,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/d2a32e8eb6daee38b6ce625d5d2dfddfe8071861/docs/figure/nmf_simple_examples.Rmd/unnamed-chunk-9-1.png" target="_blank">d2a32e8</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2020-10-13
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/40bc193e8472e89a8f8de6a98f7ca729dcc11463/docs/figure/nmf_simple_examples.Rmd/unnamed-chunk-9-1.png" target="_blank">40bc193</a>
 </td>
 <td>
@@ -1239,27 +1378,30 @@ Matthew Stephens
 </table>
 </div>
 </div>
-<p>Although the plots do not look so different, the EB shrinkage ddoes consistently improves the correlations between the true values and the estimates:</p>
+<p>Here I check whether the EB shrinkage improves the correlations
+between the true values and the estimates:</p>
 <pre class="r"><code>cors = matrix(nrow=K, ncol=2)
 colnames(cors) = c(&quot;flash&quot;,&quot;nnmf&quot;)
 for(i in 1:K){
-  cors[i,] = (c(cor(L2[,bm[i]],S2n.f$loadings.pm[[1]][,i]), cor(L2[,bm[i]],S2n.nnmf$W[,i])))
+  cors[i,] = (c(cor(L2[,bm[i]],S2n.f$L_pm[,i]), cor(L2[,bm[i]],S2n.nnmf$W[,i])))
 }
 print(cors,digits=2)</code></pre>
 <pre><code>      flash nnmf
- [1,]  0.96 0.91
- [2,]  0.95 0.92
- [3,]  0.95 0.90
- [4,]  0.98 0.94
- [5,]  0.95 0.90
- [6,]  0.95 0.89
- [7,]  0.96 0.92
- [8,]  0.96 0.93
- [9,]  0.93 0.88</code></pre>
+ [1,]  0.91 0.91
+ [2,]  0.93 0.92
+ [3,]  0.92 0.90
+ [4,]  0.96 0.94
+ [5,]  0.89 0.90
+ [6,]  0.90 0.89
+ [7,]  0.91 0.92
+ [8,]  0.94 0.93
+ [9,]  0.82 0.88</code></pre>
 </div>
 <div id="tree-like-case" class="section level2">
 <h2>Tree-like case</h2>
-<p>We have found some challenges with tree-like case, so we try that here. This simulates a symmetric 4-tip tree (6 branches total), with a factor for each branch.</p>
+<p>We have found some challenges with tree-like case, so we try that
+here. This simulates a symmetric 4-tip tree (6 branches total), with a
+factor for each branch.</p>
 <pre class="r"><code>set.seed(1)
 L3 = matrix(0,nrow=100,ncol=6)
 L3[1:50,1] = 1 #top split L
@@ -1308,13 +1450,17 @@ Matthew Stephens
 </table>
 </div>
 </div>
-<p>The results confirm that finding the representation that we want (in which each factor represents a branch) is not achieved by off-the-shelf methods. This is essentially because many factors (in the branch represenation) are linearly dependent with one another.</p>
-<p>Here, many of the estimated factors from NMF correlate most with the top split (factor 1 or 2) and have partial memberships that capture some of the lower splits.</p>
+<p>The results confirm that finding the representation that we want (in
+which each factor represents a branch) is not achieved by off-the-shelf
+methods. This is essentially because many factors (in the branch
+representation) are linearly dependent with one another; indeed I
+believe there effectively exists a rank 4 nmf solution to this data. An
+open question is whether using a binary prior can give us the tree
+result.</p>
 <pre class="r"><code>S3.nnmf = nnmf(S3,k=7)
-bm = get_bestmatch(L3,S3.nnmf$W)
 par(mfcol=c(3,3),mai=rep(0.25,4))
 for(i in 1:7){
-  plot(L3[,bm[i]],S3.nnmf$W[,i], main=paste0(&quot;True L (&quot;,bm[i], &quot;) vs Estimate&quot;))
+  plot(S3.nnmf$W[,i])
 }</code></pre>
 <p><img src="figure/nmf_simple_examples.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
@@ -1357,40 +1503,49 @@ Matthew Stephens
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
-<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
 </button>
 </p>
 <div id="workflowr-sessioninfo" class="collapse">
 <pre class="r"><code>sessionInfo()</code></pre>
-<pre><code>R version 3.6.0 (2019-04-26)
-Platform: x86_64-apple-darwin15.6.0 (64-bit)
-Running under: macOS Mojave 10.14.6
+<pre><code>R version 4.4.2 (2024-10-31)
+Platform: aarch64-apple-darwin20
+Running under: macOS Sequoia 15.3.1
 
 Matrix products: default
-BLAS:   /Library/Frameworks/R.framework/Versions/3.6/Resources/lib/libRblas.0.dylib
-LAPACK: /Library/Frameworks/R.framework/Versions/3.6/Resources/lib/libRlapack.dylib
+BLAS:   /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.0
 
 locale:
 [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+time zone: America/Chicago
+tzcode source: internal
 
 attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] magrittr_1.5   flashier_0.2.7 NNLM_0.4.4    
+[1] flashier_1.0.7 magrittr_2.0.3 ebnm_1.1-2     NNLM_0.4.4    
 
 loaded via a namespace (and not attached):
- [1] Rcpp_1.0.5       pillar_1.4.6     compiler_3.6.0   later_1.1.0.1   
- [5] git2r_0.27.1     workflowr_1.6.2  tools_3.6.0      digest_0.6.25   
- [9] evaluate_0.14    lifecycle_0.2.0  tibble_3.0.3     lattice_0.20-41 
-[13] pkgconfig_2.0.3  rlang_0.4.7      Matrix_1.2-18    rstudioapi_0.11 
-[17] parallel_3.6.0   yaml_2.2.1       ebnm_0.1-24      xfun_0.16       
-[21] invgamma_1.1     stringr_1.4.0    knitr_1.29       fs_1.4.2        
-[25] vctrs_0.3.4      rprojroot_1.3-2  grid_3.6.0       glue_1.4.2      
-[29] R6_2.4.1         rmarkdown_2.3    mixsqp_0.3-43    irlba_2.3.3     
-[33] ashr_2.2-51      whisker_0.4      backports_1.1.10 promises_1.1.1  
-[37] ellipsis_0.3.1   htmltools_0.5.0  httpuv_1.5.4     stringi_1.4.6   
-[41] truncnorm_1.0-8  SQUAREM_2020.3   crayon_1.3.4    </code></pre>
+ [1] tidyr_1.3.1       sass_0.4.9        generics_0.1.3    ashr_2.2-63      
+ [5] stringi_1.8.4     lattice_0.22-6    digest_0.6.37     evaluate_1.0.3   
+ [9] grid_4.4.2        fastmap_1.2.0     rprojroot_2.0.4   workflowr_1.7.1  
+[13] jsonlite_1.8.9    Matrix_1.7-2      whisker_0.4.1     mixsqp_0.3-54    
+[17] promises_1.3.2    purrr_1.0.2       scales_1.3.0      truncnorm_1.0-9  
+[21] invgamma_1.1      jquerylib_0.1.4   cli_3.6.3         rlang_1.1.5      
+[25] deconvolveR_1.2-1 munsell_0.5.1     splines_4.4.2     cachem_1.1.0     
+[29] yaml_2.3.10       parallel_4.4.2    tools_4.4.2       SQUAREM_2021.1   
+[33] softImpute_1.4-1  dplyr_1.1.4       colorspace_2.1-1  ggplot2_3.5.1    
+[37] httpuv_1.6.15     vctrs_0.6.5       R6_2.5.1          lifecycle_1.0.4  
+[41] git2r_0.35.0      stringr_1.5.1     fs_1.6.5          trust_0.1-8      
+[45] irlba_2.3.5.1     pkgconfig_2.0.3   pillar_1.10.1     bslib_0.9.0      
+[49] later_1.4.1       gtable_0.3.6      glue_1.8.0        Rcpp_1.0.14      
+[53] xfun_0.50         tibble_3.2.1      tidyselect_1.2.1  rstudioapi_0.17.1
+[57] knitr_1.49        htmltools_0.5.8.1 rmarkdown_2.29    compiler_4.4.2   
+[61] horseshoe_0.2.0  </code></pre>
 </div>
 </div>
 </div>
@@ -1398,7 +1553,7 @@ loaded via a namespace (and not attached):
 
 <!-- Adjust MathJax settings so that all math formulae are shown using
 TeX fonts only; see
-http://docs.mathjax.org/en/latest/configuration.html.  This will make
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
 the presentation more consistent at the cost of the webpage sometimes
 taking slightly longer to load. Note that this only works because the
 footer is added to webpages before the MathJax javascript. -->
@@ -1407,6 +1562,8 @@ footer is added to webpages before the MathJax javascript. -->
     "HTML-CSS": { availableFonts: ["TeX"] }
   });
 </script>
+
+
 
 
 </div>
@@ -1418,7 +1575,7 @@ footer is added to webpages before the MathJax javascript. -->
 
 // add bootstrap table styles to pandoc tables
 function bootstrapStylePandocTables() {
-  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
 }
 $(document).ready(function () {
   bootstrapStylePandocTables();
@@ -1436,7 +1593,7 @@ $(document).ready(function () {
 
 $(document).ready(function () {
   $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
+    $(this).parent().toggleClass('nav-tabs-open');
   });
 });
 </script>
@@ -1445,6 +1602,9 @@ $(document).ready(function () {
 
 <script>
 $(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
 
     // move toc-ignore selectors from section div to header
     $('div.section.toc-ignore')
