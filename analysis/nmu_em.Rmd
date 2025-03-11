@@ -7,13 +7,18 @@ editor_options:
   chunk_output_type: console
 ---
 
+```{r}
+library("emg")
+library("tictoc")
+```
+
 ## Introduction
 
 My goal is to fit a version of the non-negative matrix underapproximation using an EM algorithm. 
 
 The model for a data matrix $A$ is:
 $$A = uv' + b + e$$
-where $b_{ij} \sim Exp(\lambda)$, $e_{ij} \sim N(0,sigma^2)$, and $u,v$ are non-negative vectors to be estimated. Alternatively we could write $A \sim N(uv' + b,\sigma^2)$. 
+where $b_{ij} \sim Exp(\lambda)$, $e_{ij} \sim N(0,sigma^2)$, and $u,v$ are non-negative vectors to be estimated. Alternatively we could write $A \sim N(uv' + b,\sigma^2)$. (Note: the distribution of the sum of independent exponential and gaussian random variables ($b+e$) is known as an exponentially modified gaussian (EMG) distribution. The `emg` package can be used to compute the density.) 
 
 If $\sigma^2=0$ then the mle for $u,v$ (integrating out $b,e$) should be a feasible solution to the underapproximation problem. However, introducing $\sigma>0$ is useful because it allows us to implement an EM algorithm. If $sigma^2$ is very small (compared with $1/\lambda$) then this will approximately solve (a version of) the non-negative matrix underapproximation problem. On the other hand, if $1/\lambda$ is very small compared with $\sigma$ then it will be closer to regular NMF.
 
@@ -72,6 +77,11 @@ trunc_and_norm = function(u){
   return(uplus)
 }
 
+loglik_emg = function(A,u,d,lambda,sigma){
+  R = A- d * u %*% t(u)
+  sum(demg(R,lambda=lambda,sigma=sigma,log=TRUE))
+}
+
 nmu_em = function(A, lambda=1, sigma=1, maxiter=100){
   b = matrix(0,nrow=nrow(A),ncol=ncol(A))
 
@@ -86,15 +96,17 @@ nmu_em = function(A, lambda=1, sigma=1, maxiter=100){
   }
 
   d = drop(t(u) %*% (A-b) %*% u)
-
+  loglik = loglik_emg(A,u,d,lambda,sigma)
+  
   for(i in 1:maxiter){
     u = trunc_and_norm((A-b) %*% u)
     d = drop(t(u) %*% (A-b) %*% u)
     b = matrix(truncnorm::etruncnorm(a=0,mean= A-d*u %*% t(u)-lambda*sigma^2,sd=sigma),nrow=2*n)
+    loglik = c(loglik,loglik_emg(A,u,d,lambda,sigma))
   }
 
   d = drop(t(u) %*% (A-b) %*% u)
-  return(list(u=u, d=d, b=b))
+  return(list(u=u, d=d, b=b, loglik = loglik))
 }
 
 ```
@@ -104,6 +116,7 @@ fit = nmu_em(A, 1, 1)
 image(fit$u %*% t(fit$u))
 min(A- fit$d * fit$u %*% t(fit$u))
 hist(A- fit$d * fit$u %*% t(fit$u))
+plot(fit$loglik[-1])
 ```
 
 
@@ -112,46 +125,67 @@ fit = nmu_em(A, 1, 0.1)
 image(fit$u %*% t(fit$u))
 min(A- fit$d * fit$u %*% t(fit$u))
 hist(A- fit$d * fit$u %*% t(fit$u))
+plot(fit$loglik[-1])
 ```
 
-Note: if lambda is too small then the fit gets absorbed into u instead of b. This makes sense.
+Note: if lambda is too small then the fit gets absorbed into b instead of u. This makes sense.
 ```{r}
 fit = nmu_em(A, .1, 1)
 image(fit$u %*% t(fit$u))
 image(fit$b)
 ```
 
-More generally, if lambda and sigma are not appropriate this is unlikely to work well:
+More generally, if lambda and sigma are not appropriate this is unlikely to work well (note that the log-likelihood is not strictly increasing here, but is stable to 3dp so it is possible this is just numerical error rather than a bug.)
 ```{r}
 fit = nmu_em(A, 100, 100)
 image(fit$u %*% t(fit$u))
+image(A-fit$d*fit$u %*% t(fit$u))
 image(fit$b)
+plot(fit$loglik)
+fit$loglik
 ```
 
 
-Note: i did try applying this, accidentally, to a matrix where some A were negative, so there is no underapproximation solution. It still did something sensible!
+Note: i did try applying this, accidentally, to a matrix where some A were negative, so there is no underapproximation solution. It still did something sensible, effectively trying to avoid reducing the negative entries any further. This is a nice feature. 
 
 
 ## Estimating lambda and sigma
 
+I consider three possibilies. The first is a method of moments that is very simple.
+
 Note that
 $$E(A-uv') = 1/\lambda$$ and 
 $$E(A-uv')^2 = 1/\lambda^2 + \sigma^2$$.
-
-So a method of moments suggests estimating $\lambda = 1/mean(A-uv')$
+So the method of moments gives $\lambda = 1/mean(A-uv')$
 and $\sigma^2 = mean((A-uv')^2) - mean(A-uv')^2 = var(A-uv')$.
 
-The following code implements this idea (repeats fitting nmu 5  times, re-estimating lambda and sigma using the above after each time).
-Note that this is really just a first try. I think in practice, if we want an underapproximation, then we will want to do something to ensure that. Here I just initialize sigma to be small, but we need to think more about this, especially since we would like the method to be invariant to scaling of $A$.
+The second is maximum likelihood estimation of both lambda and sigma, done numerically. 
+
+The third is to estimate lambda by method of moments, and numerically optimize over sigma (I tried this because very preliminary results suggested that the MoM estimate for lambda may be more stable than that for sigma.)
+
+The following code implements this idea (repeats estimating lambda,sigma up to 5 times). Note that this is really just an initial try. In practice, if we want an underapproximation, we might want to do something to ensure that sigma is small. Here I just initialize sigma to be small, but we need to think more about this, especially since we would like the method to be invariant to scaling of $A$.
 
 One possibility would be to initialize sigma to be the estimate based on the first PC, 
 `sigma= sqrt(mean((A - A.svd$d[1] * u %*% t(u))^2))`  
 but maybe that is still too big since what we really want is that sigma is the residual when all of the (nonnegative) factors are taken out. Another possibility is to fix sigma by guessing that, say, the nonnegative factors will, in total, explain 99% of the variance. 
 
 ```{r}
-nmu_em_estlambda = function(A, maxiter=100, lambda=1, sigma=0.1){
-  b = matrix(0,nrow=nrow(A),ncol=ncol(A))
+#return the difference between the last and next-to-last elements of x
+delta = function(x){
+  return(x[length(x)]- x[length(x)-1])
+}
 
+nmu_em_estlambda = function(A, maxiter=100, lambda=1, sigma=0.1, est.method="mle.sigma", b.init = matrix(0,nrow=nrow(A),ncol=ncol(A))){
+
+  b = b.init
+  
+  # if b.init supplied, use it to estimate lambda and sigma
+  # this maybe only makes sense if we use the low rank approx of A to estimate b
+  if(!missing(b.init)){ 
+    lambda = 1/mean(b)
+    sigma = sqrt(mean((A-b)^2))
+  }  
+    
   # initialize u by svd (check both u and -u since either could work)
   A.svd = svd(A)
   u = A.svd$u[,1]
@@ -165,34 +199,86 @@ nmu_em_estlambda = function(A, maxiter=100, lambda=1, sigma=0.1){
   }
 
   d = drop(t(u) %*% (A-b) %*% u)
+  b = matrix(truncnorm::etruncnorm(a=0,mean= A-d*u %*% t(u)-lambda*sigma^2,sd=sigma),nrow=2*n)
+  
+  loglik = loglik_emg(A,u,d,lambda,sigma)
   
   for(j in 1:5){
     for(i in 1:maxiter){
       u = trunc_and_norm((A-b) %*% u)
       d = drop(t(u) %*% (A-b) %*% u)
       b = matrix(truncnorm::etruncnorm(a=0,mean= A-d*u %*% t(u)-lambda*sigma^2,sd=sigma),nrow=2*n)
+      loglik = c(loglik, loglik_emg(A,u,d,lambda,sigma))
+      if(delta(loglik)<1e-3) break;
     } 
-    lambda = 1/mean(A-d * u %*% t(u))
+    lambda = 1/mean(A-d * u %*% t(u)) #method of moments estimates
     sigma = sd(A-d * u %*% t(u))
+    if(est.method == "mle.both"){
+      fit.mle = mle(function(llambda,lsigma) {
+          -loglik_emg(A, u, d, exp(llambda),exp(lsigma))
+      }, method = "L-BFGS-B",lower = c(-10,-10), start =c(log(lambda),log(sigma)))
+      lambda = exp(coef(fit.mle)[1])
+      sigma = exp(coef(fit.mle)[2])
+    }
+    if(est.method == "mle.sigma"){
+      fit.mle = mle(function(lsigma) {
+          -loglik_emg(A, u, d, lambda,exp(lsigma))
+      }, method = "Brent", lower=c(-10), upper = c(10), start =c(log(sigma)))
+      sigma = exp(coef(fit.mle)[1])
+    }
+    
+    loglik = c(loglik, loglik_emg(A,u,d,lambda,sigma))
+    if(delta(loglik)<1e-3) break;
   }
   d = drop(t(u) %*% (A-b) %*% u)
-  return(list(u=u, d=d, b=b, lambda=lambda, sigma=sigma))
+  return(list(u=u, d=d, b=b, lambda=lambda, sigma=sigma, loglik = loglik))
 }
 ```
 
 
-Try it out:
+Try it out. Note that MoM estimation of lambda, sigma decreases the loglikelihood.
 ```{r}
-fit = nmu_em_estlambda(A)
-fit$lambda
-fit$sigma
-image(fit$u %*% t(fit$u))
+set.seed(1)
+n = 10
+maxiter = 1000
+x = cbind(c(rep(1,n),rep(0,n)), c(rep(0,n),rep(1,n)))
+E = matrix(0.1*rexp(2*n*2*n),nrow=2*n)
+E = E+t(E) #symmetric errors
+A = x %*% t(x) + E
+image(A)
+
+fit.mom = nmu_em_estlambda(A,est.method="mom")
+fit.mle.both = nmu_em_estlambda(A,est.method="mle.both")
+fit.mle.sigma = nmu_em_estlambda(A,est.method="mle.sigma")
+
+fit.mom$lambda
+fit.mom$sigma
+
+fit.mle.both$lambda
+fit.mle.both$sigma
+
+fit.mle.sigma$lambda
+fit.mle.sigma$sigma
+```
+
+Note that estimates of lambda,sigma from mle.both and mle.sigma are almost identical. Also although estimates for lambda, sigma vary with mom, the estimated `u` is very similar.
+```{r}
+plot(fit.mom$u)
+points(fit.mle.both$u,col=2,pch=2)
+points(fit.mle.sigma$u,col=3,pch=".")
+
+
+plot(fit.mle.both$loglik,col=2)
+points(fit.mom$loglik)
+points(fit.mle.sigma$loglik,col=3,pch=".")
 ```
 
 
 ## A tree
 
-Try a tree, and iteratively removing factors. We can see this gives something close to the result we want. 
+Try a tree, and iteratively removing factors. We can see this gives something close to the result we want.
+One question is why this happens because there seems to be a "better" solution even with underapproximation: I believe you can fit this tree with only four factors. This needs more investigation.
+
 ```{r}
 set.seed(1)
 n = 40
@@ -200,36 +286,222 @@ x = cbind(c(rep(1,n),rep(0,n)), c(rep(0,n),rep(1,n)), c(rep(1,n/2),rep(0,3*n/2))
 E = matrix(0.1*rexp(2*n*2*n),nrow=2*n)
 E = E+t(E) #symmetric errors
 A = x %*% t(x) + E
-image(A)
-fit = nmu_em_estlambda(A)
-fit$lambda
-fit$sigma
-image(fit$u %*% t(fit$u))
-
-A = A-fit$d*fit$u %*% t(fit$u)
-fit = nmu_em_estlambda(A)
-image(fit$u %*% t(fit$u))
-
-A = A-fit$d*fit$u %*% t(fit$u)
-fit = nmu_em_estlambda(A)
-image(fit$u %*% t(fit$u))
-
-A = A-fit$d*fit$u %*% t(fit$u)
-fit = nmu_em_estlambda(A)
-image(fit$u %*% t(fit$u))
-
-A = A-fit$d*fit$u %*% t(fit$u)
-fit = nmu_em_estlambda(A)
-image(fit$u %*% t(fit$u))
-
-A = A-fit$d*fit$u %*% t(fit$u)
-fit = nmu_em_estlambda(A)
-image(fit$u %*% t(fit$u))
-
-A = A-fit$d*fit$u %*% t(fit$u)
-fit = nmu_em_estlambda(A)
-image(fit$u %*% t(fit$u))
 ```
+
+
+Method of moments:
+```{r} 
+A = x %*% t(x) + E
+par(mfcol=c(3,3),mai=rep(0.2,4))
+image(A)
+tic()
+for(i in 1:8){
+  fit = nmu_em_estlambda(A,est.method = "mom")
+  A = A-fit$d*fit$u %*% t(fit$u)
+  fit$lambda
+  fit$sigma
+  plot(fit$u)
+}
+toc()
+
+```
+
+Estimate sigma by mle (note that this is quite a bit slower).
+```{r} 
+A = x %*% t(x) + E
+par(mfcol=c(3,3),mai=rep(0.2,4))
+image(A)
+tic()
+for(i in 1:8){
+  fit = nmu_em_estlambda(A,est.method = "mle.sigma")
+  A = A-fit$d*fit$u %*% t(fit$u)
+  fit$lambda
+  fit$sigma
+  plot(fit$u)
+}
+toc()
+```
+
+
+Here I try a tree with a stronger diagonal; the idea is that this might cause it to remove the bottom branches first, which might break the whole thing? However it continues to work quite well.
+```{r}
+set.seed(1)
+n = 40
+x = cbind(c(rep(1,n),rep(0,n)), c(rep(0,n),rep(1,n)), c(rep(1,n/2),rep(0,3*n/2)), c(rep(0,n/2), rep(1,n/2), rep(0,n)), c(rep(0,n),rep(1,n/2),rep(0,n/2)), c(rep(0,3*n/2),rep(1,n/2)))
+E = matrix(0.1*rexp(2*n*2*n),nrow=2*n)
+E = E+t(E) #symmetric errors
+
+A = x %*% diag(c(1,1,3,3,3,3)) %*% t(x) + E
+par(mfcol=c(3,3),mai=rep(0.2,4))
+image(A)
+tic()
+for(i in 1:8){
+  fit = nmu_em_estlambda(A,est.method = "mom")
+  A = A-fit$d*fit$u %*% t(fit$u)
+  fit$lambda
+  fit$sigma
+  plot(fit$u)
+}
+toc()
+
+A = x %*% diag(c(1,1,3,3,3,3)) %*% t(x) + E
+par(mfcol=c(3,3),mai=rep(0.2,4))
+image(A)
+tic()
+for(i in 1:8){
+  fit = nmu_em_estlambda(A,est.method = "mle.sigma")
+  A = A-fit$d*fit$u %*% t(fit$u)
+  fit$lambda
+  fit$sigma
+  plot(fit$u)
+}
+toc()
+```
+
+
+Here I try an even stronger diagonal. Interestingly it still does not totally break it (one factor becomes non-binar), and does not find the diagonal first.
+```{r}
+A = x %*% diag(c(1,1,8,8,8,8)) %*% t(x) + E
+par(mfcol=c(3,3),mai=rep(0.2,4))
+image(A)
+tic()
+for(i in 1:8){
+  fit = nmu_em_estlambda(A,est.method = "mom")
+  A = A-fit$d*fit$u %*% t(fit$u)
+  fit$lambda
+  fit$sigma
+  plot(fit$u)
+}
+toc()
+```
+
+Try mle.sigma
+```{r}
+A = x %*% diag(c(1,1,8,8,8,8)) %*% t(x) + E
+par(mfcol=c(3,3),mai=rep(0.2,4))
+image(A)
+tic()
+for(i in 1:8){
+  fit = nmu_em_estlambda(A,est.method = "mle.sigma")
+  A = A-fit$d*fit$u %*% t(fit$u)
+  fit$lambda
+  fit$sigma
+  plot(fit$u)
+}
+toc()
+```
+
+
+## Things to try
+
+1. I think it could be possible to extend the prior on b to a mixture of
+exponentials (using code from ashr/ebnm for exponential mixtures). That might be worth trying.
+
+2. One thought is that we could get a pretty good estimate of b from an initial low-rank approximation (eg PCA), and then do this process of NMU taking advantage of the known b. One motivation is to avoid the problem of overremoving things despite the nmu constraint - eg when it is a tree, but the bottom branches are found before the lower branches.
+
+Here, as a first investigation of 2, I try initializing b using an SVD.
+This also allows me to easily fix lambda and sigma based on that estimated b. 
+However, I found the results were very sensitive to the values of lambda and sigma, and also the number of iterations.
+
+Here are the result for estimated lambda=0.37,sigma=0.12:
+```{r}
+set.seed(1)
+n = 40
+x = cbind(c(rep(1,n),rep(0,n)), c(rep(0,n),rep(1,n)), c(rep(1,n/2),rep(0,3*n/2)), c(rep(0,n/2), rep(1,n/2), rep(0,n)), c(rep(0,n),rep(1,n/2),rep(0,n/2)), c(rep(0,3*n/2),rep(1,n/2)))
+E = matrix(0.1*rexp(2*n*2*n),nrow=2*n)
+E = E+t(E) #symmetric errors
+A = x %*% diag(c(1,1,8,8,8,8)) %*% t(x) + E
+A.svd = svd(A)
+b = A.svd$u[,1:6] %*% diag(A.svd$d[1:6]) %*% t(A.svd$v[,1:6])
+
+set.seed(2)
+lambda = 1/mean(b)
+sigma = sqrt(mean((A-b)^2))
+lambda
+sigma
+u = rnorm(80)
+for(i in 1:100){
+  u = trunc_and_norm((A-b) %*% u)
+  d = drop(t(u) %*% (A-b) %*% u)
+  b = matrix(truncnorm::etruncnorm(a=0,mean= A-d*u %*% t(u)-lambda*sigma^2,sd=sigma),nrow=2*n)
+}
+plot(u)
+
+```
+
+This is fixed lambda=1,sigma=0.1. Note that the results after 1000 iterations look pretty different from 100 iterations.
+```{r}
+set.seed(2)
+b = A.svd$u[,1:6] %*% diag(A.svd$d[1:6]) %*% t(A.svd$v[,1:6])
+lambda = 1
+sigma = 0.1
+u = rnorm(80)
+for(i in 1:100){
+  u = trunc_and_norm((A-b) %*% u)
+  d = drop(t(u) %*% (A-b) %*% u)
+  b = matrix(truncnorm::etruncnorm(a=0,mean= A-d*u %*% t(u)-lambda*sigma^2,sd=sigma),nrow=2*n)
+}
+plot(u)
+
+set.seed(2)
+b = A.svd$u[,1:6] %*% diag(A.svd$d[1:6]) %*% t(A.svd$v[,1:6])
+lambda = 1
+sigma = 0.1
+u = rnorm(80)
+for(i in 1:1000){
+  u = trunc_and_norm((A-b) %*% u)
+  d = drop(t(u) %*% (A-b) %*% u)
+  b = matrix(truncnorm::etruncnorm(a=0,mean= A-d*u %*% t(u)-lambda*sigma^2,sd=sigma),nrow=2*n)
+}
+plot(u)
+
+#lambda=1
+#sigma=0.1
+
+# par(mfcol=c(3,3))
+# image(A)
+# fit = nmu_em_estlambda(A,b.init=b)
+# fit$lambda
+# fit$sigma
+# image(fit$u %*% t(fit$u))
+# 
+# A = A-fit$d*fit$u %*% t(fit$u)
+# A.svd = svd(A)
+# b = A.svd$u[,1:6] %*% diag(A.svd$d[1:6]) %*% t(A.svd$v[,1:6])
+# 
+
+# fit = nmu_em_estlambda(A,b.init=b)
+# image(fit$u %*% t(fit$u))
+# 
+# A = A-fit$d*fit$u %*% t(fit$u)
+# fit = nmu_em_estlambda(A)
+# image(fit$u %*% t(fit$u))
+# 
+# A = A-fit$d*fit$u %*% t(fit$u)
+# fit = nmu_em_estlambda(A)
+# image(fit$u %*% t(fit$u))
+# 
+# A = A-fit$d*fit$u %*% t(fit$u)
+# fit = nmu_em_estlambda(A)
+# image(fit$u %*% t(fit$u))
+# 
+# A = A-fit$d*fit$u %*% t(fit$u)
+# fit = nmu_em_estlambda(A)
+# image(fit$u %*% t(fit$u))
+# 
+# A = A-fit$d*fit$u %*% t(fit$u)
+# fit = nmu_em_estlambda(A)
+# image(fit$u %*% t(fit$u))
+# 
+# A = A-fit$d*fit$u %*% t(fit$u)
+# fit = nmu_em_estlambda(A)
+# image(fit$u %*% t(fit$u))
+# 
+
+
+```
+
+
 
 
 ## Further thoughts; scaling 
