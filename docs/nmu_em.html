@@ -378,7 +378,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2025-02-27
+<strong>Last updated:</strong> 2025-03-11
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -509,15 +509,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreef82707c3e7e84d3874579213b97f6321b23476e6targetblankf82707ca">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreea4be13aab7c4b8c47ec5e5fe1261404f86a70cd1targetblanka4be13aa">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/stephens999/misc/tree/f82707c3e7e84d3874579213b97f6321b23476e6" target="_blank">f82707c</a>
+<a href="https://github.com/stephens999/misc/tree/a4be13aab7c4b8c47ec5e5fe1261404f86a70cd1" target="_blank">a4be13a</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreef82707c3e7e84d3874579213b97f6321b23476e6targetblankf82707ca"
+id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreea4be13aab7c4b8c47ec5e5fe1261404f86a70cd1targetblanka4be13aa"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -527,7 +527,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/stephens999/misc/tree/f82707c3e7e84d3874579213b97f6321b23476e6" target="_blank">f82707c</a>.
+<a href="https://github.com/stephens999/misc/tree/a4be13aab7c4b8c47ec5e5fe1261404f86a70cd1" target="_blank">a4be13a</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -575,6 +575,7 @@ Untracked files:
     Untracked:  analysis/eb_var.Rmd
     Untracked:  analysis/ebpmf1.Rmd
     Untracked:  analysis/ebpmf_sla_text.Rmd
+    Untracked:  analysis/ebpower.Rmd
     Untracked:  analysis/ebspca_sims.Rmd
     Untracked:  analysis/explore_psvd.Rmd
     Untracked:  analysis/fa_check_identify.Rmd
@@ -775,6 +776,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/a4be13aab7c4b8c47ec5e5fe1261404f86a70cd1/analysis/nmu_em.Rmd" target="_blank">a4be13a</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-03-11
+</td>
+<td>
+workflowr::wflow_publish("nmu_em.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/8ac138069b3655ff601132c4f92847c4aa2d2fac/docs/nmu_em.html" target="_blank">8ac1380</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-02-27
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/f82707c3e7e84d3874579213b97f6321b23476e6/analysis/nmu_em.Rmd" target="_blank">f82707c</a>
 </td>
 <td>
@@ -828,6 +863,10 @@ wflow_publish("nmu_em.Rmd")
 </div>
 </div>
 </div>
+<pre class="r"><code>library(&quot;emg&quot;)</code></pre>
+<pre><code>Loading required package: stats4</code></pre>
+<pre><code>Loading required package: moments</code></pre>
+<pre class="r"><code>library(&quot;tictoc&quot;)</code></pre>
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
 <p>My goal is to fit a version of the non-negative matrix
@@ -838,7 +877,11 @@ is: <span class="math display">\[A = uv&#39; + b + e\]</span> where
 class="math inline">\(e_{ij} \sim N(0,sigma^2)\)</span>, and <span
 class="math inline">\(u,v\)</span> are non-negative vectors to be
 estimated. Alternatively we could write <span class="math inline">\(A
-\sim N(uv&#39; + b,\sigma^2)\)</span>.</p>
+\sim N(uv&#39; + b,\sigma^2)\)</span>. (Note: the distribution of the
+sum of independent exponential and gaussian random variables (<span
+class="math inline">\(b+e\)</span>) is known as an exponentially
+modified gaussian (EMG) distribution. The <code>emg</code> package can
+be used to compute the density.)</p>
 <p>If <span class="math inline">\(\sigma^2=0\)</span> then the mle for
 <span class="math inline">\(u,v\)</span> (integrating out <span
 class="math inline">\(b,e\)</span>) should be a feasible solution to the
@@ -886,13 +929,13 @@ class="math inline">\((x)_+\)</span>.</p>
 <pre class="r"><code>  sigma=0.01  
   x = seq(-0.5,0.5,length=20)
   plot(x,truncnorm::etruncnorm(0,Inf,x-sigma^2,sigma))</code></pre>
-<p><img src="figure/nmu_em.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/nmu_em.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-1">
-Past versions of unnamed-chunk-1-1.png
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-1">
+Past versions of unnamed-chunk-2-1.png
 </button>
 </p>
-<div id="fig-unnamed-chunk-1-1" class="collapse">
+<div id="fig-unnamed-chunk-2-1" class="collapse">
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
 <thead>
@@ -911,13 +954,13 @@ Date
 <tbody>
 <tr>
 <td>
-<a href="https://github.com/stephens999/misc/blob/eb0b82bba410078a76233be4b062bfec73da1866/docs/figure/nmu_em.Rmd/unnamed-chunk-1-1.png" target="_blank">eb0b82b</a>
+<a href="https://github.com/stephens999/misc/blob/8ac138069b3655ff601132c4f92847c4aa2d2fac/docs/figure/nmu_em.Rmd/unnamed-chunk-2-1.png" target="_blank">8ac1380</a>
 </td>
 <td>
 Matthew Stephens
 </td>
 <td>
-2025-02-26
+2025-02-27
 </td>
 </tr>
 </tbody>
@@ -940,57 +983,13 @@ E = matrix(0.1*rexp(2*n*2*n),nrow=2*n)
 E = E+t(E) #symmetric errors
 A = x %*% t(x) + E
 image(A)</code></pre>
-<p><img src="figure/nmu_em.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>I’m going to solve the symmetric nmf method by the thresholded power
-iteration, <span class="math display">\[u \leftarrow (Au)_+\]</span>
-Note: this is not an algorithm I can find a reference for but I believe
-it is true that, on rescaling u to have unit norm, this iteration
-decreases <span class="math inline">\(||A-uu&#39;||\)</span> subject to
-<span class="math inline">\(u&gt;0\)</span> <span
-class="math inline">\(||u||=1\)</span>. Then you can set <span
-class="math inline">\(d=u&#39;Au\)</span> to minimize <span
-class="math inline">\(||A-duu&#39;||^2\)</span>.</p>
-<pre class="r"><code>#truncate and normalize function
-trunc_and_norm = function(u){
-  uplus = ifelse(u&gt;0,u,0)
-  if(!all(uplus==0))
-    uplus = uplus/sqrt(sum(uplus^2))
-  return(uplus)
-}
-
-nmu_em = function(A, lambda=1, sigma=1, maxiter=100){
-  b = matrix(0,nrow=nrow(A),ncol=ncol(A))
-
-  # initialize u by svd (check both u and -u since either could work)
-  u = svd(A)$u[,1]
-  u1 = trunc_and_norm(u)
-  u2 = trunc_and_norm(-u)
-  if(t(u1) %*% A %*% u1 &gt; t(u2) %*% A %*% u2){
-    u = u1
-  } else {
-    u = u2
-  }
-
-  d = drop(t(u) %*% (A-b) %*% u)
-
-  for(i in 1:maxiter){
-    u = trunc_and_norm((A-b) %*% u)
-    d = drop(t(u) %*% (A-b) %*% u)
-    b = matrix(truncnorm::etruncnorm(a=0,mean= A-d*u %*% t(u)-lambda*sigma^2,sd=sigma),nrow=2*n)
-  }
-
-  d = drop(t(u) %*% (A-b) %*% u)
-  return(list(u=u, d=d, b=b))
-}</code></pre>
-<pre class="r"><code>fit = nmu_em(A, 1, 1)
-image(fit$u %*% t(fit$u))</code></pre>
-<p><img src="figure/nmu_em.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/nmu_em.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-1">
-Past versions of unnamed-chunk-4-1.png
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-1">
+Past versions of unnamed-chunk-3-1.png
 </button>
 </p>
-<div id="fig-unnamed-chunk-4-1" class="collapse">
+<div id="fig-unnamed-chunk-3-1" class="collapse">
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
 <thead>
@@ -1009,7 +1008,18 @@ Date
 <tbody>
 <tr>
 <td>
-<a href="https://github.com/stephens999/misc/blob/eb0b82bba410078a76233be4b062bfec73da1866/docs/figure/nmu_em.Rmd/unnamed-chunk-4-1.png" target="_blank">eb0b82b</a>
+<a href="https://github.com/stephens999/misc/blob/8ac138069b3655ff601132c4f92847c4aa2d2fac/docs/figure/nmu_em.Rmd/unnamed-chunk-3-1.png" target="_blank">8ac1380</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-02-27
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/eb0b82bba410078a76233be4b062bfec73da1866/docs/figure/nmu_em.Rmd/unnamed-chunk-3-1.png" target="_blank">eb0b82b</a>
 </td>
 <td>
 Matthew Stephens
@@ -1022,11 +1032,55 @@ Matthew Stephens
 </table>
 </div>
 </div>
-<pre class="r"><code>min(A- fit$d * fit$u %*% t(fit$u))</code></pre>
-<pre><code>[1] 0.008737816</code></pre>
-<pre class="r"><code>hist(A- fit$d * fit$u %*% t(fit$u))</code></pre>
-<p><img src="figure/nmu_em.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>fit = nmu_em(A, 1, 0.1)
+<p>I’m going to solve the symmetric nmf method by the thresholded power
+iteration, <span class="math display">\[u \leftarrow (Au)_+\]</span>
+Note: this is not an algorithm I can find a reference for but I believe
+it is true that, on rescaling u to have unit norm, this iteration
+decreases <span class="math inline">\(||A-uu&#39;||\)</span> subject to
+<span class="math inline">\(u&gt;0\)</span> <span
+class="math inline">\(||u||=1\)</span>. Then you can set <span
+class="math inline">\(d=u&#39;Au\)</span> to minimize <span
+class="math inline">\(||A-duu&#39;||^2\)</span>.</p>
+<pre class="r"><code>#truncate and normalize function
+trunc_and_norm = function(u){
+  uplus = ifelse(u&gt;0,u,0)
+  if(!all(uplus==0))
+    uplus = uplus/sqrt(sum(uplus^2))
+  return(uplus)
+}
+
+loglik_emg = function(A,u,d,lambda,sigma){
+  R = A- d * u %*% t(u)
+  sum(demg(R,lambda=lambda,sigma=sigma,log=TRUE))
+}
+
+nmu_em = function(A, lambda=1, sigma=1, maxiter=100){
+  b = matrix(0,nrow=nrow(A),ncol=ncol(A))
+
+  # initialize u by svd (check both u and -u since either could work)
+  u = svd(A)$u[,1]
+  u1 = trunc_and_norm(u)
+  u2 = trunc_and_norm(-u)
+  if(t(u1) %*% A %*% u1 &gt; t(u2) %*% A %*% u2){
+    u = u1
+  } else {
+    u = u2
+  }
+
+  d = drop(t(u) %*% (A-b) %*% u)
+  loglik = loglik_emg(A,u,d,lambda,sigma)
+  
+  for(i in 1:maxiter){
+    u = trunc_and_norm((A-b) %*% u)
+    d = drop(t(u) %*% (A-b) %*% u)
+    b = matrix(truncnorm::etruncnorm(a=0,mean= A-d*u %*% t(u)-lambda*sigma^2,sd=sigma),nrow=2*n)
+    loglik = c(loglik,loglik_emg(A,u,d,lambda,sigma))
+  }
+
+  d = drop(t(u) %*% (A-b) %*% u)
+  return(list(u=u, d=d, b=b, loglik = loglik))
+}</code></pre>
+<pre class="r"><code>fit = nmu_em(A, 1, 1)
 image(fit$u %*% t(fit$u))</code></pre>
 <p><img src="figure/nmu_em.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
@@ -1053,6 +1107,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/8ac138069b3655ff601132c4f92847c4aa2d2fac/docs/figure/nmu_em.Rmd/unnamed-chunk-5-1.png" target="_blank">8ac1380</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-02-27
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/eb0b82bba410078a76233be4b062bfec73da1866/docs/figure/nmu_em.Rmd/unnamed-chunk-5-1.png" target="_blank">eb0b82b</a>
 </td>
 <td>
@@ -1070,16 +1135,131 @@ Matthew Stephens
 <pre><code>[1] 0.008737816</code></pre>
 <pre class="r"><code>hist(A- fit$d * fit$u %*% t(fit$u))</code></pre>
 <p><img src="figure/nmu_em.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Note: if lambda is too small then the fit gets absorbed into u
-instead of b. This makes sense.</p>
-<pre class="r"><code>fit = nmu_em(A, .1, 1)
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-2">
+Past versions of unnamed-chunk-5-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/8ac138069b3655ff601132c4f92847c4aa2d2fac/docs/figure/nmu_em.Rmd/unnamed-chunk-5-2.png" target="_blank">8ac1380</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-02-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>plot(fit$loglik[-1])</code></pre>
+<p><img src="figure/nmu_em.Rmd/unnamed-chunk-5-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>fit = nmu_em(A, 1, 0.1)
 image(fit$u %*% t(fit$u))</code></pre>
 <p><img src="figure/nmu_em.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>image(fit$b)</code></pre>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-1">
+Past versions of unnamed-chunk-6-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/8ac138069b3655ff601132c4f92847c4aa2d2fac/docs/figure/nmu_em.Rmd/unnamed-chunk-6-1.png" target="_blank">8ac1380</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-02-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>min(A- fit$d * fit$u %*% t(fit$u))</code></pre>
+<pre><code>[1] 0.008737816</code></pre>
+<pre class="r"><code>hist(A- fit$d * fit$u %*% t(fit$u))</code></pre>
 <p><img src="figure/nmu_em.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
-<p>More generally, if lambda and sigma are not appropriate this is
-unlikely to work well:</p>
-<pre class="r"><code>fit = nmu_em(A, 100, 100)
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-2">
+Past versions of unnamed-chunk-6-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/8ac138069b3655ff601132c4f92847c4aa2d2fac/docs/figure/nmu_em.Rmd/unnamed-chunk-6-2.png" target="_blank">8ac1380</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-02-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>plot(fit$loglik[-1])</code></pre>
+<p><img src="figure/nmu_em.Rmd/unnamed-chunk-6-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Note: if lambda is too small then the fit gets absorbed into b
+instead of u. This makes sense.</p>
+<pre class="r"><code>fit = nmu_em(A, .1, 1)
 image(fit$u %*% t(fit$u))</code></pre>
 <p><img src="figure/nmu_em.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
@@ -1106,6 +1286,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/8ac138069b3655ff601132c4f92847c4aa2d2fac/docs/figure/nmu_em.Rmd/unnamed-chunk-7-1.png" target="_blank">8ac1380</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-02-27
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/eb0b82bba410078a76233be4b062bfec73da1866/docs/figure/nmu_em.Rmd/unnamed-chunk-7-1.png" target="_blank">eb0b82b</a>
 </td>
 <td>
@@ -1121,76 +1312,12 @@ Matthew Stephens
 </div>
 <pre class="r"><code>image(fit$b)</code></pre>
 <p><img src="figure/nmu_em.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Note: i did try applying this, accidentally, to a matrix where some A
-were negative, so there is no underapproximation solution. It still did
-something sensible!</p>
-</div>
-<div id="estimating-lambda-and-sigma" class="section level2">
-<h2>Estimating lambda and sigma</h2>
-<p>Note that <span class="math display">\[E(A-uv&#39;) =
-1/\lambda\]</span> and <span class="math display">\[E(A-uv&#39;)^2 =
-1/\lambda^2 + \sigma^2\]</span>.</p>
-<p>So a method of moments suggests estimating <span
-class="math inline">\(\lambda = 1/mean(A-uv&#39;)\)</span> and <span
-class="math inline">\(\sigma^2 = mean((A-uv&#39;)^2) - mean(A-uv&#39;)^2
-= var(A-uv&#39;)\)</span>.</p>
-<p>The following code implements this idea (repeats fitting nmu 5 times,
-re-estimating lambda and sigma using the above after each time). Note
-that this is really just a first try. I think in practice, if we want an
-underapproximation, then we will want to do something to ensure that.
-Here I just initialize sigma to be small, but we need to think more
-about this, especially since we would like the method to be invariant to
-scaling of <span class="math inline">\(A\)</span>.</p>
-<p>One possibility would be to initialize sigma to be the estimate based
-on the first PC,
-<code>sigma= sqrt(mean((A - A.svd$d[1] * u %*% t(u))^2))</code><br />
-but maybe that is still too big since what we really want is that sigma
-is the residual when all of the (nonnegative) factors are taken out.
-Another possibility is to fix sigma by guessing that, say, the
-nonnegative factors will, in total, explain 99% of the variance.</p>
-<pre class="r"><code>nmu_em_estlambda = function(A, maxiter=100, lambda=1, sigma=0.1){
-  b = matrix(0,nrow=nrow(A),ncol=ncol(A))
-
-  # initialize u by svd (check both u and -u since either could work)
-  A.svd = svd(A)
-  u = A.svd$u[,1]
-  
-  u1 = trunc_and_norm(u)
-  u2 = trunc_and_norm(-u)
-  if(t(u1) %*% A %*% u1 &gt; t(u2) %*% A %*% u2){
-    u = u1
-  } else {
-    u = u2
-  }
-
-  d = drop(t(u) %*% (A-b) %*% u)
-  
-  for(j in 1:5){
-    for(i in 1:maxiter){
-      u = trunc_and_norm((A-b) %*% u)
-      d = drop(t(u) %*% (A-b) %*% u)
-      b = matrix(truncnorm::etruncnorm(a=0,mean= A-d*u %*% t(u)-lambda*sigma^2,sd=sigma),nrow=2*n)
-    } 
-    lambda = 1/mean(A-d * u %*% t(u))
-    sigma = sd(A-d * u %*% t(u))
-  }
-  d = drop(t(u) %*% (A-b) %*% u)
-  return(list(u=u, d=d, b=b, lambda=lambda, sigma=sigma))
-}</code></pre>
-<p>Try it out:</p>
-<pre class="r"><code>fit = nmu_em_estlambda(A)
-fit$lambda</code></pre>
-<pre><code>[1] 2.121926</code></pre>
-<pre class="r"><code>fit$sigma</code></pre>
-<pre><code>[1] 0.4388199</code></pre>
-<pre class="r"><code>image(fit$u %*% t(fit$u))</code></pre>
-<p><img src="figure/nmu_em.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-1">
-Past versions of unnamed-chunk-9-1.png
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-7-2">
+Past versions of unnamed-chunk-7-2.png
 </button>
 </p>
-<div id="fig-unnamed-chunk-9-1" class="collapse">
+<div id="fig-unnamed-chunk-7-2" class="collapse">
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
 <thead>
@@ -1209,27 +1336,152 @@ Date
 <tbody>
 <tr>
 <td>
-<a href="https://github.com/stephens999/misc/blob/eb0b82bba410078a76233be4b062bfec73da1866/docs/figure/nmu_em.Rmd/unnamed-chunk-9-1.png" target="_blank">eb0b82b</a>
+<a href="https://github.com/stephens999/misc/blob/8ac138069b3655ff601132c4f92847c4aa2d2fac/docs/figure/nmu_em.Rmd/unnamed-chunk-7-2.png" target="_blank">8ac1380</a>
 </td>
 <td>
 Matthew Stephens
 </td>
 <td>
-2025-02-26
+2025-02-27
 </td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
+<p>More generally, if lambda and sigma are not appropriate this is
+unlikely to work well (note that the log-likelihood is not strictly
+increasing here, but is stable to 3dp so it is possible this is just
+numerical error rather than a bug.)</p>
+<pre class="r"><code>fit = nmu_em(A, 100, 100)
+image(fit$u %*% t(fit$u))</code></pre>
+<p><img src="figure/nmu_em.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>image(A-fit$d*fit$u %*% t(fit$u))</code></pre>
+<p><img src="figure/nmu_em.Rmd/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>image(fit$b)</code></pre>
+<p><img src="figure/nmu_em.Rmd/unnamed-chunk-8-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(fit$loglik)</code></pre>
+<p><img src="figure/nmu_em.Rmd/unnamed-chunk-8-4.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>fit$loglik</code></pre>
+<pre><code>  [1] -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649
+  [8] -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649
+ [15] -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649
+ [22] -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649
+ [29] -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649
+ [36] -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649
+ [43] -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649
+ [50] -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649
+ [57] -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649
+ [64] -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649
+ [71] -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649
+ [78] -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649
+ [85] -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649
+ [92] -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649 -2209.649
+ [99] -2209.649 -2209.649 -2209.649</code></pre>
+<p>Note: i did try applying this, accidentally, to a matrix where some A
+were negative, so there is no underapproximation solution. It still did
+something sensible, effectively trying to avoid reducing the negative
+entries any further. This is a nice feature.</p>
 </div>
-<div id="a-tree" class="section level2">
-<h2>A tree</h2>
-<p>Try a tree, and iteratively removing factors. We can see this gives
-something close to the result we want.</p>
+<div id="estimating-lambda-and-sigma" class="section level2">
+<h2>Estimating lambda and sigma</h2>
+<p>I consider three possibilies. The first is a method of moments that
+is very simple.</p>
+<p>Note that <span class="math display">\[E(A-uv&#39;) =
+1/\lambda\]</span> and <span class="math display">\[E(A-uv&#39;)^2 =
+1/\lambda^2 + \sigma^2\]</span>. So the method of moments gives <span
+class="math inline">\(\lambda = 1/mean(A-uv&#39;)\)</span> and <span
+class="math inline">\(\sigma^2 = mean((A-uv&#39;)^2) - mean(A-uv&#39;)^2
+= var(A-uv&#39;)\)</span>.</p>
+<p>The second is maximum likelihood estimation of both lambda and sigma,
+done numerically.</p>
+<p>The third is to estimate lambda by method of moments, and numerically
+optimize over sigma (I tried this because very preliminary results
+suggested that the MoM estimate for lambda may be more stable than that
+for sigma.)</p>
+<p>The following code implements this idea (repeats estimating
+lambda,sigma up to 5 times). Note that this is really just an initial
+try. In practice, if we want an underapproximation, we might want to do
+something to ensure that sigma is small. Here I just initialize sigma to
+be small, but we need to think more about this, especially since we
+would like the method to be invariant to scaling of <span
+class="math inline">\(A\)</span>.</p>
+<p>One possibility would be to initialize sigma to be the estimate based
+on the first PC,
+<code>sigma= sqrt(mean((A - A.svd$d[1] * u %*% t(u))^2))</code><br />
+but maybe that is still too big since what we really want is that sigma
+is the residual when all of the (nonnegative) factors are taken out.
+Another possibility is to fix sigma by guessing that, say, the
+nonnegative factors will, in total, explain 99% of the variance.</p>
+<pre class="r"><code>#return the difference between the last and next-to-last elements of x
+delta = function(x){
+  return(x[length(x)]- x[length(x)-1])
+}
+
+nmu_em_estlambda = function(A, maxiter=100, lambda=1, sigma=0.1, est.method=&quot;mle.sigma&quot;, b.init = matrix(0,nrow=nrow(A),ncol=ncol(A))){
+
+  b = b.init
+  
+  # if b.init supplied, use it to estimate lambda and sigma
+  # this maybe only makes sense if we use the low rank approx of A to estimate b
+  if(!missing(b.init)){ 
+    lambda = 1/mean(b)
+    sigma = sqrt(mean((A-b)^2))
+  }  
+    
+  # initialize u by svd (check both u and -u since either could work)
+  A.svd = svd(A)
+  u = A.svd$u[,1]
+  
+  u1 = trunc_and_norm(u)
+  u2 = trunc_and_norm(-u)
+  if(t(u1) %*% A %*% u1 &gt; t(u2) %*% A %*% u2){
+    u = u1
+  } else {
+    u = u2
+  }
+
+  d = drop(t(u) %*% (A-b) %*% u)
+  b = matrix(truncnorm::etruncnorm(a=0,mean= A-d*u %*% t(u)-lambda*sigma^2,sd=sigma),nrow=2*n)
+  
+  loglik = loglik_emg(A,u,d,lambda,sigma)
+  
+  for(j in 1:5){
+    for(i in 1:maxiter){
+      u = trunc_and_norm((A-b) %*% u)
+      d = drop(t(u) %*% (A-b) %*% u)
+      b = matrix(truncnorm::etruncnorm(a=0,mean= A-d*u %*% t(u)-lambda*sigma^2,sd=sigma),nrow=2*n)
+      loglik = c(loglik, loglik_emg(A,u,d,lambda,sigma))
+      if(delta(loglik)&lt;1e-3) break;
+    } 
+    lambda = 1/mean(A-d * u %*% t(u)) #method of moments estimates
+    sigma = sd(A-d * u %*% t(u))
+    if(est.method == &quot;mle.both&quot;){
+      fit.mle = mle(function(llambda,lsigma) {
+          -loglik_emg(A, u, d, exp(llambda),exp(lsigma))
+      }, method = &quot;L-BFGS-B&quot;,lower = c(-10,-10), start =c(log(lambda),log(sigma)))
+      lambda = exp(coef(fit.mle)[1])
+      sigma = exp(coef(fit.mle)[2])
+    }
+    if(est.method == &quot;mle.sigma&quot;){
+      fit.mle = mle(function(lsigma) {
+          -loglik_emg(A, u, d, lambda,exp(lsigma))
+      }, method = &quot;Brent&quot;, lower=c(-10), upper = c(10), start =c(log(sigma)))
+      sigma = exp(coef(fit.mle)[1])
+    }
+    
+    loglik = c(loglik, loglik_emg(A,u,d,lambda,sigma))
+    if(delta(loglik)&lt;1e-3) break;
+  }
+  d = drop(t(u) %*% (A-b) %*% u)
+  return(list(u=u, d=d, b=b, lambda=lambda, sigma=sigma, loglik = loglik))
+}</code></pre>
+<p>Try it out. Note that MoM estimation of lambda, sigma decreases the
+loglikelihood.</p>
 <pre class="r"><code>set.seed(1)
-n = 40
-x = cbind(c(rep(1,n),rep(0,n)), c(rep(0,n),rep(1,n)), c(rep(1,n/2),rep(0,3*n/2)), c(rep(0,n/2), rep(1,n/2), rep(0,n)), c(rep(0,n),rep(1,n/2),rep(0,n/2)), c(rep(0,3*n/2),rep(1,n/2)))
+n = 10
+maxiter = 1000
+x = cbind(c(rep(1,n),rep(0,n)), c(rep(0,n),rep(1,n)))
 E = matrix(0.1*rexp(2*n*2*n),nrow=2*n)
 E = E+t(E) #symmetric errors
 A = x %*% t(x) + E
@@ -1259,6 +1511,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/8ac138069b3655ff601132c4f92847c4aa2d2fac/docs/figure/nmu_em.Rmd/unnamed-chunk-10-1.png" target="_blank">8ac1380</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-02-27
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/eb0b82bba410078a76233be4b062bfec73da1866/docs/figure/nmu_em.Rmd/unnamed-chunk-10-1.png" target="_blank">eb0b82b</a>
 </td>
 <td>
@@ -1272,19 +1535,38 @@ Matthew Stephens
 </table>
 </div>
 </div>
-<pre class="r"><code>fit = nmu_em_estlambda(A)
-fit$lambda</code></pre>
-<pre><code>[1] 1.528875</code></pre>
-<pre class="r"><code>fit$sigma</code></pre>
-<pre><code>[1] 0.7285704</code></pre>
-<pre class="r"><code>image(fit$u %*% t(fit$u))</code></pre>
-<p><img src="figure/nmu_em.Rmd/unnamed-chunk-10-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>fit.mom = nmu_em_estlambda(A,est.method=&quot;mom&quot;)
+fit.mle.both = nmu_em_estlambda(A,est.method=&quot;mle.both&quot;)
+fit.mle.sigma = nmu_em_estlambda(A,est.method=&quot;mle.sigma&quot;)
+
+fit.mom$lambda</code></pre>
+<pre><code>[1] 2.220807</code></pre>
+<pre class="r"><code>fit.mom$sigma</code></pre>
+<pre><code>[1] 0.447544</code></pre>
+<pre class="r"><code>fit.mle.both$lambda</code></pre>
+<pre><code> llambda 
+2.235999 </code></pre>
+<pre class="r"><code>fit.mle.both$sigma</code></pre>
+<pre><code>     lsigma 
+0.001436343 </code></pre>
+<pre class="r"><code>fit.mle.sigma$lambda</code></pre>
+<pre><code>[1] 2.235889</code></pre>
+<pre class="r"><code>fit.mle.sigma$sigma</code></pre>
+<pre><code>    lsigma 
+0.00144136 </code></pre>
+<p>Note that estimates of lambda,sigma from mle.both and mle.sigma are
+almost identical. Also although estimates for lambda, sigma vary with
+mom, the estimated <code>u</code> is very similar.</p>
+<pre class="r"><code>plot(fit.mom$u)
+points(fit.mle.both$u,col=2,pch=2)
+points(fit.mle.sigma$u,col=3,pch=&quot;.&quot;)</code></pre>
+<p><img src="figure/nmu_em.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-10-2">
-Past versions of unnamed-chunk-10-2.png
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-1">
+Past versions of unnamed-chunk-11-1.png
 </button>
 </p>
-<div id="fig-unnamed-chunk-10-2" class="collapse">
+<div id="fig-unnamed-chunk-11-1" class="collapse">
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
 <thead>
@@ -1303,7 +1585,18 @@ Date
 <tbody>
 <tr>
 <td>
-<a href="https://github.com/stephens999/misc/blob/eb0b82bba410078a76233be4b062bfec73da1866/docs/figure/nmu_em.Rmd/unnamed-chunk-10-2.png" target="_blank">eb0b82b</a>
+<a href="https://github.com/stephens999/misc/blob/8ac138069b3655ff601132c4f92847c4aa2d2fac/docs/figure/nmu_em.Rmd/unnamed-chunk-11-1.png" target="_blank">8ac1380</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-02-27
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/eb0b82bba410078a76233be4b062bfec73da1866/docs/figure/nmu_em.Rmd/unnamed-chunk-11-1.png" target="_blank">eb0b82b</a>
 </td>
 <td>
 Matthew Stephens
@@ -1316,30 +1609,378 @@ Matthew Stephens
 </table>
 </div>
 </div>
-<pre class="r"><code>A = A-fit$d*fit$u %*% t(fit$u)
-fit = nmu_em_estlambda(A)
-image(fit$u %*% t(fit$u))</code></pre>
-<p><img src="figure/nmu_em.Rmd/unnamed-chunk-10-3.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>A = A-fit$d*fit$u %*% t(fit$u)
-fit = nmu_em_estlambda(A)
-image(fit$u %*% t(fit$u))</code></pre>
-<p><img src="figure/nmu_em.Rmd/unnamed-chunk-10-4.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>A = A-fit$d*fit$u %*% t(fit$u)
-fit = nmu_em_estlambda(A)
-image(fit$u %*% t(fit$u))</code></pre>
-<p><img src="figure/nmu_em.Rmd/unnamed-chunk-10-5.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>A = A-fit$d*fit$u %*% t(fit$u)
-fit = nmu_em_estlambda(A)
-image(fit$u %*% t(fit$u))</code></pre>
-<p><img src="figure/nmu_em.Rmd/unnamed-chunk-10-6.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>A = A-fit$d*fit$u %*% t(fit$u)
-fit = nmu_em_estlambda(A)
-image(fit$u %*% t(fit$u))</code></pre>
-<p><img src="figure/nmu_em.Rmd/unnamed-chunk-10-7.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>A = A-fit$d*fit$u %*% t(fit$u)
-fit = nmu_em_estlambda(A)
-image(fit$u %*% t(fit$u))</code></pre>
-<p><img src="figure/nmu_em.Rmd/unnamed-chunk-10-8.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(fit.mle.both$loglik,col=2)
+points(fit.mom$loglik)
+points(fit.mle.sigma$loglik,col=3,pch=&quot;.&quot;)</code></pre>
+<p><img src="figure/nmu_em.Rmd/unnamed-chunk-11-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-2">
+Past versions of unnamed-chunk-11-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-11-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/8ac138069b3655ff601132c4f92847c4aa2d2fac/docs/figure/nmu_em.Rmd/unnamed-chunk-11-2.png" target="_blank">8ac1380</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-02-27
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/eb0b82bba410078a76233be4b062bfec73da1866/docs/figure/nmu_em.Rmd/unnamed-chunk-11-2.png" target="_blank">eb0b82b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-02-26
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="a-tree" class="section level2">
+<h2>A tree</h2>
+<p>Try a tree, and iteratively removing factors. We can see this gives
+something close to the result we want. One question is why this happens
+because there seems to be a “better” solution even with
+underapproximation: I believe you can fit this tree with only four
+factors. This needs more investigation.</p>
+<pre class="r"><code>set.seed(1)
+n = 40
+x = cbind(c(rep(1,n),rep(0,n)), c(rep(0,n),rep(1,n)), c(rep(1,n/2),rep(0,3*n/2)), c(rep(0,n/2), rep(1,n/2), rep(0,n)), c(rep(0,n),rep(1,n/2),rep(0,n/2)), c(rep(0,3*n/2),rep(1,n/2)))
+E = matrix(0.1*rexp(2*n*2*n),nrow=2*n)
+E = E+t(E) #symmetric errors
+A = x %*% t(x) + E</code></pre>
+<p>Method of moments:</p>
+<pre class="r"><code>A = x %*% t(x) + E
+par(mfcol=c(3,3),mai=rep(0.2,4))
+image(A)
+tic()
+for(i in 1:8){
+  fit = nmu_em_estlambda(A,est.method = &quot;mom&quot;)
+  A = A-fit$d*fit$u %*% t(fit$u)
+  fit$lambda
+  fit$sigma
+  plot(fit$u)
+}</code></pre>
+<p><img src="figure/nmu_em.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-13-1">
+Past versions of unnamed-chunk-13-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-13-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/8ac138069b3655ff601132c4f92847c4aa2d2fac/docs/figure/nmu_em.Rmd/unnamed-chunk-13-1.png" target="_blank">8ac1380</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-02-27
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/eb0b82bba410078a76233be4b062bfec73da1866/docs/figure/nmu_em.Rmd/unnamed-chunk-13-1.png" target="_blank">eb0b82b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-02-26
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>toc()</code></pre>
+<pre><code>13.232 sec elapsed</code></pre>
+<p>Estimate sigma by mle (note that this is quite a bit slower).</p>
+<pre class="r"><code>A = x %*% t(x) + E
+par(mfcol=c(3,3),mai=rep(0.2,4))
+image(A)
+tic()
+for(i in 1:8){
+  fit = nmu_em_estlambda(A,est.method = &quot;mle.sigma&quot;)
+  A = A-fit$d*fit$u %*% t(fit$u)
+  fit$lambda
+  fit$sigma
+  plot(fit$u)
+}</code></pre>
+<p><img src="figure/nmu_em.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-14-1">
+Past versions of unnamed-chunk-14-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-14-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/8ac138069b3655ff601132c4f92847c4aa2d2fac/docs/figure/nmu_em.Rmd/unnamed-chunk-14-1.png" target="_blank">8ac1380</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-02-27
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/eb0b82bba410078a76233be4b062bfec73da1866/docs/figure/nmu_em.Rmd/unnamed-chunk-14-1.png" target="_blank">eb0b82b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-02-26
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>toc()</code></pre>
+<pre><code>43.886 sec elapsed</code></pre>
+<p>Here I try a tree with a stronger diagonal; the idea is that this
+might cause it to remove the bottom branches first, which might break
+the whole thing? However it continues to work quite well.</p>
+<pre class="r"><code>set.seed(1)
+n = 40
+x = cbind(c(rep(1,n),rep(0,n)), c(rep(0,n),rep(1,n)), c(rep(1,n/2),rep(0,3*n/2)), c(rep(0,n/2), rep(1,n/2), rep(0,n)), c(rep(0,n),rep(1,n/2),rep(0,n/2)), c(rep(0,3*n/2),rep(1,n/2)))
+E = matrix(0.1*rexp(2*n*2*n),nrow=2*n)
+E = E+t(E) #symmetric errors
+
+A = x %*% diag(c(1,1,3,3,3,3)) %*% t(x) + E
+par(mfcol=c(3,3),mai=rep(0.2,4))
+image(A)
+tic()
+for(i in 1:8){
+  fit = nmu_em_estlambda(A,est.method = &quot;mom&quot;)
+  A = A-fit$d*fit$u %*% t(fit$u)
+  fit$lambda
+  fit$sigma
+  plot(fit$u)
+}</code></pre>
+<p><img src="figure/nmu_em.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>toc()</code></pre>
+<pre><code>12.934 sec elapsed</code></pre>
+<pre class="r"><code>A = x %*% diag(c(1,1,3,3,3,3)) %*% t(x) + E
+par(mfcol=c(3,3),mai=rep(0.2,4))
+image(A)
+tic()
+for(i in 1:8){
+  fit = nmu_em_estlambda(A,est.method = &quot;mle.sigma&quot;)
+  A = A-fit$d*fit$u %*% t(fit$u)
+  fit$lambda
+  fit$sigma
+  plot(fit$u)
+}</code></pre>
+<p><img src="figure/nmu_em.Rmd/unnamed-chunk-15-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>toc()</code></pre>
+<pre><code>47.595 sec elapsed</code></pre>
+<p>Here I try an even stronger diagonal. Interestingly it still does not
+totally break it (one factor becomes non-binar), and does not find the
+diagonal first.</p>
+<pre class="r"><code>A = x %*% diag(c(1,1,8,8,8,8)) %*% t(x) + E
+par(mfcol=c(3,3),mai=rep(0.2,4))
+image(A)
+tic()
+for(i in 1:8){
+  fit = nmu_em_estlambda(A,est.method = &quot;mom&quot;)
+  A = A-fit$d*fit$u %*% t(fit$u)
+  fit$lambda
+  fit$sigma
+  plot(fit$u)
+}</code></pre>
+<p><img src="figure/nmu_em.Rmd/unnamed-chunk-16-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>toc()</code></pre>
+<pre><code>12.326 sec elapsed</code></pre>
+<p>Try mle.sigma</p>
+<pre class="r"><code>A = x %*% diag(c(1,1,8,8,8,8)) %*% t(x) + E
+par(mfcol=c(3,3),mai=rep(0.2,4))
+image(A)
+tic()
+for(i in 1:8){
+  fit = nmu_em_estlambda(A,est.method = &quot;mle.sigma&quot;)
+  A = A-fit$d*fit$u %*% t(fit$u)
+  fit$lambda
+  fit$sigma
+  plot(fit$u)
+}</code></pre>
+<p><img src="figure/nmu_em.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>toc()</code></pre>
+<pre><code>26.97 sec elapsed</code></pre>
+</div>
+<div id="things-to-try" class="section level2">
+<h2>Things to try</h2>
+<ol style="list-style-type: decimal">
+<li><p>I think it could be possible to extend the prior on b to a
+mixture of exponentials (using code from ashr/ebnm for exponential
+mixtures). That might be worth trying.</p></li>
+<li><p>One thought is that we could get a pretty good estimate of b from
+an initial low-rank approximation (eg PCA), and then do this process of
+NMU taking advantage of the known b. One motivation is to avoid the
+problem of overremoving things despite the nmu constraint - eg when it
+is a tree, but the bottom branches are found before the lower
+branches.</p></li>
+</ol>
+<p>Here, as a first investigation of 2, I try initializing b using an
+SVD. This also allows me to easily fix lambda and sigma based on that
+estimated b. However, I found the results were very sensitive to the
+values of lambda and sigma, and also the number of iterations.</p>
+<p>Here are the result for estimated lambda=0.37,sigma=0.12:</p>
+<pre class="r"><code>set.seed(1)
+n = 40
+x = cbind(c(rep(1,n),rep(0,n)), c(rep(0,n),rep(1,n)), c(rep(1,n/2),rep(0,3*n/2)), c(rep(0,n/2), rep(1,n/2), rep(0,n)), c(rep(0,n),rep(1,n/2),rep(0,n/2)), c(rep(0,3*n/2),rep(1,n/2)))
+E = matrix(0.1*rexp(2*n*2*n),nrow=2*n)
+E = E+t(E) #symmetric errors
+A = x %*% diag(c(1,1,8,8,8,8)) %*% t(x) + E
+A.svd = svd(A)
+b = A.svd$u[,1:6] %*% diag(A.svd$d[1:6]) %*% t(A.svd$v[,1:6])
+
+set.seed(2)
+lambda = 1/mean(b)
+sigma = sqrt(mean((A-b)^2))
+lambda</code></pre>
+<pre><code>[1] 0.3703403</code></pre>
+<pre class="r"><code>sigma</code></pre>
+<pre><code>[1] 0.1297278</code></pre>
+<pre class="r"><code>u = rnorm(80)
+for(i in 1:100){
+  u = trunc_and_norm((A-b) %*% u)
+  d = drop(t(u) %*% (A-b) %*% u)
+  b = matrix(truncnorm::etruncnorm(a=0,mean= A-d*u %*% t(u)-lambda*sigma^2,sd=sigma),nrow=2*n)
+}
+plot(u)</code></pre>
+<p><img src="figure/nmu_em.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>This is fixed lambda=1,sigma=0.1. Note that the results after 1000
+iterations look pretty different from 100 iterations.</p>
+<pre class="r"><code>set.seed(2)
+b = A.svd$u[,1:6] %*% diag(A.svd$d[1:6]) %*% t(A.svd$v[,1:6])
+lambda = 1
+sigma = 0.1
+u = rnorm(80)
+for(i in 1:100){
+  u = trunc_and_norm((A-b) %*% u)
+  d = drop(t(u) %*% (A-b) %*% u)
+  b = matrix(truncnorm::etruncnorm(a=0,mean= A-d*u %*% t(u)-lambda*sigma^2,sd=sigma),nrow=2*n)
+}
+plot(u)</code></pre>
+<p><img src="figure/nmu_em.Rmd/unnamed-chunk-19-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>set.seed(2)
+b = A.svd$u[,1:6] %*% diag(A.svd$d[1:6]) %*% t(A.svd$v[,1:6])
+lambda = 1
+sigma = 0.1
+u = rnorm(80)
+for(i in 1:1000){
+  u = trunc_and_norm((A-b) %*% u)
+  d = drop(t(u) %*% (A-b) %*% u)
+  b = matrix(truncnorm::etruncnorm(a=0,mean= A-d*u %*% t(u)-lambda*sigma^2,sd=sigma),nrow=2*n)
+}
+plot(u)</code></pre>
+<p><img src="figure/nmu_em.Rmd/unnamed-chunk-19-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#lambda=1
+#sigma=0.1
+
+# par(mfcol=c(3,3))
+# image(A)
+# fit = nmu_em_estlambda(A,b.init=b)
+# fit$lambda
+# fit$sigma
+# image(fit$u %*% t(fit$u))
+# 
+# A = A-fit$d*fit$u %*% t(fit$u)
+# A.svd = svd(A)
+# b = A.svd$u[,1:6] %*% diag(A.svd$d[1:6]) %*% t(A.svd$v[,1:6])
+# 
+
+# fit = nmu_em_estlambda(A,b.init=b)
+# image(fit$u %*% t(fit$u))
+# 
+# A = A-fit$d*fit$u %*% t(fit$u)
+# fit = nmu_em_estlambda(A)
+# image(fit$u %*% t(fit$u))
+# 
+# A = A-fit$d*fit$u %*% t(fit$u)
+# fit = nmu_em_estlambda(A)
+# image(fit$u %*% t(fit$u))
+# 
+# A = A-fit$d*fit$u %*% t(fit$u)
+# fit = nmu_em_estlambda(A)
+# image(fit$u %*% t(fit$u))
+# 
+# A = A-fit$d*fit$u %*% t(fit$u)
+# fit = nmu_em_estlambda(A)
+# image(fit$u %*% t(fit$u))
+# 
+# A = A-fit$d*fit$u %*% t(fit$u)
+# fit = nmu_em_estlambda(A)
+# image(fit$u %*% t(fit$u))
+# 
+# A = A-fit$d*fit$u %*% t(fit$u)
+# fit = nmu_em_estlambda(A)
+# image(fit$u %*% t(fit$u))
+# </code></pre>
 </div>
 <div id="further-thoughts-scaling" class="section level2">
 <h2>Further thoughts; scaling</h2>
@@ -1389,7 +2030,7 @@ Session information
 <pre class="r"><code>sessionInfo()</code></pre>
 <pre><code>R version 4.4.2 (2024-10-31)
 Platform: aarch64-apple-darwin20
-Running under: macOS Sequoia 15.3
+Running under: macOS Sequoia 15.3.1
 
 Matrix products: default
 BLAS:   /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRblas.0.dylib 
@@ -1402,7 +2043,11 @@ time zone: America/Chicago
 tzcode source: internal
 
 attached base packages:
-[1] stats     graphics  grDevices utils     datasets  methods   base     
+[1] stats4    stats     graphics  grDevices utils     datasets  methods  
+[8] base     
+
+other attached packages:
+[1] tictoc_1.2.1   emg_1.0.9      moments_0.14.1
 
 loaded via a namespace (and not attached):
  [1] vctrs_0.6.5       cli_3.6.3         knitr_1.49        rlang_1.1.5      
