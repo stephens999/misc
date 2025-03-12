@@ -1,0 +1,220 @@
+---
+title: "ebpower"
+author: "Matthew Stephens"
+date: "2025-03-09"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+library("ebnm")
+```
+
+## Introduction
+
+I want to implement an EB version of the power update
+for a symmetric data matrix S. I haven't implemented an update
+to the residual error yet
+
+```{r}
+# model is  S \sim VDV' + E with eb prior on V
+eb_power_update = function(S,v,d,ebnm_fn){
+  K = ncol(v)
+  sigma2=mean((S-v %*% diag(d,nrow=length(d)) %*% t(v))^2)
+  
+  for(k in 1:K){
+    U = v[,-k,drop=FALSE]
+    D = diag(d[-k],nrow=length(d[-k]))
+    
+    newv = (S %*% v[,k,drop=FALSE] - U %*% D %*% t(U) %*% v[,k,drop=FALSE] )
+    if(!all(newv==0)){
+      fit.ebnm = ebnm_fn(newv,sigma2)        
+      newv = fit.ebnm$posterior$mean
+      if(!all(newv==0)){
+        newv = newv/sqrt(sum(newv^2 + fit.ebnm$posterior$sd^2))
+      } 
+    }
+    v[,k] = newv
+    d[k] = t(v[,k]) %*% S %*% v[,k] - t(v[,k]) %*% U %*% D %*% t(U) %*% v[,k] 
+  }
+  return(list(v=v,d=d))
+}
+
+#helper function
+compute_sqerr = function(S,fit){
+  sum((S-fit$v %*% diag(fit$d,nrow=length(fit$d)) %*% t(fit$v))^2)
+}
+
+# a random initialization
+random_init = function(S,K){
+  n = nrow(S)
+  v = matrix(nrow=n,ncol=K)
+  for(k in 1:K){
+    v[,k] = pmax(cbind(rnorm(n)),0) # initialize v
+    v[,k] = v[,k]/sum(v[,k]^2)
+  }
+  d = rep(1e-8,K)
+  return(list(v=v,d=d))
+}
+```
+
+
+## Tree structured data
+
+Simulate some data from a tree structure.
+```{r}
+set.seed(1)
+n = 40
+x = cbind(c(rep(1,n),rep(0,n)), c(rep(0,n),rep(1,n)), c(rep(1,n/2),rep(0,3*n/2)), c(rep(0,n/2), rep(1,n/2), rep(0,n)), c(rep(0,n),rep(1,n/2),rep(0,n/2)), c(rep(0,3*n/2),rep(1,n/2)))
+E = matrix(0.1*rexp(2*n*2*n),nrow=2*n)
+E = E+t(E) #symmetric errors
+A = x %*% t(x) + E
+image(A)
+```
+
+
+### Rank 1 fit
+
+Here I fit a single factor with point exponential prior. It finds the solution where everything is approximately equal.This is also the leading eigenvector of A.
+```{r}
+set.seed(1)
+fit = random_init(A,1)
+
+err = rep(0,10)
+err[1] = compute_sqerr(A,fit)
+for(i in 2:100){
+  fit = eb_power_update(A,fit$v,fit$d,ebnm_point_exponential)
+  err[i] = compute_sqerr(A,fit)
+}
+plot(err)
+plot(fit$v[,1],svd(A)$v[,1])
+plot(fit$v)
+```
+
+Interestingly the point-Laplace prior zeros everything out. This indicates the need to be a bit careful about initialization (maybe particularly for sigma2). 
+```{r}
+set.seed(1)
+fit = random_init(A,1)
+
+err = rep(0,10)
+err[1] = compute_sqerr(A,fit)
+for(i in 2:100){
+  fit = eb_power_update(A,fit$v,fit$d,ebnm_point_laplace)
+  err[i] = compute_sqerr(A,fit)
+}
+plot(fit$v[,1],svd(A)$v[,1])
+plot(fit$v)
+```
+
+### Run multiple factors
+
+Here I run with $K=9$. It finds a rank 4 solution, zeroing out the other 5. 
+One can compare this with non-negative without the EB approach [here](power_nneg.html). 
+```{r}
+set.seed(2)
+fit = random_init(A,9)
+err = rep(0,10)
+err[1] = sum((A-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
+for(i in 2:100){
+  fit = eb_power_update(A,fit$v,fit$d,ebnm_point_exponential)
+  err[i] = sum((A-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
+}
+plot(err)
+
+par(mfcol=c(3,3),mai=rep(0.3,4))
+for(i in 1:9){plot(fit$v[,i],main=paste0(fit$d[i]))}
+```
+
+Here I try the generalized binary prior. So far I'm finding this does not work well, especially if started from random starting point. I debugged and found that what happens is that initially all the v are quite non-negative, bounded away from 0. So the gb prior puts all its weight on the non-null normal component and does not shrink anything. (Is it worth using a laplace for the non-null component?) The point exponential does not have that problem - it shrinks the smallest values towards 0, and eventually gets to a point where everything is 0.
+
+```{r}
+set.seed(2)
+fit = random_init(A,9)
+err = rep(0,10)
+err[1] = sum((A-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
+ 
+for(i in 2:10){
+  fit = eb_power_update(A,fit$v,fit$d,ebnm_generalized_binary)
+  err[i] = sum((A-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
+}
+plot(err)
+
+par(mfcol=c(3,3),mai=rep(0.3,4))
+for(i in 1:9){plot(fit$v[,i],main=paste0(fit$d[i]))}
+```
+
+I should try with a fixed GB prior? I want to force the shrinkage towards 0...
+Here we try initializing GB with point-exponential.
+
+```{r}
+set.seed(2)
+fit = random_init(A,9)
+
+err = rep(0,10)
+err[1] = compute_sqerr(A,fit)
+ 
+for(i in 2:50){
+  fit = eb_power_update(A,fit$v,fit$d,ebnm_point_exponential)
+  err[i] = compute_sqerr(A,fit)
+}
+par(mfcol=c(3,3),mai=rep(0.3,4))
+for(i in 1:9){plot(fit$v[,i],main=paste0(fit$d[i]))}
+err
+
+fit$d = rep(1e-8,9)
+for(i in 2:50){
+  fit = eb_power_update(A,fit$v,fit$d,ebnm_generalized_binary)
+  err[i] = compute_sqerr(A,fit)
+}
+par(mfcol=c(3,3),mai=rep(0.3,4))
+for(i in 1:9){plot(fit$v[,i],main=paste0(fit$d[i]))}
+err
+sum(E^2) # compare with "true" error
+```
+
+## SVD initialization
+
+I'm going to try initializing with SVD, then running point-laplace, then 
+running GB (similar to GBCD strategy). Interestingly, initializing at SVD with d set to the svd-based value leads point-laplace to a solution with negative d values (not shown) so here I initialize d to be very small and let it learn the non-zero values more gradually. 
+```{r}
+set.seed(2)
+A.svd = svd(A)
+
+fit = list(v=A.svd$u[,1:4],d=rep(1e-8,4)) #init d to be very small
+
+err = rep(0,10)
+err[1] = compute_sqerr(A,fit)
+ 
+for(i in 2:100){
+  fit = eb_power_update(A,fit$v,fit$d,ebnm_point_laplace)
+  err[i] = compute_sqerr(A,fit)
+}
+par(mfcol=c(3,3),mai=rep(0.3,4))
+for(i in 1:4){plot(fit$v[,i],main=paste0(fit$d[i]))}
+err
+```
+
+```{r}
+split_v = function(v){
+  v = cbind(pmax(v,0),pmax(-v,0))
+}
+
+fit$v = split_v(fit$v)
+fit$d= rep(fit$d/2,2)
+
+for(i in 2:100){
+  fit = eb_power_update(A,fit$v,fit$d,ebnm_point_exponential)
+  err[i] = compute_sqerr(A,fit)
+}
+
+for(i in 2:50){
+  fit = eb_power_update(A,fit$v,fit$d,ebnm_generalized_binary)
+  err[i] = compute_sqerr(A,fit)
+}
+par(mfcol=c(3,3),mai=rep(0.3,4))
+for(i in 1:4){plot(fit$v[,i],main=paste0(fit$d[i]))}
+err
+sum(E^2) # co
+```
+
