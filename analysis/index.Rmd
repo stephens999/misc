@@ -92,6 +92,7 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 * [Run NMF on covariance matrices, including tree-like case](nmf_simple_examples.html)
 * [Non-negative matrix underapproximation via EM](nmu_em.html)
 * [A power method for fitting symmetric NMF](power_nneg.html)
+* [An EB version of the power method for symmetric NMF](ebpower.html)
 
 # Multinomial factor models
 
