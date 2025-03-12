@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Matthew Stephens" />
+
+<meta name="date" content="2025-03-09" />
+
+<title>ebpower</title>
+
+<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">misc</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/stephens999/misc">source</a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">ebpower</h1>
+<h4 class="author">Matthew Stephens</h4>
+<h4 class="date">2025-03-09</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2025-03-12
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>misc/analysis/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.1). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed1code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(1)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed1code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(1)</code> was run prior to running the
+code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree6aa4dfe6fd85776c0ae780624b0f98aab0180cc0targetblank6aa4dfea">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/stephens999/misc/tree/6aa4dfe6fd85776c0ae780624b0f98aab0180cc0" target="_blank">6aa4dfe</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree6aa4dfe6fd85776c0ae780624b0f98aab0180cc0targetblank6aa4dfea"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/stephens999/misc/tree/6aa4dfe6fd85776c0ae780624b0f98aab0180cc0" target="_blank">6aa4dfe</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.RData
+    Ignored:    analysis/.Rhistory
+    Ignored:    analysis/ALStruct_cache/
+    Ignored:    data/.Rhistory
+    Ignored:    data/methylation-data-for-matthew.rds
+    Ignored:    data/pbmc/
+    Ignored:    data/pbmc_purified.RData
+
+Untracked files:
+    Untracked:  .dropbox
+    Untracked:  Icon
+    Untracked:  analysis/GHstan.Rmd
+    Untracked:  analysis/GTEX-cogaps.Rmd
+    Untracked:  analysis/PACS.Rmd
+    Untracked:  analysis/Rplot.png
+    Untracked:  analysis/SPCAvRP.rmd
+    Untracked:  analysis/abf_comparisons.Rmd
+    Untracked:  analysis/admm_02.Rmd
+    Untracked:  analysis/admm_03.Rmd
+    Untracked:  analysis/bispca.Rmd
+    Untracked:  analysis/cache/
+    Untracked:  analysis/cholesky.Rmd
+    Untracked:  analysis/compare-transformed-models.Rmd
+    Untracked:  analysis/cormotif.Rmd
+    Untracked:  analysis/cp_ash.Rmd
+    Untracked:  analysis/eQTL.perm.rand.pdf
+    Untracked:  analysis/eb_prepilot.Rmd
+    Untracked:  analysis/eb_var.Rmd
+    Untracked:  analysis/ebpmf1.Rmd
+    Untracked:  analysis/ebpmf_sla_text.Rmd
+    Untracked:  analysis/ebspca_sims.Rmd
+    Untracked:  analysis/explore_psvd.Rmd
+    Untracked:  analysis/fa_check_identify.Rmd
+    Untracked:  analysis/fa_iterative.Rmd
+    Untracked:  analysis/flash_cov_overlapping_groups_init.Rmd
+    Untracked:  analysis/flash_test_tree.Rmd
+    Untracked:  analysis/flashier_newgroups.Rmd
+    Untracked:  analysis/flashier_nmf_triples.Rmd
+    Untracked:  analysis/flashier_pbmc.Rmd
+    Untracked:  analysis/flashier_snn_shifted_prior.Rmd
+    Untracked:  analysis/greedy_ebpmf_exploration_00.Rmd
+    Untracked:  analysis/ieQTL.perm.rand.pdf
+    Untracked:  analysis/lasso_em_03.Rmd
+    Untracked:  analysis/m6amash.Rmd
+    Untracked:  analysis/mash_bhat_z.Rmd
+    Untracked:  analysis/mash_ieqtl_permutations.Rmd
+    Untracked:  analysis/methylation_example.Rmd
+    Untracked:  analysis/mixsqp.Rmd
+    Untracked:  analysis/mr.ash_lasso_init.Rmd
+    Untracked:  analysis/mr.mash.test.Rmd
+    Untracked:  analysis/mr_ash_modular.Rmd
+    Untracked:  analysis/mr_ash_parameterization.Rmd
+    Untracked:  analysis/mr_ash_ridge.Rmd
+    Untracked:  analysis/mv_gaussian_message_passing.Rmd
+    Untracked:  analysis/nejm.Rmd
+    Untracked:  analysis/nmf_bg.Rmd
+    Untracked:  analysis/nonneg_underapprox.Rmd
+    Untracked:  analysis/normal_conditional_on_r2.Rmd
+    Untracked:  analysis/normalize.Rmd
+    Untracked:  analysis/pbmc.Rmd
+    Untracked:  analysis/pca_binary_weighted.Rmd
+    Untracked:  analysis/pca_l1.Rmd
+    Untracked:  analysis/poisson_nmf_approx.Rmd
+    Untracked:  analysis/poisson_shrink.Rmd
+    Untracked:  analysis/poisson_transform.Rmd
+    Untracked:  analysis/qrnotes.txt
+    Untracked:  analysis/ridge_iterative_02.Rmd
+    Untracked:  analysis/ridge_iterative_splitting.Rmd
+    Untracked:  analysis/samps/
+    Untracked:  analysis/sc_bimodal.Rmd
+    Untracked:  analysis/shrinkage_comparisons_changepoints.Rmd
+    Untracked:  analysis/susie_cov.Rmd
+    Untracked:  analysis/susie_en.Rmd
+    Untracked:  analysis/susie_z_investigate.Rmd
+    Untracked:  analysis/svd-timing.Rmd
+    Untracked:  analysis/temp.RDS
+    Untracked:  analysis/temp.Rmd
+    Untracked:  analysis/test-figure/
+    Untracked:  analysis/test.Rmd
+    Untracked:  analysis/test.Rpres
+    Untracked:  analysis/test.md
+    Untracked:  analysis/test_qr.R
+    Untracked:  analysis/test_sparse.Rmd
+    Untracked:  analysis/tree_dist_top_eigenvector.Rmd
+    Untracked:  analysis/z.txt
+    Untracked:  code/multivariate_testfuncs.R
+    Untracked:  code/rqb.hacked.R
+    Untracked:  data/4matthew/
+    Untracked:  data/4matthew2/
+    Untracked:  data/E-MTAB-2805.processed.1/
+    Untracked:  data/ENSG00000156738.Sim_Y2.RDS
+    Untracked:  data/GDS5363_full.soft.gz
+    Untracked:  data/GSE41265_allGenesTPM.txt
+    Untracked:  data/Muscle_Skeletal.ACTN3.pm1Mb.RDS
+    Untracked:  data/P.rds
+    Untracked:  data/Thyroid.FMO2.pm1Mb.RDS
+    Untracked:  data/bmass.HaemgenRBC2016.MAF01.Vs2.MergedDataSources.200kRanSubset.ChrBPMAFMarkerZScores.vs1.txt.gz
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.PreviousSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/eb_prepilot/
+    Untracked:  data/finemap_data/fmo2.sim/b.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/data
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.ld
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.z
+    Untracked:  data/finemap_data/fmo2.sim/pos.txt
+    Untracked:  data/logm.csv
+    Untracked:  data/m.cd.RDS
+    Untracked:  data/m.cdu.old.RDS
+    Untracked:  data/m.new.cd.RDS
+    Untracked:  data/m.old.cd.RDS
+    Untracked:  data/mainbib.bib.old
+    Untracked:  data/mat.csv
+    Untracked:  data/mat.txt
+    Untracked:  data/mat_new.csv
+    Untracked:  data/matrix_lik.rds
+    Untracked:  data/paintor_data/
+    Untracked:  data/running_data_chris.csv
+    Untracked:  data/running_data_matthew.csv
+    Untracked:  data/temp.txt
+    Untracked:  data/y.txt
+    Untracked:  data/y_f.txt
+    Untracked:  data/zscore_jointLCLs_m6AQTLs_susie_eQTLpruned.rds
+    Untracked:  data/zscore_jointLCLs_random.rds
+    Untracked:  explore_udi.R
+    Untracked:  output/fit.k10.rds
+    Untracked:  output/fit.nn.pbmc.purified.rds
+    Untracked:  output/fit.nn.rds
+    Untracked:  output/fit.nn.s.001.rds
+    Untracked:  output/fit.nn.s.01.rds
+    Untracked:  output/fit.nn.s.1.rds
+    Untracked:  output/fit.nn.s.10.rds
+    Untracked:  output/fit.snn.s.001.rds
+    Untracked:  output/fit.snn.s.01.nninit.rds
+    Untracked:  output/fit.snn.s.01.rds
+    Untracked:  output/fit.varbvs.RDS
+    Untracked:  output/fit2.nn.pbmc.purified.rds
+    Untracked:  output/glmnet.fit.RDS
+    Untracked:  output/snn07.txt
+    Untracked:  output/snn34.txt
+    Untracked:  output/test.bv.txt
+    Untracked:  output/test.gamma.txt
+    Untracked:  output/test.hyp.txt
+    Untracked:  output/test.log.txt
+    Untracked:  output/test.param.txt
+    Untracked:  output/test2.bv.txt
+    Untracked:  output/test2.gamma.txt
+    Untracked:  output/test2.hyp.txt
+    Untracked:  output/test2.log.txt
+    Untracked:  output/test2.param.txt
+    Untracked:  output/test3.bv.txt
+    Untracked:  output/test3.gamma.txt
+    Untracked:  output/test3.hyp.txt
+    Untracked:  output/test3.log.txt
+    Untracked:  output/test3.param.txt
+    Untracked:  output/test4.bv.txt
+    Untracked:  output/test4.gamma.txt
+    Untracked:  output/test4.hyp.txt
+    Untracked:  output/test4.log.txt
+    Untracked:  output/test4.param.txt
+    Untracked:  output/test5.bv.txt
+    Untracked:  output/test5.gamma.txt
+    Untracked:  output/test5.hyp.txt
+    Untracked:  output/test5.log.txt
+    Untracked:  output/test5.param.txt
+
+Unstaged changes:
+    Modified:   .gitignore
+    Modified:   analysis/flashier_log1p.Rmd
+    Modified:   analysis/flashier_sla_text.Rmd
+    Modified:   analysis/logistic_z_scores.Rmd
+    Modified:   analysis/mr_ash_pen.Rmd
+    Modified:   analysis/nmu_em.Rmd
+    Modified:   analysis/susie_flash.Rmd
+    Modified:   misc.Rproj
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown (<code>analysis/ebpower.Rmd</code>) and HTML
+(<code>docs/ebpower.html</code>) files. If you’ve configured a remote
+Git repository (see <code>?wflow_git_remote</code>), click on the
+hyperlinks in the table below to view the files as they were in that
+past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/6aa4dfe6fd85776c0ae780624b0f98aab0180cc0/analysis/ebpower.Rmd" target="_blank">6aa4dfe</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-03-12
+</td>
+<td>
+workflowr::wflow_publish("analysis/ebpower.Rmd")
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<pre class="r"><code>library(&quot;ebnm&quot;)</code></pre>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>I want to implement an EB version of the power update for a symmetric
+data matrix S. I haven’t implemented an update to the residual error
+yet</p>
+<pre class="r"><code># model is  S \sim VDV&#39; + E with eb prior on V
+eb_power_update = function(S,v,d,ebnm_fn){
+  K = ncol(v)
+  sigma2=mean((S-v %*% diag(d,nrow=length(d)) %*% t(v))^2)
+  
+  for(k in 1:K){
+    U = v[,-k,drop=FALSE]
+    D = diag(d[-k],nrow=length(d[-k]))
+    
+    newv = (S %*% v[,k,drop=FALSE] - U %*% D %*% t(U) %*% v[,k,drop=FALSE] )
+    if(!all(newv==0)){
+      fit.ebnm = ebnm_fn(newv,sigma2)        
+      newv = fit.ebnm$posterior$mean
+      if(!all(newv==0)){
+        newv = newv/sqrt(sum(newv^2 + fit.ebnm$posterior$sd^2))
+      } 
+    }
+    v[,k] = newv
+    d[k] = t(v[,k]) %*% S %*% v[,k] - t(v[,k]) %*% U %*% D %*% t(U) %*% v[,k] 
+  }
+  return(list(v=v,d=d))
+}
+
+#helper function
+compute_sqerr = function(S,fit){
+  sum((S-fit$v %*% diag(fit$d,nrow=length(fit$d)) %*% t(fit$v))^2)
+}
+
+# a random initialization
+random_init = function(S,K){
+  n = nrow(S)
+  v = matrix(nrow=n,ncol=K)
+  for(k in 1:K){
+    v[,k] = pmax(cbind(rnorm(n)),0) # initialize v
+    v[,k] = v[,k]/sum(v[,k]^2)
+  }
+  d = rep(1e-8,K)
+  return(list(v=v,d=d))
+}</code></pre>
+</div>
+<div id="tree-structured-data" class="section level2">
+<h2>Tree structured data</h2>
+<p>Simulate some data from a tree structure.</p>
+<pre class="r"><code>set.seed(1)
+n = 40
+x = cbind(c(rep(1,n),rep(0,n)), c(rep(0,n),rep(1,n)), c(rep(1,n/2),rep(0,3*n/2)), c(rep(0,n/2), rep(1,n/2), rep(0,n)), c(rep(0,n),rep(1,n/2),rep(0,n/2)), c(rep(0,3*n/2),rep(1,n/2)))
+E = matrix(0.1*rexp(2*n*2*n),nrow=2*n)
+E = E+t(E) #symmetric errors
+A = x %*% t(x) + E
+image(A)</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<div id="rank-1-fit" class="section level3">
+<h3>Rank 1 fit</h3>
+<p>Here I fit a single factor with point exponential prior. It finds the
+solution where everything is approximately equal.This is also the
+leading eigenvector of A.</p>
+<pre class="r"><code>set.seed(1)
+fit = random_init(A,1)
+
+err = rep(0,10)
+err[1] = compute_sqerr(A,fit)
+for(i in 2:100){
+  fit = eb_power_update(A,fit$v,fit$d,ebnm_point_exponential)
+  err[i] = compute_sqerr(A,fit)
+}
+plot(err)</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(fit$v[,1],svd(A)$v[,1])</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(fit$v)</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-4-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Interestingly the point-Laplace prior zeros everything out. This
+indicates the need to be a bit careful about initialization (maybe
+particularly for sigma2).</p>
+<pre class="r"><code>set.seed(1)
+fit = random_init(A,1)
+
+err = rep(0,10)
+err[1] = compute_sqerr(A,fit)
+for(i in 2:100){
+  fit = eb_power_update(A,fit$v,fit$d,ebnm_point_laplace)
+  err[i] = compute_sqerr(A,fit)
+}
+plot(fit$v[,1],svd(A)$v[,1])</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(fit$v)</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="run-multiple-factors" class="section level3">
+<h3>Run multiple factors</h3>
+<p>Here I run with <span class="math inline">\(K=9\)</span>. It finds a
+rank 4 solution, zeroing out the other 5. One can compare this with
+non-negative without the EB approach <a
+href="power_nneg.html">here</a>.</p>
+<pre class="r"><code>set.seed(2)
+fit = random_init(A,9)
+err = rep(0,10)
+err[1] = sum((A-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
+for(i in 2:100){
+  fit = eb_power_update(A,fit$v,fit$d,ebnm_point_exponential)
+  err[i] = sum((A-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
+}
+plot(err)</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>par(mfcol=c(3,3),mai=rep(0.3,4))
+for(i in 1:9){plot(fit$v[,i],main=paste0(fit$d[i]))}</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Here I try the generalized binary prior. So far I’m finding this does
+not work well, especially if started from random starting point. I
+debugged and found that what happens is that initially all the v are
+quite non-negative, bounded away from 0. So the gb prior puts all its
+weight on the non-null normal component and does not shrink anything.
+(Is it worth using a laplace for the non-null component?) The point
+exponential does not have that problem - it shrinks the smallest values
+towards 0, and eventually gets to a point where everything is 0.</p>
+<pre class="r"><code>set.seed(2)
+fit = random_init(A,9)
+err = rep(0,10)
+err[1] = sum((A-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
+ 
+for(i in 2:10){
+  fit = eb_power_update(A,fit$v,fit$d,ebnm_generalized_binary)
+  err[i] = sum((A-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
+}
+plot(err)</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>par(mfcol=c(3,3),mai=rep(0.3,4))
+for(i in 1:9){plot(fit$v[,i],main=paste0(fit$d[i]))}</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>I should try with a fixed GB prior? I want to force the shrinkage
+towards 0… Here we try initializing GB with point-exponential.</p>
+<pre class="r"><code>set.seed(2)
+fit = random_init(A,9)
+
+err = rep(0,10)
+err[1] = compute_sqerr(A,fit)
+ 
+for(i in 2:50){
+  fit = eb_power_update(A,fit$v,fit$d,ebnm_point_exponential)
+  err[i] = compute_sqerr(A,fit)
+}
+par(mfcol=c(3,3),mai=rep(0.3,4))
+for(i in 1:9){plot(fit$v[,i],main=paste0(fit$d[i]))}</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>err</code></pre>
+<pre><code> [1] 10358.0063  4607.3557  4598.9735  4537.0254  3410.6696  1191.1974
+ [7]   959.9479   811.3587   682.0467   581.9783   500.5249   371.6257
+[13]   196.7067   127.1278   120.6584   119.9063   119.6007   119.4296
+[19]   119.3242   119.2502   119.1947   119.1548   119.1264   119.1049
+[25]   119.0875   119.0733   119.0618   119.0524   119.0446   119.0379
+[31]   119.0322   119.0272   119.0227   119.0185   119.0144   119.0105
+[37]   119.0068   119.0034   119.0003   118.9974   118.9947   118.9923
+[43]   118.9902   118.9883   118.9866   118.9851   118.9838   118.9825
+[49]   118.9814   118.9803</code></pre>
+<pre class="r"><code>fit$d = rep(1e-8,9)
+for(i in 2:50){
+  fit = eb_power_update(A,fit$v,fit$d,ebnm_generalized_binary)
+  err[i] = compute_sqerr(A,fit)
+}
+par(mfcol=c(3,3),mai=rep(0.3,4))
+for(i in 1:9){plot(fit$v[,i],main=paste0(fit$d[i]))}</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>err</code></pre>
+<pre><code> [1] 10358.0063   997.5409   864.8641   744.9060   633.3875   567.5381
+ [7]   534.0768   506.6033   438.9509   294.1267   201.6841   150.2595
+[13]   129.7993   124.1713   122.6030   121.8072   121.4878   121.3150
+[19]   121.1241   121.0973   121.0897   121.0870   121.0856   121.0848
+[25]   121.0843   121.0839   121.0836   121.0834   121.0832   121.0831
+[31]   121.0830   121.0830   121.0829   121.0829   121.0829   121.0828
+[37]   121.0828   121.0828   121.0828   121.0828   121.0828   121.0828
+[43]   121.0828   121.0828   121.0828   121.0828   121.0828   121.0828
+[49]   121.0828   121.0828</code></pre>
+<pre class="r"><code>sum(E^2) # compare with &quot;true&quot; error</code></pre>
+<pre><code>[1] 388.104</code></pre>
+</div>
+</div>
+<div id="svd-initialization" class="section level2">
+<h2>SVD initialization</h2>
+<p>I’m going to try initializing with SVD, then running point-laplace,
+then running GB (similar to GBCD strategy). Interestingly, initializing
+at SVD with d set to the svd-based value leads point-laplace to a
+solution with negative d values (not shown) so here I initialize d to be
+very small and let it learn the non-zero values more gradually.</p>
+<pre class="r"><code>set.seed(2)
+A.svd = svd(A)
+
+fit = list(v=A.svd$u[,1:4],d=rep(1e-8,4)) #init d to be very small
+
+err = rep(0,10)
+err[1] = compute_sqerr(A,fit)
+ 
+for(i in 2:100){
+  fit = eb_power_update(A,fit$v,fit$d,ebnm_point_laplace)
+  err[i] = compute_sqerr(A,fit)
+}
+par(mfcol=c(3,3),mai=rep(0.3,4))
+for(i in 1:4){plot(fit$v[,i],main=paste0(fit$d[i]))}
+err</code></pre>
+<pre><code>  [1] 10358.0063   736.7750   120.5348   118.9666   118.9591   118.9599
+  [7]   118.9606   118.9609   118.9607   118.9601   118.9596   118.9593
+ [13]   118.9590   118.9589   118.9588   118.9587   118.9586   118.9586
+ [19]   118.9586   118.9587   118.9588   118.9590   118.9592   118.9593
+ [25]   118.9595   118.9597   118.9598   118.9600   118.9601   118.9602
+ [31]   118.9603   118.9604   118.9605   118.9605   118.9606   118.9606
+ [37]   118.9607   118.9607   118.9608   118.9608   118.9608   118.9608
+ [43]   118.9609   118.9609   118.9609   118.9609   118.9609   118.9609
+ [49]   118.9610   118.9610   118.9610   118.9610   118.9610   118.9610
+ [55]   118.9610   118.9610   118.9610   118.9610   118.9610   118.9611
+ [61]   118.9611   118.9611   118.9611   118.9611   118.9611   118.9611
+ [67]   118.9611   118.9611   118.9611   118.9611   118.9611   118.9611
+ [73]   118.9611   118.9611   118.9611   118.9611   118.9611   118.9611
+ [79]   118.9611   118.9611   118.9611   118.9611   118.9611   118.9611
+ [85]   118.9611   118.9611   118.9611   118.9611   118.9611   118.9611
+ [91]   118.9611   118.9611   118.9611   118.9611   118.9611   118.9612
+ [97]   118.9612   118.9612   118.9612   118.9612</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>split_v = function(v){
+  v = cbind(pmax(v,0),pmax(-v,0))
+}
+
+fit$v = split_v(fit$v)
+fit$d= rep(fit$d/2,2)
+
+for(i in 2:100){
+  fit = eb_power_update(A,fit$v,fit$d,ebnm_point_exponential)
+  err[i] = compute_sqerr(A,fit)
+}
+
+for(i in 2:50){
+  fit = eb_power_update(A,fit$v,fit$d,ebnm_generalized_binary)
+  err[i] = compute_sqerr(A,fit)
+}
+par(mfcol=c(3,3),mai=rep(0.3,4))
+for(i in 1:4){plot(fit$v[,i],main=paste0(fit$d[i]))}
+err</code></pre>
+<pre><code>  [1] 10358.0063   108.6040   108.5842   108.5771   108.6587   108.7029
+  [7]   108.6780   108.7333   108.8173   108.7955   108.8543   108.8530
+ [13]   108.8317   108.8515   108.8325   108.8746   108.8902   108.8967
+ [19]   108.8792   108.8969   108.8839   108.8752   108.8795   108.9067
+ [25]   108.9010   108.8965   108.8927   108.8894   108.8865   108.8841
+ [31]   108.8819   108.8801   108.8785   108.8772   108.8761   108.8751
+ [37]   108.8743   108.8736   108.8731   108.8726   108.8722   108.8719
+ [43]   108.8717   108.8715   108.8714   108.8713   108.8712   108.8712
+ [49]   108.8712   108.8712   109.8584   109.7571   109.6662   109.5818
+ [55]   109.5042   109.4326   109.3657   109.3023   109.2416   109.1830
+ [61]   109.1271   109.0745   109.0247   108.9786   108.9351   108.8937
+ [67]   108.8547   108.8164   108.7790   108.7436   108.7096   108.6770
+ [73]   108.6449   108.6124   108.5800   108.5484   108.5179   108.4888
+ [79]   108.4612   108.4348   108.4094   108.3848   108.3607   108.3368
+ [85]   108.3133   108.2901   108.2669   108.2428   108.2191   108.1958
+ [91]   108.1730   108.1506   108.1284   108.1068   108.0863   108.0665
+ [97]   108.0473   108.0286   108.0101   107.9917</code></pre>
+<pre class="r"><code>sum(E^2) # co</code></pre>
+<pre><code>[1] 388.104</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.4.2 (2024-10-31)
+Platform: aarch64-apple-darwin20
+Running under: macOS Sequoia 15.3.1
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.0
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+time zone: America/Chicago
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] ebnm_1.1-2
+
+loaded via a namespace (and not attached):
+ [1] sass_0.4.9        generics_0.1.3    ashr_2.2-63       stringi_1.8.4    
+ [5] lattice_0.22-6    digest_0.6.37     magrittr_2.0.3    evaluate_1.0.3   
+ [9] grid_4.4.2        fastmap_1.2.0     rprojroot_2.0.4   workflowr_1.7.1  
+[13] jsonlite_1.8.9    Matrix_1.7-2      whisker_0.4.1     mixsqp_0.3-54    
+[17] promises_1.3.2    scales_1.3.0      truncnorm_1.0-9   invgamma_1.1     
+[21] jquerylib_0.1.4   cli_3.6.3         rlang_1.1.5       deconvolveR_1.2-1
+[25] munsell_0.5.1     splines_4.4.2     cachem_1.1.0      yaml_2.3.10      
+[29] tools_4.4.2       SQUAREM_2021.1    dplyr_1.1.4       colorspace_2.1-1 
+[33] ggplot2_3.5.1     httpuv_1.6.15     vctrs_0.6.5       R6_2.5.1         
+[37] lifecycle_1.0.4   git2r_0.35.0      stringr_1.5.1     fs_1.6.5         
+[41] trust_0.1-8       irlba_2.3.5.1     pkgconfig_2.0.3   pillar_1.10.1    
+[45] bslib_0.9.0       later_1.4.1       gtable_0.3.6      glue_1.8.0       
+[49] Rcpp_1.0.14       xfun_0.50         tibble_3.2.1      tidyselect_1.2.1 
+[53] rstudioapi_0.17.1 knitr_1.49        htmltools_0.5.8.1 rmarkdown_2.29   
+[57] compiler_4.4.2    horseshoe_0.2.0  </code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
