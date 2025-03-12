@@ -155,6 +155,9 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 * [A look at estimates of the latent factors on trees](tree_ebcd.html)
 * [Outline of a method for building trees topdown using flash](flash_tree.html)
 
+# EBNM
+* [A bimodal mixture of 2 normals ebnm function](ebnm_binormal.html)
+
 # IRLS
 
 * [implementation of irls for logistic regression](irls.html)
