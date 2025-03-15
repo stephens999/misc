@@ -8,7 +8,35 @@ editor_options:
 ---
 
 ```{r}
+# load the ebnm library and define an ebnm_binormal function
+
 library("ebnm")
+
+dbinormal = function (x,s,s0,lambda,log=TRUE){
+  pi0 = 0.5
+  pi1 = 0.5
+  s2 = s^2
+  s02 = s0^2
+  l0 = dnorm(x,0,sqrt(lambda^2 * s02 + s2),log=TRUE)
+  l1 = dnorm(x,lambda,sqrt(lambda^2 * s02 + s2),log=TRUE)
+  logsum = log(pi0*exp(l0) + pi1*exp(l1))
+ 
+  m = pmax(l0,l1)
+  logsum = m + log(pi0*exp(l0-m) + pi1*exp(l1-m))
+  if (log) return(sum(logsum))
+  else return(exp(sum(logsum)))
+}
+
+ebnm_binormal = function(x,s){
+  x = drop(x) 
+  s0 = 0.01
+  lambda = optimize(function(lambda){-dbinormal(x,s,s0,lambda,log=TRUE)},
+              lower = 0, upper = max(x))$minimum
+  g = ashr::normalmix(pi=c(0.5,0.5), mean=c(0,lambda), sd=c(lambda * s0,lambda * s0))
+  postmean = ashr::postmean(g,ashr::set_data(x,s))
+  postsd = ashr::postsd(g,ashr::set_data(x,s))
+  return(list(g = g, posterior = data.frame(mean=postmean,sd=postsd)))
+}
 ```
 
 ## Introduction
@@ -16,6 +44,97 @@ library("ebnm")
 I want to implement an EB version of the power update
 for a symmetric data matrix S. I haven't implemented an update
 to the residual error yet
+
+## Rank 1
+
+```{r}
+eb_power_update_r1 = function(S,v,ebnm_fn,sigma){
+  newv = drop(S %*% v)
+  if(!all(newv==0))
+    v = ebnm_fn(newv, sigma)$posterior$mean
+  if(!all(v==0))
+    v = v/sqrt(sum(v^2))
+  return(v)
+}
+```
+
+Simulate data under a tree model (with very small errors)
+```{r}
+set.seed(1)
+n = 40
+x = cbind(c(rep(1,n),rep(0,n)), c(rep(0,n),rep(1,n)), c(rep(1,n/2),rep(0,3*n/2)), c(rep(0,n/2), rep(1,n/2), rep(0,n)), c(rep(0,n),rep(1,n/2),rep(0,n/2)), c(rep(0,3*n/2),rep(1,n/2)))
+E = matrix(0.01*rexp(2*n*2*n),nrow=2*n)
+E = E+t(E) #symmetric errors
+S = x %*% diag(c(1,1,1,1,1,1)) %*% t(x) + E
+image(S)
+```
+
+Check the first PC. It is essentially the constant vector.
+```{r}
+pc1 = cbind(svd(S)$v[,1])
+plot(-pc1,ylim=c(0,0.16))
+```
+
+We can see EB power (point-laplace), with random init, zeros out the component.
+```{r}
+set.seed(1)
+v = cbind(rnorm(2*n))
+v= v/sqrt(sum(v^2))
+sigma = sqrt(mean(S^2))
+
+for(i in 1:100){
+  v = eb_power_update_r1(S,v,ebnm_point_laplace,sigma)
+}
+plot(v, ylim=c(0,0.16))
+```
+
+However, if we use a different random init, it can find the first split of the tree (here a 0-1 split
+rather than +-1 split).
+```{r}
+set.seed(4)
+v = cbind(rnorm(2*n))
+v= v/sqrt(sum(v^2))
+sigma = sqrt(mean(S^2))
+
+for(i in 1:100){
+  v = eb_power_update_r1(S,v,ebnm_point_laplace,sigma)
+}
+plot(v, ylim=c(0,0.16))
+```
+
+If we initialize to the first PC, it finds something close to the first PC (a bit more split).
+```{r}
+v = -pc1
+sigma = sqrt(mean(S^2))
+for(i in 1:100){
+  v = eb_power_update_r1(S,v,ebnm_point_laplace,sigma)
+}
+plot(v, ylim=c(0,0.14))
+```
+
+If we initialize to the (positive version of) the first PC, point-exponential performs similarly (we use the negative because the first PC here is negative).
+```{r}
+v = -pc1
+sigma = sqrt(mean(S^2))
+
+for(i in 1:100){
+  v = eb_power_update_r1(S,v,ebnm_point_exponential,sigma)
+}
+plot(v, ylim=c(0,0.14))
+```
+
+Try further running binormal - it levels things out.
+```{r}
+for(i in 1:100){
+  v = eb_power_update_r1(S,v,ebnm_binormal,sigma)
+}
+plot(v, ylim=c(0,0.14))
+```
+
+
+
+
+## Rank K
 
 ```{r}
 # model is  S \sim VDV' + E with eb prior on V
@@ -29,7 +148,7 @@ eb_power_update = function(S,v,d,ebnm_fn){
     
     newv = (S %*% v[,k,drop=FALSE] - U %*% D %*% t(U) %*% v[,k,drop=FALSE] )
     if(!all(newv==0)){
-      fit.ebnm = ebnm_fn(newv,sigma2)        
+      fit.ebnm = ebnm_fn(newv,sqrt(sigma2))        
       newv = fit.ebnm$posterior$mean
       if(!all(newv==0)){
         newv = newv/sqrt(sum(newv^2 + fit.ebnm$posterior$sd^2))
@@ -51,7 +170,7 @@ random_init = function(S,K){
   n = nrow(S)
   v = matrix(nrow=n,ncol=K)
   for(k in 1:K){
-    v[,k] = pmax(cbind(rnorm(n)),0) # initialize v
+    v[,k] = cbind(rnorm(n)) # initialize v
     v[,k] = v[,k]/sum(v[,k]^2)
   }
   d = rep(1e-8,K)
@@ -62,137 +181,108 @@ random_init = function(S,K){
 
 ## Tree structured data
 
-Simulate some data from a tree structure.
+Simulate data under a tree model (with very small errors)
 ```{r}
 set.seed(1)
 n = 40
 x = cbind(c(rep(1,n),rep(0,n)), c(rep(0,n),rep(1,n)), c(rep(1,n/2),rep(0,3*n/2)), c(rep(0,n/2), rep(1,n/2), rep(0,n)), c(rep(0,n),rep(1,n/2),rep(0,n/2)), c(rep(0,3*n/2),rep(1,n/2)))
-E = matrix(0.1*rexp(2*n*2*n),nrow=2*n)
+E = matrix(0.01*rexp(2*n*2*n),nrow=2*n)
 E = E+t(E) #symmetric errors
-A = x %*% t(x) + E
-image(A)
+S = x %*% diag(c(1,1,1,1,1,1)) %*% t(x) + E
+image(S)
 ```
 
-
-### Rank 1 fit
-
-Here I fit a single factor with point exponential prior. It finds the solution where everything is approximately equal.This is also the leading eigenvector of A.
-```{r}
-set.seed(1)
-fit = random_init(A,1)
-
-err = rep(0,10)
-err[1] = compute_sqerr(A,fit)
-for(i in 2:100){
-  fit = eb_power_update(A,fit$v,fit$d,ebnm_point_exponential)
-  err[i] = compute_sqerr(A,fit)
-}
-plot(err)
-plot(fit$v[,1],svd(A)$v[,1])
-plot(fit$v)
-```
-
-Interestingly the point-Laplace prior zeros everything out. This indicates the need to be a bit careful about initialization (maybe particularly for sigma2). 
-```{r}
-set.seed(1)
-fit = random_init(A,1)
-
-err = rep(0,10)
-err[1] = compute_sqerr(A,fit)
-for(i in 2:100){
-  fit = eb_power_update(A,fit$v,fit$d,ebnm_point_laplace)
-  err[i] = compute_sqerr(A,fit)
-}
-plot(fit$v[,1],svd(A)$v[,1])
-plot(fit$v)
-```
 
 ### Run multiple factors
 
-Here I run with $K=9$. It finds a rank 4 solution, zeroing out the other 5. 
+Here I run with $K=9$ and point-exponential. It finds a rank 3 solution, zeroing out the other 6. This is definitely missing some structure, showing the need for more careful initialization. 
 One can compare this with non-negative without the EB approach [here](power_nneg.html). 
 ```{r}
 set.seed(2)
-fit = random_init(A,9)
+fit = random_init(S,9)
 err = rep(0,10)
-err[1] = sum((A-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
+err[1] = sum((S-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
 for(i in 2:100){
-  fit = eb_power_update(A,fit$v,fit$d,ebnm_point_exponential)
-  err[i] = sum((A-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
+  fit = eb_power_update(S,fit$v,fit$d,ebnm_point_exponential)
+  err[i] = sum((S-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
 }
 plot(err)
 
 par(mfcol=c(3,3),mai=rep(0.3,4))
-for(i in 1:9){plot(fit$v[,i],main=paste0(fit$d[i]))}
+for(i in 1:9){plot(fit$v[,i],main=paste0(trunc(fit$d[i])))}
 ```
 
-Here I try the generalized binary prior. So far I'm finding this does not work well, especially if started from random starting point. I debugged and found that what happens is that initially all the v are quite non-negative, bounded away from 0. So the gb prior puts all its weight on the non-null normal component and does not shrink anything. (Is it worth using a laplace for the non-null component?) The point exponential does not have that problem - it shrinks the smallest values towards 0, and eventually gets to a point where everything is 0.
+Here I try the generalized binary prior. So far I'm finding this does not work well, especially if started from random starting point. I debugged and found that what happens is that generally the v are bounded away from 0. So the gb prior puts all its weight on the non-null normal component and does not shrink anything. (Is it worth using a laplace for the non-null component?) The point exponential does not have that problem - it shrinks the smallest values towards 0, and eventually gets to a point where everything is 0. It seems clear that using the gb prior from random initialization is not going to work.
 
 ```{r}
 set.seed(2)
-fit = random_init(A,9)
+fit = random_init(S,9)
 err = rep(0,10)
-err[1] = sum((A-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
+err[1] = sum((S-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
  
 for(i in 2:10){
-  fit = eb_power_update(A,fit$v,fit$d,ebnm_generalized_binary)
-  err[i] = sum((A-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
+  fit = eb_power_update(S,fit$v,fit$d,ebnm_generalized_binary)
+  err[i] = sum((S-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
 }
 plot(err)
 
 par(mfcol=c(3,3),mai=rep(0.3,4))
-for(i in 1:9){plot(fit$v[,i],main=paste0(fit$d[i]))}
+for(i in 1:9){plot(fit$v[,i],main=paste0(trunc(fit$d[i])))}
 ```
 
-I should try with a fixed GB prior? I want to force the shrinkage towards 0...
-Here we try initializing GB with point-exponential.
-
+Here we try initializing GB with point-exponential. It produces a fit with the intermediate components.
 ```{r}
 set.seed(2)
-fit = random_init(A,9)
+fit = random_init(S,9)
 
 err = rep(0,10)
-err[1] = compute_sqerr(A,fit)
+err[1] = compute_sqerr(S,fit)
  
 for(i in 2:50){
-  fit = eb_power_update(A,fit$v,fit$d,ebnm_point_exponential)
-  err[i] = compute_sqerr(A,fit)
+  fit = eb_power_update(S,fit$v,fit$d,ebnm_point_exponential)
+  err[i] = compute_sqerr(S,fit)
 }
 par(mfcol=c(3,3),mai=rep(0.3,4))
-for(i in 1:9){plot(fit$v[,i],main=paste0(fit$d[i]))}
-err
+for(i in 1:9){plot(fit$v[,i],main=paste0(trunc(fit$d[i])))}
 
-fit$d = rep(1e-8,9)
 for(i in 2:50){
-  fit = eb_power_update(A,fit$v,fit$d,ebnm_generalized_binary)
-  err[i] = compute_sqerr(A,fit)
+  fit = eb_power_update(S,fit$v,fit$d,ebnm_generalized_binary)
+  err[i] = compute_sqerr(S,fit)
 }
 par(mfcol=c(3,3),mai=rep(0.3,4))
-for(i in 1:9){plot(fit$v[,i],main=paste0(fit$d[i]))}
-err
-sum(E^2) # compare with "true" error
+for(i in 1:9){plot(fit$v[,i],main=paste0(trunc(fit$d[i])))}
+```
+
+The binormal prior provides a more bimodal solution. (Note: although not seen here, I have seen issues with it including a factor that puts two non-neighboring populations together.)
+```{r}
+for(i in 2:50){
+  fit = eb_power_update(S,fit$v,fit$d,ebnm_binormal)
+  err[i] = compute_sqerr(S,fit)
+}
+par(mfcol=c(3,3),mai=rep(0.3,4))
+for(i in 1:9){plot(fit$v[,i],main=paste0(trunc(fit$d[i])))}
+
 ```
 
 ## SVD initialization
 
 I'm going to try initializing with SVD, then running point-laplace, then 
-running GB (similar to GBCD strategy). Interestingly, initializing at SVD with d set to the svd-based value leads point-laplace to a solution with negative d values (not shown) so here I initialize d to be very small and let it learn the non-zero values more gradually. 
+running GB, similar to the strategy in the GBCD paper. (Note: here I initialize with the svd values for d; an alternative is to set these to be very small and just use the v from svd to initialize.)
 ```{r}
 set.seed(2)
-A.svd = svd(A)
+S.svd = svd(S)
 
-fit = list(v=A.svd$u[,1:4],d=rep(1e-8,4)) #init d to be very small
+fit = list(v=S.svd$u[,1:4],d=S.svd$d[1:4]) #rep(1e-8,4)) #init d to be very small
 
 err = rep(0,10)
-err[1] = compute_sqerr(A,fit)
+err[1] = compute_sqerr(S,fit)
  
 for(i in 2:100){
-  fit = eb_power_update(A,fit$v,fit$d,ebnm_point_laplace)
-  err[i] = compute_sqerr(A,fit)
+  fit = eb_power_update(S,fit$v,fit$d,ebnm_point_laplace)
+  err[i] = compute_sqerr(S,fit)
 }
 par(mfcol=c(3,3),mai=rep(0.3,4))
-for(i in 1:4){plot(fit$v[,i],main=paste0(fit$d[i]))}
-err
+for(i in 1:4){plot(fit$v[,i],main=paste0(trunc(fit$d[i])))}
 ```
 
 ```{r}
@@ -204,17 +294,29 @@ fit$v = split_v(fit$v)
 fit$d= rep(fit$d/2,2)
 
 for(i in 2:100){
-  fit = eb_power_update(A,fit$v,fit$d,ebnm_point_exponential)
-  err[i] = compute_sqerr(A,fit)
-}
-
-for(i in 2:50){
-  fit = eb_power_update(A,fit$v,fit$d,ebnm_generalized_binary)
-  err[i] = compute_sqerr(A,fit)
+  fit = eb_power_update(S,fit$v,fit$d,ebnm_point_exponential)
+  err[i] = compute_sqerr(S,fit)
 }
 par(mfcol=c(3,3),mai=rep(0.3,4))
-for(i in 1:4){plot(fit$v[,i],main=paste0(fit$d[i]))}
-err
-sum(E^2) # co
+for(i in 1:8){plot(fit$v[,i],main=paste0(trunc(fit$d[i])))}
+fit.pe = fit # save for later use
+
+for(i in 2:200){
+  fit = eb_power_update(S,fit$v,fit$d,ebnm_generalized_binary)
+  err[i] = compute_sqerr(S,fit)
+}
+par(mfcol=c(3,3),mai=rep(0.3,4))
+for(i in 1:8){plot(fit$v[,i],main=paste0(trunc(fit$d[i])))}
+```
+
+Try binormal instead, initialized from point-exp. This works better.
+```{r}
+fit = fit.pe
+for(i in 2:200){
+  fit = eb_power_update(S,fit$v,fit$d,ebnm_binormal)
+  err[i] = compute_sqerr(S,fit)
+}
+par(mfcol=c(3,3),mai=rep(0.3,4))
+for(i in 1:8){plot(fit$v[,i],main=paste0(trunc(fit$d[i])))}
 ```
 
