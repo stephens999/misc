@@ -166,11 +166,14 @@ compute_sqerr = function(S,fit){
 }
 
 # a random initialization
-random_init = function(S,K){
+random_init = function(S,K,nonneg = FALSE){
   n = nrow(S)
   v = matrix(nrow=n,ncol=K)
+  
   for(k in 1:K){
     v[,k] = cbind(rnorm(n)) # initialize v
+    if(nonneg)
+        v[,k] = pmax(v[,k],0)
     v[,k] = v[,k]/sum(v[,k]^2)
   }
   d = rep(1e-8,K)
@@ -195,11 +198,11 @@ image(S)
 
 ### Run multiple factors
 
-Here I run with $K=9$ and point-exponential. It finds a rank 3 solution, zeroing out the other 6. This is definitely missing some structure, showing the need for more careful initialization. 
+Here I run with $K=9$ and point-exponential. It finds a rank 4 solution, essentially zeroing out the other 5. 
 One can compare this with non-negative without the EB approach [here](power_nneg.html). 
 ```{r}
 set.seed(2)
-fit = random_init(S,9)
+fit = random_init(S,9,nonneg=TRUE)
 err = rep(0,10)
 err[1] = sum((S-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
 for(i in 2:100){
@@ -216,7 +219,7 @@ Here I try the generalized binary prior. So far I'm finding this does not work w
 
 ```{r}
 set.seed(2)
-fit = random_init(S,9)
+fit = random_init(S,9, nonneg=TRUE)
 err = rep(0,10)
 err[1] = sum((S-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
  
@@ -230,24 +233,19 @@ par(mfcol=c(3,3),mai=rep(0.3,4))
 for(i in 1:9){plot(fit$v[,i],main=paste0(trunc(fit$d[i])))}
 ```
 
-Here we try initializing GB with point-exponential. It produces a fit with the intermediate components.
+Here we try initializing GB with point-exponential. It only changes the fit very little.
 ```{r}
 set.seed(2)
-fit = random_init(S,9)
+fit = random_init(S,9,nonneg=TRUE)
 
-err = rep(0,10)
-err[1] = compute_sqerr(S,fit)
- 
-for(i in 2:50){
+for(i in 1:100){
   fit = eb_power_update(S,fit$v,fit$d,ebnm_point_exponential)
-  err[i] = compute_sqerr(S,fit)
 }
 par(mfcol=c(3,3),mai=rep(0.3,4))
 for(i in 1:9){plot(fit$v[,i],main=paste0(trunc(fit$d[i])))}
 
-for(i in 2:50){
+for(i in 1:100){
   fit = eb_power_update(S,fit$v,fit$d,ebnm_generalized_binary)
-  err[i] = compute_sqerr(S,fit)
 }
 par(mfcol=c(3,3),mai=rep(0.3,4))
 for(i in 1:9){plot(fit$v[,i],main=paste0(trunc(fit$d[i])))}
@@ -255,9 +253,15 @@ for(i in 1:9){plot(fit$v[,i],main=paste0(trunc(fit$d[i])))}
 
 The binormal prior provides a more bimodal solution. (Note: although not seen here, I have seen issues with it including a factor that puts two non-neighboring populations together.)
 ```{r}
-for(i in 2:50){
+for(i in 1:100){
   fit = eb_power_update(S,fit$v,fit$d,ebnm_binormal)
   err[i] = compute_sqerr(S,fit)
+}
+par(mfcol=c(3,3),mai=rep(0.3,4))
+for(i in 1:9){plot(fit$v[,i],main=paste0(trunc(fit$d[i])))}
+
+for(i in 1:100){
+  fit = eb_power_update(S,fit$v,fit$d,ebnm_binormal)
 }
 par(mfcol=c(3,3),mai=rep(0.3,4))
 for(i in 1:9){plot(fit$v[,i],main=paste0(trunc(fit$d[i])))}
