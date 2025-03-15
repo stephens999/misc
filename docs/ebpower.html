@@ -378,7 +378,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2025-03-12
+<strong>Last updated:</strong> 2025-03-15
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -509,15 +509,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree6aa4dfe6fd85776c0ae780624b0f98aab0180cc0targetblank6aa4dfea">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree06085212e070eebf91e0b613cf6f91e67fff8d6atargetblank0608521a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/stephens999/misc/tree/6aa4dfe6fd85776c0ae780624b0f98aab0180cc0" target="_blank">6aa4dfe</a>
+<a href="https://github.com/stephens999/misc/tree/06085212e070eebf91e0b613cf6f91e67fff8d6a" target="_blank">0608521</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree6aa4dfe6fd85776c0ae780624b0f98aab0180cc0targetblank6aa4dfea"
+id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree06085212e070eebf91e0b613cf6f91e67fff8d6atargetblank0608521a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -527,7 +527,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/stephens999/misc/tree/6aa4dfe6fd85776c0ae780624b0f98aab0180cc0" target="_blank">6aa4dfe</a>.
+<a href="https://github.com/stephens999/misc/tree/06085212e070eebf91e0b613cf6f91e67fff8d6a" target="_blank">0608521</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -572,6 +572,7 @@ Untracked files:
     Untracked:  analysis/cp_ash.Rmd
     Untracked:  analysis/eQTL.perm.rand.pdf
     Untracked:  analysis/eb_prepilot.Rmd
+    Untracked:  analysis/eb_snmu.Rmd
     Untracked:  analysis/eb_var.Rmd
     Untracked:  analysis/ebpmf1.Rmd
     Untracked:  analysis/ebpmf_sla_text.Rmd
@@ -721,6 +722,7 @@ Untracked files:
 
 Unstaged changes:
     Modified:   .gitignore
+    Modified:   analysis/ebnm_binormal.Rmd
     Modified:   analysis/flashier_log1p.Rmd
     Modified:   analysis/flashier_sla_text.Rmd
     Modified:   analysis/logistic_z_scores.Rmd
@@ -777,6 +779,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/06085212e070eebf91e0b613cf6f91e67fff8d6a/analysis/ebpower.Rmd" target="_blank">0608521</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-03-15
+</td>
+<td>
+workflowr::wflow_publish("ebpower.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/2956a39704e80e0a05a7a8959d48c94fc6c577f8/docs/ebpower.html" target="_blank">2956a39</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-03-12
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/6aa4dfe6fd85776c0ae780624b0f98aab0180cc0/analysis/ebpower.Rmd" target="_blank">6aa4dfe</a>
 </td>
 <td>
@@ -796,12 +832,376 @@ workflowr::wflow_publish("analysis/ebpower.Rmd")
 </div>
 </div>
 </div>
-<pre class="r"><code>library(&quot;ebnm&quot;)</code></pre>
+<pre class="r"><code># load the ebnm library and define an ebnm_binormal function
+
+library(&quot;ebnm&quot;)
+
+dbinormal = function (x,s,s0,lambda,log=TRUE){
+  pi0 = 0.5
+  pi1 = 0.5
+  s2 = s^2
+  s02 = s0^2
+  l0 = dnorm(x,0,sqrt(lambda^2 * s02 + s2),log=TRUE)
+  l1 = dnorm(x,lambda,sqrt(lambda^2 * s02 + s2),log=TRUE)
+  logsum = log(pi0*exp(l0) + pi1*exp(l1))
+ 
+  m = pmax(l0,l1)
+  logsum = m + log(pi0*exp(l0-m) + pi1*exp(l1-m))
+  if (log) return(sum(logsum))
+  else return(exp(sum(logsum)))
+}
+
+ebnm_binormal = function(x,s){
+  x = drop(x) 
+  s0 = 0.01
+  lambda = optimize(function(lambda){-dbinormal(x,s,s0,lambda,log=TRUE)},
+              lower = 0, upper = max(x))$minimum
+  g = ashr::normalmix(pi=c(0.5,0.5), mean=c(0,lambda), sd=c(lambda * s0,lambda * s0))
+  postmean = ashr::postmean(g,ashr::set_data(x,s))
+  postsd = ashr::postsd(g,ashr::set_data(x,s))
+  return(list(g = g, posterior = data.frame(mean=postmean,sd=postsd)))
+}</code></pre>
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
 <p>I want to implement an EB version of the power update for a symmetric
 data matrix S. I haven’t implemented an update to the residual error
 yet</p>
+</div>
+<div id="rank-1" class="section level2">
+<h2>Rank 1</h2>
+<pre class="r"><code>eb_power_update_r1 = function(S,v,ebnm_fn,sigma){
+  newv = drop(S %*% v)
+  if(!all(newv==0))
+    v = ebnm_fn(newv, sigma)$posterior$mean
+  if(!all(v==0))
+    v = v/sqrt(sum(v^2))
+  return(v)
+}</code></pre>
+<p>Simulate data under a tree model (with very small errors)</p>
+<pre class="r"><code>set.seed(1)
+n = 40
+x = cbind(c(rep(1,n),rep(0,n)), c(rep(0,n),rep(1,n)), c(rep(1,n/2),rep(0,3*n/2)), c(rep(0,n/2), rep(1,n/2), rep(0,n)), c(rep(0,n),rep(1,n/2),rep(0,n/2)), c(rep(0,3*n/2),rep(1,n/2)))
+E = matrix(0.01*rexp(2*n*2*n),nrow=2*n)
+E = E+t(E) #symmetric errors
+S = x %*% diag(c(1,1,1,1,1,1)) %*% t(x) + E
+image(S)</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-1">
+Past versions of unnamed-chunk-3-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-3-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/2956a39704e80e0a05a7a8959d48c94fc6c577f8/docs/figure/ebpower.Rmd/unnamed-chunk-3-1.png" target="_blank">2956a39</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-03-12
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Check the first PC. It is essentially the constant vector.</p>
+<pre class="r"><code>pc1 = cbind(svd(S)$v[,1])
+plot(-pc1,ylim=c(0,0.16))</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-1">
+Past versions of unnamed-chunk-4-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/2956a39704e80e0a05a7a8959d48c94fc6c577f8/docs/figure/ebpower.Rmd/unnamed-chunk-4-1.png" target="_blank">2956a39</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-03-12
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>We can see EB power (point-laplace), with random init, zeros out the
+component.</p>
+<pre class="r"><code>set.seed(1)
+v = cbind(rnorm(2*n))
+v= v/sqrt(sum(v^2))
+sigma = sqrt(mean(S^2))
+
+for(i in 1:100){
+  v = eb_power_update_r1(S,v,ebnm_point_laplace,sigma)
+}
+plot(v, ylim=c(0,0.16))</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-1">
+Past versions of unnamed-chunk-5-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/2956a39704e80e0a05a7a8959d48c94fc6c577f8/docs/figure/ebpower.Rmd/unnamed-chunk-5-1.png" target="_blank">2956a39</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-03-12
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>However, if we use a different random init, it can find the first
+split of the tree (here a 0-1 split rather than +-1 split).</p>
+<pre class="r"><code>set.seed(4)
+v = cbind(rnorm(2*n))
+v= v/sqrt(sum(v^2))
+sigma = sqrt(mean(S^2))
+
+for(i in 1:100){
+  v = eb_power_update_r1(S,v,ebnm_point_laplace,sigma)
+}
+plot(v, ylim=c(0,0.16))</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-1">
+Past versions of unnamed-chunk-6-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/2956a39704e80e0a05a7a8959d48c94fc6c577f8/docs/figure/ebpower.Rmd/unnamed-chunk-6-1.png" target="_blank">2956a39</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-03-12
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>If we initialize to the first PC, it finds something close to the
+first PC (a bit more split).</p>
+<pre class="r"><code>v = -pc1
+sigma = sqrt(mean(S^2))
+for(i in 1:100){
+  v = eb_power_update_r1(S,v,ebnm_point_laplace,sigma)
+}
+plot(v, ylim=c(0,0.14))</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-7-1">
+Past versions of unnamed-chunk-7-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-7-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/2956a39704e80e0a05a7a8959d48c94fc6c577f8/docs/figure/ebpower.Rmd/unnamed-chunk-7-1.png" target="_blank">2956a39</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-03-12
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>If we initialize to the (positive version of) the first PC,
+point-exponential performs similarly (we use the negative because the
+first PC here is negative).</p>
+<pre class="r"><code>v = -pc1
+sigma = sqrt(mean(S^2))
+
+for(i in 1:100){
+  v = eb_power_update_r1(S,v,ebnm_point_exponential,sigma)
+}
+plot(v, ylim=c(0,0.14))</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-1">
+Past versions of unnamed-chunk-8-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-8-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/2956a39704e80e0a05a7a8959d48c94fc6c577f8/docs/figure/ebpower.Rmd/unnamed-chunk-8-1.png" target="_blank">2956a39</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-03-12
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Try further running binormal - it levels things out.</p>
+<pre class="r"><code>for(i in 1:100){
+  v = eb_power_update_r1(S,v,ebnm_binormal,sigma)
+}
+plot(v, ylim=c(0,0.14))</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-1">
+Past versions of unnamed-chunk-9-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/2956a39704e80e0a05a7a8959d48c94fc6c577f8/docs/figure/ebpower.Rmd/unnamed-chunk-9-1.png" target="_blank">2956a39</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-03-12
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="rank-k" class="section level2">
+<h2>Rank K</h2>
 <pre class="r"><code># model is  S \sim VDV&#39; + E with eb prior on V
 eb_power_update = function(S,v,d,ebnm_fn){
   K = ncol(v)
@@ -813,7 +1213,7 @@ eb_power_update = function(S,v,d,ebnm_fn){
     
     newv = (S %*% v[,k,drop=FALSE] - U %*% D %*% t(U) %*% v[,k,drop=FALSE] )
     if(!all(newv==0)){
-      fit.ebnm = ebnm_fn(newv,sigma2)        
+      fit.ebnm = ebnm_fn(newv,sqrt(sigma2))        
       newv = fit.ebnm$posterior$mean
       if(!all(newv==0)){
         newv = newv/sqrt(sum(newv^2 + fit.ebnm$posterior$sd^2))
@@ -835,7 +1235,7 @@ random_init = function(S,K){
   n = nrow(S)
   v = matrix(nrow=n,ncol=K)
   for(k in 1:K){
-    v[,k] = pmax(cbind(rnorm(n)),0) # initialize v
+    v[,k] = cbind(rnorm(n)) # initialize v
     v[,k] = v[,k]/sum(v[,k]^2)
   }
   d = rep(1e-8,K)
@@ -844,180 +1244,113 @@ random_init = function(S,K){
 </div>
 <div id="tree-structured-data" class="section level2">
 <h2>Tree structured data</h2>
-<p>Simulate some data from a tree structure.</p>
+<p>Simulate data under a tree model (with very small errors)</p>
 <pre class="r"><code>set.seed(1)
 n = 40
 x = cbind(c(rep(1,n),rep(0,n)), c(rep(0,n),rep(1,n)), c(rep(1,n/2),rep(0,3*n/2)), c(rep(0,n/2), rep(1,n/2), rep(0,n)), c(rep(0,n),rep(1,n/2),rep(0,n/2)), c(rep(0,3*n/2),rep(1,n/2)))
-E = matrix(0.1*rexp(2*n*2*n),nrow=2*n)
+E = matrix(0.01*rexp(2*n*2*n),nrow=2*n)
 E = E+t(E) #symmetric errors
-A = x %*% t(x) + E
-image(A)</code></pre>
-<p><img src="figure/ebpower.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
-<div id="rank-1-fit" class="section level3">
-<h3>Rank 1 fit</h3>
-<p>Here I fit a single factor with point exponential prior. It finds the
-solution where everything is approximately equal.This is also the
-leading eigenvector of A.</p>
-<pre class="r"><code>set.seed(1)
-fit = random_init(A,1)
-
-err = rep(0,10)
-err[1] = compute_sqerr(A,fit)
-for(i in 2:100){
-  fit = eb_power_update(A,fit$v,fit$d,ebnm_point_exponential)
-  err[i] = compute_sqerr(A,fit)
-}
-plot(err)</code></pre>
-<p><img src="figure/ebpower.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>plot(fit$v[,1],svd(A)$v[,1])</code></pre>
-<p><img src="figure/ebpower.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>plot(fit$v)</code></pre>
-<p><img src="figure/ebpower.Rmd/unnamed-chunk-4-3.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Interestingly the point-Laplace prior zeros everything out. This
-indicates the need to be a bit careful about initialization (maybe
-particularly for sigma2).</p>
-<pre class="r"><code>set.seed(1)
-fit = random_init(A,1)
-
-err = rep(0,10)
-err[1] = compute_sqerr(A,fit)
-for(i in 2:100){
-  fit = eb_power_update(A,fit$v,fit$d,ebnm_point_laplace)
-  err[i] = compute_sqerr(A,fit)
-}
-plot(fit$v[,1],svd(A)$v[,1])</code></pre>
-<p><img src="figure/ebpower.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>plot(fit$v)</code></pre>
-<p><img src="figure/ebpower.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /></p>
-</div>
+S = x %*% diag(c(1,1,1,1,1,1)) %*% t(x) + E
+image(S)</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
 <div id="run-multiple-factors" class="section level3">
 <h3>Run multiple factors</h3>
-<p>Here I run with <span class="math inline">\(K=9\)</span>. It finds a
-rank 4 solution, zeroing out the other 5. One can compare this with
-non-negative without the EB approach <a
-href="power_nneg.html">here</a>.</p>
+<p>Here I run with <span class="math inline">\(K=9\)</span> and
+point-exponential. It finds a rank 3 solution, zeroing out the other 6.
+This is definitely missing some structure, showing the need for more
+careful initialization. One can compare this with non-negative without
+the EB approach <a href="power_nneg.html">here</a>.</p>
 <pre class="r"><code>set.seed(2)
-fit = random_init(A,9)
+fit = random_init(S,9)
 err = rep(0,10)
-err[1] = sum((A-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
+err[1] = sum((S-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
 for(i in 2:100){
-  fit = eb_power_update(A,fit$v,fit$d,ebnm_point_exponential)
-  err[i] = sum((A-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
+  fit = eb_power_update(S,fit$v,fit$d,ebnm_point_exponential)
+  err[i] = sum((S-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
 }
 plot(err)</code></pre>
-<p><img src="figure/ebpower.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>par(mfcol=c(3,3),mai=rep(0.3,4))
-for(i in 1:9){plot(fit$v[,i],main=paste0(fit$d[i]))}</code></pre>
-<p><img src="figure/ebpower.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
+for(i in 1:9){plot(fit$v[,i],main=paste0(trunc(fit$d[i])))}</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-12-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Here I try the generalized binary prior. So far I’m finding this does
 not work well, especially if started from random starting point. I
-debugged and found that what happens is that initially all the v are
-quite non-negative, bounded away from 0. So the gb prior puts all its
-weight on the non-null normal component and does not shrink anything.
-(Is it worth using a laplace for the non-null component?) The point
-exponential does not have that problem - it shrinks the smallest values
-towards 0, and eventually gets to a point where everything is 0.</p>
+debugged and found that what happens is that generally the v are bounded
+away from 0. So the gb prior puts all its weight on the non-null normal
+component and does not shrink anything. (Is it worth using a laplace for
+the non-null component?) The point exponential does not have that
+problem - it shrinks the smallest values towards 0, and eventually gets
+to a point where everything is 0. It seems clear that using the gb prior
+from random initialization is not going to work.</p>
 <pre class="r"><code>set.seed(2)
-fit = random_init(A,9)
+fit = random_init(S,9)
 err = rep(0,10)
-err[1] = sum((A-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
+err[1] = sum((S-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
  
 for(i in 2:10){
-  fit = eb_power_update(A,fit$v,fit$d,ebnm_generalized_binary)
-  err[i] = sum((A-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
+  fit = eb_power_update(S,fit$v,fit$d,ebnm_generalized_binary)
+  err[i] = sum((S-fit$v %*% diag(fit$d) %*% t(fit$v))^2)
 }
 plot(err)</code></pre>
-<p><img src="figure/ebpower.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>par(mfcol=c(3,3),mai=rep(0.3,4))
-for(i in 1:9){plot(fit$v[,i],main=paste0(fit$d[i]))}</code></pre>
-<p><img src="figure/ebpower.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
-<p>I should try with a fixed GB prior? I want to force the shrinkage
-towards 0… Here we try initializing GB with point-exponential.</p>
+for(i in 1:9){plot(fit$v[,i],main=paste0(trunc(fit$d[i])))}</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-13-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Here we try initializing GB with point-exponential. It produces a fit
+with the intermediate components.</p>
 <pre class="r"><code>set.seed(2)
-fit = random_init(A,9)
+fit = random_init(S,9)
 
 err = rep(0,10)
-err[1] = compute_sqerr(A,fit)
+err[1] = compute_sqerr(S,fit)
  
 for(i in 2:50){
-  fit = eb_power_update(A,fit$v,fit$d,ebnm_point_exponential)
-  err[i] = compute_sqerr(A,fit)
+  fit = eb_power_update(S,fit$v,fit$d,ebnm_point_exponential)
+  err[i] = compute_sqerr(S,fit)
 }
 par(mfcol=c(3,3),mai=rep(0.3,4))
-for(i in 1:9){plot(fit$v[,i],main=paste0(fit$d[i]))}</code></pre>
-<p><img src="figure/ebpower.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>err</code></pre>
-<pre><code> [1] 10358.0063  4607.3557  4598.9735  4537.0254  3410.6696  1191.1974
- [7]   959.9479   811.3587   682.0467   581.9783   500.5249   371.6257
-[13]   196.7067   127.1278   120.6584   119.9063   119.6007   119.4296
-[19]   119.3242   119.2502   119.1947   119.1548   119.1264   119.1049
-[25]   119.0875   119.0733   119.0618   119.0524   119.0446   119.0379
-[31]   119.0322   119.0272   119.0227   119.0185   119.0144   119.0105
-[37]   119.0068   119.0034   119.0003   118.9974   118.9947   118.9923
-[43]   118.9902   118.9883   118.9866   118.9851   118.9838   118.9825
-[49]   118.9814   118.9803</code></pre>
-<pre class="r"><code>fit$d = rep(1e-8,9)
-for(i in 2:50){
-  fit = eb_power_update(A,fit$v,fit$d,ebnm_generalized_binary)
-  err[i] = compute_sqerr(A,fit)
+for(i in 1:9){plot(fit$v[,i],main=paste0(trunc(fit$d[i])))}</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>for(i in 2:50){
+  fit = eb_power_update(S,fit$v,fit$d,ebnm_generalized_binary)
+  err[i] = compute_sqerr(S,fit)
 }
 par(mfcol=c(3,3),mai=rep(0.3,4))
-for(i in 1:9){plot(fit$v[,i],main=paste0(fit$d[i]))}</code></pre>
-<p><img src="figure/ebpower.Rmd/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>err</code></pre>
-<pre><code> [1] 10358.0063   997.5409   864.8641   744.9060   633.3875   567.5381
- [7]   534.0768   506.6033   438.9509   294.1267   201.6841   150.2595
-[13]   129.7993   124.1713   122.6030   121.8072   121.4878   121.3150
-[19]   121.1241   121.0973   121.0897   121.0870   121.0856   121.0848
-[25]   121.0843   121.0839   121.0836   121.0834   121.0832   121.0831
-[31]   121.0830   121.0830   121.0829   121.0829   121.0829   121.0828
-[37]   121.0828   121.0828   121.0828   121.0828   121.0828   121.0828
-[43]   121.0828   121.0828   121.0828   121.0828   121.0828   121.0828
-[49]   121.0828   121.0828</code></pre>
-<pre class="r"><code>sum(E^2) # compare with &quot;true&quot; error</code></pre>
-<pre><code>[1] 388.104</code></pre>
+for(i in 1:9){plot(fit$v[,i],main=paste0(trunc(fit$d[i])))}</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-14-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>The binormal prior provides a more bimodal solution. (Note: although
+not seen here, I have seen issues with it including a factor that puts
+two non-neighboring populations together.)</p>
+<pre class="r"><code>for(i in 2:50){
+  fit = eb_power_update(S,fit$v,fit$d,ebnm_binormal)
+  err[i] = compute_sqerr(S,fit)
+}
+par(mfcol=c(3,3),mai=rep(0.3,4))
+for(i in 1:9){plot(fit$v[,i],main=paste0(trunc(fit$d[i])))}</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 </div>
 <div id="svd-initialization" class="section level2">
 <h2>SVD initialization</h2>
 <p>I’m going to try initializing with SVD, then running point-laplace,
-then running GB (similar to GBCD strategy). Interestingly, initializing
-at SVD with d set to the svd-based value leads point-laplace to a
-solution with negative d values (not shown) so here I initialize d to be
-very small and let it learn the non-zero values more gradually.</p>
+then running GB, similar to the strategy in the GBCD paper. (Note: here
+I initialize with the svd values for d; an alternative is to set these
+to be very small and just use the v from svd to initialize.)</p>
 <pre class="r"><code>set.seed(2)
-A.svd = svd(A)
+S.svd = svd(S)
 
-fit = list(v=A.svd$u[,1:4],d=rep(1e-8,4)) #init d to be very small
+fit = list(v=S.svd$u[,1:4],d=S.svd$d[1:4]) #rep(1e-8,4)) #init d to be very small
 
 err = rep(0,10)
-err[1] = compute_sqerr(A,fit)
+err[1] = compute_sqerr(S,fit)
  
 for(i in 2:100){
-  fit = eb_power_update(A,fit$v,fit$d,ebnm_point_laplace)
-  err[i] = compute_sqerr(A,fit)
+  fit = eb_power_update(S,fit$v,fit$d,ebnm_point_laplace)
+  err[i] = compute_sqerr(S,fit)
 }
 par(mfcol=c(3,3),mai=rep(0.3,4))
-for(i in 1:4){plot(fit$v[,i],main=paste0(fit$d[i]))}
-err</code></pre>
-<pre><code>  [1] 10358.0063   736.7750   120.5348   118.9666   118.9591   118.9599
-  [7]   118.9606   118.9609   118.9607   118.9601   118.9596   118.9593
- [13]   118.9590   118.9589   118.9588   118.9587   118.9586   118.9586
- [19]   118.9586   118.9587   118.9588   118.9590   118.9592   118.9593
- [25]   118.9595   118.9597   118.9598   118.9600   118.9601   118.9602
- [31]   118.9603   118.9604   118.9605   118.9605   118.9606   118.9606
- [37]   118.9607   118.9607   118.9608   118.9608   118.9608   118.9608
- [43]   118.9609   118.9609   118.9609   118.9609   118.9609   118.9609
- [49]   118.9610   118.9610   118.9610   118.9610   118.9610   118.9610
- [55]   118.9610   118.9610   118.9610   118.9610   118.9610   118.9611
- [61]   118.9611   118.9611   118.9611   118.9611   118.9611   118.9611
- [67]   118.9611   118.9611   118.9611   118.9611   118.9611   118.9611
- [73]   118.9611   118.9611   118.9611   118.9611   118.9611   118.9611
- [79]   118.9611   118.9611   118.9611   118.9611   118.9611   118.9611
- [85]   118.9611   118.9611   118.9611   118.9611   118.9611   118.9611
- [91]   118.9611   118.9611   118.9611   118.9611   118.9611   118.9612
- [97]   118.9612   118.9612   118.9612   118.9612</code></pre>
-<p><img src="figure/ebpower.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+for(i in 1:4){plot(fit$v[,i],main=paste0(trunc(fit$d[i])))}</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-16-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>split_v = function(v){
   v = cbind(pmax(v,0),pmax(-v,0))
 }
@@ -1026,37 +1359,31 @@ fit$v = split_v(fit$v)
 fit$d= rep(fit$d/2,2)
 
 for(i in 2:100){
-  fit = eb_power_update(A,fit$v,fit$d,ebnm_point_exponential)
-  err[i] = compute_sqerr(A,fit)
-}
-
-for(i in 2:50){
-  fit = eb_power_update(A,fit$v,fit$d,ebnm_generalized_binary)
-  err[i] = compute_sqerr(A,fit)
+  fit = eb_power_update(S,fit$v,fit$d,ebnm_point_exponential)
+  err[i] = compute_sqerr(S,fit)
 }
 par(mfcol=c(3,3),mai=rep(0.3,4))
-for(i in 1:4){plot(fit$v[,i],main=paste0(fit$d[i]))}
-err</code></pre>
-<pre><code>  [1] 10358.0063   108.6040   108.5842   108.5771   108.6587   108.7029
-  [7]   108.6780   108.7333   108.8173   108.7955   108.8543   108.8530
- [13]   108.8317   108.8515   108.8325   108.8746   108.8902   108.8967
- [19]   108.8792   108.8969   108.8839   108.8752   108.8795   108.9067
- [25]   108.9010   108.8965   108.8927   108.8894   108.8865   108.8841
- [31]   108.8819   108.8801   108.8785   108.8772   108.8761   108.8751
- [37]   108.8743   108.8736   108.8731   108.8726   108.8722   108.8719
- [43]   108.8717   108.8715   108.8714   108.8713   108.8712   108.8712
- [49]   108.8712   108.8712   109.8584   109.7571   109.6662   109.5818
- [55]   109.5042   109.4326   109.3657   109.3023   109.2416   109.1830
- [61]   109.1271   109.0745   109.0247   108.9786   108.9351   108.8937
- [67]   108.8547   108.8164   108.7790   108.7436   108.7096   108.6770
- [73]   108.6449   108.6124   108.5800   108.5484   108.5179   108.4888
- [79]   108.4612   108.4348   108.4094   108.3848   108.3607   108.3368
- [85]   108.3133   108.2901   108.2669   108.2428   108.2191   108.1958
- [91]   108.1730   108.1506   108.1284   108.1068   108.0863   108.0665
- [97]   108.0473   108.0286   108.0101   107.9917</code></pre>
-<pre class="r"><code>sum(E^2) # co</code></pre>
-<pre><code>[1] 388.104</code></pre>
-<p><img src="figure/ebpower.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+for(i in 1:8){plot(fit$v[,i],main=paste0(trunc(fit$d[i])))}
+fit.pe = fit # save for later use
+
+for(i in 2:200){
+  fit = eb_power_update(S,fit$v,fit$d,ebnm_generalized_binary)
+  err[i] = compute_sqerr(S,fit)
+}
+par(mfcol=c(3,3),mai=rep(0.3,4))</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>for(i in 1:8){plot(fit$v[,i],main=paste0(trunc(fit$d[i])))}</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-17-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Try binormal instead, initialized from point-exp. This works
+better.</p>
+<pre class="r"><code>fit = fit.pe
+for(i in 2:200){
+  fit = eb_power_update(S,fit$v,fit$d,ebnm_binormal)
+  err[i] = compute_sqerr(S,fit)
+}
+par(mfcol=c(3,3),mai=rep(0.3,4))
+for(i in 1:8){plot(fit$v[,i],main=paste0(trunc(fit$d[i])))}</code></pre>
+<p><img src="figure/ebpower.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
