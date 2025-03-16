@@ -48,6 +48,14 @@ to the residual error yet
 ## Rank 1
 
 ```{r}
+# This is just the regular power update, used for initialization
+power_update_r1 = function(S,v){
+  newv = drop(S %*% v)
+  if(!all(newv==0))
+    v = newv/sqrt(sum(newv^2))
+  return(v)
+}
+
 eb_power_update_r1 = function(S,v,ebnm_fn,sigma){
   newv = drop(S %*% v)
   if(!all(newv==0))
@@ -75,18 +83,31 @@ pc1 = cbind(svd(S)$v[,1])
 plot(-pc1,ylim=c(0,0.16))
 ```
 
-We can see EB power (point-laplace), with random init, zeros out the component.
+If one uses a completely random initialization then the eb method will often (but not always) zero things out completely on the first iteration:
+```{r}
+set.seed(1)
+v = cbind(rnorm(2*n))
+v= v/sqrt(sum(v^2))
+sigma = sqrt(mean(S^2))
+v = eb_power_update_r1(S,v,ebnm_point_laplace,sigma)
+plot(v,ylim=c(-0.25,0.25))
+```
+
+We can help avoid this here by doing a single iteration of the power method before moving to EB (because the matrix is very low rank the single iteration moves us quickly to the right subspace):
 ```{r}
 set.seed(1)
 v = cbind(rnorm(2*n))
 v= v/sqrt(sum(v^2))
 sigma = sqrt(mean(S^2))
 
+v = power_update_r1(S,v)
+plot(v,ylim=c(-0.25,0.25))
 for(i in 1:100){
   v = eb_power_update_r1(S,v,ebnm_point_laplace,sigma)
 }
-plot(v, ylim=c(0,0.16))
+plot(v,ylim=c(-0.25,0.25))
 ```
+
 
 However, if we use a different random init, it can find the first split of the tree (here a 0-1 split
 rather than +-1 split).
@@ -96,10 +117,13 @@ v = cbind(rnorm(2*n))
 v= v/sqrt(sum(v^2))
 sigma = sqrt(mean(S^2))
 
+v = power_update_r1(S,v)
+plot(v,ylim=c(-0.25,0.25))
 for(i in 1:100){
   v = eb_power_update_r1(S,v,ebnm_point_laplace,sigma)
 }
-plot(v, ylim=c(0,0.16))
+plot(v,ylim=c(-0.25,0.25))
+abline(h=0)
 ```
 
 If we initialize to the first PC, it finds something close to the first PC (a bit more split).
@@ -109,7 +133,7 @@ sigma = sqrt(mean(S^2))
 for(i in 1:100){
   v = eb_power_update_r1(S,v,ebnm_point_laplace,sigma)
 }
-plot(v, ylim=c(0,0.14))
+plot(v, ylim=c(-0.25,0.25))
 ```
 
 If we initialize to the (positive version of) the first PC, point-exponential performs similarly (we use the negative because the first PC here is negative).
@@ -120,7 +144,7 @@ sigma = sqrt(mean(S^2))
 for(i in 1:100){
   v = eb_power_update_r1(S,v,ebnm_point_exponential,sigma)
 }
-plot(v, ylim=c(0,0.14))
+plot(v, ylim=c(-0.25,0.25))
 ```
 
 Try further running binormal - it levels things out.
@@ -128,7 +152,7 @@ Try further running binormal - it levels things out.
 for(i in 1:100){
   v = eb_power_update_r1(S,v,ebnm_binormal,sigma)
 }
-plot(v, ylim=c(0,0.14))
+plot(v, ylim=c(-0.25,0.25))
 ```
 
 
