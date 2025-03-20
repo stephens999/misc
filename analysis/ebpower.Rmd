@@ -42,11 +42,12 @@ ebnm_binormal = function(x,s){
 ## Introduction
 
 I want to implement an EB version of the power update
-for a symmetric data matrix S. I haven't implemented an update
-to the residual error yet
+for a symmetric data matrix S. 
 
 ## Rank 1
 
+These are the update functions for the regular power update and
+the EB version.
 ```{r}
 # This is just the regular power update, used for initialization
 power_update_r1 = function(S,v){
@@ -66,21 +67,256 @@ eb_power_update_r1 = function(S,v,ebnm_fn,sigma){
 }
 ```
 
-Simulate data under a tree model (with very small errors)
+### Non-overlapping equal group
+
+First I simulate data under non-overlapping equal groups, so the
+matrix is essentially a noisy version of a (block) identity matrix.
+I set up `x` here to be the 6 factors of a hierarchical tree structure for later use, but I only use the bottom 4 factors so it is not actually a tree.
 ```{r}
 set.seed(1)
 n = 40
 x = cbind(c(rep(1,n),rep(0,n)), c(rep(0,n),rep(1,n)), c(rep(1,n/2),rep(0,3*n/2)), c(rep(0,n/2), rep(1,n/2), rep(0,n)), c(rep(0,n),rep(1,n/2),rep(0,n/2)), c(rep(0,3*n/2),rep(1,n/2)))
-E = matrix(0.01*rexp(2*n*2*n),nrow=2*n)
+E = matrix(0.1*rnorm(2*n*2*n),nrow=2*n)
 E = E+t(E) #symmetric errors
+S = x %*% diag(c(0,0,1,1,1,1)) %*% t(x) + E
+image(S)
+```
+
+The first four PCs all have almost the same eigenvalues here.
+The first PC is piecewise constant on the four groups, with essentially arbitrary values on each group.
+```{r}
+S.svd = svd(S)
+S.svd$d[1:10]
+pc1 = S.svd$v[,1]
+plot(pc1)
+```
+
+
+#### Point Laplace 
+
+Power update with point laplace: it finds one of the groups. 
+```{r}
+v = pc1
+for(i in 1:100)
+  v = eb_power_update_r1(S, v, ebnm_point_laplace, sqrt(mean(S^2)))
+plot(v, ylim=c(-0.25,0.25))
+```
+
+I expected that it could find a solution with both positive and negative values (two different groups) if initialized differently. So I tried initilializing it like that, but it still found just one group. 
+```{r}
+v = c(rep(1,n/2),rep(-1,n/2),rep(0,n))
+v = v/sqrt(sum(v^2))
+for(i in 1:10){
+  v = eb_power_update_r1(S, v, ebnm_point_laplace, sqrt(mean(S^2)))
+}
+plot(v, ylim=c(-0.25,0.25))
+```
+
+Try a different one:
+```{r}
+v = c(rep(0,n/2),rep(1,n/2),rep(-1,n/2),rep(0,n/2))
+v = v/sqrt(sum(v^2))
+for(i in 1:100){
+  v = eb_power_update_r1(S, v, ebnm_point_laplace, sqrt(mean(S^2)))
+}
+plot(v, ylim=c(-0.25,0.25))
+```
+
+And again.. It seems to consistently want to find one group. I was a bit surprised by this, but I guess having just one group
+allows it to have a sparser solution, and this is winning out here.
+```{r}
+v = c(rep(1,n/2),rep(0,n/2),rep(-1,n/2),rep(0,n/2))
+v = v/sqrt(sum(v^2))
+for(i in 1:100){
+  v = eb_power_update_r1(S, v, ebnm_point_laplace, sqrt(mean(S^2)))
+}
+plot(v, ylim=c(-0.25,0.25))
+```
+
+#### Point Exponential
+
+Power update with point exponential: it finds one of the groups, as I expected.
+```{r}
+v = pc1
+for(i in 1:100){
+  v = eb_power_update_r1(S, v, ebnm_point_exponential, sqrt(mean(S^2)))
+}
+plot(v, ylim=c(-0.25,0.25))
+```
+
+Here I initialize with the negative of the first PC, and it finds a single group again. Again I expected this. 
+```{r}
+v = -pc1
+for(i in 1:100){
+  v = eb_power_update_r1(S, v, ebnm_point_exponential, sqrt(mean(S^2)))
+}
+plot(v, ylim=c(-0.25,0.25))
+```
+
+#### Binormal prior
+
+Try binormal prior; this behaves as expected.
+```{r}
+v = pc1
+for(i in 1:100){
+  v = eb_power_update_r1(S, v, ebnm_binormal, sqrt(mean(S^2)))
+}
+plot(v, ylim=c(-0.25,0.25))
+```
+
+However, when I try initializing with the negative of the first PC, it finds two groups. This was unexpected to me, but it makes sense in retrospect, especially as I fix the sparsity of the binormal prior to have 0.5 mass on the 0 component. Also, it is easier for the point exponential to move to sparser solutions because it is unimodal at 0. Possibly it supports the idea of running the point exponential prior before running binormal. 
+```{r}
+v = -pc1
+for(i in 1:100){
+  v = eb_power_update_r1(S, v, ebnm_binormal, sqrt(mean(S^2)))
+}
+plot(v, ylim=c(-0.25,0.25))
+```
+
+Here is the same thing running point exponential before binormal.
+```{r}
+v = -pc1
+for(i in 1:100){
+  v = eb_power_update_r1(S, v, ebnm_point_exponential, sqrt(mean(S^2)))
+}
+for(i in 1:100){
+  v = eb_power_update_r1(S, v, ebnm_binormal, sqrt(mean(S^2)))
+}
+plot(v, ylim=c(-0.25,0.25))
+```
+
+#### Generalized Binary
+
+The GB behaves like the binormal prior:
+```{r}
+v = pc1
+for(i in 1:100){
+  v = eb_power_update_r1(S, v, ebnm_generalized_binary, sqrt(mean(S^2)))
+}
+plot(v, ylim=c(-0.25,0.25))
+```
+
+Interestingly, in this example the GB prior also converges to the 2 group solution when initialized from the negative of the first PC.
+```{r}
+v = -pc1
+for(i in 1:100){
+  v = eb_power_update_r1(S, v, ebnm_generalized_binary, sqrt(mean(S^2)))
+}
+plot(v, ylim=c(-0.25,0.25))
+```
+
+### Non-overlapping equal group II - centered
+
+I reran the above after centering the matrix to see how this
+affects things. I expected it would change the point laplace
+to find some +-1 solutions, but others should maybe not change much.
+
+```{r}
+S = S-mean(S)
+```
+
+Now it is the top 3 PCs that have almost the same eigenvalues, as
+I have effectively removed one of them.
+The first PC is still piecewise constant on the four groups, with essentially arbitrary values on each group.
+```{r}
+S.svd = svd(S)
+S.svd$d[1:10]
+pc1 = S.svd$v[,1]
+plot(pc1)
+```
+
+
+#### Point Laplace 
+
+Point laplace now finds a +-1 solution as I expected.
+```{r}
+v = pc1
+for(i in 1:100)
+  v = eb_power_update_r1(S, v, ebnm_point_laplace, sqrt(mean(S^2)))
+plot(v, ylim=c(-0.25,0.25))
+```
+
+
+#### Point Exponential
+
+Point exponential finds one group, as I expected.
+```{r}
+v = pc1
+for(i in 1:100){
+  v = eb_power_update_r1(S, v, ebnm_point_exponential, sqrt(mean(S^2)))
+}
+plot(v, ylim=c(-0.25,0.25))
+```
+
+Here I initialize with the negative of the first PC, and it finds a single group again. Again I expected this. 
+```{r}
+v = -pc1
+for(i in 1:100){
+  v = eb_power_update_r1(S, v, ebnm_point_exponential, sqrt(mean(S^2)))
+}
+plot(v, ylim=c(-0.25,0.25))
+```
+
+#### Binormal prior
+
+The binormal prior behaves just as before centering:
+```{r}
+v = pc1
+for(i in 1:100){
+  v = eb_power_update_r1(S, v, ebnm_binormal, sqrt(mean(S^2)))
+}
+plot(v, ylim=c(-0.25,0.25))
+```
+
+```{r}
+v = -pc1
+for(i in 1:100){
+  v = eb_power_update_r1(S, v, ebnm_binormal, sqrt(mean(S^2)))
+}
+plot(v, ylim=c(-0.25,0.25))
+```
+
+
+#### Generalized Binary
+
+The GB also behaves the same as without centering
+```{r}
+v = pc1
+for(i in 1:100){
+  v = eb_power_update_r1(S, v, ebnm_generalized_binary, sqrt(mean(S^2)))
+}
+plot(v, ylim=c(-0.25,0.25))
+```
+
+
+```{r}
+v = -pc1
+for(i in 1:100){
+  v = eb_power_update_r1(S, v, ebnm_generalized_binary, sqrt(mean(S^2)))
+}
+plot(v, ylim=c(-0.25,0.25))
+```
+
+
+
+### Tree model
+Simulate data under a tree model 
+```{r}
+set.seed(1)
 S = x %*% diag(c(1,1,1,1,1,1)) %*% t(x) + E
 image(S)
 ```
 
-Check the first PC. It is essentially the constant vector.
+Check the PCs. The top 2 PCs have similar eigenvalues. The first one splits the top two branches; the second one also splits them, but is almost constant. 
 ```{r}
-pc1 = cbind(svd(S)$v[,1])
-plot(-pc1,ylim=c(0,0.16))
+S.svd = svd(S)
+S.svd$d[1:10]
+pc1 = cbind(S.svd$v[,1])
+pc2 = cbind(S.svd$v[,2])
+plot(pc1,ylim=c(-0.25,0.25))
+abline(h=0)
+plot(pc2,ylim=c(-0.25,0.25))
+abline(h=0)
 ```
 
 If one uses a completely random initialization then the eb method will often (but not always) zero things out completely on the first iteration:
@@ -91,28 +327,12 @@ v= v/sqrt(sum(v^2))
 sigma = sqrt(mean(S^2))
 v = eb_power_update_r1(S,v,ebnm_point_laplace,sigma)
 plot(v,ylim=c(-0.25,0.25))
+abline(h=0)
 ```
 
-We can help avoid this here by doing a single iteration of the power method before moving to EB (because the matrix is very low rank the single iteration moves us quickly to the right subspace):
+We can help avoid this here by doing a single iteration of the power method before moving to EB (because the matrix is very low rank the single iteration moves us quickly to the right subspace). Here the point-laplace gives a 0-1 split of the top 2 branches.
 ```{r}
 set.seed(1)
-v = cbind(rnorm(2*n))
-v= v/sqrt(sum(v^2))
-sigma = sqrt(mean(S^2))
-
-v = power_update_r1(S,v)
-plot(v,ylim=c(-0.25,0.25))
-for(i in 1:100){
-  v = eb_power_update_r1(S,v,ebnm_point_laplace,sigma)
-}
-plot(v,ylim=c(-0.25,0.25))
-```
-
-
-However, if we use a different random init, it can find the first split of the tree (here a 0-1 split
-rather than +-1 split).
-```{r}
-set.seed(4)
 v = cbind(rnorm(2*n))
 v= v/sqrt(sum(v^2))
 sigma = sqrt(mean(S^2))
@@ -126,37 +346,219 @@ plot(v,ylim=c(-0.25,0.25))
 abline(h=0)
 ```
 
-If we initialize to the first PC, it finds something close to the first PC (a bit more split).
+The point exponential performs similarly, but the "0" part is slightly non-zero. This is possibly due to the posterior mean reflecting a small probability of coming from the exponential part. (This is not a convergence issue - it remains with more iterations, not shown.)
 ```{r}
-v = -pc1
-sigma = sqrt(mean(S^2))
-for(i in 1:100){
-  v = eb_power_update_r1(S,v,ebnm_point_laplace,sigma)
-}
-plot(v, ylim=c(-0.25,0.25))
-```
-
-If we initialize to the (positive version of) the first PC, point-exponential performs similarly (we use the negative because the first PC here is negative).
-```{r}
-v = -pc1
+set.seed(1)
+v = cbind(rnorm(2*n))
+v= v/sqrt(sum(v^2))
 sigma = sqrt(mean(S^2))
 
+v = power_update_r1(S,v)
+plot(v,ylim=c(-0.25,0.25))
 for(i in 1:100){
   v = eb_power_update_r1(S,v,ebnm_point_exponential,sigma)
 }
-plot(v, ylim=c(-0.25,0.25))
+plot(v,ylim=c(-0.25,0.25))
+abline(h=0)
 ```
 
-Try further running binormal - it levels things out.
+
+Try further running binormal - it moves things to 0.
 ```{r}
 for(i in 1:100){
   v = eb_power_update_r1(S,v,ebnm_binormal,sigma)
 }
 plot(v, ylim=c(-0.25,0.25))
+abline(h=0)
+```
+
+Here running binormal from a random starting point gives the constant vector. (Not a bad solution in principle, but not what we are looking for)
+```{r}
+set.seed(1)
+v = cbind(rnorm(2*n))
+v= v/sqrt(sum(v^2))
+sigma = sqrt(mean(S^2))
+
+v = power_update_r1(S,v)
+plot(v,ylim=c(-0.25,0.25))
+for(i in 1:100){
+  v = eb_power_update_r1(S,v,ebnm_binormal,sigma)
+}
+plot(v,ylim=c(-0.25,0.25))
+abline(h=0)
 ```
 
 
+### Tree model - stronger diagonal
 
+To try to make things interesting I make the diagonal stronger,
+so that there is ambiguity about whether to split on the top branch or the
+population-specific branches. I'm hoping to create a situation where
+the point exponential gives us a non tree-like solution that captures no single branch (ie captures multiple branches).
+
+```{r}
+set.seed(1)
+S = x %*% diag(c(1,1,8,8,8,8)) %*% t(x) + E
+image(S)
+```
+
+Check the PCs. They don't change much from the original symmetric case.
+```{r}
+S.svd = svd(S)
+S.svd$d[1:10]
+pc1 = cbind(S.svd$v[,1])
+pc2 = cbind(S.svd$v[,2])
+plot(pc1,ylim=c(-0.25,0.25))
+abline(h=0)
+plot(pc2,ylim=c(-0.25,0.25))
+abline(h=0)
+```
+
+Again, point-laplace gives a 0-1 split of the top 2 branches (even though initialized here from something closer to a split of 3 populations vs 1)
+```{r}
+set.seed(1)
+v = cbind(rnorm(2*n))
+v= v/sqrt(sum(v^2))
+sigma = sqrt(mean(S^2))
+
+v = power_update_r1(S,v)
+plot(v,ylim=c(-0.25,0.25))
+for(i in 1:100){
+  v = eb_power_update_r1(S,v,ebnm_point_laplace,sigma)
+}
+plot(v,ylim=c(-0.25,0.25))
+abline(h=0)
+```
+
+The point exponential performs similarly, but the "0" part again slightly non-zero. 
+```{r}
+set.seed(1)
+v = cbind(rnorm(2*n))
+v= v/sqrt(sum(v^2))
+sigma = sqrt(mean(S^2))
+
+v = power_update_r1(S,v)
+plot(v,ylim=c(-0.25,0.25))
+for(i in 1:100){
+  v = eb_power_update_r1(S,v,ebnm_point_exponential,sigma)
+}
+plot(v,ylim=c(-0.25,0.25))
+abline(h=0)
+```
+
+
+This time we use generalized binary, which like the binormal moves that non-zero element to 0.
+```{r}
+for(i in 1:100){
+  v = eb_power_update_r1(S,v,ebnm_generalized_binary,sigma)
+}
+plot(v, ylim=c(-0.25,0.25))
+abline(h=0)
+```
+
+Here running binormal from a random starting point gives a 3-population split. It is another illustration of why running binormal from a random starting point may not be a good idea. 
+```{r}
+set.seed(1)
+v = cbind(rnorm(2*n))
+v= v/sqrt(sum(v^2))
+sigma = sqrt(mean(S^2))
+
+v = power_update_r1(S,v)
+plot(v,ylim=c(-0.25,0.25))
+for(i in 1:100){
+  v = eb_power_update_r1(S,v,ebnm_binormal,sigma)
+}
+plot(v,ylim=c(-0.25,0.25))
+abline(h=0)
+```
+
+
+The same happens for the GB prior:
+```{r}
+set.seed(1)
+v = cbind(rnorm(2*n))
+v= v/sqrt(sum(v^2))
+sigma = sqrt(mean(S^2))
+
+v = power_update_r1(S,v)
+plot(v,ylim=c(-0.25,0.25))
+for(i in 1:100){
+  v = eb_power_update_r1(S,v,ebnm_generalized_binary,sigma)
+}
+plot(v,ylim=c(-0.25,0.25))
+abline(h=0)
+```
+
+### Tree model - centered
+
+Now we try centering the tree.
+```{r}
+set.seed(1)
+S = x %*% diag(c(1,1,1,1,1,1)) %*% t(x) + E
+S = S-mean(S)
+image(S)
+```
+
+Check the PCs. The top 2 PCs have similar eigenvalues. The first one splits the top two branches; the second one also splits them, but is almost constant. 
+```{r}
+S.svd = svd(S)
+S.svd$d[1:10]
+pc1 = cbind(S.svd$v[,1])
+pc2 = cbind(S.svd$v[,2])
+plot(pc1,ylim=c(-0.25,0.25))
+abline(h=0)
+plot(pc2,ylim=c(-0.25,0.25))
+abline(h=0)
+```
+
+Now the point-laplace gives a +-1 split of the top 2 branches.
+```{r}
+set.seed(1)
+v = cbind(rnorm(2*n))
+v= v/sqrt(sum(v^2))
+sigma = sqrt(mean(S^2))
+
+v = power_update_r1(S,v)
+plot(v,ylim=c(-0.25,0.25))
+for(i in 1:100){
+  v = eb_power_update_r1(S,v,ebnm_point_laplace,sigma)
+}
+plot(v,ylim=c(-0.25,0.25))
+abline(h=0)
+```
+
+The point exponential produces a 0-1 split. 
+```{r}
+set.seed(1)
+v = cbind(rnorm(2*n))
+v= v/sqrt(sum(v^2))
+sigma = sqrt(mean(S^2))
+
+v = power_update_r1(S,v)
+plot(v,ylim=c(-0.25,0.25))
+for(i in 1:100){
+  v = eb_power_update_r1(S,v,ebnm_point_exponential,sigma)
+}
+plot(v,ylim=c(-0.25,0.25))
+abline(h=0)
+```
+
+
+Here running binormal from a random starting point also gives the 0-1 split.
+```{r}
+set.seed(1)
+v = cbind(rnorm(2*n))
+v= v/sqrt(sum(v^2))
+sigma = sqrt(mean(S^2))
+
+v = power_update_r1(S,v)
+plot(v,ylim=c(-0.25,0.25))
+for(i in 1:100){
+  v = eb_power_update_r1(S,v,ebnm_binormal,sigma)
+}
+plot(v,ylim=c(-0.25,0.25))
+abline(h=0)
+```
 
 ## Rank K
 
