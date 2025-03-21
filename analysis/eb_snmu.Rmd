@@ -513,3 +513,56 @@ for(k in 1:ncol(fit$v))
   plot(fit$v[,k])
 ```
 
+### Overlapping groups
+
+I try the simulation with 10 overlapping groups that I have tried previously [flash_cov_overlapping_groups.html](here), but here I simulate things by adding noise directly to the symmetric matrix S. 
+```{r}
+set.seed(1)
+k=10
+n = 100
+L= matrix(rbinom(k*n,1,0.1),nrow=n)
+E = matrix(rnorm(n*n,0,1),nrow=n)
+E = E + t(E)
+S = L %*% diag(rep(10,k)) %*% t(L) + E
+# p = 1000
+# F = matrix(rnorm(k*p),nrow=p)
+# X = L %*% t(F) + rnorm(n*p,0,0.1)
+# plot(rowSums(L))
+```
+
+Fit with point exp followed by binormal; here, after adding every factor I run a single iteration updating each of the previous factors, as I found this helped improve performance. (Without this step, it fits several redundant factors; with this step it zeros out the redundant factors.)
+```{r}
+set.seed(4)
+fit = snmu_init(S,1)
+
+fit$v = cbind(trunc_and_norm(rep(1,nrow(S))))
+fit = snmu_update_d(fit)
+
+for(k in 1:20){
+  fit = snmu_add_new_factor(fit)
+  for(i in 1:100){
+    fit = snmu_update_v(fit,ebnm_point_exponential,ncol(fit$v))
+    fit = snmu_update_d(fit)
+    fit = snmu_update_sigma_and_lambda_mom(fit)
+  }  
+  for(i in 1:100){
+    fit = snmu_update_v(fit,ebnm_binormal,ncol(fit$v))
+    fit = snmu_update_d(fit)
+    fit = snmu_update_sigma_and_lambda_mom(fit)
+  }  
+  for(k in 1:ncol(fit$v)){ #update each factor once
+    fit = snmu_update_v(fit,ebnm_binormal,k)
+    fit = snmu_update_d(fit)
+  }
+}
+# remove empty factors
+fit$v = fit$v[,fit$d>0]
+fit$d = fit$d[fit$d>0]
+par(mfcol=c(4,4),mai=rep(0.25,4))
+for(k in 1:ncol(fit$v))
+  plot(fit$v[,k])
+
+c = cor(L, fit$v)
+o = order(apply(c,2,max),decreasing = TRUE)
+cbind(apply(c,2,max)[o],apply(c,2,which.max)[o], fit$d[o])
+```
