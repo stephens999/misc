@@ -1,0 +1,515 @@
+---
+title: "eb_snmu"
+author: "Matthew Stephens"
+date: "2025-03-12"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+library("emg")
+library("ebnm")
+```
+
+## Introduction
+
+I'm going to start putting together code for Empirical Bayes symmetric non-negative matrix underapproximation (SNMU).
+Given an $n\times n$ nonnegative matrix $S$ 
+the goal is to fit a model of the form
+$$S = vdv' + b + e$$
+with $v$ an $n \times K$ nonnegative matrix, $d$ is a nonnegative diagonal matrix, and $b$ is a nonnegative $n \times n$ matrix.
+If $e$ is small or 0 then $vdv'$ forms a nonnegative underapproximation of $S$.
+We assume a prior $g_k$ on elements of $v[,k]$, which will be estimated by EB.
+
+We assume elements of $b$ are iid Exp($\lambda$) and elements of $e_{ij}$ are $N(0,\sigma^2)$. Thus the elements of $S$ have an Exponentially modified gaussian (EMG) distribution.
+
+This will use ideas from (ebpower.html) and (power_nneg.html), as well as the ebnm function from (ebnm_binormal.html).
+
+Note: while i started out with the underapproximation idea in mind, there are reasons I started to focus on the simpler case b=0. These include: convergence is slower with b>0, and I am not sure I can implement an efficient version for the b>0 case when the original matrix is sparse, which is a deal-breaker in practice. Of course this code includes that case (b=0) as well.
+
+```{r}
+# truncate and normalize a vector v
+# returns a vector of 0s if all element of v are non-positive
+trunc_and_norm = function(v){
+  vplus = ifelse(v>0,v,0)
+  if(!all(vplus==0))
+    vplus = vplus/sqrt(sum(vplus^2))
+  return(vplus)
+}
+
+# returns the log likelihood of a matrix S under the
+# Exponentially modified gaussian (EMG) model
+loglik_emg = function(S,v,d,lambda,sigma){
+  R = S - vdvt(v,d) 
+  sum(demg(R,lambda=lambda,sigma=sigma,log=TRUE))
+}
+
+
+```
+
+### Functions for ebnm_binormal
+
+```{r}
+dbinormal = function (x,s,s0,lambda,log=TRUE){
+  pi0 = 0.5
+  pi1 = 0.5
+  s2 = s^2
+  s02 = s0^2
+  l0 = dnorm(x,0,sqrt(lambda^2 * s02 + s2),log=TRUE)
+  l1 = dnorm(x,lambda,sqrt(lambda^2 * s02 + s2),log=TRUE)
+  logsum = log(pi0*exp(l0) + pi1*exp(l1))
+ 
+  m = pmax(l0,l1)
+  logsum = m + log(pi0*exp(l0-m) + pi1*exp(l1-m))
+  if (log) return(sum(logsum))
+  else return(exp(sum(logsum)))
+}
+
+ebnm_binormal = function(x,s){
+  
+  if(all(x<0)){ # in this case optimal lambda is 0
+    return(list(g = ashr::normalmix(pi=c(0.5,0.5), mean=c(0,lambda), sd=c(0,0)),posterior = data.frame(mean=rep(0,length(x)),sd=rep(0,length(x)))))
+  }
+  
+  x = drop(x)
+  s0 = 0.01
+  lambda = optimize(function(lambda){-dbinormal(x,s,s0,lambda,log=TRUE)},
+              lower = 0, upper = max(x))$minimum
+  g = ashr::normalmix(pi=c(0.5,0.5), mean=c(0,lambda), sd=c(lambda * s0,lambda * s0))
+  postmean = ashr::postmean(g,ashr::set_data(x,s))
+  postsd = ashr::postsd(g,ashr::set_data(x,s))
+  return(list(g = g, posterior = data.frame(mean=postmean,sd=postsd)))
+}
+
+```
+
+### Functions for SNMU
+
+```{r}
+# This is just the regular power update, used for initialization
+power_update_r1 = function(S,v){
+  newv = drop(S %*% v)
+  if(!all(newv==0))
+    v = newv/sqrt(sum(newv^2))
+  return(v)
+}
+
+# initializes an SNMU fit for a matrix S
+# initializes b = 0, v by random random normals, and d to be very small (1e-8). It runs n.power.iter iterations of the rank1 power update on each initialized v vector and then truncates and normalizes them.
+# Note that the power update here is done with S, rather than S-VDV'
+snmu_init = function(S,K,lambda=1,sigma=0.1,b.init= matrix(0,nrow=nrow(S),ncol=ncol(S)), n.power.iter = 1){
+  
+  b = b.init
+    # if b.init supplied, use it to estimate lambda and sigma
+  # this maybe only makes sense if we use the low rank approx of S to estimate b
+  if(!missing(b.init)){ 
+    lambda = 1/mean(b)
+    sigma = sqrt(mean((S-b)^2))
+  }  
+  
+  v = matrix(rnorm(nrow(S)*K),ncol=K)
+  for(k in 1:K){
+    for(i in 1:n.power.iter){
+      v[,k] = power_update_r1(S,v[,k])
+    }
+    v[,k] = trunc_and_norm(v[,k])
+  }
+    
+  d = rep(1e-8,K)
+  loglik = loglik_emg(S,v,d,lambda,sigma)
+  
+  return(list(S=S,b=b,v=v,d=d,lambda=lambda, sigma=sigma,loglik=loglik))
+}
+
+snmu_add_new_factor = function(fit, v = rnorm(nrow(fit$S)), n.power.iter = 1){
+  for(i in 1:n.power.iter){
+    v = power_update_r1(fit$S-fit$b-vdvt(fit$v,fit$d),v)
+  }
+  v = trunc_and_norm(v)
+  
+  fit$v = cbind(fit$v,v)
+  fit$d = c(fit$d,1e-8)
+  return(fit)
+}
+
+# return the last element of the vector loglik
+snmu_loglik = function(fit){
+  fit$loglik[length(fit$loglik)]
+}
+
+vdvt = function(v,d){
+  v %*% diag(d,nrow=length(d)) %*% t(v)
+}
+
+snmu_update_d =function(fit,kset=1:ncol(fit$v)){
+  fit = within(fit, {
+    for(k in kset){
+      U = v[,-k,drop=FALSE]
+      D = diag(d[-k],nrow=length(d[-k]))
+      d[k] = max(t(v[,k]) %*% (S - b) %*% v[,k] - t(v[,k]) %*% U %*% D %*% t(U) %*% v[,k],0)
+    }
+  })
+}
+```
+
+
+```{r}
+# note that this could be made more efficent for sparse S
+# one puzzle is how to avoid evaluating b in cases where S =XX' and X sparse...
+# updates the columns of v in kset
+snmu_update_v=function(fit,ebnm_fn,kset=1:ncol(fit$v)){
+  fit = within(fit, {
+    for(k in kset){
+      
+      U = v[,-k,drop=FALSE]
+      D = diag(d[-k],nrow=length(d[-k]))
+    
+      newv = drop(S %*% v[,k,drop=FALSE] - b %*% v[,k,drop=FALSE] - U %*% D %*% t(U) %*% v[,k,drop=FALSE])
+      
+      if(!all(newv==0)){
+        fit.ebnm = ebnm_fn(newv,sigma)        
+        newv = fit.ebnm$posterior$mean
+        if(!all(newv==0)){
+          newv = newv/sqrt(sum(newv^2 + fit.ebnm$posterior$sd^2))
+        } 
+        rm(fit.ebnm)
+      }
+    
+      v[,k] = newv
+      d[k] = max(t(v[,k]) %*% (S - b) %*% v[,k] - t(v[,k]) %*% U %*% D %*% t(U) %*% v[,k],0)
+    }
+    rm(newv,D,U)
+  })
+  return(fit)
+}
+
+
+snmu_update_b=function(fit){
+  fit = within(fit,{
+    b = matrix(truncnorm::etruncnorm(a=0,mean= S-vdvt(v,d)-lambda*sigma^2,sd=sigma),nrow=nrow(S))
+  })
+  return(fit)
+}
+
+snmu_update_loglik=function(fit){
+  fit$loglik = with(fit, c(loglik, loglik_emg(S,v,d,lambda,sigma)))
+  return(fit)
+}  
+
+snmu_update_sigma_and_lambda_mom = function(fit){
+  fit$lambda = with(fit, 1/mean(S-vdvt(v,d))) #method of moments estimates
+  fit$sigma = with(fit, sd(S-vdvt(v,d)))
+  return(fit)
+}
+
+snmu_update_sigma_mle = function(fit){
+  fit.mle = mle(function(lsigma) {-loglik_emg(fit$S, fit$v, fit$d, fit$lambda,exp(lsigma))}, method = "Brent", lower=c(-10), upper = c(10), start =c(log(fit$sigma)))
+  fit$sigma = exp(coef(fit.mle)[1])
+  return(fit)
+}
+```
+
+
+
+## Experiments
+
+Simulate data under a tree model
+```{r}
+set.seed(1)
+n = 40
+x = cbind(c(rep(1,n),rep(0,n)), c(rep(0,n),rep(1,n)), c(rep(1,n/2),rep(0,3*n/2)), c(rep(0,n/2), rep(1,n/2), rep(0,n)), c(rep(0,n),rep(1,n/2),rep(0,n/2)), c(rep(0,3*n/2),rep(1,n/2)))
+E = matrix(0.1*rexp(2*n*2*n),nrow=2*n)
+E = E+t(E) #symmetric errors
+S = x %*% diag(c(1,1,1,1,1,1)) %*% t(x) + E
+image(S)
+```
+
+Try initializing
+```{r}
+fit = snmu_init(S,1)
+snmu_loglik(fit)
+
+
+fit = snmu_init(S,3)
+snmu_loglik(fit)
+```
+
+Try updating b
+```{r}
+fit = snmu_init(S,1)
+fit = snmu_update_b(fit)
+```
+
+Try updating v
+```{r}
+fit = snmu_init(S,1)
+fit = snmu_update_v(fit,ebnm_point_exponential)
+```
+
+Here I try just fitting one factor
+```{r}
+set.seed(1)
+fit = snmu_init(S,1)
+for(i in 1:100){
+  fit = snmu_update_v(fit,ebnm_point_exponential)
+  fit = snmu_update_sigma_and_lambda_mom(fit)
+  #fit = snmu_update_sigma_mle(fit)
+}
+plot(fit$v)
+```
+
+Now iteratively add factors. It eventually gets them all, but it adds a null factor in the middle. I believe that is an initialization issue. Note that I simply truncate the factor after a power update, without checking on it's "orientation" (+ or -). We might want to try making sure it is correctly oriented before truncating (eg by checking v'Sv for each orientation after truncation and choosing the orientation that maximizes this?)
+```{r}
+for(i in 1:8){
+  fit = snmu_add_new_factor(fit)
+  k=ncol(fit$v)
+  for(i in 1:100){
+    # fit = snmu_update_b(fit) # I no longer bother with b for reasons noted in introduction
+    fit = snmu_update_v(fit,ebnm_point_exponential,k)
+    fit = snmu_update_d(fit)
+    fit = snmu_update_sigma_and_lambda_mom(fit)
+    #fit = snmu_update_sigma_mle(fit)
+  }
+}
+par(mfcol=c(3,3))
+for(i in 1:ncol(fit$v)){
+  plot(fit$v[,i])
+}
+```
+
+Try starting with a fixed intercept factor,
+and adding factors in a greedy way. This one illustrates the problem that sometimes the point exponential can find intermediate factors that capture more than one branch. I should investigate this more.
+```{r}
+set.seed(4)
+fit = snmu_init(S,1)
+fit$v = cbind(trunc_and_norm(rep(1,nrow(S))))
+fit = snmu_update_d(fit)
+
+for(k in 1:8){
+  fit = snmu_add_new_factor(fit)
+  for(i in 1:100){
+    fit = snmu_update_v(fit,ebnm_point_exponential,ncol(fit$v))
+    fit = snmu_update_d(fit)
+    fit = snmu_update_sigma_and_lambda_mom(fit)
+  }  
+}
+par(mfcol=c(3,3))
+for(k in 1:ncol(fit$v))
+  plot(fit$v[,k])
+```
+
+Try the same, but stopping after 6 factors to see what is going on.
+```{r}
+set.seed(4)
+fit = snmu_init(S,1)
+fit$v = cbind(trunc_and_norm(rep(1,nrow(S))))
+fit = snmu_update_d(fit)
+
+for(k in 1:6){
+  fit = snmu_add_new_factor(fit)
+  for(i in 1:100){
+    fit = snmu_update_v(fit,ebnm_point_exponential,ncol(fit$v))
+    fit = snmu_update_d(fit)
+    fit = snmu_update_sigma_and_lambda_mom(fit)
+  }  
+}
+par(mfcol=c(3,3))
+for(k in 1:ncol(fit$v))
+  plot(fit$v[,k])
+```
+
+Look at the value of d and the residuals;
+```{r}
+fit$d
+resid = S-vdvt(fit$v,fit$d)
+image(resid)
+plot(resid[80,])
+```
+
+Try fitting more d iterations - it doesn't change anything.
+```{r}
+for(i in 1:100){
+  fit = snmu_update_d(fit)
+}
+fit$d
+```
+
+Interestingly, after only 10 iterations the fit is looking like a single population. So it is not an initialization issue. It moves away from this solution to the mixed solution. Possibly this is because the second factor is slightly uneven between the two populations? 
+```{r}
+fit = snmu_add_new_factor(fit)
+plot(fit$v[,8])
+for(i in 1:10){
+    fit = snmu_update_v(fit,ebnm_point_exponential,ncol(fit$v))
+    fit = snmu_update_d(fit)
+    fit = snmu_update_sigma_and_lambda_mom(fit)
+} 
+par(mfcol=c(3,3))
+for(k in 1:ncol(fit$v))
+  plot(fit$v[,k])
+```
+
+After another 90 iterations we clearly see the mixed factor:
+```{r}
+for(i in 1:90){
+    fit = snmu_update_v(fit,ebnm_point_exponential,ncol(fit$v))
+    fit = snmu_update_d(fit)
+    fit = snmu_update_sigma_and_lambda_mom(fit)
+} 
+par(mfcol=c(3,3))
+for(k in 1:ncol(fit$v))
+  plot(fit$v[,k])
+```
+
+
+Here I try running the binormal after the point exponential. 
+```{r}
+set.seed(4)
+fit = snmu_init(S,1)
+fit$v = cbind(trunc_and_norm(rep(1,nrow(S))))
+fit = snmu_update_d(fit)
+
+for(k in 1:6){
+  fit = snmu_add_new_factor(fit)
+  for(i in 1:100){
+    fit = snmu_update_v(fit,ebnm_point_exponential,ncol(fit$v))
+    fit = snmu_update_d(fit)
+    fit = snmu_update_sigma_and_lambda_mom(fit)
+  }  
+  for(i in 1:100){
+    fit = snmu_update_v(fit,ebnm_binormal,ncol(fit$v))
+    fit = snmu_update_d(fit)
+    fit = snmu_update_sigma_and_lambda_mom(fit)
+  }  
+}
+par(mfcol=c(3,3))
+for(k in 1:ncol(fit$v))
+  plot(fit$v[,k])
+```
+
+The binormal cleans up all the factors (as expected). Now adding a new factor, and just using the point exponential actually picks out the single population. This is consistent with the idea that the slightly uneven second factor was driving it to find the mixed solution previously. In any case this illustrates the delicacy of the solution, and also suggests maybe running binormal after point exponential may be a general helpful strategy. 
+```{r}
+fit = snmu_add_new_factor(fit)
+plot(fit$v[,8])
+for(i in 1:1000){
+    fit = snmu_update_v(fit,ebnm_point_exponential,ncol(fit$v))
+    fit = snmu_update_d(fit)
+    fit = snmu_update_sigma_and_lambda_mom(fit)
+} 
+par(mfcol=c(3,3))
+for(k in 1:ncol(fit$v))
+  plot(fit$v[,k])
+```
+
+Here I try running the GB after the point exponential. It is a bit less binary than the binormal prior, but has the same qualitative effect.
+```{r}
+set.seed(4)
+fit = snmu_init(S,1)
+fit$v = cbind(trunc_and_norm(rep(1,nrow(S))))
+fit = snmu_update_d(fit)
+
+for(k in 1:6){
+  fit = snmu_add_new_factor(fit)
+  for(i in 1:100){
+    fit = snmu_update_v(fit,ebnm_point_exponential,ncol(fit$v))
+    fit = snmu_update_d(fit)
+    fit = snmu_update_sigma_and_lambda_mom(fit)
+  }  
+  for(i in 1:100){
+    fit = snmu_update_v(fit,ebnm_generalized_binary,ncol(fit$v))
+    fit = snmu_update_d(fit)
+    fit = snmu_update_sigma_and_lambda_mom(fit)
+  }  
+}
+
+fit = snmu_add_new_factor(fit)
+for(i in 1:1000){
+    fit = snmu_update_v(fit,ebnm_point_exponential,ncol(fit$v))
+    fit = snmu_update_d(fit)
+    fit = snmu_update_sigma_and_lambda_mom(fit)
+} 
+par(mfcol=c(3,3))
+for(k in 1:ncol(fit$v))
+  plot(fit$v[,k])
+```
+
+
+### Tree with strong diagonal
+
+Here I simulate a tree but with a stronger diagonal.  The point exponenential now misses the top branches.
+```{r}
+S = x %*% diag(c(1,1,8,8,8,8)) %*% t(x) + E
+image(S)
+set.seed(4)
+fit = snmu_init(S,1)
+
+fit$v = cbind(trunc_and_norm(rep(1,nrow(S))))
+fit = snmu_update_d(fit)
+
+for(k in 1:8){
+  fit = snmu_add_new_factor(fit)
+  for(i in 1:100){
+    fit = snmu_update_v(fit,ebnm_point_exponential,ncol(fit$v))
+    fit = snmu_update_d(fit)
+    fit = snmu_update_sigma_and_lambda_mom(fit)
+  }  
+}
+par(mfcol=c(3,3))
+for(k in 1:ncol(fit$v))
+  plot(fit$v[,k])
+```
+
+Try with point-exponential followed by binormal. It produces a qualitively tree-like fit, although one factor is slightly trimodal.  (More iterations did not change this; not shown.)
+```{r}
+S = x %*% diag(c(1,1,8,8,8,8)) %*% t(x) + E
+set.seed(4)
+fit = snmu_init(S,1)
+
+fit$v = cbind(trunc_and_norm(rep(1,nrow(S))))
+fit = snmu_update_d(fit)
+
+for(k in 1:8){
+  fit = snmu_add_new_factor(fit)
+  for(i in 1:100){
+    fit = snmu_update_v(fit,ebnm_point_exponential,ncol(fit$v))
+    fit = snmu_update_d(fit)
+    fit = snmu_update_sigma_and_lambda_mom(fit)
+  }  
+  for(i in 1:100){
+    fit = snmu_update_v(fit,ebnm_binormal,ncol(fit$v))
+    fit = snmu_update_d(fit)
+    fit = snmu_update_sigma_and_lambda_mom(fit)
+  }  
+}
+par(mfcol=c(3,3))
+for(k in 1:ncol(fit$v))
+  plot(fit$v[,k])
+```
+
+Same with GB instead of binormal. This one does not find the top branches, maybe because it produces even more tri-modal factors that capture the top branches. This illustrates that the binormal prior may produce more binary factors than than the GB prior.
+```{r}
+S = x %*% diag(c(1,1,8,8,8,8)) %*% t(x) + E
+set.seed(4)
+fit = snmu_init(S,1)
+
+fit$v = cbind(trunc_and_norm(rep(1,nrow(S))))
+fit = snmu_update_d(fit)
+
+for(k in 1:8){
+  fit = snmu_add_new_factor(fit)
+  for(i in 1:100){
+    fit = snmu_update_v(fit,ebnm_point_exponential,ncol(fit$v))
+    fit = snmu_update_d(fit)
+    fit = snmu_update_sigma_and_lambda_mom(fit)
+  }  
+  for(i in 1:100){
+    fit = snmu_update_v(fit,ebnm_generalized_binary,ncol(fit$v))
+    fit = snmu_update_d(fit)
+    fit = snmu_update_sigma_and_lambda_mom(fit)
+  }  
+}
+par(mfcol=c(3,3))
+for(k in 1:ncol(fit$v))
+  plot(fit$v[,k])
+```
+
