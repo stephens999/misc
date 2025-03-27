@@ -1,0 +1,499 @@
+---
+title: "tap_free_energy"
+author: "Matthew Stephens"
+date: "2025-03-24"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+
+## Introduction
+
+I aim to explore some ideas related to AMP and TAP free energy.
+One goal is to reproduce Figure 3 from Celentano, Fan and Mei (2023).
+
+### The EB code
+
+I'm also going to compare with the EB approach using a binormal prior,
+as investigated [here](ebnm_binormal.html).
+Here I changed the binormal prior to have modes at +-1 instead of 0,1,
+for consistency with the spin-glass model.
+```{r}
+# load the ebnm library and define an ebnm_binormal function
+
+library("ebnm")
+
+dbinormal = function (x,s,s0,lambda,log=TRUE){
+  pi0 = 0.5
+  pi1 = 0.5
+  s2 = s^2
+  s02 = s0^2
+  l0 = dnorm(x,-lambda,sqrt(lambda^2 * s02 + s2),log=TRUE)
+  l1 = dnorm(x,lambda,sqrt(lambda^2 * s02 + s2),log=TRUE)
+  logsum = log(pi0*exp(l0) + pi1*exp(l1))
+ 
+  m = pmax(l0,l1)
+  logsum = m + log(pi0*exp(l0-m) + pi1*exp(l1-m))
+  if (log) return(sum(logsum))
+  else return(exp(sum(logsum)))
+}
+
+ebnm_binormal = function(x,s,fixg=FALSE){
+  x = drop(x) 
+  s0 = 0.01
+  lambda = 1
+  if(!fixg){
+    lambda = optimize(function(lambda){-dbinormal(x,s,s0,lambda,log=TRUE)},
+              lower = 0, upper = max(x))$minimum
+  }
+  g = ashr::normalmix(pi=c(0.5,0.5), mean=c(-lambda,lambda), sd=c(lambda * s0,lambda * s0))
+  postmean = ashr::postmean(g,ashr::set_data(x,s))
+  postsd = ashr::postsd(g,ashr::set_data(x,s))
+  return(list(g = g, posterior = data.frame(mean=postmean,sd=postsd)))
+}
+
+eb_power_update_r1 = function(S,v,ebnm_fn,sigma){
+  newv = drop(S %*% v)
+  if(!all(newv==0)){
+    fit.ebnm = ebnm_fn(newv,sigma)        
+    newv = fit.ebnm$posterior$mean
+    if(!all(newv==0)){
+      newv = newv/sqrt(sum(newv^2 + fit.ebnm$posterior$sd^2))
+    }
+  }
+  return(newv)     
+}
+
+
+```
+
+This implements the single step update in my write-up, equation (6), 
+but with the second moment = n, and setting $\sigma^2 = 1/n \lambda$.
+It should only be used with the fixed prior (uniform on +-1).
+```{r}
+# this is my modification to try to mimic the fixed point iterations
+# of the naive mean field approach from Celentano, Fan and Mei (2023)
+eb_power_update2_r1 = function(S,v,ebnm_fn,lambda){
+  gamma = t(v) %*% S %*% v
+  newv = drop(S %*% v)/drop(gamma)
+  if(!all(newv==0))
+    newv = ebnm_fn(nrow(S) * newv, sqrt(nrow(S)/(gamma*lambda)))$posterior$mean
+  # if(!all(v==0))
+  #   v = v/sqrt(sum(v^2))
+  return(newv)
+}
+```
+
+### The NGD and SI code
+
+Here I implement the algorithms from Celentano, Fan and Mei (2023) paper.
+Here is their Natural Gradient Descent algorithm (NGD, p9) and spectral initialization (SI, p8). Note that setting TAP=0 in this ngd function ignores the TAP term, so I think should give regular mean-field VB.
+Note that for the initialization I added a small value 1e-8 to avoid the 0 initialization for lambda=1.
+```{r}
+# set TAP=0 to ignore the TAP term, and do regular VB
+ngd = function(Y,h,eta=0.1,lambda,TAP=1){
+  m = tanh(h)
+  h = (1-eta)*h + eta*(lambda* Y %*% m - TAP*lambda^2 *(1-sum(m^2)/nrow(Y))*m)
+  return(h)
+}
+
+
+spec_init = function(Y,lambda){
+  h = svd(Y)$u[,1]
+  return(h*sqrt(nrow(Y)*lambda^2 *(lambda^2-1)+1e-8))
+}
+
+# this estimate come from Montanari and Venkatarmanan, 2019 eqn 3.1
+# but I adjusted the square root term to be 0 if it is negative
+est_lambda = function(Y){
+  lmax = max(eigen(Y)$values)
+  return(0.5*(lmax + sqrt(max(lmax^2-4,0))))
+}
+
+```
+
+A function to simulate under the correctly specified model (1.3)
+```{r}
+sim_data = function(lambda,n){
+  x = 1 - 2*rbinom(n,1,0.5)
+  Z = matrix(rnorm(n*n),nrow=n)
+  Y = lambda/n * x %*% t(x) + (Z+t(Z))/sqrt(2*n)
+  return(list(Y=Y,x=x))
+}
+```
+
+### Preliminary checks
+
+Here I check that NGD without the TAP term and the standard mean field
+iteration give the same answers on a simple example.
+I first run 10000 iterations of NGD without the TAP term, and check that it satisfies the fixed point equation, which it does to within errors of about 1e-16.
+```{r}
+set.seed(1)
+lambda = 1.1
+n = 500
+dat = sim_data(lambda,n)
+Y = dat$Y
+h0 = spec_init(Y,lambda)
+    
+# Run NGD without the TAP term
+h = h0
+for(i in 1:10000){
+  h = ngd(Y,h,eta=0.1,lambda,TAP=0)
+}
+m_ngd = tanh(h)
+hist(m_ngd-tanh(lambda*(Y %*% m_ngd)))
+```
+
+However, interestingly I found that the fixed point iterations diverge from this fixed point. After 1000 iterations you can't see the difference but you can see the changes per fixed point iteration are increasing.
+```{r}
+m = m_ngd
+for(i in 1:1000){
+  m = tanh(lambda*(Y %*% m))
+}
+plot(m,m_ngd)   
+hist(m-tanh(lambda*(Y %*% m)))
+```
+
+After another 1000 iterations you can see the difference clearly:
+```{r}
+for(i in 1:1000){
+  m = tanh(lambda*(Y %*% m))
+}
+plot(m,m_ngd)   
+hist(m-tanh(lambda*(Y %*% m)))
+```
+
+It is actually oscillating between two values:
+```{r}
+m_fp = m
+m = tanh(lambda*(Y %*% m))
+plot(m,m_fp)
+hist(m-tanh(lambda*(Y %*% m)))
+m = tanh(lambda*(Y %*% m))
+plot(m,m_fp)
+hist(m-tanh(lambda*(Y %*% m)))
+```
+
+I suspect this oscillating behavior occurs because $Y$ is not spd. I believe that if it is SPD we should not see this behavior.
+Here I try setting the negative eigenvalues to 0, and then running the iterations again.
+```{r}
+Y.e = eigen(dat$Y)
+Y.e$d = pmax(Y.e$values,0)
+Y2 = Y.e$vectors %*% diag(Y.e$d) %*% t(Y.e$vectors)
+```
+
+For this example, 100000 iterations of the fixed point iteration seem to converge to a fixed point.
+```{r}
+Y = Y2
+h0 = spec_init(Y,lambda)
+m = tanh(h0)
+for(i in 1:10000){
+  m = tanh(lambda*(Y %*% m))
+}
+hist(m-tanh(lambda*(Y %*% m)))
+```
+
+Here I check that my modified EB update produces essentially the same update as the fixed point (tanh) update. These should be very similar  because tanh is the posterior mean under the binary +-1 prior.
+```{r}
+m = tanh(h0)
+m_fp = tanh(lambda*(Y %*% m))
+m_eb = eb_power_update2_r1(Y,m, function(x,s){ebnm_binormal(x,s,fixg=TRUE)},lambda)
+plot(m_fp,m_eb)
+```
+
+
+
+### Simulate data and run the algorithms
+
+Here I simulate for a sequence of lambdas and compute the mean squared error as a function of lambda for mean field (red), TAP(blue) and the initialization (black). It looks somewhat 
+similar to the plot from the paper
+I also compute the results for svd initialization (which perform quite well by the error measure used here). [Note: the warnings for the modified EB2 method arise because gamma is negative (S is not spd) and the square root gives warnings.]
+```{r}
+set.seed(1)
+n = 500
+mean_err_ngd = c()
+mean_err_ngd0 = c()
+mean_err_init = c()
+mean_err_eb = c()
+mean_err_eb2 = c()
+mean_err_mf = c()
+lambda_seq = seq(1,2,length=10)
+for(lambda in lambda_seq){
+  err_init = c()
+  err_ngd = c()
+  err_ngd0 = c()
+  err_eb = c()
+  err_eb2 = c()
+  err_mf = c()
+  for(k in 1:10){
+    dat = sim_data(lambda,n)
+    Y = dat$Y
+    h0 = spec_init(Y,lambda)
+    
+    h = h0
+    m = tanh(h)
+    err_init = c(err_init,min(mean((m-dat$x)^2),mean((m+dat$x)^2)))
+    
+    for(i in 1:10000){
+       h = ngd(Y,h,eta=0.1,lambda)
+    }
+    m = tanh(h)
+    err_ngd = c(err_ngd,min(mean((m-dat$x)^2),mean((m+dat$x)^2)))
+    
+    # do the same without the TAP term
+    h = h0
+    m = tanh(h)
+    err_init = c(err_init,min(mean((m-dat$x)^2),mean((m+dat$x)^2)))
+    for(i in 1:10000){
+       h = ngd(Y,h,eta=0.1,lambda,TAP=0)
+    }
+    m = tanh(h)
+    err_ngd0 = c(err_ngd0,min(mean((m-dat$x)^2),mean((m+dat$x)^2)))
+    
+    # do with the VB mf updates
+    h = h0
+    m = tanh(h)
+    for(i in 1:100){
+       m = tanh(lambda*(Y %*% m))
+    }
+    err_mf = c(err_mf,min(mean((m-dat$x)^2),mean((m+dat$x)^2)))
+    
+    # do the same with EB power update
+    v = h0/sqrt(sum(h0^2))
+    for(i in 1:100){
+       v = eb_power_update_r1(Y,v, ebnm_binormal,sigma=sqrt(1/nrow(Y)))
+    }
+    lambda.hat = max(t(v) %*% Y %*% v,0) # this is estimate of lambda in the EB model
+    m = v * sqrt(lambda.hat) * sqrt(n/lambda) #so lambda/n mm' = lamdba.hat v v' 
+    
+    err_eb = c(err_eb,min(mean((m-dat$x)^2),mean((m+dat$x)^2)))
+    
+    # do the same with modified EB power update
+    v = h0/sqrt(sum(h0^2))
+    for(i in 1:100){
+       v = eb_power_update2_r1(Y,v, function(x,s){ebnm_binormal(x,s,fixg=TRUE)},lambda)
+    }
+    
+    m = v
+    
+    err_eb2 = c(err_eb2,min(mean((m-dat$x)^2),mean((m+dat$x)^2)))
+    
+  }
+  mean_err_ngd = c(mean_err_ngd,mean(err_ngd))
+  mean_err_ngd0 = c(mean_err_ngd0,mean(err_ngd0))
+  mean_err_init = c(mean_err_init,mean(err_init))
+  mean_err_eb = c(mean_err_eb,mean(err_eb))
+  mean_err_eb2 = c(mean_err_eb2,mean(err_eb2))
+  mean_err_mf = c(mean_err_mf,mean(err_mf))
+}
+
+plot(lambda_seq,mean_err_mf,col="green",type="l")
+lines(lambda_seq,mean_err_ngd0,col="red")
+lines(lambda_seq,mean_err_ngd)
+lines(lambda_seq,mean_err_init,col="blue")
+lines(lambda_seq,mean_err_eb2,col="magenta")
+lines(lambda_seq,mean_err_eb,col="cyan")
+```
+
+
+### Try positive definite S
+
+A function to simulate Y to be symmetric positive definite. I use a $Wishart(I/n,n)$ for the error term, so that the off-diagonal entries have mean 0 and variance 1/n; the diagonal entries have mean 1 and variance 2/n.
+
+```{r}
+sim_data_spd = function(lambda,n){
+  x = 1 - 2*rbinom(n,1,0.5)
+  Z = matrix(rnorm(n*n),nrow=n)
+  Y = lambda/n * x %*% t(x) + rWishart(1,n,diag(n)/n)[,,1]
+  return(list(Y=Y,x=x))
+}
+```
+
+Repeat the above simulation but with SPD Y. Note that I need to check the details on how sigma and lambda are set because now I am not simulating under the correct model. But now (unexpectedly to me) the TAP term seems to make no difference - the MF and the TAP give the same answer.
+```{r}
+set.seed(1)
+n = 500
+mean_err_ngd = c()
+mean_err_ngd0 = c()
+mean_err_init = c()
+mean_err_eb = c()
+mean_err_eb2 = c()
+mean_err_mf = c()
+lambda_seq = seq(1,4,length=10)
+for(lambda in lambda_seq){
+  err_init = c()
+  err_ngd = c()
+  err_ngd0 = c()
+  err_eb = c()
+  err_eb2 = c()
+  err_mf = c()
+  for(k in 1:10){
+    dat = sim_data_spd(lambda,n)
+    Y = dat$Y
+    h0 = spec_init(Y,lambda)
+    
+    h = h0
+    m = tanh(h)
+    err_init = c(err_init,min(mean((m-dat$x)^2),mean((m+dat$x)^2)))
+    
+    for(i in 1:10000){
+       h = ngd(Y,h,eta=0.1,lambda)
+    }
+    m = tanh(h)
+    err_ngd = c(err_ngd,min(mean((m-dat$x)^2),mean((m+dat$x)^2)))
+
+    # do the same without the TAP term
+    h = h0
+    m = tanh(h)
+    err_init = c(err_init,min(mean((m-dat$x)^2),mean((m+dat$x)^2)))
+    for(i in 1:10000){
+       h = ngd(Y,h,eta=0.1,lambda,TAP=0)
+    }
+    m = tanh(h)
+    err_ngd0 = c(err_ngd0,min(mean((m-dat$x)^2),mean((m+dat$x)^2)))
+
+    # do with the VB mf updates
+    h = h0
+    m = tanh(h)
+    for(i in 1:100){
+       m = tanh(lambda*(Y %*% m))
+    }
+    err_mf = c(err_mf,min(mean((m-dat$x)^2),mean((m+dat$x)^2)))
+
+    # do the same with EB power update
+    v = h0/sqrt(sum(h0^2))
+    for(i in 1:100){
+       v = eb_power_update_r1(Y,v, ebnm_binormal,sigma=sqrt(1/nrow(Y)))
+    }
+    lambda.hat = max(t(v) %*% Y %*% v,0) # this is estimate of lambda in the EB model
+    m = v * sqrt(lambda.hat) * sqrt(n/lambda) #so lambda/n mm' = lamdba.hat v v' 
+    
+    err_eb = c(err_eb,min(mean((m-dat$x)^2),mean((m+dat$x)^2)))
+    
+    # do the same with modified EB power update
+    v = h0/sqrt(sum(h0^2))
+    for(i in 1:100){
+       v = eb_power_update2_r1(Y,v, function(x,s){ebnm_binormal(x,s,fixg=TRUE)},lambda)
+    }
+    
+    m = v
+    
+    err_eb2 = c(err_eb2,min(mean((m-dat$x)^2),mean((m+dat$x)^2)))
+    
+  }
+  mean_err_ngd = c(mean_err_ngd,mean(err_ngd))
+  mean_err_ngd0 = c(mean_err_ngd0,mean(err_ngd0))
+  mean_err_init = c(mean_err_init,mean(err_init))
+  mean_err_eb = c(mean_err_eb,mean(err_eb))
+  mean_err_eb2 = c(mean_err_eb2,mean(err_eb2))
+  mean_err_mf = c(mean_err_mf,mean(err_mf))
+}
+
+# plot(lambda_seq,mean_err_mf,col="green",type="l")
+# lines(lambda_seq,mean_err_ngd0,col="red")
+# lines(lambda_seq,mean_err_ngd)
+# lines(lambda_seq,mean_err_init,col="blue")
+# lines(lambda_seq,mean_err_eb2,col="magenta")
+# lines(lambda_seq,mean_err_eb,col="cyan")
+
+
+plot(lambda_seq,mean_err_eb,col="cyan",type="l",ylim=c(0,3))
+lines(lambda_seq,mean_err_init,col="blue")
+lines(lambda_seq,mean_err_eb2,col="magenta")
+lines(lambda_seq,mean_err_mf,col="green",type="l")
+lines(lambda_seq,mean_err_ngd0,col="red")
+lines(lambda_seq,mean_err_ngd)
+```
+
+Repeat the above simulation with SPD Y, but subtracting the mean 1 diagonal so that the error term is 0 mean everywhere, before running the methods. (So now the matrix is no longer SPD of course.)
+```{r}
+set.seed(1)
+n = 500
+mean_err_ngd = c()
+mean_err_ngd0 = c()
+mean_err_init = c()
+mean_err_eb = c()
+mean_err_eb2 = c()
+mean_err_mf = c()
+lambda_seq = seq(1,4,length=10)
+for(lambda in lambda_seq){
+  err_init = c()
+  err_ngd = c()
+  err_ngd0 = c()
+  err_eb = c()
+  err_eb2 = c()
+  err_mf = c()
+  for(k in 1:10){
+    dat = sim_data_spd(lambda,n)
+    Y = dat$Y-diag(nrow(dat$Y))
+    h0 = spec_init(Y,lambda)
+    
+    h = h0
+    m = tanh(h)
+    err_init = c(err_init,min(mean((m-dat$x)^2),mean((m+dat$x)^2)))
+    
+    for(i in 1:10000){
+       h = ngd(Y,h,eta=0.1,lambda)
+    }
+    m = tanh(h)
+    err_ngd = c(err_ngd,min(mean((m-dat$x)^2),mean((m+dat$x)^2)))
+
+    # do the same without the TAP term
+    h = h0
+    m = tanh(h)
+    err_init = c(err_init,min(mean((m-dat$x)^2),mean((m+dat$x)^2)))
+    for(i in 1:10000){
+       h = ngd(Y,h,eta=0.1,lambda,TAP=0)
+    }
+    m = tanh(h)
+    err_ngd0 = c(err_ngd0,min(mean((m-dat$x)^2),mean((m+dat$x)^2)))
+
+    # do with the VB mf updates
+    h = h0
+    m = tanh(h)
+    for(i in 1:100){
+       m = tanh(lambda*(Y %*% m))
+    }
+    err_mf = c(err_mf,min(mean((m-dat$x)^2),mean((m+dat$x)^2)))
+
+    # do the same with EB power update
+    v = h0/sqrt(sum(h0^2))
+    for(i in 1:100){
+       v = eb_power_update_r1(Y,v, ebnm_binormal,sigma=sqrt(1/nrow(Y)))
+    }
+    lambda.hat = max(t(v) %*% Y %*% v,0) # this is estimate of lambda in the EB model
+    m = v * sqrt(lambda.hat) * sqrt(n/lambda) #so lambda/n mm' = lamdba.hat v v' 
+    
+    err_eb = c(err_eb,min(mean((m-dat$x)^2),mean((m+dat$x)^2)))
+    
+    # do the same with modified EB power update
+    v = h0/sqrt(sum(h0^2))
+    for(i in 1:100){
+       v = eb_power_update2_r1(Y,v, function(x,s){ebnm_binormal(x,s,fixg=TRUE)},lambda)
+    }
+    
+    m = v
+    
+    err_eb2 = c(err_eb2,min(mean((m-dat$x)^2),mean((m+dat$x)^2)))
+    
+  }
+  mean_err_ngd = c(mean_err_ngd,mean(err_ngd))
+  mean_err_ngd0 = c(mean_err_ngd0,mean(err_ngd0))
+  mean_err_init = c(mean_err_init,mean(err_init))
+  mean_err_eb = c(mean_err_eb,mean(err_eb))
+  mean_err_eb2 = c(mean_err_eb2,mean(err_eb2))
+  mean_err_mf = c(mean_err_mf,mean(err_mf))
+}
+
+
+plot(lambda_seq,mean_err_eb,col="cyan",type="l",ylim=c(0,3))
+lines(lambda_seq,mean_err_init,col="blue")
+lines(lambda_seq,mean_err_eb2,col="magenta")
+lines(lambda_seq,mean_err_mf,col="green",type="l")
+lines(lambda_seq,mean_err_ngd0,col="red")
+lines(lambda_seq,mean_err_ngd)
+```
+
+
+
