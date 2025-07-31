@@ -298,7 +298,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2025-03-12
+<strong>Last updated:</strong> 2025-07-31
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -345,15 +345,15 @@ results.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree099a0c1200a82ac8a2aa512e2db055f6f08d65a1targetblank099a0c1a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree34ab19814232091ad371c467bfd493f3d30bb406targetblank34ab198a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/stephens999/misc/tree/099a0c1200a82ac8a2aa512e2db055f6f08d65a1" target="_blank">099a0c1</a>
+<a href="https://github.com/stephens999/misc/tree/34ab19814232091ad371c467bfd493f3d30bb406" target="_blank">34ab198</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree099a0c1200a82ac8a2aa512e2db055f6f08d65a1targetblank099a0c1a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree34ab19814232091ad371c467bfd493f3d30bb406targetblank34ab198a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -363,7 +363,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/stephens999/misc/tree/099a0c1200a82ac8a2aa512e2db055f6f08d65a1" target="_blank">099a0c1</a>.
+<a href="https://github.com/stephens999/misc/tree/34ab19814232091ad371c467bfd493f3d30bb406" target="_blank">34ab198</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -407,6 +407,7 @@ Untracked files:
     Untracked:  analysis/cormotif.Rmd
     Untracked:  analysis/cp_ash.Rmd
     Untracked:  analysis/eQTL.perm.rand.pdf
+    Untracked:  analysis/eb_power2.Rmd
     Untracked:  analysis/eb_prepilot.Rmd
     Untracked:  analysis/eb_var.Rmd
     Untracked:  analysis/ebpmf1.Rmd
@@ -466,6 +467,7 @@ Untracked files:
     Untracked:  analysis/test_sparse.Rmd
     Untracked:  analysis/tree_dist_top_eigenvector.Rmd
     Untracked:  analysis/z.txt
+    Untracked:  code/coordinate_descent_symNMF.R
     Untracked:  code/multivariate_testfuncs.R
     Untracked:  code/rqb.hacked.R
     Untracked:  data/4matthew/
@@ -557,12 +559,16 @@ Untracked files:
 
 Unstaged changes:
     Modified:   .gitignore
+    Modified:   analysis/eb_snmu.Rmd
+    Modified:   analysis/ebnm_binormal.Rmd
+    Modified:   analysis/ebpower.Rmd
     Modified:   analysis/flashier_log1p.Rmd
     Modified:   analysis/flashier_sla_text.Rmd
     Modified:   analysis/logistic_z_scores.Rmd
     Modified:   analysis/mr_ash_pen.Rmd
     Modified:   analysis/nmu_em.Rmd
     Modified:   analysis/susie_flash.Rmd
+    Modified:   analysis/tap_free_energy.Rmd
     Modified:   misc.Rproj
 
 </code></pre>
@@ -607,6 +613,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/34ab19814232091ad371c467bfd493f3d30bb406/analysis/index.Rmd" target="_blank">34ab198</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-07-31
+</td>
+<td>
+workflowr::wflow_publish("analysis/index.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/63006e6aecce6979772e4d1f7be0cced6691d99e/docs/index.html" target="_blank">63006e6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-03-12
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -3528,6 +3568,9 @@ groups</a></li>
 on trees</a></li>
 <li><a href="flash_tree.html">Outline of a method for building trees
 topdown using flash</a></li>
+<li><a href="flashier_point_laplace_initialization.html">Some results
+for trees and overlapping groups, initializing using
+point-laplace</a></li>
 </ul>
 </div>
 <div id="ebnm" class="section level1">
