@@ -1,0 +1,576 @@
+---
+title: "flashier_tree_pexp"
+author: "Matthew Stephens"
+date: "2025-07-24"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+library(flashier)
+library(codesymnmf)
+```
+
+## Introduction
+
+It seems like we have reached the following conclusion: when data
+come from a tree, the point laplace prior, with backfitting, finds the tree.
+Splitting the point laplace and running GB then preserves the tree (but also keeps additional factors). Unlike point laplace, point exponential often does not find the tree. Indeed, even when initialized from a tree-like fit, point exponential may move away from it to prefer a more regular (non-binary) "NMF" solution. 
+
+This document is trying to illustrate some of this, and also explore non tree like cases.
+
+
+## Balanced Tree
+
+I'm going to start with simulations with a balanced tree with 4 tips. I start with some code for simulating this.
+
+### Tree simulation code
+
+```{r}
+#################################################################
+# Scenario 2: Bifurcating Tree Structure
+#################################################################
+
+#' Simulate data with a bifurcating tree structure for the loadings matrix.
+#'
+#' This function generates a data matrix X = LF' + E, where the loadings
+#' matrix L represents a fixed bifurcating tree with four leaves.
+#'
+#' @param leaf_sizes A numeric vector with the size of each of the 4 leaf groups.
+#' @param p An integer, the number of features.
+#' @param sigma2 A numeric, the variance of the error term E.
+#' @param sigma_k2 A numeric or vector, the variance(s) for the factor matrix F.
+#'
+#' @return A list containing the simulated data matrix X, loadings L, factors F, and error E.
+#'
+simulate_bifurcating_tree <- function(leaf_sizes, p, sigma2, sigma_k2) {
+  # This function is specifically designed for the 4-leaf tree structure.
+  num_leaves <- length(leaf_sizes)
+  if (num_leaves != 4) {
+    stop("This function is hardcoded for a bifurcating tree with 4 leaves.")
+  }
+  n <- sum(leaf_sizes)
+  K <- 7 # For a full binary tree with 4 leaves, K = 2*4 - 1 = 7
+
+  # 1. Construct the Loadings matrix L (n x K)
+  # This is the base structure for one sample at each of the 4 leaves.
+  L_prototype <- matrix(c(
+    1, 1, 0, 1, 0, 0, 0,
+    1, 1, 0, 0, 1, 0, 0,
+    1, 0, 1, 0, 0, 1, 0,
+    1, 0, 1, 0, 0, 0, 1
+  ), nrow = 4, byrow = TRUE)
+
+  # Expand the prototype by repeating each row according to the specified leaf_sizes.
+  L <- L_prototype[rep(1:num_leaves, times = leaf_sizes), ]
+
+  # 2. Construct the Factor matrix F (p x K)
+  if (length(sigma_k2) == 1) {
+    sigma_k2 <- rep(sigma_k2, K)
+  }
+  F_mat <- matrix(NA, nrow = p, ncol = K)
+  for (k in 1:K) {
+    F_mat[, k] <- rnorm(p, mean = 0, sd = sqrt(sigma_k2[k]))
+  }
+
+  # 3. Construct the Error matrix E (n x p)
+  E <- matrix(rnorm(n * p, mean = 0, sd = sqrt(sigma2)), nrow = n, ncol = p)
+
+  # 4. Compute the data matrix X = LF' + E
+  X <- L %*% t(F_mat) + E
+
+  return(list(X = X, L = L, F = F_mat, E = E))
+}
+
+params_tree <- list(
+  leaf_sizes = c(40, 40, 40, 40), # n = 160
+  p = 1000,
+  sigma2 = 1,
+  sigma_k2 = rep(4,7) # For K = 7 factors
+)
+
+set.seed(2)
+sim_tree <- do.call(simulate_bifurcating_tree, params_tree)
+S = sim_tree$X %*% t(sim_tree$X)
+image(S)
+```
+
+### Code to estimate D from L
+
+```{r}
+#' Estimate the diagonal matrix D that minimizes ||S - LDL'||^2_F
+#'
+#' @param S A given n x n matrix.
+#' @param L A given n x k matrix.
+#' @return A k vector containing diagonal entries of D that minimize objective
+
+estimate_D <- function(S, L) {
+  
+  # Get dimensions
+  n <- nrow(S)
+  k <- ncol(L)
+  
+  # Check for conformable dimensions
+  if (nrow(L) != n) {
+    stop("Matrices S and L have non-conformable dimensions (rows must match).")
+  }
+
+  
+  # 1. Pre-compute helper matrices (C and B will be k x k)
+  C <- t(L) %*% L
+  B <- t(L) %*% S %*% L
+  
+  # 2. Construct the linear system M d = b
+  M <- C * C
+  b <- diag(B)
+  
+  # 3. Solve for the k diagonal elements of D
+  d_vector <- qr.solve(M, b)
+  
+  return(d_vector)
+}
+```
+
+
+### Run point laplace
+
+Here I run point-laplace on the symmetric S matrix. It finds the tree structure.
+```{r}
+fit.pl = flash(data=S, ebnm_fn = ebnm::ebnm_point_laplace, greedy_Kmax = 10, backfit=TRUE)
+par(mfcol=c(2,2),mai=rep(0.3,4))
+for(k in 1:4)
+  plot(fit.pl$L_pm[,k])
+```
+
+We can also find the tree by running point-laplace on the data matrix with normal prior on F. It still works. (Note: we know that running on the data matrix with normal prior on F encourages independent/orthogonal L values; that does not hurt here because the way the point-laplace finds the tree structure is by using approximately orthogonal factors.)
+```{r}
+X = sim_tree$X
+fit.data.pl = flash(data = X, ebnm_fn = c(ebnm::ebnm_point_laplace,ebnm::ebnm_normal), greedy_Kmax = 10, backfit=TRUE)
+par(mfcol=c(2,2),mai=rep(0.3,4))
+for(k in 1:4)
+  plot(fit.data.pl$L_pm[,k])
+```
+
+
+
+### Split point-laplace into pairs
+
+Here I split into pairs and remove the zero columns before estimating D
+```{r}
+L = fit.pl$L_pm
+L = cbind(pmax(L,0),pmax(-L,0))
+
+#remove any column that is all 0s; then normalize columns
+zero_col = apply(L,2, function(x){all(x==0)})
+L = L[,!zero_col]
+
+norm = function(x){return(x/sqrt(sum(x^2)))}
+L = apply(L,2,norm)
+
+d = estimate_D(S,L) # this is the least squares estimate of d so can be negative
+
+# set negative entries to 0; then iterate local updates for each element of d 10 times
+d = pmax(d,0) 
+K = ncol(L)
+for(i in 1:10){
+  for(k in 1:K){
+    U = L[,-k,drop=FALSE]
+    v = L[,k,drop=FALSE]
+    D = diag(d[-k],nrow=length(d[-k]))
+    d[k] = max(t(v) %*% S %*% v - t(v) %*% U %*% D %*% t(U) %*% v,0)
+  }
+}
+
+scaledL = L %*% diag(sqrt(d),nrow=length(d)) 
+image(scaledL)
+```
+
+
+### GB prior from PL initialization
+
+Here I run flash with GB prior on the S matrix, initialized from the (split) point laplace solution. The GB prior keeps the tree structure (ie it does not change much from the initialization).
+```{r}
+fit.gb.init = flash_init(data=S) |> 
+  flash_factors_init(init=list(scaledL,scaledL), ebnm_fn = ebnm::ebnm_generalized_binary) |>
+  flash_backfit(maxiter =10000)
+res.gb = ldf(fit.gb.init,type="i")
+image(res.gb$L %*% diag(sqrt(res.gb$D)))
+```
+
+Here I try something similar for the data matrix, with GB prior on L and normal prior on F. For simplicity (and to make the point more strongly) I initialize at the true values of L and F. The GB prior goes away from the tree solution and goes to the "clustering" solution, in which correlations are captured in F. Our understanding is that this happens because the mean field approximation encourages L to be diagonal (which it is for the cluster solution, but not the tree solution).
+
+```{r}
+fit.data.gb.init = flash_init(data=X) |> 
+  flash_factors_init(init=list(sim_tree$L,sim_tree$F), ebnm_fn = c(ebnm::ebnm_generalized_binary,ebnm::ebnm_normal)) |>
+  flash_backfit(maxiter =10000)
+res.data.gb = ldf(fit.data.gb.init,type="i")
+image(res.data.gb$L %*% diag(sqrt(res.data.gb$D)))
+```
+
+
+I wanted to check the same thing happens with a point-laplace prior on F, and it does.
+```{r}
+fit.data2.gb.init = flash_init(data=X) |> 
+  flash_factors_init(init=list(sim_tree$L,sim_tree$F), ebnm_fn = c(ebnm::ebnm_generalized_binary,ebnm::ebnm_point_laplace)) |>
+  flash_backfit(maxiter =10000)
+res.data2.gb = ldf(fit.data2.gb.init,type="i")
+image(res.data2.gb$L %*% diag(sqrt(res.data2.gb$D)))
+```
+
+
+
+### Point exponential prior with PL initialization
+
+Here we try analyzing S again, but with point exponential priors instead of GB. 
+In contrast to GB prior, the point exponential changes from the binary tree structure, even when initialized from the PL solution. It seems to prefer something closer to a regular NMF-like solution, which exploits its greater flexibility to avoid some of the factors. (Since the data matrix methods don't like the tree solution with GB prior, there's no reason to think that they will with PE prior so I don't do those.)
+
+```{r}
+fit.pe.init = flash_init(data=S) |> 
+  flash_factors_init(init=list(scaledL,scaledL), ebnm_fn = ebnm::ebnm_point_exponential) |>
+  flash_backfit(maxiter =10000)
+res.pe = ldf(fit.pe.init,type="i")
+image(res.pe$L %*% diag(sqrt(res.pe$D)))
+```
+
+
+## Star Tree
+
+Now I simulate a "star" tree - it has no weight on the branches corresponding to the top split. This changes things in that the point-laplace strategy now finds some factors that do not actually exist in the tree (because the point-laplace factors introduce some negative correlations that do not exist in the data and then need to be accounted for somehow). Re-estimating D will downweight those factors but may not remove them entirely. 
+
+```{r}
+set.seed(1)
+params_star <- list(
+  leaf_sizes = c(40, 40, 40, 40), # n = 160
+  p = 1000,
+  sigma2 = 1,
+  sigma_k2 = c(4,0,0,4,4,4,4) # For K = 7 factors
+)
+sim_star <- do.call(simulate_bifurcating_tree, params_star)
+S = sim_star$X %*% t(sim_star$X)
+image(S)
+```
+
+Running point laplace: note that in addition to factors capturing the individual
+tips, you also get a factor that splits 2 vs 2 - a "non-existent" top branch. This is because
+the point-laplace induces negative correlations between the tips that it needs to correct for. My expectation is that this will disappear, or be substantially downweighted, when I split the factors and reestimate the weights (D).
+```{r}
+fit.pl = flash(data=S, ebnm_fn = ebnm::ebnm_point_laplace, greedy_Kmax = 10, backfit=TRUE)
+par(mfcol=c(2,2),mai=rep(0.3,4))
+for(k in 1:4)
+  plot(fit.pl$L_pm[,k])
+```
+
+
+Here I split the factors into pairs and re-estimate D. We see that the non-existent top branches get 0 weights.
+```{r}
+L = fit.pl$L_pm
+L = cbind(pmax(L,0),pmax(-L,0))
+
+#remove any column that is all 0s; then normalize columns
+zero_col = apply(L,2, function(x){all(x==0)})
+L = L[,!zero_col]
+
+norm = function(x){return(x/sqrt(sum(x^2)))}
+L = apply(L,2,norm)
+
+d = estimate_D(S,L) # this is the least squares estimate of d so can be negative
+
+# set negative entries to 0; then iterate local updates for each element of d 10 times
+d = pmax(d,0) 
+K = ncol(L)
+for(i in 1:10){
+  for(k in 1:K){
+    U = L[,-k,drop=FALSE]
+    v = L[,k,drop=FALSE]
+    D = diag(d[-k],nrow=length(d[-k]))
+    d[k] = max(t(v) %*% S %*% v - t(v) %*% U %*% D %*% t(U) %*% v,0)
+  }
+}
+print(d)
+
+scaledL = L[,d>0] %*% diag(sqrt(d[d>0]),nrow=length(d[d>0])) 
+image(scaledL)
+```
+
+Here I run flash with GB prior on the S matrix, initialized from the (split) point laplace solution. As with the bifurcating tree, GB prior keeps the tree structure (ie it does not change much from the initialization). Note that the "intercept" factor is not quite constant - it might be best to include a fixed constant intercept factor if we want to avoid that kind of thing.
+```{r}
+fit.gb.init = flash_init(data=S) |> 
+  flash_factors_init(init=list(scaledL,scaledL), ebnm_fn = ebnm::ebnm_generalized_binary) |>
+  flash_backfit(maxiter =10000)
+res.gb = ldf(fit.gb.init,type="i")
+image(res.gb$L %*% diag(sqrt(res.gb$D)))
+par(mfcol=c(2,3),mai=rep(0.3,4))
+for(k in 1:5)
+  plot(fit.gb.init$L_pm[,k])
+```
+
+
+## Overlapping clusters
+
+Now I try simulating the (non-tree) ``overlapping cluster" case, where the L factors are independent Bernoulli.  This is maybe more difficult than the tree case for point-laplace, so it is a nice test case to see if the point-laplace initialization still works. Here is code to simulate data.
+```{r}
+#################################################################
+# Scenario 3: Overlapping Structure
+#################################################################
+
+#' Simulate data with an overlapping structure for the loadings matrix.
+#'
+#' This function generates a data matrix X = LF' + E, where the entries of the
+#' loadings matrix L are drawn from a Bernoulli distribution, allowing for
+#' samples to have membership in multiple groups.
+#'
+#' @param n An integer, the number of samples.
+#' @param p An integer, the number of features.
+#' @param K An integer, the number of factors/groups.
+#' @param pi1 A numeric value (between 0 and 1), the Bernoulli probability for L entries.
+#' @param sigma2 A numeric, the variance of the error term E.
+#' @param sigma_k2 A numeric or vector, the variance(s) for the factor matrix F.
+#'
+#' @return A list containing the simulated data matrix X, loadings L, factors F, and error E.
+#'
+simulate_overlapping <- function(n, p, K, pi1, sigma2, sigma_k2) {
+
+  # 1. Construct the Loadings matrix L (n x K)
+  # Each entry is an independent Bernoulli trial.
+  L <- matrix(rbinom(n * K, size = 1, prob = pi1), nrow = n, ncol = K)
+
+  # 2. Construct the Factor matrix F (p x K)
+  if (length(sigma_k2) == 1) {
+    sigma_k2 <- rep(sigma_k2, K)
+  }
+  F_mat <- matrix(NA, nrow = p, ncol = K)
+  for (k in 1:K) {
+    F_mat[, k] <- rnorm(p, mean = 0, sd = sqrt(sigma_k2[k]))
+  }
+
+  # 3. Construct the Error matrix E (n x p)
+  E <- matrix(rnorm(n * p, mean = 0, sd = sqrt(sigma2)), nrow = n, ncol = p)
+
+  # 4. Compute the data matrix X = LF' + E
+  X <- L %*% t(F_mat) + E
+
+  return(list(X = X, L = L, F = F_mat, E = E))
+}
+
+### --- Run Scenario 3 Simulation ---
+params_overlapping <- list(
+  n = 100,
+  p = 1000,
+  K = 10,
+  pi1 = 0.1,
+  sigma2 = 1,
+  sigma_k2 = 1
+)
+sim_overlapping <- do.call(simulate_overlapping, params_overlapping)
+S = sim_overlapping$X %*% t(sim_overlapping$X)
+image(S)
+```
+
+Running flashier on the S matrix with point laplace prior. It finds 10 factors - which will be increased to 20 after splitting.
+```{r}
+fit.pl = flash(data=S, ebnm_fn = ebnm::ebnm_point_laplace, greedy_Kmax = 20, backfit=TRUE)
+```
+
+Splitting. We see that after splitting, each true factor is captured by at least one other factor with correlation exceeding 0.8.
+```{r}
+L = fit.pl$L_pm
+L = cbind(pmax(L,0),pmax(-L,0))
+
+#remove any column that is all 0s; then normalize columns
+zero_col = apply(L,2, function(x){all(x==0)})
+L = L[,!zero_col]
+
+norm = function(x){return(x/sqrt(sum(x^2)))}
+L = apply(L,2,norm)
+
+d = estimate_D(S,L) # this is the least squares estimate of d so can be negative
+
+# set negative entries to 0; then iterate local updates for each element of d 10 times
+d = pmax(d,0) 
+K = ncol(L)
+for(i in 1:10){
+  for(k in 1:K){
+    U = L[,-k,drop=FALSE]
+    v = L[,k,drop=FALSE]
+    D = diag(d[-k],nrow=length(d[-k]))
+    d[k] = max(t(v) %*% S %*% v - t(v) %*% U %*% D %*% t(U) %*% v,0)
+  }
+}
+
+scaledL.pl = L %*% diag(sqrt(d),nrow=length(d)) 
+image(scaledL.pl)
+apply(cor(sim_overlapping$L,L),1,max)
+```
+
+Fit gb prior from this solution. After backfitting it has captured every factor very precisely. However, there remain another 10 factors that are "noise".
+```{r}
+fit.gb.init = flash_init(data=S) |> 
+  flash_factors_init(init=list(scaledL.pl,scaledL.pl), ebnm_fn = ebnm::ebnm_generalized_binary) |>
+  flash_backfit(maxiter =10000)
+res.gb = ldf(fit.gb.init,type="i")
+image(res.gb$L %*% diag(sqrt(res.gb$D)))
+apply(cor(sim_overlapping$L,res.gb$L),1,max)
+plot(sqrt(res.gb$D))
+plot(fit.gb.init$pve)
+```
+
+All the noise factors are "somewhat" correlated with one of the true factors:
+```{r}
+apply(cor(sim_overlapping$L,res.gb$L),2,max)
+plot(res.gb$L[,1],sim_overlapping$L[,8])
+
+```
+
+
+And point-exp. This 0s out some of the noise factors, but there is no longer a separation in terms of the norm of the signal vs noise factors.
+```{r}
+fit.pe.init = flash_init(data=S) |> 
+  flash_factors_init(init=list(scaledL.pl,scaledL.pl), ebnm_fn = ebnm::ebnm_point_exponential) |>
+  flash_backfit(maxiter =10000)
+res.pe = ldf(fit.pe.init,type="i")
+res.pe$L = res.pe$L[,res.pe$D>0]
+res.pe$D = res.pe$D[res.pe$D>0]
+image(res.pe$L %*% diag(sqrt(res.pe$D)))
+apply(cor(sim_overlapping$L,res.pe$L),1,max)
+plot(sqrt(res.pe$D))
+```
+
+Here I fit GB, initializing from the true solution, so it excludes the noise factors.
+The elbo is worse than the solution with the noise factors, demonstrating that the noise factors are an issue with the objective function, rather than a computational issue associated with a local optimum.
+```{r}
+fit.gb.init2 = flash_init(data=S) |> 
+  flash_factors_init(init=list(sim_overlapping$L,sim_overlapping$L), ebnm_fn = ebnm::ebnm_generalized_binary) |>
+  flash_backfit(maxiter =10000)
+res.gb2 = ldf(fit.gb.init2,type="i")
+image(res.gb2$L %*% diag(sqrt(res.gb2$D)))
+apply(cor(sim_overlapping$L,res.gb2$L),1,max)
+fit.gb.init2$elbo
+fit.gb.init$elbo
+```
+
+
+
+Compare symmetric NMF. If we set the number of factors correct it gets it spot on.
+```{r}
+fit.snmf = codesymnmf(S,10)
+apply(cor(sim_overlapping$L,fit.snmf$H),1,max)
+```
+
+But increasing the number of factors reduces accuracy. And there is not a clear separation in terms of the norm of each factor - it separates the signal into multiple factors.
+```{r}
+fit.snmf = codesymnmf(S,20)
+apply(cor(sim_overlapping$L,fit.snmf$H),1,max)
+plot(apply(fit.snmf$H,2,function(x){sum(x^2)}))
+```
+
+Try gb initialized from SNMF. It finds the true factors and does a better job than SNMF of separating them into the signal and noise (but the noise still exists).
+```{r}
+fit.gb.init3 = flash_init(data=S) |> 
+  flash_factors_init(init=list(fit.snmf$H,fit.snmf$H), ebnm_fn = ebnm::ebnm_generalized_binary) |>
+  flash_backfit(maxiter =10000)
+res.gb3 = ldf(fit.gb.init3,type="i")
+image(res.gb3$L %*% diag(sqrt(res.gb3$D)))
+apply(cor(sim_overlapping$L,res.gb3$L),1,max)
+plot(res.gb3$D)
+fit.gb.init3$elbo
+```
+
+
+### Stability selection
+
+Here I wanted to see if I could remove the noise factors by some kind of
+stability selection. The idea is to run GB on two halves of the data and only keeping factors that show up in both halves. Note that I run the initialization separately on each too - I found that when I did not do this (ie I used the same initialization for both GB fits, using PL on the full data) the two GB fits were more similar, as expected, and that some factors that were not in the truth were still selected. This suggests that separate initialization may be important for this stability selection approach to work.
+
+```{r}
+# Split the data into two halves
+X1 = sim_overlapping$X[,1:500]
+X2 = sim_overlapping$X[,501:1000]
+S1 = X1 %*% t(X1)
+S2 = X2 %*% t(X2)
+
+fit.pl.1 = flash(data=S1,ebnm_fn = ebnm::ebnm_point_laplace, greedy_Kmax = 20, backfit=TRUE)
+res.pl.1 = ldf(fit.pl.1,type="i")
+scaledL.pl.1 = res.pl.1$L %*% diag(sqrt(res.pl.1$D),nrow=length(res.pl.1$D))
+  
+fit.gb.init1 = flash_init(data=S1) |> 
+  flash_factors_init(init=list(scaledL.pl.1,scaledL.pl.1), ebnm_fn = ebnm::ebnm_generalized_binary) |>
+  flash_backfit(maxiter =10000)
+
+fit.pl.2 = flash(data=S2,ebnm_fn = ebnm::ebnm_point_laplace, greedy_Kmax = 20, backfit=TRUE)
+res.pl.2 = ldf(fit.pl.2,type="i")
+scaledL.pl.2 = res.pl.2$L %*% diag(sqrt(res.pl.2$D),nrow=length(res.pl.2$D))
+  
+
+fit.gb.init2 = flash_init(data=S2) |>
+  flash_factors_init(init=list(scaledL.pl.2,scaledL.pl.2), ebnm_fn = ebnm::ebnm_generalized_binary) |>
+  flash_backfit(maxiter =10000)
+
+# Check the correlation with the truth
+apply(cor(sim_overlapping$L,fit.gb.init1$L_pm),1,max) 
+apply(cor(sim_overlapping$L,fit.gb.init2$L_pm),1,max) 
+```
+
+Find pairs of factors whose correlation is above some threshold. Here I use a strict 0.99 threshold, which should only select factors that are the same in both fits. We see that in this case we only select 5 factors, but all the selected factors are highly correlated with the truth.
+```{r}
+threshold =0.99
+# Find the correlation between the two sets of factors
+cor_matrix = cor(fit.gb.init1$L_pm, fit.gb.init2$L_pm)
+hist(cor_matrix)
+
+subset1 = which(apply(cor_matrix, 1, max)>threshold)# max correlation for each factor in fit.gb.init1
+apply(cor(sim_overlapping$L,fit.gb.init1$L_pm[,subset1]),1,max) # check correlation with the truth
+apply(cor(sim_overlapping$L,fit.gb.init1$L_pm[,subset1]),2,max) # check correlation with the truth
+
+
+subset2 = which(apply(cor_matrix, 2, max)>threshold)# max correlation for each factor in fit.gb.init2
+apply(cor(sim_overlapping$L,fit.gb.init2$L_pm[,subset2]),1,max) # check correlation with the truth
+apply(cor(sim_overlapping$L,fit.gb.init2$L_pm[,subset2]),2,max) # check correlation with the truth
+```
+
+
+
+
+
+### Run GB on the data matrix
+
+I also wanted to try running GB on the data matrix here to see what happens (the L are much less correlated than in the tree case, so there is some idea that the mean field approximation might be OK here.)
+
+To run GB on the data matrix I need a way to initialize F. Here I do it using an L2 penalty (could think harder about this).
+```{r}
+compute_F = function(L,X){
+  k = ncol(L)
+# A = (L'L + I)
+  A_matrix <- t(L) %*% L + diag(k)
+
+  # B = L'X
+  B_matrix <- t(L) %*% X
+
+  # Solve the system A * F_transpose = B for F_transpose
+  # R's solve(A, B) is designed for this!
+  F_transpose <- solve(A_matrix, B_matrix)
+
+  # Get F by transposing the result
+  F_optimal <- t(F_transpose)
+  return(F_optimal)
+}
+```
+
+
+Run GB prior on data matrix, initialized from the point-laplace L. It finds 11 factors, but only 5 of the true factors are captured completely correctly.
+```{r}
+X = sim_overlapping$X
+L.init = scaledL.pl
+F.init = compute_F(L.init,X)
+fit.data.gb.init = flash_init(data=X) |> 
+  flash_factors_init(init=list(L.init,F.init), ebnm_fn = c(ebnm::ebnm_generalized_binary,ebnm::ebnm_normal)) |>
+  flash_backfit(maxiter =10000)
+plot(fit.data.gb.init$pve)
+apply(cor(sim_overlapping$L,fit.data.gb.init$L_pm[,fit.data.gb.init$pve>1e-4]),1, max)
+```
+
+
+
+
+
+
