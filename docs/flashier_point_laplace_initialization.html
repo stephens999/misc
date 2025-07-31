@@ -1,0 +1,1839 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Matthew Stephens" />
+
+<meta name="date" content="2025-07-24" />
+
+<title>flashier_tree_pexp</title>
+
+<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">misc</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/stephens999/misc">source</a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">flashier_tree_pexp</h1>
+<h4 class="author">Matthew Stephens</h4>
+<h4 class="date">2025-07-24</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2025-07-31
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>misc/analysis/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.1). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed1code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(1)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed1code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(1)</code> was run prior to running the
+code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreef13ba0a10bee3f7d65f5feb412bb1f34ebf83cfctargetblankf13ba0aa">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/stephens999/misc/tree/f13ba0a10bee3f7d65f5feb412bb1f34ebf83cfc" target="_blank">f13ba0a</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreef13ba0a10bee3f7d65f5feb412bb1f34ebf83cfctargetblankf13ba0aa"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/stephens999/misc/tree/f13ba0a10bee3f7d65f5feb412bb1f34ebf83cfc" target="_blank">f13ba0a</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.RData
+    Ignored:    analysis/.Rhistory
+    Ignored:    analysis/ALStruct_cache/
+    Ignored:    data/.Rhistory
+    Ignored:    data/methylation-data-for-matthew.rds
+    Ignored:    data/pbmc/
+    Ignored:    data/pbmc_purified.RData
+
+Untracked files:
+    Untracked:  .dropbox
+    Untracked:  Icon
+    Untracked:  analysis/GHstan.Rmd
+    Untracked:  analysis/GTEX-cogaps.Rmd
+    Untracked:  analysis/PACS.Rmd
+    Untracked:  analysis/Rplot.png
+    Untracked:  analysis/SPCAvRP.rmd
+    Untracked:  analysis/abf_comparisons.Rmd
+    Untracked:  analysis/admm_02.Rmd
+    Untracked:  analysis/admm_03.Rmd
+    Untracked:  analysis/bispca.Rmd
+    Untracked:  analysis/cache/
+    Untracked:  analysis/cholesky.Rmd
+    Untracked:  analysis/compare-transformed-models.Rmd
+    Untracked:  analysis/cormotif.Rmd
+    Untracked:  analysis/cp_ash.Rmd
+    Untracked:  analysis/eQTL.perm.rand.pdf
+    Untracked:  analysis/eb_power2.Rmd
+    Untracked:  analysis/eb_prepilot.Rmd
+    Untracked:  analysis/eb_var.Rmd
+    Untracked:  analysis/ebpmf1.Rmd
+    Untracked:  analysis/ebpmf_sla_text.Rmd
+    Untracked:  analysis/ebspca_sims.Rmd
+    Untracked:  analysis/explore_psvd.Rmd
+    Untracked:  analysis/fa_check_identify.Rmd
+    Untracked:  analysis/fa_iterative.Rmd
+    Untracked:  analysis/flash_cov_overlapping_groups_init.Rmd
+    Untracked:  analysis/flash_test_tree.Rmd
+    Untracked:  analysis/flashier_newgroups.Rmd
+    Untracked:  analysis/flashier_nmf_triples.Rmd
+    Untracked:  analysis/flashier_pbmc.Rmd
+    Untracked:  analysis/flashier_snn_shifted_prior.Rmd
+    Untracked:  analysis/greedy_ebpmf_exploration_00.Rmd
+    Untracked:  analysis/ieQTL.perm.rand.pdf
+    Untracked:  analysis/lasso_em_03.Rmd
+    Untracked:  analysis/m6amash.Rmd
+    Untracked:  analysis/mash_bhat_z.Rmd
+    Untracked:  analysis/mash_ieqtl_permutations.Rmd
+    Untracked:  analysis/methylation_example.Rmd
+    Untracked:  analysis/mixsqp.Rmd
+    Untracked:  analysis/mr.ash_lasso_init.Rmd
+    Untracked:  analysis/mr.mash.test.Rmd
+    Untracked:  analysis/mr_ash_modular.Rmd
+    Untracked:  analysis/mr_ash_parameterization.Rmd
+    Untracked:  analysis/mr_ash_ridge.Rmd
+    Untracked:  analysis/mv_gaussian_message_passing.Rmd
+    Untracked:  analysis/nejm.Rmd
+    Untracked:  analysis/nmf_bg.Rmd
+    Untracked:  analysis/nonneg_underapprox.Rmd
+    Untracked:  analysis/normal_conditional_on_r2.Rmd
+    Untracked:  analysis/normalize.Rmd
+    Untracked:  analysis/pbmc.Rmd
+    Untracked:  analysis/pca_binary_weighted.Rmd
+    Untracked:  analysis/pca_l1.Rmd
+    Untracked:  analysis/poisson_nmf_approx.Rmd
+    Untracked:  analysis/poisson_shrink.Rmd
+    Untracked:  analysis/poisson_transform.Rmd
+    Untracked:  analysis/qrnotes.txt
+    Untracked:  analysis/ridge_iterative_02.Rmd
+    Untracked:  analysis/ridge_iterative_splitting.Rmd
+    Untracked:  analysis/samps/
+    Untracked:  analysis/sc_bimodal.Rmd
+    Untracked:  analysis/shrinkage_comparisons_changepoints.Rmd
+    Untracked:  analysis/susie_cov.Rmd
+    Untracked:  analysis/susie_en.Rmd
+    Untracked:  analysis/susie_z_investigate.Rmd
+    Untracked:  analysis/svd-timing.Rmd
+    Untracked:  analysis/temp.RDS
+    Untracked:  analysis/temp.Rmd
+    Untracked:  analysis/test-figure/
+    Untracked:  analysis/test.Rmd
+    Untracked:  analysis/test.Rpres
+    Untracked:  analysis/test.md
+    Untracked:  analysis/test_qr.R
+    Untracked:  analysis/test_sparse.Rmd
+    Untracked:  analysis/tree_dist_top_eigenvector.Rmd
+    Untracked:  analysis/z.txt
+    Untracked:  code/coordinate_descent_symNMF.R
+    Untracked:  code/multivariate_testfuncs.R
+    Untracked:  code/rqb.hacked.R
+    Untracked:  data/4matthew/
+    Untracked:  data/4matthew2/
+    Untracked:  data/E-MTAB-2805.processed.1/
+    Untracked:  data/ENSG00000156738.Sim_Y2.RDS
+    Untracked:  data/GDS5363_full.soft.gz
+    Untracked:  data/GSE41265_allGenesTPM.txt
+    Untracked:  data/Muscle_Skeletal.ACTN3.pm1Mb.RDS
+    Untracked:  data/P.rds
+    Untracked:  data/Thyroid.FMO2.pm1Mb.RDS
+    Untracked:  data/bmass.HaemgenRBC2016.MAF01.Vs2.MergedDataSources.200kRanSubset.ChrBPMAFMarkerZScores.vs1.txt.gz
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.PreviousSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/eb_prepilot/
+    Untracked:  data/finemap_data/fmo2.sim/b.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/data
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.ld
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.z
+    Untracked:  data/finemap_data/fmo2.sim/pos.txt
+    Untracked:  data/logm.csv
+    Untracked:  data/m.cd.RDS
+    Untracked:  data/m.cdu.old.RDS
+    Untracked:  data/m.new.cd.RDS
+    Untracked:  data/m.old.cd.RDS
+    Untracked:  data/mainbib.bib.old
+    Untracked:  data/mat.csv
+    Untracked:  data/mat.txt
+    Untracked:  data/mat_new.csv
+    Untracked:  data/matrix_lik.rds
+    Untracked:  data/paintor_data/
+    Untracked:  data/running_data_chris.csv
+    Untracked:  data/running_data_matthew.csv
+    Untracked:  data/temp.txt
+    Untracked:  data/y.txt
+    Untracked:  data/y_f.txt
+    Untracked:  data/zscore_jointLCLs_m6AQTLs_susie_eQTLpruned.rds
+    Untracked:  data/zscore_jointLCLs_random.rds
+    Untracked:  explore_udi.R
+    Untracked:  output/fit.k10.rds
+    Untracked:  output/fit.nn.pbmc.purified.rds
+    Untracked:  output/fit.nn.rds
+    Untracked:  output/fit.nn.s.001.rds
+    Untracked:  output/fit.nn.s.01.rds
+    Untracked:  output/fit.nn.s.1.rds
+    Untracked:  output/fit.nn.s.10.rds
+    Untracked:  output/fit.snn.s.001.rds
+    Untracked:  output/fit.snn.s.01.nninit.rds
+    Untracked:  output/fit.snn.s.01.rds
+    Untracked:  output/fit.varbvs.RDS
+    Untracked:  output/fit2.nn.pbmc.purified.rds
+    Untracked:  output/glmnet.fit.RDS
+    Untracked:  output/snn07.txt
+    Untracked:  output/snn34.txt
+    Untracked:  output/test.bv.txt
+    Untracked:  output/test.gamma.txt
+    Untracked:  output/test.hyp.txt
+    Untracked:  output/test.log.txt
+    Untracked:  output/test.param.txt
+    Untracked:  output/test2.bv.txt
+    Untracked:  output/test2.gamma.txt
+    Untracked:  output/test2.hyp.txt
+    Untracked:  output/test2.log.txt
+    Untracked:  output/test2.param.txt
+    Untracked:  output/test3.bv.txt
+    Untracked:  output/test3.gamma.txt
+    Untracked:  output/test3.hyp.txt
+    Untracked:  output/test3.log.txt
+    Untracked:  output/test3.param.txt
+    Untracked:  output/test4.bv.txt
+    Untracked:  output/test4.gamma.txt
+    Untracked:  output/test4.hyp.txt
+    Untracked:  output/test4.log.txt
+    Untracked:  output/test4.param.txt
+    Untracked:  output/test5.bv.txt
+    Untracked:  output/test5.gamma.txt
+    Untracked:  output/test5.hyp.txt
+    Untracked:  output/test5.log.txt
+    Untracked:  output/test5.param.txt
+
+Unstaged changes:
+    Modified:   .gitignore
+    Modified:   analysis/eb_snmu.Rmd
+    Modified:   analysis/ebnm_binormal.Rmd
+    Modified:   analysis/ebpower.Rmd
+    Modified:   analysis/flashier_log1p.Rmd
+    Modified:   analysis/flashier_sla_text.Rmd
+    Modified:   analysis/logistic_z_scores.Rmd
+    Modified:   analysis/mr_ash_pen.Rmd
+    Modified:   analysis/nmu_em.Rmd
+    Modified:   analysis/susie_flash.Rmd
+    Modified:   analysis/tap_free_energy.Rmd
+    Modified:   misc.Rproj
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown
+(<code>analysis/flashier_point_laplace_initialization.Rmd</code>) and
+HTML (<code>docs/flashier_point_laplace_initialization.html</code>)
+files. If you’ve configured a remote Git repository (see
+<code>?wflow_git_remote</code>), click on the hyperlinks in the table
+below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/f13ba0a10bee3f7d65f5feb412bb1f34ebf83cfc/analysis/flashier_point_laplace_initialization.Rmd" target="_blank">f13ba0a</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-07-31
+</td>
+<td>
+workflowr::wflow_publish("analysis/flashier_point_laplace_initialization.Rmd")
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<pre class="r"><code>library(flashier)</code></pre>
+<pre><code>Loading required package: ebnm</code></pre>
+<pre class="r"><code>library(codesymnmf)</code></pre>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>It seems like we have reached the following conclusion: when data
+come from a tree, the point laplace prior, with backfitting, finds the
+tree. Splitting the point laplace and running GB then preserves the tree
+(but also keeps additional factors). Unlike point laplace, point
+exponential often does not find the tree. Indeed, even when initialized
+from a tree-like fit, point exponential may move away from it to prefer
+a more regular (non-binary) “NMF” solution.</p>
+<p>This document is trying to illustrate some of this, and also explore
+non tree like cases.</p>
+</div>
+<div id="balanced-tree" class="section level2">
+<h2>Balanced Tree</h2>
+<p>I’m going to start with simulations with a balanced tree with 4 tips.
+I start with some code for simulating this.</p>
+<div id="tree-simulation-code" class="section level3">
+<h3>Tree simulation code</h3>
+<pre class="r"><code>#################################################################
+# Scenario 2: Bifurcating Tree Structure
+#################################################################
+
+#&#39; Simulate data with a bifurcating tree structure for the loadings matrix.
+#&#39;
+#&#39; This function generates a data matrix X = LF&#39; + E, where the loadings
+#&#39; matrix L represents a fixed bifurcating tree with four leaves.
+#&#39;
+#&#39; @param leaf_sizes A numeric vector with the size of each of the 4 leaf groups.
+#&#39; @param p An integer, the number of features.
+#&#39; @param sigma2 A numeric, the variance of the error term E.
+#&#39; @param sigma_k2 A numeric or vector, the variance(s) for the factor matrix F.
+#&#39;
+#&#39; @return A list containing the simulated data matrix X, loadings L, factors F, and error E.
+#&#39;
+simulate_bifurcating_tree &lt;- function(leaf_sizes, p, sigma2, sigma_k2) {
+  # This function is specifically designed for the 4-leaf tree structure.
+  num_leaves &lt;- length(leaf_sizes)
+  if (num_leaves != 4) {
+    stop(&quot;This function is hardcoded for a bifurcating tree with 4 leaves.&quot;)
+  }
+  n &lt;- sum(leaf_sizes)
+  K &lt;- 7 # For a full binary tree with 4 leaves, K = 2*4 - 1 = 7
+
+  # 1. Construct the Loadings matrix L (n x K)
+  # This is the base structure for one sample at each of the 4 leaves.
+  L_prototype &lt;- matrix(c(
+    1, 1, 0, 1, 0, 0, 0,
+    1, 1, 0, 0, 1, 0, 0,
+    1, 0, 1, 0, 0, 1, 0,
+    1, 0, 1, 0, 0, 0, 1
+  ), nrow = 4, byrow = TRUE)
+
+  # Expand the prototype by repeating each row according to the specified leaf_sizes.
+  L &lt;- L_prototype[rep(1:num_leaves, times = leaf_sizes), ]
+
+  # 2. Construct the Factor matrix F (p x K)
+  if (length(sigma_k2) == 1) {
+    sigma_k2 &lt;- rep(sigma_k2, K)
+  }
+  F_mat &lt;- matrix(NA, nrow = p, ncol = K)
+  for (k in 1:K) {
+    F_mat[, k] &lt;- rnorm(p, mean = 0, sd = sqrt(sigma_k2[k]))
+  }
+
+  # 3. Construct the Error matrix E (n x p)
+  E &lt;- matrix(rnorm(n * p, mean = 0, sd = sqrt(sigma2)), nrow = n, ncol = p)
+
+  # 4. Compute the data matrix X = LF&#39; + E
+  X &lt;- L %*% t(F_mat) + E
+
+  return(list(X = X, L = L, F = F_mat, E = E))
+}
+
+params_tree &lt;- list(
+  leaf_sizes = c(40, 40, 40, 40), # n = 160
+  p = 1000,
+  sigma2 = 1,
+  sigma_k2 = rep(4,7) # For K = 7 factors
+)
+
+set.seed(2)
+sim_tree &lt;- do.call(simulate_bifurcating_tree, params_tree)
+S = sim_tree$X %*% t(sim_tree$X)
+image(S)</code></pre>
+<p><img src="figure/flashier_point_laplace_initialization.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="code-to-estimate-d-from-l" class="section level3">
+<h3>Code to estimate D from L</h3>
+<pre class="r"><code>#&#39; Estimate the diagonal matrix D that minimizes ||S - LDL&#39;||^2_F
+#&#39;
+#&#39; @param S A given n x n matrix.
+#&#39; @param L A given n x k matrix.
+#&#39; @return A k vector containing diagonal entries of D that minimize objective
+
+estimate_D &lt;- function(S, L) {
+  
+  # Get dimensions
+  n &lt;- nrow(S)
+  k &lt;- ncol(L)
+  
+  # Check for conformable dimensions
+  if (nrow(L) != n) {
+    stop(&quot;Matrices S and L have non-conformable dimensions (rows must match).&quot;)
+  }
+
+  
+  # 1. Pre-compute helper matrices (C and B will be k x k)
+  C &lt;- t(L) %*% L
+  B &lt;- t(L) %*% S %*% L
+  
+  # 2. Construct the linear system M d = b
+  M &lt;- C * C
+  b &lt;- diag(B)
+  
+  # 3. Solve for the k diagonal elements of D
+  d_vector &lt;- qr.solve(M, b)
+  
+  return(d_vector)
+}</code></pre>
+</div>
+<div id="run-point-laplace" class="section level3">
+<h3>Run point laplace</h3>
+<p>Here I run point-laplace on the symmetric S matrix. It finds the tree
+structure.</p>
+<pre class="r"><code>fit.pl = flash(data=S, ebnm_fn = ebnm::ebnm_point_laplace, greedy_Kmax = 10, backfit=TRUE)</code></pre>
+<pre><code>Adding factor 1 to flash object...
+Adding factor 2 to flash object...
+Adding factor 3 to flash object...
+Adding factor 4 to flash object...
+Adding factor 5 to flash object...
+Factor doesn&#39;t significantly increase objective and won&#39;t be added.
+Wrapping up...
+Done.
+Backfitting 4 factors (tolerance: 3.81e-04)...
+  Difference between iterations is within 1.0e+04...
+  Difference between iterations is within 1.0e+03...
+  Difference between iterations is within 1.0e+02...
+  Difference between iterations is within 1.0e+01...
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+  Difference between iterations is within 1.0e-02...
+  Difference between iterations is within 1.0e-03...
+Wrapping up...
+Done.
+Nullchecking 4 factors...
+Done.</code></pre>
+<pre class="r"><code>par(mfcol=c(2,2),mai=rep(0.3,4))
+for(k in 1:4)
+  plot(fit.pl$L_pm[,k])</code></pre>
+<p><img src="figure/flashier_point_laplace_initialization.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>We can also find the tree by running point-laplace on the data matrix
+with normal prior on F. It still works. (Note: we know that running on
+the data matrix with normal prior on F encourages independent/orthogonal
+L values; that does not hurt here because the way the point-laplace
+finds the tree structure is by using approximately orthogonal
+factors.)</p>
+<pre class="r"><code>X = sim_tree$X
+fit.data.pl = flash(data = X, ebnm_fn = c(ebnm::ebnm_point_laplace,ebnm::ebnm_normal), greedy_Kmax = 10, backfit=TRUE)</code></pre>
+<pre><code>Adding factor 1 to flash object...
+Adding factor 2 to flash object...
+Adding factor 3 to flash object...
+Adding factor 4 to flash object...
+Adding factor 5 to flash object...
+Factor doesn&#39;t significantly increase objective and won&#39;t be added.
+Wrapping up...
+Done.
+Backfitting 4 factors (tolerance: 2.38e-03)...
+  Difference between iterations is within 1.0e+03...
+  Difference between iterations is within 1.0e+02...
+  Difference between iterations is within 1.0e+01...
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+  Difference between iterations is within 1.0e-02...
+  Difference between iterations is within 1.0e-03...
+Wrapping up...
+Done.
+Nullchecking 4 factors...
+Done.</code></pre>
+<pre class="r"><code>par(mfcol=c(2,2),mai=rep(0.3,4))
+for(k in 1:4)
+  plot(fit.data.pl$L_pm[,k])</code></pre>
+<p><img src="figure/flashier_point_laplace_initialization.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="split-point-laplace-into-pairs" class="section level3">
+<h3>Split point-laplace into pairs</h3>
+<p>Here I split into pairs and remove the zero columns before estimating
+D</p>
+<pre class="r"><code>L = fit.pl$L_pm
+L = cbind(pmax(L,0),pmax(-L,0))
+
+#remove any column that is all 0s; then normalize columns
+zero_col = apply(L,2, function(x){all(x==0)})
+L = L[,!zero_col]
+
+norm = function(x){return(x/sqrt(sum(x^2)))}
+L = apply(L,2,norm)
+
+d = estimate_D(S,L) # this is the least squares estimate of d so can be negative
+
+# set negative entries to 0; then iterate local updates for each element of d 10 times
+d = pmax(d,0) 
+K = ncol(L)
+for(i in 1:10){
+  for(k in 1:K){
+    U = L[,-k,drop=FALSE]
+    v = L[,k,drop=FALSE]
+    D = diag(d[-k],nrow=length(d[-k]))
+    d[k] = max(t(v) %*% S %*% v - t(v) %*% U %*% D %*% t(U) %*% v,0)
+  }
+}
+
+scaledL = L %*% diag(sqrt(d),nrow=length(d)) 
+image(scaledL)</code></pre>
+<p><img src="figure/flashier_point_laplace_initialization.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="gb-prior-from-pl-initialization" class="section level3">
+<h3>GB prior from PL initialization</h3>
+<p>Here I run flash with GB prior on the S matrix, initialized from the
+(split) point laplace solution. The GB prior keeps the tree structure
+(ie it does not change much from the initialization).</p>
+<pre class="r"><code>fit.gb.init = flash_init(data=S) |&gt; 
+  flash_factors_init(init=list(scaledL,scaledL), ebnm_fn = ebnm::ebnm_generalized_binary) |&gt;
+  flash_backfit(maxiter =10000)</code></pre>
+<pre><code>Backfitting 7 factors (tolerance: 3.81e-04)...
+  Difference between iterations is within 1.0e+03...
+  Difference between iterations is within 1.0e+02...
+  Difference between iterations is within 1.0e+01...
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+  Difference between iterations is within 1.0e-02...
+  Difference between iterations is within 1.0e-03...
+Wrapping up...
+Done.</code></pre>
+<pre class="r"><code>res.gb = ldf(fit.gb.init,type=&quot;i&quot;)
+image(res.gb$L %*% diag(sqrt(res.gb$D)))</code></pre>
+<p><img src="figure/flashier_point_laplace_initialization.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Here I try something similar for the data matrix, with GB prior on L
+and normal prior on F. For simplicity (and to make the point more
+strongly) I initialize at the true values of L and F. The GB prior goes
+away from the tree solution and goes to the “clustering” solution, in
+which correlations are captured in F. Our understanding is that this
+happens because the mean field approximation encourages L to be diagonal
+(which it is for the cluster solution, but not the tree solution).</p>
+<pre class="r"><code>fit.data.gb.init = flash_init(data=X) |&gt; 
+  flash_factors_init(init=list(sim_tree$L,sim_tree$F), ebnm_fn = c(ebnm::ebnm_generalized_binary,ebnm::ebnm_normal)) |&gt;
+  flash_backfit(maxiter =10000)</code></pre>
+<pre><code>Backfitting 7 factors (tolerance: 2.38e-03)...
+  Difference between iterations is within 1.0e+01...
+  --Estimate of factor 3 is numerically zero!
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+Wrapping up...
+Done.</code></pre>
+<pre class="r"><code>res.data.gb = ldf(fit.data.gb.init,type=&quot;i&quot;)
+image(res.data.gb$L %*% diag(sqrt(res.data.gb$D)))</code></pre>
+<p><img src="figure/flashier_point_laplace_initialization.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>I wanted to check the same thing happens with a point-laplace prior
+on F, and it does.</p>
+<pre class="r"><code>fit.data2.gb.init = flash_init(data=X) |&gt; 
+  flash_factors_init(init=list(sim_tree$L,sim_tree$F), ebnm_fn = c(ebnm::ebnm_generalized_binary,ebnm::ebnm_point_laplace)) |&gt;
+  flash_backfit(maxiter =10000)</code></pre>
+<pre><code>Backfitting 7 factors (tolerance: 2.38e-03)...
+  Difference between iterations is within 1.0e+01...
+  --Estimate of factor 3 is numerically zero!
+  Difference between iterations is within 1.0e+00...
+  --Estimate of factor 2 is numerically zero!
+  --Estimate of factor 2 is numerically zero!
+  Difference between iterations is within 1.0e-01...
+  --Estimate of factor 1 is numerically zero!
+  Difference between iterations is within 1.0e-02...
+  Difference between iterations is within 1.0e-03...
+Wrapping up...
+Done.</code></pre>
+<pre class="r"><code>res.data2.gb = ldf(fit.data2.gb.init,type=&quot;i&quot;)
+image(res.data2.gb$L %*% diag(sqrt(res.data2.gb$D)))</code></pre>
+<p><img src="figure/flashier_point_laplace_initialization.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="point-exponential-prior-with-pl-initialization"
+class="section level3">
+<h3>Point exponential prior with PL initialization</h3>
+<p>Here we try analyzing S again, but with point exponential priors
+instead of GB. In contrast to GB prior, the point exponential changes
+from the binary tree structure, even when initialized from the PL
+solution. It seems to prefer something closer to a regular NMF-like
+solution, which exploits its greater flexibility to avoid some of the
+factors. (Since the data matrix methods don’t like the tree solution
+with GB prior, there’s no reason to think that they will with PE prior
+so I don’t do those.)</p>
+<pre class="r"><code>fit.pe.init = flash_init(data=S) |&gt; 
+  flash_factors_init(init=list(scaledL,scaledL), ebnm_fn = ebnm::ebnm_point_exponential) |&gt;
+  flash_backfit(maxiter =10000)</code></pre>
+<pre><code>Backfitting 7 factors (tolerance: 3.81e-04)...
+  Difference between iterations is within 1.0e+03...
+  Difference between iterations is within 1.0e+02...
+  Difference between iterations is within 1.0e+01...
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+  Difference between iterations is within 1.0e-02...
+  Difference between iterations is within 1.0e-03...
+Wrapping up...
+Done.</code></pre>
+<pre class="r"><code>res.pe = ldf(fit.pe.init,type=&quot;i&quot;)
+image(res.pe$L %*% diag(sqrt(res.pe$D)))</code></pre>
+<p><img src="figure/flashier_point_laplace_initialization.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="star-tree" class="section level2">
+<h2>Star Tree</h2>
+<p>Now I simulate a “star” tree - it has no weight on the branches
+corresponding to the top split. This changes things in that the
+point-laplace strategy now finds some factors that do not actually exist
+in the tree (because the point-laplace factors introduce some negative
+correlations that do not exist in the data and then need to be accounted
+for somehow). Re-estimating D will downweight those factors but may not
+remove them entirely.</p>
+<pre class="r"><code>set.seed(1)
+params_star &lt;- list(
+  leaf_sizes = c(40, 40, 40, 40), # n = 160
+  p = 1000,
+  sigma2 = 1,
+  sigma_k2 = c(4,0,0,4,4,4,4) # For K = 7 factors
+)
+sim_star &lt;- do.call(simulate_bifurcating_tree, params_star)
+S = sim_star$X %*% t(sim_star$X)
+image(S)</code></pre>
+<p><img src="figure/flashier_point_laplace_initialization.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Running point laplace: note that in addition to factors capturing the
+individual tips, you also get a factor that splits 2 vs 2 - a
+“non-existent” top branch. This is because the point-laplace induces
+negative correlations between the tips that it needs to correct for. My
+expectation is that this will disappear, or be substantially
+downweighted, when I split the factors and reestimate the weights
+(D).</p>
+<pre class="r"><code>fit.pl = flash(data=S, ebnm_fn = ebnm::ebnm_point_laplace, greedy_Kmax = 10, backfit=TRUE)</code></pre>
+<pre><code>Adding factor 1 to flash object...
+Adding factor 2 to flash object...
+Adding factor 3 to flash object...
+Adding factor 4 to flash object...
+Adding factor 5 to flash object...
+Factor doesn&#39;t significantly increase objective and won&#39;t be added.
+Wrapping up...
+Done.
+Backfitting 4 factors (tolerance: 3.81e-04)...
+  Difference between iterations is within 1.0e+04...
+  Difference between iterations is within 1.0e+03...
+  Difference between iterations is within 1.0e+02...
+  Difference between iterations is within 1.0e+01...
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+  Difference between iterations is within 1.0e-02...
+  Difference between iterations is within 1.0e-03...
+Wrapping up...
+Done.
+Nullchecking 4 factors...
+Done.</code></pre>
+<pre class="r"><code>par(mfcol=c(2,2),mai=rep(0.3,4))
+for(k in 1:4)
+  plot(fit.pl$L_pm[,k])</code></pre>
+<p><img src="figure/flashier_point_laplace_initialization.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Here I split the factors into pairs and re-estimate D. We see that
+the non-existent top branches get 0 weights.</p>
+<pre class="r"><code>L = fit.pl$L_pm
+L = cbind(pmax(L,0),pmax(-L,0))
+
+#remove any column that is all 0s; then normalize columns
+zero_col = apply(L,2, function(x){all(x==0)})
+L = L[,!zero_col]
+
+norm = function(x){return(x/sqrt(sum(x^2)))}
+L = apply(L,2,norm)
+
+d = estimate_D(S,L) # this is the least squares estimate of d so can be negative
+
+# set negative entries to 0; then iterate local updates for each element of d 10 times
+d = pmax(d,0) 
+K = ncol(L)
+for(i in 1:10){
+  for(k in 1:K){
+    U = L[,-k,drop=FALSE]
+    v = L[,k,drop=FALSE]
+    D = diag(d[-k],nrow=length(d[-k]))
+    d[k] = max(t(v) %*% S %*% v - t(v) %*% U %*% D %*% t(U) %*% v,0)
+  }
+}
+print(d)</code></pre>
+<pre><code>[1] 175459.6 167440.9      0.0 697281.7 166604.9 170086.2      0.0</code></pre>
+<pre class="r"><code>scaledL = L[,d&gt;0] %*% diag(sqrt(d[d&gt;0]),nrow=length(d[d&gt;0])) 
+image(scaledL)</code></pre>
+<p><img src="figure/flashier_point_laplace_initialization.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Here I run flash with GB prior on the S matrix, initialized from the
+(split) point laplace solution. As with the bifurcating tree, GB prior
+keeps the tree structure (ie it does not change much from the
+initialization). Note that the “intercept” factor is not quite constant
+- it might be best to include a fixed constant intercept factor if we
+want to avoid that kind of thing.</p>
+<pre class="r"><code>fit.gb.init = flash_init(data=S) |&gt; 
+  flash_factors_init(init=list(scaledL,scaledL), ebnm_fn = ebnm::ebnm_generalized_binary) |&gt;
+  flash_backfit(maxiter =10000)</code></pre>
+<pre><code>Backfitting 5 factors (tolerance: 3.81e-04)...
+  Difference between iterations is within 1.0e+02...
+  Difference between iterations is within 1.0e+01...
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+  Difference between iterations is within 1.0e-02...
+  Difference between iterations is within 1.0e-03...
+Wrapping up...
+Done.</code></pre>
+<pre class="r"><code>res.gb = ldf(fit.gb.init,type=&quot;i&quot;)
+image(res.gb$L %*% diag(sqrt(res.gb$D)))</code></pre>
+<p><img src="figure/flashier_point_laplace_initialization.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>par(mfcol=c(2,3),mai=rep(0.3,4))
+for(k in 1:5)
+  plot(fit.gb.init$L_pm[,k])</code></pre>
+<p><img src="figure/flashier_point_laplace_initialization.Rmd/unnamed-chunk-14-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="overlapping-clusters" class="section level2">
+<h2>Overlapping clusters</h2>
+<p>Now I try simulating the (non-tree) ``overlapping cluster” case,
+where the L factors are independent Bernoulli. This is maybe more
+difficult than the tree case for point-laplace, so it is a nice test
+case to see if the point-laplace initialization still works. Here is
+code to simulate data.</p>
+<pre class="r"><code>#################################################################
+# Scenario 3: Overlapping Structure
+#################################################################
+
+#&#39; Simulate data with an overlapping structure for the loadings matrix.
+#&#39;
+#&#39; This function generates a data matrix X = LF&#39; + E, where the entries of the
+#&#39; loadings matrix L are drawn from a Bernoulli distribution, allowing for
+#&#39; samples to have membership in multiple groups.
+#&#39;
+#&#39; @param n An integer, the number of samples.
+#&#39; @param p An integer, the number of features.
+#&#39; @param K An integer, the number of factors/groups.
+#&#39; @param pi1 A numeric value (between 0 and 1), the Bernoulli probability for L entries.
+#&#39; @param sigma2 A numeric, the variance of the error term E.
+#&#39; @param sigma_k2 A numeric or vector, the variance(s) for the factor matrix F.
+#&#39;
+#&#39; @return A list containing the simulated data matrix X, loadings L, factors F, and error E.
+#&#39;
+simulate_overlapping &lt;- function(n, p, K, pi1, sigma2, sigma_k2) {
+
+  # 1. Construct the Loadings matrix L (n x K)
+  # Each entry is an independent Bernoulli trial.
+  L &lt;- matrix(rbinom(n * K, size = 1, prob = pi1), nrow = n, ncol = K)
+
+  # 2. Construct the Factor matrix F (p x K)
+  if (length(sigma_k2) == 1) {
+    sigma_k2 &lt;- rep(sigma_k2, K)
+  }
+  F_mat &lt;- matrix(NA, nrow = p, ncol = K)
+  for (k in 1:K) {
+    F_mat[, k] &lt;- rnorm(p, mean = 0, sd = sqrt(sigma_k2[k]))
+  }
+
+  # 3. Construct the Error matrix E (n x p)
+  E &lt;- matrix(rnorm(n * p, mean = 0, sd = sqrt(sigma2)), nrow = n, ncol = p)
+
+  # 4. Compute the data matrix X = LF&#39; + E
+  X &lt;- L %*% t(F_mat) + E
+
+  return(list(X = X, L = L, F = F_mat, E = E))
+}
+
+### --- Run Scenario 3 Simulation ---
+params_overlapping &lt;- list(
+  n = 100,
+  p = 1000,
+  K = 10,
+  pi1 = 0.1,
+  sigma2 = 1,
+  sigma_k2 = 1
+)
+sim_overlapping &lt;- do.call(simulate_overlapping, params_overlapping)
+S = sim_overlapping$X %*% t(sim_overlapping$X)
+image(S)</code></pre>
+<p><img src="figure/flashier_point_laplace_initialization.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Running flashier on the S matrix with point laplace prior. It finds
+10 factors - which will be increased to 20 after splitting.</p>
+<pre class="r"><code>fit.pl = flash(data=S, ebnm_fn = ebnm::ebnm_point_laplace, greedy_Kmax = 20, backfit=TRUE)</code></pre>
+<pre><code>Adding factor 1 to flash object...
+Adding factor 2 to flash object...
+Adding factor 3 to flash object...
+Adding factor 4 to flash object...
+Adding factor 5 to flash object...
+Adding factor 6 to flash object...
+Adding factor 7 to flash object...
+Adding factor 8 to flash object...
+Adding factor 9 to flash object...
+Adding factor 10 to flash object...
+Adding factor 11 to flash object...
+Factor doesn&#39;t significantly increase objective and won&#39;t be added.
+Wrapping up...
+Done.
+Backfitting 10 factors (tolerance: 1.49e-04)...
+  Difference between iterations is within 1.0e+02...
+  Difference between iterations is within 1.0e+01...
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+  Difference between iterations is within 1.0e-02...
+  Difference between iterations is within 1.0e-03...
+  Difference between iterations is within 1.0e-04...
+Wrapping up...
+Done.
+Nullchecking 10 factors...
+Done.</code></pre>
+<p>Splitting. We see that after splitting, each true factor is captured
+by at least one other factor with correlation exceeding 0.8.</p>
+<pre class="r"><code>L = fit.pl$L_pm
+L = cbind(pmax(L,0),pmax(-L,0))
+
+#remove any column that is all 0s; then normalize columns
+zero_col = apply(L,2, function(x){all(x==0)})
+L = L[,!zero_col]
+
+norm = function(x){return(x/sqrt(sum(x^2)))}
+L = apply(L,2,norm)
+
+d = estimate_D(S,L) # this is the least squares estimate of d so can be negative
+
+# set negative entries to 0; then iterate local updates for each element of d 10 times
+d = pmax(d,0) 
+K = ncol(L)
+for(i in 1:10){
+  for(k in 1:K){
+    U = L[,-k,drop=FALSE]
+    v = L[,k,drop=FALSE]
+    D = diag(d[-k],nrow=length(d[-k]))
+    d[k] = max(t(v) %*% S %*% v - t(v) %*% U %*% D %*% t(U) %*% v,0)
+  }
+}
+
+scaledL.pl = L %*% diag(sqrt(d),nrow=length(d)) 
+image(scaledL.pl)</code></pre>
+<p><img src="figure/flashier_point_laplace_initialization.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>apply(cor(sim_overlapping$L,L),1,max)</code></pre>
+<pre><code> [1] 0.8373273 0.9997012 0.8702571 0.8064068 0.8018187 0.8527269 0.8935886
+ [8] 0.9995136 0.9991889 0.9988286</code></pre>
+<p>Fit gb prior from this solution. After backfitting it has captured
+every factor very precisely. However, there remain another 10 factors
+that are “noise”.</p>
+<pre class="r"><code>fit.gb.init = flash_init(data=S) |&gt; 
+  flash_factors_init(init=list(scaledL.pl,scaledL.pl), ebnm_fn = ebnm::ebnm_generalized_binary) |&gt;
+  flash_backfit(maxiter =10000)</code></pre>
+<pre><code>Backfitting 20 factors (tolerance: 1.49e-04)...
+  Difference between iterations is within 1.0e+02...
+  Difference between iterations is within 1.0e+01...
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+Wrapping up...
+Done.</code></pre>
+<pre class="r"><code>res.gb = ldf(fit.gb.init,type=&quot;i&quot;)
+image(res.gb$L %*% diag(sqrt(res.gb$D)))</code></pre>
+<p><img src="figure/flashier_point_laplace_initialization.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>apply(cor(sim_overlapping$L,res.gb$L),1,max)</code></pre>
+<pre><code> [1] 0.9985591 0.9996712 0.9986700 0.9996270 0.9976296 0.9987763 0.9951237
+ [8] 0.9983535 0.9980711 0.9990746</code></pre>
+<pre class="r"><code>plot(sqrt(res.gb$D))</code></pre>
+<p><img src="figure/flashier_point_laplace_initialization.Rmd/unnamed-chunk-18-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(fit.gb.init$pve)</code></pre>
+<p><img src="figure/flashier_point_laplace_initialization.Rmd/unnamed-chunk-18-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>All the noise factors are “somewhat” correlated with one of the true
+factors:</p>
+<pre class="r"><code>apply(cor(sim_overlapping$L,res.gb$L),2,max)</code></pre>
+<pre><code> [1] 0.3880381 0.4760747 0.9990746 0.9987763 0.4084375 0.9996270 0.9951237
+ [8] 0.9985591 0.9996712 0.9980711 0.5769912 0.6672203 0.5001826 0.8386079
+[15] 0.9983535 0.9976296 0.9986700 0.5672753 0.4081128 0.2288980</code></pre>
+<pre class="r"><code>plot(res.gb$L[,1],sim_overlapping$L[,8])</code></pre>
+<p><img src="figure/flashier_point_laplace_initialization.Rmd/unnamed-chunk-19-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>And point-exp. This 0s out some of the noise factors, but there is no
+longer a separation in terms of the norm of the signal vs noise
+factors.</p>
+<pre class="r"><code>fit.pe.init = flash_init(data=S) |&gt; 
+  flash_factors_init(init=list(scaledL.pl,scaledL.pl), ebnm_fn = ebnm::ebnm_point_exponential) |&gt;
+  flash_backfit(maxiter =10000)</code></pre>
+<pre><code>Backfitting 20 factors (tolerance: 1.49e-04)...
+  --Estimate of factor 1 is numerically zero!
+  --Estimate of factor 5 is numerically zero!
+  --Estimate of factor 19 is numerically zero!
+  --Estimate of factor 20 is numerically zero!
+  Difference between iterations is within 1.0e+02...
+  Difference between iterations is within 1.0e+01...
+  --Estimate of factor 12 is numerically zero!
+  --Estimate of factor 14 is numerically zero!
+  --Estimate of factor 11 is numerically zero!
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+  Difference between iterations is within 1.0e-02...
+  Difference between iterations is within 1.0e-03...
+  Difference between iterations is within 1.0e-04...
+Wrapping up...
+Done.</code></pre>
+<pre class="r"><code>res.pe = ldf(fit.pe.init,type=&quot;i&quot;)
+res.pe$L = res.pe$L[,res.pe$D&gt;0]
+res.pe$D = res.pe$D[res.pe$D&gt;0]
+image(res.pe$L %*% diag(sqrt(res.pe$D)))</code></pre>
+<p><img src="figure/flashier_point_laplace_initialization.Rmd/unnamed-chunk-20-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>apply(cor(sim_overlapping$L,res.pe$L),1,max)</code></pre>
+<pre><code> [1] 0.9956095 0.9962150 0.9971473 0.9982653 0.9679725 0.9985727 0.9910375
+ [8] 0.9995323 0.9943218 0.9982473</code></pre>
+<pre class="r"><code>plot(sqrt(res.pe$D))</code></pre>
+<p><img src="figure/flashier_point_laplace_initialization.Rmd/unnamed-chunk-20-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Here I fit GB, initializing from the true solution, so it excludes
+the noise factors. The elbo is worse than the solution with the noise
+factors, demonstrating that the noise factors are an issue with the
+objective function, rather than a computational issue associated with a
+local optimum.</p>
+<pre class="r"><code>fit.gb.init2 = flash_init(data=S) |&gt; 
+  flash_factors_init(init=list(sim_overlapping$L,sim_overlapping$L), ebnm_fn = ebnm::ebnm_generalized_binary) |&gt;
+  flash_backfit(maxiter =10000)</code></pre>
+<pre><code>Backfitting 10 factors (tolerance: 1.49e-04)...
+  Difference between iterations is within 1.0e+03...
+  Difference between iterations is within 1.0e+02...
+  Difference between iterations is within 1.0e+01...
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+  Difference between iterations is within 1.0e-02...
+  Difference between iterations is within 1.0e-03...
+  Difference between iterations is within 1.0e-04...
+Wrapping up...
+Done.</code></pre>
+<pre class="r"><code>res.gb2 = ldf(fit.gb.init2,type=&quot;i&quot;)
+image(res.gb2$L %*% diag(sqrt(res.gb2$D)))</code></pre>
+<p><img src="figure/flashier_point_laplace_initialization.Rmd/unnamed-chunk-21-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>apply(cor(sim_overlapping$L,res.gb2$L),1,max)</code></pre>
+<pre><code> [1] 0.9987039 0.9996273 0.9994677 0.9996469 0.9995088 0.9990088 0.9979238
+ [8] 0.9997191 0.9991552 0.9992118</code></pre>
+<pre class="r"><code>fit.gb.init2$elbo</code></pre>
+<pre><code>[1] -61627.4</code></pre>
+<pre class="r"><code>fit.gb.init$elbo</code></pre>
+<pre><code>[1] -60879.21</code></pre>
+<p>Compare symmetric NMF. If we set the number of factors correct it
+gets it spot on.</p>
+<pre class="r"><code>fit.snmf = codesymnmf(S,10)
+apply(cor(sim_overlapping$L,fit.snmf$H),1,max)</code></pre>
+<pre><code> [1] 0.9965285 0.9978352 0.9981614 0.9974676 0.9985630 0.9975771 0.9955543
+ [8] 0.9966790 0.9957586 0.9973037</code></pre>
+<p>But increasing the number of factors reduces accuracy. And there is
+not a clear separation in terms of the norm of each factor - it
+separates the signal into multiple factors.</p>
+<pre class="r"><code>fit.snmf = codesymnmf(S,20)
+apply(cor(sim_overlapping$L,fit.snmf$H),1,max)</code></pre>
+<pre><code> [1] 0.9945436 0.9946577 0.9265224 0.9003717 0.9124962 0.9974367 0.9775646
+ [8] 0.9968955 0.9807130 0.9805033</code></pre>
+<pre class="r"><code>plot(apply(fit.snmf$H,2,function(x){sum(x^2)}))</code></pre>
+<p><img src="figure/flashier_point_laplace_initialization.Rmd/unnamed-chunk-23-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Try gb initialized from SNMF. It finds the true factors and does a
+better job than SNMF of separating them into the signal and noise (but
+the noise still exists).</p>
+<pre class="r"><code>fit.gb.init3 = flash_init(data=S) |&gt; 
+  flash_factors_init(init=list(fit.snmf$H,fit.snmf$H), ebnm_fn = ebnm::ebnm_generalized_binary) |&gt;
+  flash_backfit(maxiter =10000)</code></pre>
+<pre><code>Backfitting 20 factors (tolerance: 1.49e-04)...
+  Difference between iterations is within 1.0e+02...
+  Difference between iterations is within 1.0e+01...
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+  Difference between iterations is within 1.0e-02...
+Wrapping up...
+Done.</code></pre>
+<pre class="r"><code>res.gb3 = ldf(fit.gb.init3,type=&quot;i&quot;)
+image(res.gb3$L %*% diag(sqrt(res.gb3$D)))</code></pre>
+<p><img src="figure/flashier_point_laplace_initialization.Rmd/unnamed-chunk-24-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>apply(cor(sim_overlapping$L,res.gb3$L),1,max)</code></pre>
+<pre><code> [1] 0.9986140 0.9995282 0.9960718 0.9975122 0.9953685 0.9986727 0.9972489
+ [8] 0.9992732 0.9971634 0.9972242</code></pre>
+<pre class="r"><code>plot(res.gb3$D)</code></pre>
+<p><img src="figure/flashier_point_laplace_initialization.Rmd/unnamed-chunk-24-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>fit.gb.init3$elbo</code></pre>
+<pre><code>[1] -60992.27</code></pre>
+<div id="stability-selection" class="section level3">
+<h3>Stability selection</h3>
+<p>Here I wanted to see if I could remove the noise factors by some kind
+of stability selection. The idea is to run GB on two halves of the data
+and only keeping factors that show up in both halves. Note that I run
+the initialization separately on each too - I found that when I did not
+do this (ie I used the same initialization for both GB fits, using PL on
+the full data) the two GB fits were more similar, as expected, and that
+some factors that were not in the truth were still selected. This
+suggests that separate initialization may be important for this
+stability selection approach to work.</p>
+<pre class="r"><code># Split the data into two halves
+X1 = sim_overlapping$X[,1:500]
+X2 = sim_overlapping$X[,501:1000]
+S1 = X1 %*% t(X1)
+S2 = X2 %*% t(X2)
+
+fit.pl.1 = flash(data=S1,ebnm_fn = ebnm::ebnm_point_laplace, greedy_Kmax = 20, backfit=TRUE)</code></pre>
+<pre><code>Adding factor 1 to flash object...
+Adding factor 2 to flash object...
+Adding factor 3 to flash object...
+Adding factor 4 to flash object...
+Adding factor 5 to flash object...
+Adding factor 6 to flash object...
+Adding factor 7 to flash object...
+Adding factor 8 to flash object...
+Adding factor 9 to flash object...
+Adding factor 10 to flash object...
+Adding factor 11 to flash object...
+Factor doesn&#39;t significantly increase objective and won&#39;t be added.
+Wrapping up...
+Done.
+Backfitting 10 factors (tolerance: 1.49e-04)...
+  Difference between iterations is within 1.0e+02...
+  Difference between iterations is within 1.0e+01...
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+  Difference between iterations is within 1.0e-02...
+  Difference between iterations is within 1.0e-03...
+Wrapping up...
+Done.
+Nullchecking 10 factors...
+Done.</code></pre>
+<pre class="r"><code>res.pl.1 = ldf(fit.pl.1,type=&quot;i&quot;)
+scaledL.pl.1 = res.pl.1$L %*% diag(sqrt(res.pl.1$D),nrow=length(res.pl.1$D))
+  
+fit.gb.init1 = flash_init(data=S1) |&gt; 
+  flash_factors_init(init=list(scaledL.pl.1,scaledL.pl.1), ebnm_fn = ebnm::ebnm_generalized_binary) |&gt;
+  flash_backfit(maxiter =10000)</code></pre>
+<pre><code>Backfitting 10 factors (tolerance: 1.49e-04)...
+  --Estimate of factor 3 is numerically zero!
+  --Estimate of factor 4 is numerically zero!
+  --Estimate of factor 6 is numerically zero!
+  --Estimate of factor 7 is numerically zero!
+  --Estimate of factor 8 is numerically zero!
+  --Estimate of factor 9 is numerically zero!
+  --Estimate of factor 10 is numerically zero!
+  Difference between iterations is within 1.0e+03...
+  Difference between iterations is within 1.0e+02...
+  Difference between iterations is within 1.0e+01...
+  --Estimate of factor 3 is numerically zero!
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+  Difference between iterations is within 1.0e-02...
+  Difference between iterations is within 1.0e-03...
+  Difference between iterations is within 1.0e-04...
+Wrapping up...
+Done.</code></pre>
+<pre class="r"><code>fit.pl.2 = flash(data=S2,ebnm_fn = ebnm::ebnm_point_laplace, greedy_Kmax = 20, backfit=TRUE)</code></pre>
+<pre><code>Adding factor 1 to flash object...
+Adding factor 2 to flash object...
+Adding factor 3 to flash object...
+Adding factor 4 to flash object...
+Adding factor 5 to flash object...
+Adding factor 6 to flash object...
+Adding factor 7 to flash object...
+Adding factor 8 to flash object...
+Adding factor 9 to flash object...
+Adding factor 10 to flash object...
+Adding factor 11 to flash object...
+Adding factor 12 to flash object...
+Adding factor 13 to flash object...
+Factor doesn&#39;t significantly increase objective and won&#39;t be added.
+Wrapping up...
+Done.
+Backfitting 12 factors (tolerance: 1.49e-04)...
+  Difference between iterations is within 1.0e+02...
+  Difference between iterations is within 1.0e+01...
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+  Difference between iterations is within 1.0e-02...
+  Difference between iterations is within 1.0e-03...
+  Difference between iterations is within 1.0e-04...
+Wrapping up...
+Done.
+Nullchecking 12 factors...
+Done.</code></pre>
+<pre class="r"><code>res.pl.2 = ldf(fit.pl.2,type=&quot;i&quot;)
+scaledL.pl.2 = res.pl.2$L %*% diag(sqrt(res.pl.2$D),nrow=length(res.pl.2$D))
+  
+
+fit.gb.init2 = flash_init(data=S2) |&gt;
+  flash_factors_init(init=list(scaledL.pl.2,scaledL.pl.2), ebnm_fn = ebnm::ebnm_generalized_binary) |&gt;
+  flash_backfit(maxiter =10000)</code></pre>
+<pre><code>Backfitting 12 factors (tolerance: 1.49e-04)...
+  Difference between iterations is within 1.0e+03...
+  Difference between iterations is within 1.0e+02...
+  Difference between iterations is within 1.0e+01...
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+  Difference between iterations is within 1.0e-02...
+  Difference between iterations is within 1.0e-03...
+  Difference between iterations is within 1.0e-04...
+Wrapping up...
+Done.</code></pre>
+<pre class="r"><code># Check the correlation with the truth
+apply(cor(sim_overlapping$L,fit.gb.init1$L_pm),1,max) </code></pre>
+<pre><code> [1] 0.6050383 0.3069479 0.9984406 0.9989354 0.9961152 0.8721900 0.9961616
+ [8] 0.9993420 0.2478813 0.9992866</code></pre>
+<pre class="r"><code>apply(cor(sim_overlapping$L,fit.gb.init2$L_pm),1,max) </code></pre>
+<pre><code> [1] 0.9986497 0.6330508 0.9998398 0.9960888 0.8743634 0.9986423 0.9985358
+ [8] 0.9988238 0.9978144 0.9994676</code></pre>
+<p>Find pairs of factors whose correlation is above some threshold. Here
+I use a strict 0.99 threshold, which should only select factors that are
+the same in both fits. We see that in this case we only select 5
+factors, but all the selected factors are highly correlated with the
+truth.</p>
+<pre class="r"><code>threshold =0.99
+# Find the correlation between the two sets of factors
+cor_matrix = cor(fit.gb.init1$L_pm, fit.gb.init2$L_pm)
+hist(cor_matrix)</code></pre>
+<p><img src="figure/flashier_point_laplace_initialization.Rmd/unnamed-chunk-26-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>subset1 = which(apply(cor_matrix, 1, max)&gt;threshold)# max correlation for each factor in fit.gb.init1
+apply(cor(sim_overlapping$L,fit.gb.init1$L_pm[,subset1]),1,max) # check correlation with the truth</code></pre>
+<pre><code> [1] 0.11467908 0.20246906 0.99844059 0.99893539 0.02317349 0.09011994
+ [7] 0.99616158 0.99934200 0.24788135 0.99928663</code></pre>
+<pre class="r"><code>apply(cor(sim_overlapping$L,fit.gb.init1$L_pm[,subset1]),2,max) # check correlation with the truth</code></pre>
+<pre><code>[1] 0.9992866 0.9989354 0.9961616 0.9984406 0.9993420</code></pre>
+<pre class="r"><code>subset2 = which(apply(cor_matrix, 2, max)&gt;threshold)# max correlation for each factor in fit.gb.init2
+apply(cor(sim_overlapping$L,fit.gb.init2$L_pm[,subset2]),1,max) # check correlation with the truth</code></pre>
+<pre><code> [1] 0.103675737 0.220254945 0.999839763 0.996088762 0.008953469 0.085542714
+ [7] 0.998535835 0.998823838 0.230359111 0.999467610</code></pre>
+<pre class="r"><code>apply(cor(sim_overlapping$L,fit.gb.init2$L_pm[,subset2]),2,max) # check correlation with the truth</code></pre>
+<pre><code>[1] 0.9960888 0.9985358 0.9988238 0.9998398 0.9994676</code></pre>
+</div>
+<div id="run-gb-on-the-data-matrix" class="section level3">
+<h3>Run GB on the data matrix</h3>
+<p>I also wanted to try running GB on the data matrix here to see what
+happens (the L are much less correlated than in the tree case, so there
+is some idea that the mean field approximation might be OK here.)</p>
+<p>To run GB on the data matrix I need a way to initialize F. Here I do
+it using an L2 penalty (could think harder about this).</p>
+<pre class="r"><code>compute_F = function(L,X){
+  k = ncol(L)
+# A = (L&#39;L + I)
+  A_matrix &lt;- t(L) %*% L + diag(k)
+
+  # B = L&#39;X
+  B_matrix &lt;- t(L) %*% X
+
+  # Solve the system A * F_transpose = B for F_transpose
+  # R&#39;s solve(A, B) is designed for this!
+  F_transpose &lt;- solve(A_matrix, B_matrix)
+
+  # Get F by transposing the result
+  F_optimal &lt;- t(F_transpose)
+  return(F_optimal)
+}</code></pre>
+<p>Run GB prior on data matrix, initialized from the point-laplace L. It
+finds 11 factors, but only 5 of the true factors are captured completely
+correctly.</p>
+<pre class="r"><code>X = sim_overlapping$X
+L.init = scaledL.pl
+F.init = compute_F(L.init,X)
+fit.data.gb.init = flash_init(data=X) |&gt; 
+  flash_factors_init(init=list(L.init,F.init), ebnm_fn = c(ebnm::ebnm_generalized_binary,ebnm::ebnm_normal)) |&gt;
+  flash_backfit(maxiter =10000)</code></pre>
+<pre><code>Backfitting 20 factors (tolerance: 1.49e-03)...
+  Difference between iterations is within 1.0e+03...
+  --Estimate of factor 1 is numerically zero!
+  --Estimate of factor 5 is numerically zero!
+  --Estimate of factor 13 is numerically zero!
+  --Estimate of factor 19 is numerically zero!
+  Difference between iterations is within 1.0e+02...
+  --Estimate of factor 12 is numerically zero!
+  --Estimate of factor 20 is numerically zero!
+  --Estimate of factor 20 is numerically zero!
+  Difference between iterations is within 1.0e+01...
+  --Estimate of factor 18 is numerically zero!
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+  Difference between iterations is within 1.0e-02...
+  Difference between iterations is within 1.0e-03...
+Wrapping up...
+Done.</code></pre>
+<pre class="r"><code>plot(fit.data.gb.init$pve)</code></pre>
+<p><img src="figure/flashier_point_laplace_initialization.Rmd/unnamed-chunk-28-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>apply(cor(sim_overlapping$L,fit.data.gb.init$L_pm[,fit.data.gb.init$pve&gt;1e-4]),1, max)</code></pre>
+<pre><code> [1] 0.9993729 0.9998130 0.8704070 0.6198717 0.7942671 0.7712810 0.8900630
+ [8] 0.9996763 0.9990663 0.9994648</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.4.2 (2024-10-31)
+Platform: aarch64-apple-darwin20
+Running under: macOS Sequoia 15.5
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.0
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+time zone: America/Chicago
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] codesymnmf_0.0.0.9000 flashier_1.0.56       ebnm_1.1-34          
+
+loaded via a namespace (and not attached):
+ [1] softImpute_1.4-3     gtable_0.3.6         xfun_0.52           
+ [4] bslib_0.9.0          ggplot2_3.5.2        htmlwidgets_1.6.4   
+ [7] ggrepel_0.9.6        lattice_0.22-6       quadprog_1.5-8      
+[10] vctrs_0.6.5          tools_4.4.2          generics_0.1.4      
+[13] parallel_4.4.2       Polychrome_1.5.4     tibble_3.3.0        
+[16] pkgconfig_2.0.3      Matrix_1.7-2         data.table_1.17.6   
+[19] SQUAREM_2021.1       RColorBrewer_1.1-3   RcppParallel_5.1.10 
+[22] scatterplot3d_0.3-44 lifecycle_1.0.4      truncnorm_1.0-9     
+[25] compiler_4.4.2       farver_2.1.2         stringr_1.5.1       
+[28] git2r_0.35.0         progress_1.2.3       RhpcBLASctl_0.23-42 
+[31] httpuv_1.6.15        htmltools_0.5.8.1    sass_0.4.10         
+[34] lazyeval_0.2.2       yaml_2.3.10          plotly_4.11.0       
+[37] crayon_1.5.3         tidyr_1.3.1          later_1.4.2         
+[40] pillar_1.10.2        jquerylib_0.1.4      whisker_0.4.1       
+[43] uwot_0.2.3           cachem_1.1.0         trust_0.1-8         
+[46] gtools_3.9.5         tidyselect_1.2.1     digest_0.6.37       
+[49] Rtsne_0.17           stringi_1.8.7        purrr_1.0.4         
+[52] dplyr_1.1.4          ashr_2.2-66          splines_4.4.2       
+[55] cowplot_1.1.3        rprojroot_2.0.4      fastmap_1.2.0       
+[58] grid_4.4.2           colorspace_2.1-1     cli_3.6.5           
+[61] invgamma_1.1         magrittr_2.0.3       prettyunits_1.2.0   
+[64] scales_1.4.0         promises_1.3.3       horseshoe_0.2.0     
+[67] httr_1.4.7           rmarkdown_2.29       fastTopics_0.7-07   
+[70] deconvolveR_1.2-1    workflowr_1.7.1      hms_1.1.3           
+[73] pbapply_1.7-2        evaluate_1.0.4       knitr_1.50          
+[76] viridisLite_0.4.2    irlba_2.3.5.1        rlang_1.1.6         
+[79] Rcpp_1.0.14          mixsqp_0.3-54        glue_1.8.0          
+[82] rstudioapi_0.17.1    jsonlite_2.0.0       R6_2.6.1            
+[85] fs_1.6.6            </code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
