@@ -1,0 +1,157 @@
+---
+title: "fastica_01"
+author: "Matthew Stephens"
+date: "2025-10-22"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+library(fastICA)
+library(flashier)
+library(RcppHungarian)
+```
+
+## Introduction
+
+I wanted to take a look at the fastICA package and try it out on a simple simulation.
+This simulation is based on using a mixture of two Gaussians (a "spike-and-slab" prior) for the latent factors, as in https://github.com/daniel-lazarev/GUIDE/blob/main/GUIDE-simulation.ipynb.
+
+
+```{r}
+M <- 10000 # Number of variants/samples (rows)
+L <- 10    # True number of latent factors
+T <- 100   # Number of traits/phenotypes (columns)
+
+s_1 <- 1   # Standard Deviation 1 (Spike component)
+s_2 <- 5   # Standard Deviation 2 (Slab component)
+eps <- 1e-2 # Standard Deviation for observation noise 
+
+# Set seed for reproducibility
+set.seed(42)
+
+# Data Simulation (G = X %*% Y + noise)
+
+# 3.1. Generating Standard Deviation Matrices (a and b)
+# Elements are sampled from {s_1, s_2} [1, 2].
+sd_choices <- c(s_1, s_2)
+
+# Matrix 'a' (M x L): Standard deviations for X (Probabilities p=[0.7, 0.3]) [4]
+p_a <- c(0.7, 0.3)
+a_vector <- sample(sd_choices, size = M * L, replace = TRUE, prob = p_a)
+a <- matrix(a_vector, nrow = M, ncol = L)
+
+# Matrix 'b' (L x T): Standard deviations for Y (Probabilities p=[0.8, 0.2]) [4]
+p_b <- c(0.8, 0.2)
+b_vector <- sample(sd_choices, size = L * T, replace = TRUE, prob = p_b)
+b <- matrix(b_vector, nrow = L, ncol = T)
+
+# Generating Latent Factors (X and Y)
+# X is drawn from Normal(0, a)
+X <- matrix(rnorm(M * L, mean = 0, sd = a), nrow = M, ncol = L)
+
+# Y is drawn from Normal(0, b)
+Y <- matrix(rnorm(L * T, mean = 0, sd = b), nrow = L, ncol = T)
+
+# Generating Noise and Final Data Matrix G
+# Noise is generated from Normal(0, eps)
+noise <- matrix(rnorm(M * T, mean = 0, sd = eps), nrow = M, ncol = T)
+
+# Calculate the final data matrix G = X @ Y + noise
+G <- X %*% Y + noise
+```
+
+Now I'll apply fastICA to this matrix. It produces a factorization X = SA where S are the sources (independent components) which are designed to be as "non-gaussian" as possible. In this case we see ICA finds all of the components essentially 
+perfectly.
+```{r}
+ica_result <- fastICA(G, n.comp = 10)
+cormat <- cor(ica_result$S,X)
+
+apply(abs(cormat),1, max)
+assignment_problem <- RcppHungarian::HungarianSolver(-1*abs(cormat))
+pairings <- assignment_problem$pairs
+image(abs(cormat)[pairings[,1], pairings[,2]])
+```
+
+Compare with flashier: we see flashier is much less effective at recovering the components here.
+```{r}
+f1 = flash(G, greedy_Kmax = 20, ebnm_fn = ebnm_point_laplace, backfit=TRUE)
+cormat <- cor(f1$L_pm,X)
+
+apply(abs(cormat),1, max)
+assignment_problem <- RcppHungarian::HungarianSolver(-1*abs(cormat))
+pairings <- assignment_problem$pairs
+image(abs(cormat)[pairings[,1], pairings[,2]])
+```
+
+One question is whether this is because of flashier converging to a local optimum. To assess this we initialize it to the ica solution. We see that this initialization produces essentially the same results as ICA (ie it does not move away from the correct answer) and produces a better elbo than the greedy fit. 
+```{r}
+f2 = flash_init(G) |> flash_factors_init(init = list(ica_result$S,t(ica_result$A)), ebnm_fn = ebnm_point_laplace) |> flash_backfit()
+cormat <- cor(f2$L_pm,X)
+
+apply(abs(cormat),1, max)
+assignment_problem <- RcppHungarian::HungarianSolver(-1*abs(cormat))
+pairings <- assignment_problem$pairs
+image(abs(cormat)[pairings[,1], pairings[,2]])
+f1$elbo
+f2$elbo
+```
+
+
+## ICA with sequential fit
+
+One feature of fastICA fit is that by default it fits all components jointly. Here I try the sequential ("deflation") method. Interestingly it also finds the exact solution. 
+```{r}
+ica_result2 <- fastICA(G, n.comp = 10, alg.typ="deflation")
+cormat <- cor(ica_result2$S,X)
+
+apply(abs(cormat),1, max)
+assignment_problem <- RcppHungarian::HungarianSolver(-1*abs(cormat))
+pairings <- assignment_problem$pairs
+image(abs(cormat)[pairings[,1], pairings[,2]])
+```
+
+## ICA with fewer components
+
+Interestingly, if you just extract a few components, ICA does much less well. I think this is because ICA has an inital step that projects onto the first n.comp PCs, so
+if you use, say, n.comp = 2 it only keeps information in the first 2 PCs, so it can't find the true directions.
+```{r}
+ica_result3 <- fastICA(G, n.comp = 2)
+cormat <- cor(ica_result3$S,X)
+apply(abs(cormat),1, max)
+```
+
+## ICA with too many components
+On the other hand, using too many components, the algorithm is robust.
+```{r}
+ica_result4 <- fastICA(G, n.comp = 20)
+cormat <- cor(ica_result4$S,X)
+apply(abs(cormat),2, max)
+assignment_problem <- RcppHungarian::HungarianSolver(-1*abs(cormat))
+pairings <- assignment_problem$pairs
+image(abs(cormat)[pairings[,1], pairings[,2]])
+```
+
+## ICA with all components
+Even using all the components, the algorithm is robust.
+```{r}
+ica_result5 <- fastICA(G, n.comp = 100)
+cormat <- cor(ica_result5$S,X)
+apply(abs(cormat),2, max)
+assignment_problem <- RcppHungarian::HungarianSolver(-1*abs(cormat))
+pairings <- assignment_problem$pairs
+image(abs(cormat)[pairings[,1], pairings[,2]])
+```
+
+## ICA with all components and sequential
+
+Here we use all the components, together with the deflation algorithm. This is maybe the most similar algorithm to the greedy approach in flashier. Interestingly this takes by far the longest time of all the ICA runs we made here. However, it does successfully extract all the components.
+```{r}
+ica_result6 <- fastICA(G, n.comp = 100, alg.typ="deflation")
+cormat <- cor(ica_result6$S,X)
+apply(abs(cormat),2, max)
+assignment_problem <- RcppHungarian::HungarianSolver(-1*abs(cormat))
+pairings <- assignment_problem$pairs
+image(abs(cormat)[pairings[,1], pairings[,2]])
+```
