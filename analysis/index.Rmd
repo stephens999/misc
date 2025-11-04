@@ -97,6 +97,8 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 # ICA
 
 * [Initial try of fastICA on simulated data](fastica_01.html)
+* [Single unit fastICA on simulated data](fastica_02.html)
+
 
 # Multinomial factor models
 
