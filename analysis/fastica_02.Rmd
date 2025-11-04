@@ -1,0 +1,157 @@
+---
+title: "fastica_02"
+author: "Matthew Stephens"
+date: "2025-10-27"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+library(flashier)
+```
+
+## Introduction
+
+I wanted to implement single unit fast ica for myself to better understand what it is doing. I also compare the single unit solution with the single unit solution from flashier in a simulation.
+
+
+## Single unit ICA
+
+This is the basic update for fastICA: 
+
+```{r}
+fastica_r1update = function(X,w){
+  w= w/sqrt(sum(w^2))
+  P = t(X) %*% w
+  G = tanh(P)
+  G2 = 1-tanh(P)^2
+  w = X %*% G - sum(G2) * w 
+  return(w)
+}
+```
+
+The following function centers and whitens the data. This code is based on the fastICA function in the fastICA package. It projects the columns of X onto the top n.comp PCs. These projections are the rows of the returned matrix, so the returned matrix has n.comp rows and nrow(X) columns. It seems it could be better to avoid forming XX' in some cases but for now I just followed the fastICA code.
+
+(Actually it seems this should be equivalent to finding the first n.comp right eigenvectors of the centered X? ie we could replace the projection step with X' = UDV' and take (root-n times) the first k rows of V'?)
+```{r}
+preprocess = function(X, n.comp=10){
+  n <- nrow(X)
+  p <- ncol(X)
+  X <- scale(X, scale = FALSE)
+  X <- t(X)
+  
+  ## This appears to be equivalant to X1 = t(svd(X)$v[,1:n.comp])       
+  V <- X %*% t(X)/n
+  s <- La.svd(V)
+  D <- diag(c(1/sqrt(s$d)))
+  K <- D %*% t(s$u)
+  K <- matrix(K[1:n.comp, ], n.comp, p)
+  X1 <- K %*% X
+  return(X1)
+}
+```
+
+## Simulate data
+
+These are the same simulations as in [fastica_01.html]
+ 
+```{r}
+M <- 10000 # Number of variants/samples (rows)
+L <- 10    # True number of latent factors
+T <- 100   # Number of traits/phenotypes (columns)
+
+s_1 <- 1   # Standard Deviation 1 (Spike component)
+s_2 <- 5   # Standard Deviation 2 (Slab component)
+eps <- 1e-2 # Standard Deviation for observation noise 
+
+# Set seed for reproducibility
+set.seed(42)
+
+# Data Simulation (G = X %*% Y + noise)
+
+# 3.1. Generating Standard Deviation Matrices (a and b)
+# Elements are sampled from {s_1, s_2} [1, 2].
+sd_choices <- c(s_1, s_2)
+
+# Matrix 'a' (M x L): Standard deviations for X (Probabilities p=[0.7, 0.3]) [4]
+p_a <- c(0.7, 0.3)
+a_vector <- sample(sd_choices, size = M * L, replace = TRUE, prob = p_a)
+a <- matrix(a_vector, nrow = M, ncol = L)
+
+# Matrix 'b' (L x T): Standard deviations for Y (Probabilities p=[0.8, 0.2]) [4]
+p_b <- c(0.8, 0.2)
+b_vector <- sample(sd_choices, size = L * T, replace = TRUE, prob = p_b)
+b <- matrix(b_vector, nrow = L, ncol = T)
+
+# Generating Latent Factors (X and Y)
+# X is drawn from Normal(0, a)
+X <- matrix(rnorm(M * L, mean = 0, sd = a), nrow = M, ncol = L)
+
+# Y is drawn from Normal(0, b)
+Y <- matrix(rnorm(L * T, mean = 0, sd = b), nrow = L, ncol = T)
+
+# Generating Noise and Final Data Matrix G
+# Noise is generated from Normal(0, eps)
+noise <- matrix(rnorm(M * T, mean = 0, sd = eps), nrow = M, ncol = T)
+
+# Calculate the final data matrix G = X @ Y + noise
+G <- X %*% Y + noise
+```
+
+## Run single unit ICA
+
+Here w is a linear combination of the rows of X1, and the goal is to find a linear combination that makes the result highly non-gaussian.
+```{r}
+X1 = preprocess(G)
+w = rnorm(nrow(X1))
+for(i in 1:100)
+  w = fastica_r1update(X1,w)
+cor(X,t(X1) %*% w)
+w = w/sqrt(sum(w^2))
+s = t(X1) %*% w
+a = t(G) %*% s/sum(s^2)
+
+```                   
+
+## Compare with flashier
+
+Here I run flashier (rank 1) using point-laplace. It finds a solution that is correlated with several of the true "sources" rather than picking out a single source.
+```{r}
+fit.fl = flash(G, ebnm_fn = ebnm_point_laplace, greedy_Kmax = 1)
+cor(X, fit.fl$L_pm)
+```
+
+Here I try initializing from the fastica solution. It moves away from that solution to something similar to the solution above.
+```{r}
+fit.fl2 = flash_init(G) |> flash_factors_init(init = list(s,a), ebnm_fn = ebnm_point_laplace) |> flash_backfit()
+cor(X, fit.fl2$L_pm)
+fit.fl$elbo
+fit.fl2$elbo
+```
+
+## Understanding the result
+
+Here I look at the "fit" term. We see that the flash solution gives a better mean squared error than the ICA solution. In fact the ICA solution is not really very driven by mean squared error: it looks for directions that are non-gaussian without worrying at all about the mse (except they have to be linear combinations of the rows of X). 
+
+```{r}
+mean((G-fitted(fit.fl))^2)
+mean((G-fitted(fit.fl2))^2)
+mean((G-s%*%t(a))^2)
+```
+
+This gets me thinking that, in terms of finding the true sources, maybe flash (rank 1) is over emphasising the fit term relative to the penalty (non-gaussian) term. Maybe we could improve this by downweighting the fit term somehow. Here I look at the nuclear norm of the residuals for the two approaches:
+```{r}
+nuclear_norm = function(X){
+  s = svd(X)$d
+  return(sum(s))
+}
+frob_norm = function(X){
+  s = svd(X)$d
+  return(sqrt(sum(s^2)))
+}
+(nuclear_norm((G-fitted(fit.fl))) - nuclear_norm((G-s%*%t(a))))/(ncol(G)*nrow(G))
+(frob_norm((G-fitted(fit.fl))) - frob_norm((G-s%*%t(a))))/(ncol(G)*nrow(G))
+```
+
+
