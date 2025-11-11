@@ -1,0 +1,216 @@
+---
+title: "flash_pca"
+author: "Matthew Stephens"
+date: "2025-11-11"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+library(flashier)
+library(fastICA)
+library(PMA)
+```
+
+## Introduction: 
+
+Motivated by some results from [ICA](fastica_02.html)
+ I want to try fitting $X = M + lf' + E$ where M is low rank.
+ 
+ Given $l$ and $f$, the maximum likelihood estimate for $M$ is 
+ given by truncated SVD of $X-lf'$, so I can iterate between
+ estimating $l,f$ and estimating $M$. This approach shoudl
+ work for either using flashier or PMD to estimate $l,f$.
+ 
+ 
+## Simulate data
+
+These are the same simulations as in (fastica_01.html)
+ 
+```{r}
+M <- 10000 # Number of variants/samples (rows)
+L <- 10    # True number of latent factors
+T <- 100   # Number of traits/phenotypes (columns)
+
+s_1 <- 1   # Standard Deviation 1 (Spike component)
+s_2 <- 5   # Standard Deviation 2 (Slab component)
+eps <- 1e-2 # Standard Deviation for observation noise 
+
+# Set seed for reproducibility
+set.seed(42)
+
+# Data Simulation (G = X %*% Y + noise)
+
+# 3.1. Generating Standard Deviation Matrices (a and b)
+# Elements are sampled from {s_1, s_2} [1, 2].
+sd_choices <- c(s_1, s_2)
+
+# Matrix 'a' (M x L): Standard deviations for X (Probabilities p=[0.7, 0.3]) [4]
+p_a <- c(0.7, 0.3)
+a_vector <- sample(sd_choices, size = M * L, replace = TRUE, prob = p_a)
+a <- matrix(a_vector, nrow = M, ncol = L)
+
+# Matrix 'b' (L x T): Standard deviations for Y (Probabilities p=[0.8, 0.2]) [4]
+p_b <- c(0.8, 0.2)
+b_vector <- sample(sd_choices, size = L * T, replace = TRUE, prob = p_b)
+b <- matrix(b_vector, nrow = L, ncol = T)
+
+# Generating Latent Factors (X and Y)
+# X is drawn from Normal(0, a)
+X <- matrix(rnorm(M * L, mean = 0, sd = a), nrow = M, ncol = L)
+
+# Y is drawn from Normal(0, b)
+Y <- matrix(rnorm(L * T, mean = 0, sd = b), nrow = L, ncol = T)
+
+# Generating Noise and Final Data Matrix G
+# Noise is generated from Normal(0, eps)
+noise <- matrix(rnorm(M * T, mean = 0, sd = eps), nrow = M, ncol = T)
+
+# Calculate the final data matrix G = X @ Y + noise
+G <- X %*% Y + noise
+```
+
+
+# Iterative flash with PCA
+ 
+ Here I try the iterative approach with rank of M=9. I find that it chooses a laplace prior with all its weight on non-null component, and does not find a great solution.
+
+```{r}
+fit.fl = flash(G, ebnm_fn = ebnm_point_laplace, greedy_Kmax = 1)
+for(i in 1:5){
+  M.svd = svd(G - fitted(fit.fl) )
+  M = M.svd$u[,1:9] %*% (M.svd$d[1:9] * t(M.svd$v[,1:9]))
+  #fit.fl = flash(G-M, ebnm_fn = ebnm_point_laplace, greedy_Kmax = 1)
+  fit.fl = flash_update_data(fit.fl,G-M)
+  fit.fl = flash_backfit(fit.fl)
+  print(fit.fl$elbo)
+}
+cor(X, fit.fl$L_pm)
+fit.fl$L_ghat
+fit.fl$elbo
+```
+
+Try a normal mixture prior instead:
+```{r}
+fit.fl = flash(G, ebnm_fn = ebnm_normal_scale_mixture, greedy_Kmax = 1)
+cor(X, fit.fl$L_pm)
+for(i in 1:5){
+  M.svd = svd(G - fitted(fit.fl) )
+  M = M.svd$u[,1:9] %*% (M.svd$d[1:9] * t(M.svd$v[,1:9]))
+  #fit.fl = flash(G-M, ebnm_fn = ebnm_point_laplace, greedy_Kmax = 1)
+  fit.fl = flash_update_data(fit.fl,G-M)
+  fit.fl = flash_backfit(fit.fl)
+  print(fit.fl$elbo)
+}
+cor(X, fit.fl$L_pm)
+fit.fl$L_ghat
+fit.fl$elbo
+```
+
+
+Now try with initializing at an ica solution. It still uses a laplace prior, but it essentially converges to the ica solution (ie does not move much) and the elbo is better
+```{r}
+fit.ica = fastICA(G, n.comp = 10)
+s = fit.ica$S[,1]
+a = fit.ica$A[1,]
+M.svd = svd(G - s %*% t(a) )
+M = M.svd$u[,1:9] %*% (M.svd$d[1:9] * t(M.svd$v[,1:9]))
+fit.fl2 = flash(G-M, ebnm_fn = ebnm_point_laplace, greedy_Kmax = 1)
+fit.fl2$L_ghat
+fit.fl2$elbo
+for(i in 1:5){
+  M.svd = svd(G - fitted(fit.fl2) )
+  M = M.svd$u[,1:9] %*% (M.svd$d[1:9] * t(M.svd$v[,1:9]))
+  fit.fl2 = flash(G-M, ebnm_fn = ebnm_point_laplace, greedy_Kmax = 1)
+  print(fit.fl$elbo)
+}
+cor(X, fit.fl2$L_pm)
+fit.fl2$L_ghat
+fit.fl2$F_ghat
+fit.fl2$elbo
+fit.fl$elbo
+```
+
+
+Here I try the same thing, but using just the first 8 PCs in an attempt to provide a bit more "wiggle room" for the optimization to move.  But I found convergence is very slow here.
+```{r}
+fit.fl = flash(G, ebnm_fn = ebnm_point_laplace, greedy_Kmax = 1)
+for(i in 1:50){
+  M.svd = svd(G - fitted(fit.fl) )
+  M = M.svd$u[,1:8] %*% (M.svd$d[1:8] * t(M.svd$v[,1:8]))
+  fit.fl = flash(G-M, ebnm_fn = ebnm_point_laplace, greedy_Kmax = 1)
+  print(fit.fl$elbo)
+}
+cor(X, fit.fl$L_pm)
+fit.fl$L_ghat
+fit.fl$elbo
+```
+
+Try nuclear norm regularization on M rather than hard rank constraint.
+```{r}
+fit.fl = flash(G, ebnm_fn = ebnm_point_laplace, greedy_Kmax = 1)
+for(i in 1:50){
+  M.svd = svd(G - fitted(fit.fl) )
+  M.svd$d = pmax(0, M.svd$d - 10)
+  M = M.svd$u %*% (M.svd$d * t(M.svd$v))
+  fit.fl = flash(G-M, ebnm_fn = ebnm_point_laplace, greedy_Kmax = 1)
+  print(fit.fl$elbo)
+}
+cor(X, fit.fl$L_pm)
+fit.fl$L_ghat
+fit.fl$elbo
+```
+
+
+
+
+
+## Iterative PMD with PCA
+
+Here I try the same with PMD
+```{r}
+library(PMA)
+fit.pmd = PMD(G,"standard",sumabs=0.5,center=F)
+cor(X, fit.pmd$u)
+
+for(i in 1:10){
+  M.svd = svd(G - fit.pmd$u %*% t(fit.pmd$d * fit.pmd$v) )
+  M = M.svd$u[,1:9] %*% (M.svd$d[1:9] * t(M.svd$v[,1:9]))
+  fit.pmd = PMD(G-M, v = fit.pmd$v, type="standard", sumabs= 0.5, center=F,niter=1)
+}
+cor(X, fit.pmd$u)
+
+# fit term
+sum((G-M- fit.pmd$u %*% (fit.pmd$d * t(fit.pmd$v)))^2) 
+# penalty term (seems to be fixed)
+sum(abs(fit.pmd$u)) * fit.pmd$sumabsu + sum(abs(fit.pmd$v)) * fit.pmd$sumabsv
+```
+
+This worked well. Now I'll try a lesser penalty.
+```{r}
+fit.pmd = PMD(G,"standard",sumabs=0.9,center=F)
+cor(X, fit.pmd$u)
+for(i in 1:10){
+  M.svd = svd(G - fit.pmd$u %*% t(fit.pmd$d * fit.pmd$v) )
+  M = M.svd$u[,1:9] %*% (M.svd$d[1:9] * t(M.svd$v[,1:9]))
+  fit.pmd = PMD(G-M, v = fit.pmd$v, type="standard", sumabs= 0.9, center=F,niter=1)
+  print(sum((G-M- fit.pmd$u %*% (fit.pmd$d * t(fit.pmd$v)))^2) )
+}
+cor(X, fit.pmd$u)
+
+# fit term
+sum((G-M- fit.pmd$u %*% (fit.pmd$d * t(fit.pmd$v)))^2) 
+# penalty term (seems to be fixed)
+sum(abs(fit.pmd$u)) * fit.pmd$sumabsu + sum(abs(fit.pmd$v)) * fit.pmd$sumabsv
+```
+
+Here I compare the fit and penalty at the fastICA solution to see if this is a convergence issue. It was a bit of a suprise to see that the ICA solution does not get close to the PMD fit term. This is presumably because it does not optimize for mse. Also we see that the M.svd$d has 9 large eigenvalues, and one that is not large but bigger than background. This is the one that ICA is not fitting. That is, ICA does not actually leave a rank 9 matrix but actually a rank 10 matrix. Presumably this is because ICA fits the top 10PCs not the actual data matrix, so it leaves some of the "noise" unfitted, but maybe actually PMD is fitting more noise? (Is this an advantage of an initial step doing PCA? It might be. Maybe we should try PMD on the top PCs rather than the full data matrix?)
+```{r}
+M.svd = svd(G - s %*% t(a) )
+M = M.svd$u[,1:9] %*% (M.svd$d[1:9] * t(M.svd$v[,1:9]))
+sum((G-M- s %*% t(a))^2)
+M.svd$d
+svd((G-fit.pmd$u %*% (fit.pmd$d * t(fit.pmd$v))))$d
+```
+
