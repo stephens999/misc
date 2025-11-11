@@ -140,6 +140,7 @@ mean((G-fitted(fit.fl2))^2)
 mean((G-s%*%t(a))^2)
 ```
 
+
 This gets me thinking that, in terms of finding the true sources, maybe flash (rank 1) is over emphasising the fit term relative to the penalty (non-gaussian) term. Maybe we could improve this by downweighting the fit term somehow. Here I look at the nuclear norm of the residuals for the two approaches:
 ```{r}
 nuclear_norm = function(X){
@@ -153,5 +154,6 @@ frob_norm = function(X){
 (nuclear_norm((G-fitted(fit.fl))) - nuclear_norm((G-s%*%t(a))))/(ncol(G)*nrow(G))
 (frob_norm((G-fitted(fit.fl))) - frob_norm((G-s%*%t(a))))/(ncol(G)*nrow(G))
 ```
+
 
 
