@@ -378,7 +378,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2025-11-11
+<strong>Last updated:</strong> 2025-11-14
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -509,15 +509,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreea0618fff0636d6dd24212694aa0cfdf3857539b3targetblanka0618ffa">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreea415272e8d25afa0d7c854d7b15a57f22f6672e4targetblanka415272a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/stephens999/misc/tree/a0618fff0636d6dd24212694aa0cfdf3857539b3" target="_blank">a0618ff</a>
+<a href="https://github.com/stephens999/misc/tree/a415272e8d25afa0d7c854d7b15a57f22f6672e4" target="_blank">a415272</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreea0618fff0636d6dd24212694aa0cfdf3857539b3targetblanka0618ffa"
+id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreea415272e8d25afa0d7c854d7b15a57f22f6672e4targetblanka415272a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -527,7 +527,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/stephens999/misc/tree/a0618fff0636d6dd24212694aa0cfdf3857539b3" target="_blank">a0618ff</a>.
+<a href="https://github.com/stephens999/misc/tree/a415272e8d25afa0d7c854d7b15a57f22f6672e4" target="_blank">a415272</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -580,8 +580,8 @@ Untracked files:
     Untracked:  analysis/explore_psvd.Rmd
     Untracked:  analysis/fa_check_identify.Rmd
     Untracked:  analysis/fa_iterative.Rmd
+    Untracked:  analysis/fastica_centered.Rmd
     Untracked:  analysis/flash_cov_overlapping_groups_init.Rmd
-    Untracked:  analysis/flash_pca.Rmd
     Untracked:  analysis/flash_test_tree.Rmd
     Untracked:  analysis/flashier_newgroups.Rmd
     Untracked:  analysis/flashier_nmf_triples.Rmd
@@ -784,6 +784,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/a415272e8d25afa0d7c854d7b15a57f22f6672e4/analysis/fastica_02.Rmd" target="_blank">a415272</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-14
+</td>
+<td>
+workflowr::wflow_publish("fastica_02.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/fd23328815e329adbc5d36518e81c3f2372eb02c/docs/fastica_02.html" target="_blank">fd23328</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-11
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/a0618fff0636d6dd24212694aa0cfdf3857539b3/analysis/fastica_02.Rmd" target="_blank">a0618ff</a>
 </td>
 <td>
@@ -839,6 +873,7 @@ workflowr::wflow_publish("fastica_02.Rmd")
 </div>
 <pre class="r"><code>library(flashier)</code></pre>
 <pre><code>Loading required package: ebnm</code></pre>
+<pre class="r"><code>library(fastICA)</code></pre>
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
 <p>I wanted to implement single unit fast ica for myself to better
@@ -1032,6 +1067,693 @@ frob_norm = function(X){
 <pre><code>[1] -0.0009582495</code></pre>
 <pre class="r"><code>(frob_norm((G-fitted(fit.fl))) - frob_norm((G-s%*%t(a))))/(ncol(G)*nrow(G))</code></pre>
 <pre><code>[1] -0.000523434</code></pre>
+</div>
+<div id="independent-binary-groups-3-groups-of--1"
+class="section level2">
+<h2>Independent binary groups (3 groups of +-1)</h2>
+<p>Here I try simulating 3 binary groups (each an independent 50-50
+split in n=100). I use +-1 for the groups here (so it is not a
+nonnegative simulation here). Specifically I simulate <span
+class="math inline">\(X=LF&#39;+E\)</span> where <span
+class="math inline">\(L\)</span> are +-1 and <span
+class="math inline">\(F\)</span> are iid normal. I add a small error
+term.</p>
+<pre class="r"><code>K=3
+p = 1000
+n = 100
+set.seed(1)
+L = matrix(-1,nrow=n,ncol=K)
+for(i in 1:K){L[sample(1:n,n/2),i]=1}
+FF = matrix(rnorm(p*K), nrow = p, ncol=K)
+X = L %*% t(FF) + rnorm(n*p,0,0.01)
+image(X)</code></pre>
+<p><img src="figure/fastica_02.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Since <span class="math inline">\(F\)</span> is simulated here to be
+independent, it should be that <span class="math inline">\(F&#39;F
+\approx I\)</span>, so <span class="math inline">\(XF\)</span> shoudl be
+something close to <span class="math inline">\(L\)</span>, and indeed it
+is. I’m hoping ICA will find <span
+class="math inline">\(W=F\)</span>.</p>
+<pre class="r"><code>par(mfcol=c(3,1))
+plot(X %*% FF[,1], L[,1])
+plot(X %*% FF[,2], L[,2])
+plot(X %*% FF[,3], L[,3])</code></pre>
+<p><img src="figure/fastica_02.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<div id="fastica" class="section level3">
+<h3>fastICA</h3>
+<p>Single unit fastICA on these data picks out a single source:</p>
+<pre class="r"><code>X1 = preprocess(X)
+w = rnorm(nrow(X1))
+for(i in 1:10)
+  w = fastica_r1update(X1,w)
+cor(L,t(X1) %*% w)</code></pre>
+<pre><code>            [,1]
+[1,]  0.09199908
+[2,] -0.14565607
+[3,] -0.99941252</code></pre>
+<p>Here is multi-unit fastICA; it finds all 3 groups essentially
+perfectly.</p>
+<pre class="r"><code>fit.ica = fastICA(X, n.comp = 3)
+apply(abs(cor(L,fit.ica$S)),1, max)</code></pre>
+<pre><code>[1] 0.9989443 0.9965059 0.9958627</code></pre>
+<pre class="r"><code>par(mfcol=c(2,2))
+for(k in 1:3)
+  plot(fit.ica$S[,k])</code></pre>
+<p><img src="figure/fastica_02.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="flashier" class="section level3">
+<h3>flashier</h3>
+<p>Running single-unit flashier with point Laplace prior does not find
+any group - it finds the first PC.</p>
+<pre class="r"><code>fit.fl = flash(X, ebnm_fn = c(ebnm_point_laplace,ebnm_normal), greedy_Kmax = 1)</code></pre>
+<pre><code>Adding factor 1 to flash object...
+Wrapping up...
+Done.
+Nullchecking 1 factors...
+Done.</code></pre>
+<pre class="r"><code>cor(L,fit.fl$L_pm)</code></pre>
+<pre><code>           [,1]
+[1,] -0.1567018
+[2,] -0.8002616
+[3,] -0.6939910</code></pre>
+<pre class="r"><code>cor(svd(X)$u[,1],fit.fl$L_pm)</code></pre>
+<pre><code>          [,1]
+[1,] 0.9999963</code></pre>
+<p>Similarly, running with backfitting finds the first 3 PCs.</p>
+<pre class="r"><code>fit.fl = flash(X, ebnm_fn = c(ebnm_point_laplace,ebnm_normal), greedy_Kmax = 10,backfit=TRUE)</code></pre>
+<pre><code>Adding factor 1 to flash object...
+Adding factor 2 to flash object...
+Adding factor 3 to flash object...
+Adding factor 4 to flash object...
+Factor doesn&#39;t significantly increase objective and won&#39;t be added.
+Wrapping up...
+Done.
+Backfitting 3 factors (tolerance: 1.49e-03)...
+  Difference between iterations is within 1.0e+05...
+  Difference between iterations is within 1.0e+04...
+  Difference between iterations is within 1.0e+03...
+  Difference between iterations is within 1.0e+02...
+  Difference between iterations is within 1.0e+01...
+Wrapping up...
+Done.
+Nullchecking 3 factors...
+Done.</code></pre>
+<pre class="r"><code>cor(L,fit.fl$L_pm)</code></pre>
+<pre><code>           [,1]        [,2]       [,3]
+[1,] -0.1566870 -0.94939845 -0.2720530
+[2,] -0.8002638 -0.08025245  0.5942468
+[3,] -0.6939936  0.37506211 -0.6146585</code></pre>
+<pre class="r"><code>cor(svd(X)$u[,1:3],fit.fl$L_pm)</code></pre>
+<pre><code>              [,1]         [,2]          [,3]
+[1,]  0.9999966324 0.0024234410  0.0003082603
+[2,] -0.0025763629 0.9999967966  0.0006660919
+[3,]  0.0003124162 0.0007305277 -0.9999997306</code></pre>
+<p>Here I try with a (approximate) Bernoulli (+-1) prior. First I define
+the ebnm_symmetric_bernoulli function to compute the posterior for this
+prior:</p>
+<pre class="r"><code>ebnm_symmetric_bernoulli = flash_ebnm(
+    prior_family = &quot;normal_scale_mixture&quot;,
+    fix_g = TRUE,
+    g_init = ashr::normalmix(pi = c(0.5, 0.5),
+                             mean = c(-1, 1),
+                             sd = 1e-8))</code></pre>
+<p>Single unit flash with this prior does not find a good solution.</p>
+<pre class="r"><code>fit.fl = flash(X, ebnm_fn = c(ebnm_symmetric_bernoulli,ebnm_normal), greedy_Kmax = 1)</code></pre>
+<pre><code>Adding factor 1 to flash object...
+Wrapping up...
+Done.
+Nullchecking 1 factors...
+Done.</code></pre>
+<pre class="r"><code>cor(L,fit.fl$L_pm)</code></pre>
+<pre><code>      [,1]
+[1,] -0.40
+[2,] -0.64
+[3,] -0.52</code></pre>
+<pre class="r"><code>cor(svd(X)$u[,1],fit.fl$L_pm)</code></pre>
+<pre><code>          [,1]
+[1,] 0.8279994</code></pre>
+<pre class="r"><code>par(mfcol=c(2,1))
+plot(fit.fl$L_pm)
+plot(X %*% fit.fl$F_pm)</code></pre>
+<p><img src="figure/fastica_02.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>But with backfitting it does find the correct solution:</p>
+<pre class="r"><code>fit.fl = flash(X, ebnm_fn = c(ebnm_symmetric_bernoulli,ebnm_normal) , greedy_Kmax = 10,backfit=TRUE)</code></pre>
+<pre><code>Adding factor 1 to flash object...
+Adding factor 2 to flash object...
+Adding factor 3 to flash object...
+Adding factor 4 to flash object...
+Adding factor 5 to flash object...
+Adding factor 6 to flash object...
+Adding factor 7 to flash object...
+Adding factor 8 to flash object...
+Adding factor 9 to flash object...
+Factor doesn&#39;t significantly increase objective and won&#39;t be added.
+Wrapping up...
+Done.
+Backfitting 8 factors (tolerance: 1.49e-03)...
+  Difference between iterations is within 1.0e+05...
+  Difference between iterations is within 1.0e+04...
+  Difference between iterations is within 1.0e+03...
+  --Estimate of factor 8 is numerically zero!
+  Difference between iterations is within 1.0e+02...
+  Difference between iterations is within 1.0e+01...
+  Difference between iterations is within 1.0e+00...
+  --Estimate of factor 7 is numerically zero!
+  --Estimate of factor 6 is numerically zero!
+  Difference between iterations is within 1.0e-01...
+  --Estimate of factor 5 is numerically zero!
+  --Estimate of factor 1 is numerically zero!
+  Difference between iterations is within 1.0e-02...
+  Difference between iterations is within 1.0e-03...
+Wrapping up...
+Done.
+Nullchecking 8 factors...
+  5 factors are identically zero.
+Wrapping up...
+  Removed 5 factors.
+Done.</code></pre>
+<pre class="r"><code>cor(L,fit.fl$L_pm)</code></pre>
+<pre><code>      [,1]  [,2] [,3]
+[1,] -1.00 -0.08 0.04
+[2,] -0.04  0.16 1.00
+[3,]  0.08  1.00 0.16</code></pre>
+</div>
+</div>
+<div id="independent-binary-groups-3-groups-of-01"
+class="section level2">
+<h2>Independent binary groups (3 groups of 0,1)</h2>
+<p>Now I redo those simulations, but with 0-1 groups instead of +-1.</p>
+<pre class="r"><code>K=3
+p = 1000
+n = 100
+set.seed(1)
+L = matrix(0,nrow=n,ncol=K)
+for(i in 1:K){L[sample(1:n,n/2),i]=1}
+FF = matrix(rnorm(p*K), nrow = p, ncol=K)
+X = L %*% t(FF) + rnorm(n*p,0,0.01)
+image(X)</code></pre>
+<p><img src="figure/fastica_02.Rmd/unnamed-chunk-19-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Since <span class="math inline">\(F\)</span> is simulated here to be
+independent, it should be that <span class="math inline">\(F&#39;F
+\approx I\)</span>, so <span class="math inline">\(XF\)</span> shoudl be
+something close to <span class="math inline">\(L\)</span>, and indeed it
+is. I’m hoping ICA will find <span
+class="math inline">\(W=F\)</span>.</p>
+<pre class="r"><code>par(mfcol=c(3,1))
+plot(X %*% FF[,1], L[,1])
+plot(X %*% FF[,2], L[,2])
+plot(X %*% FF[,3], L[,3])</code></pre>
+<p><img src="figure/fastica_02.Rmd/unnamed-chunk-20-1.png" width="672" style="display: block; margin: auto;" /></p>
+<div id="fastica-1" class="section level3">
+<h3>fastICA</h3>
+<p>Single unit fastICA on these data picks out a single source:</p>
+<pre class="r"><code>X1 = preprocess(X)
+w = rnorm(nrow(X1))
+for(i in 1:10)
+  w = fastica_r1update(X1,w)
+cor(L,t(X1) %*% w)</code></pre>
+<pre><code>           [,1]
+[1,]  0.0909585
+[2,] -0.1472225
+[3,] -0.9995281</code></pre>
+<p>Here is multi-unit fastICA; it finds all 3 groups essentially
+perfectly.</p>
+<pre class="r"><code>fit.ica = fastICA(X, n.comp = 3)
+apply(abs(cor(L,fit.ica$S)),1, max)</code></pre>
+<pre><code>[1] 0.9989442 0.9965061 0.9958623</code></pre>
+<pre class="r"><code>par(mfcol=c(2,2))
+for(k in 1:3)
+  plot(fit.ica$S[,k])</code></pre>
+<p><img src="figure/fastica_02.Rmd/unnamed-chunk-22-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="flashier-1" class="section level3">
+<h3>flashier</h3>
+<p>Running single-unit flashier with point exponential prior does not
+find any group - it finds the first PC.</p>
+<pre class="r"><code>fit.fl = flash(X, ebnm_fn = c(ebnm_point_exponential,ebnm_normal), greedy_Kmax = 1)</code></pre>
+<pre><code>Adding factor 1 to flash object...
+Wrapping up...
+Done.
+Nullchecking 1 factors...
+Done.</code></pre>
+<pre class="r"><code>cor(L,fit.fl$L_pm)</code></pre>
+<pre><code>          [,1]
+[1,] 0.5227276
+[2,] 0.6792148
+[3,] 0.5977773</code></pre>
+<pre class="r"><code>cor(svd(X)$u[,1],fit.fl$L_pm)</code></pre>
+<pre><code>           [,1]
+[1,] -0.9999988</code></pre>
+<p>Running with backfitting finds 5 factors, none of them correct.</p>
+<pre class="r"><code>fit.fl = flash(X, ebnm_fn = c(ebnm_point_exponential,ebnm_normal), greedy_Kmax = 10,backfit=TRUE)</code></pre>
+<pre><code>Adding factor 1 to flash object...
+Adding factor 2 to flash object...
+Adding factor 3 to flash object...
+Adding factor 4 to flash object...
+Adding factor 5 to flash object...
+Adding factor 6 to flash object...
+Adding factor 7 to flash object...
+Adding factor 8 to flash object...
+Factor doesn&#39;t significantly increase objective and won&#39;t be added.
+Wrapping up...
+Done.
+Backfitting 7 factors (tolerance: 1.49e-03)...
+  Difference between iterations is within 1.0e+05...
+  Difference between iterations is within 1.0e+04...
+  Difference between iterations is within 1.0e+03...
+  Difference between iterations is within 1.0e+02...
+  Difference between iterations is within 1.0e+01...
+  Difference between iterations is within 1.0e+00...
+  --Estimate of factor 6 is numerically zero!
+  --Estimate of factor 7 is numerically zero!
+  Difference between iterations is within 1.0e-01...
+  Difference between iterations is within 1.0e-02...
+  --Maximum number of iterations reached!
+Wrapping up...
+Done.
+Nullchecking 7 factors...
+  2 factors are identically zero.
+Wrapping up...
+  Removed 2 factors.
+Done.</code></pre>
+<pre class="r"><code>cor(L,fit.fl$L_pm)</code></pre>
+<pre><code>          [,1]       [,2]       [,3]       [,4]       [,5]
+[1,] 0.5216345  0.7497056 -0.3678773 -0.2471044 -0.2220610
+[2,] 0.6777868 -0.2532741 -0.1322539  0.7498331 -0.4353849
+[3,] 0.5983102 -0.3683479  0.7494706 -0.1315798  0.2212696</code></pre>
+<pre class="r"><code>cor(svd(X)$u[,1:3],fit.fl$L_pm)</code></pre>
+<pre><code>           [,1]        [,2]       [,3]       [,4]       [,5]
+[1,] -0.9988877 -0.06100998 -0.1368803 -0.2200027  0.2469289
+[2,]  0.0581783 -0.82837620  0.6308183  0.3057501  0.1792939
+[3,]  0.0605365 -0.11628327 -0.5469159  0.7742343 -0.4737231</code></pre>
+<p>Here I try with a Bernoulli (0,1) prior. First I define the
+ebnm_bernoulli function to compute the posterior for this prior:</p>
+<pre class="r"><code>ebnm_bernoulli = flash_ebnm(
+    prior_family = &quot;normal_scale_mixture&quot;,
+    fix_g = TRUE,
+    g_init = ashr::normalmix(pi = c(0.5, 0.5),
+                             mean = c(0, 1),
+                             sd = 1e-8))</code></pre>
+<p>Single unit flash with this prior does not find a good solution.</p>
+<pre class="r"><code>fit.fl = flash(X, ebnm_fn = c(ebnm_bernoulli,ebnm_normal), greedy_Kmax = 1)</code></pre>
+<pre><code>Adding factor 1 to flash object...
+Wrapping up...
+Done.
+Nullchecking 1 factors...
+Done.</code></pre>
+<pre class="r"><code>cor(L,fit.fl$L_pm)</code></pre>
+<pre><code>          [,1]
+[1,] 0.4034733
+[2,] 0.4034733
+[3,] 0.4034733</code></pre>
+<pre class="r"><code>cor(svd(X)$u[,1],fit.fl$L_pm)</code></pre>
+<pre><code>           [,1]
+[1,] -0.6712566</code></pre>
+<pre class="r"><code>par(mfcol=c(2,1))
+plot(fit.fl$L_pm)
+plot(X %*% fit.fl$F_pm)</code></pre>
+<p><img src="figure/fastica_02.Rmd/unnamed-chunk-26-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>In this case backfitting also doesn’t work.</p>
+<pre class="r"><code>fit.fl = flash(X, ebnm_fn = c(ebnm_bernoulli,ebnm_normal) , greedy_Kmax = 10,backfit=TRUE)</code></pre>
+<pre><code>Adding factor 1 to flash object...
+Adding factor 2 to flash object...
+Adding factor 3 to flash object...
+Adding factor 4 to flash object...
+Adding factor 5 to flash object...
+Adding factor 6 to flash object...
+Adding factor 7 to flash object...
+Adding factor 8 to flash object...
+Adding factor 9 to flash object...
+Adding factor 10 to flash object...
+Wrapping up...
+Done.
+Backfitting 10 factors (tolerance: 1.49e-03)...
+  Difference between iterations is within 1.0e+04...
+  Difference between iterations is within 1.0e+03...
+  Difference between iterations is within 1.0e+02...
+  Difference between iterations is within 1.0e+01...
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+  Difference between iterations is within 1.0e-02...
+  Difference between iterations is within 1.0e-03...
+Wrapping up...
+Done.
+Nullchecking 10 factors...
+Factor5set to zero, increasing objective by 1.229e-06.
+Factor6set to zero, increasing objective by 1.085e-05.
+Factor7set to zero, increasing objective by 1.305e-06.
+Factor8set to zero, increasing objective by 3.321e-06.
+Factor9set to zero, increasing objective by 2.710e-06.
+Factor10set to zero, increasing objective by 2.528e-06.
+Wrapping up...
+  Removed 6 factors.
+Done.</code></pre>
+<pre class="r"><code>cor(L,fit.fl$L_pm)</code></pre>
+<pre><code>          [,1]   [,2]   [,3]   [,4]
+[1,] 0.4034733 -0.750  0.250  0.375
+[2,] 0.4034733  0.250 -0.750  0.125
+[3,] 0.4034733  0.375  0.125 -0.750</code></pre>
+<p>Try generalized binary - also fails.</p>
+<pre class="r"><code>fit.fl = flash(X, ebnm_fn = c(ebnm_point_exponential,ebnm_normal), greedy_Kmax = 100, backfit=TRUE)</code></pre>
+<pre><code>Adding factor 1 to flash object...
+Adding factor 2 to flash object...
+Adding factor 3 to flash object...
+Adding factor 4 to flash object...
+Adding factor 5 to flash object...
+Adding factor 6 to flash object...
+Adding factor 7 to flash object...
+Adding factor 8 to flash object...
+Factor doesn&#39;t significantly increase objective and won&#39;t be added.
+Wrapping up...
+Done.
+Backfitting 7 factors (tolerance: 1.49e-03)...
+  Difference between iterations is within 1.0e+05...
+  Difference between iterations is within 1.0e+04...
+  Difference between iterations is within 1.0e+03...
+  Difference between iterations is within 1.0e+02...
+  Difference between iterations is within 1.0e+01...
+  Difference between iterations is within 1.0e+00...
+  --Estimate of factor 6 is numerically zero!
+  --Estimate of factor 7 is numerically zero!
+  Difference between iterations is within 1.0e-01...
+  Difference between iterations is within 1.0e-02...
+  --Maximum number of iterations reached!
+Wrapping up...
+Done.
+Nullchecking 7 factors...
+  2 factors are identically zero.
+Wrapping up...
+  Removed 2 factors.
+Done.</code></pre>
+<pre class="r"><code>apply(abs(cor(L,fit.fl$L_pm)),1,max)</code></pre>
+<pre><code>[1] 0.7497056 0.7498331 0.7494706</code></pre>
+<pre class="r"><code>fit.fl.gb = flash_init(X) |&gt; flash_factors_init(init = list(fit.fl$L_pm, fit.fl$F_pm), ebnm_fn = c(ebnm_generalized_binary,ebnm_normal)) |&gt; flash_backfit()</code></pre>
+<pre><code>Backfitting 5 factors (tolerance: 1.49e-03)...
+  Difference between iterations is within 1.0e+01...
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+  Difference between iterations is within 1.0e-02...
+  Difference between iterations is within 1.0e-03...
+Wrapping up...
+Done.</code></pre>
+<pre class="r"><code>apply(abs(cor(L,fit.fl.gb$L_pm)),1,max)</code></pre>
+<pre><code>[1] 0.7464413 0.7418248 0.7418114</code></pre>
+<p>Single unit flash with GB prior initialized at ICA solution:</p>
+<pre class="r"><code>Lhat = t(X1) %*% w
+Fhat = t(X) %*% Lhat / sum(Lhat^2) 
+fit.fl.gb = flash_init(X) |&gt; flash_factors_init(init = list( cbind(Lhat),cbind(Fhat)), ebnm_fn = c(ebnm_generalized_binary,ebnm_normal)) |&gt; flash_backfit()</code></pre>
+<pre><code>Backfitting 1 factors (tolerance: 1.49e-03)...
+  Difference between iterations is within 1.0e+04...
+  Difference between iterations is within 1.0e+03...
+  Difference between iterations is within 1.0e+02...
+  Difference between iterations is within 1.0e+01...
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+Wrapping up...
+Done.</code></pre>
+<pre class="r"><code>cor(L,fit.fl.gb$L_pm)</code></pre>
+<pre><code>          [,1]
+[1,] 0.5248171
+[2,] 0.6770598
+[3,] 0.5976217</code></pre>
+<p>Single unit flash with bernoulli prior initialized at ICA
+solution:</p>
+<pre class="r"><code>Lhat = t(X1) %*% w/sqrt(p)
+Fhat = t(X) %*% Lhat / sum(Lhat^2) 
+fit.fl.b = flash_init(X) |&gt; flash_factors_init(init = list( cbind(Lhat),cbind(Fhat)), ebnm_fn = c(ebnm_bernoulli,ebnm_normal)) |&gt; flash_backfit()</code></pre>
+<pre><code>Backfitting 1 factors (tolerance: 1.49e-03)...
+  --Estimate of factor 1 is numerically zero!
+Wrapping up...
+Done.</code></pre>
+<pre class="r"><code>cor(L,fit.fl.b$L_pm)</code></pre>
+<pre><code>           [,1]
+[1,] -0.3408647
+[2,] -0.6322558
+[3,] -0.7695170</code></pre>
+<p>Single unit flash with bernoulli prior initialized at true value - I
+was suprised this doesn’t work and thought maybe I was doing something
+wrong. However, I think that what is happening is that now the Ls are
+not close to orthogonal because of the non-negative values. In contrast,
+the previous (+-1) Ls were close to orthogonal. This seems to have a
+major impact. I should think harder about this and what it implies about
+how to deal with binary groups.</p>
+<pre class="r"><code>Lhat = L[,1]
+Fhat = FF[,1]
+fit.fl.b = flash_init(X) |&gt; flash_factors_init(init = list( cbind(Lhat),cbind(Fhat)), ebnm_fn = c(ebnm_bernoulli,ebnm_normal)) |&gt; flash_backfit(maxiter=2)</code></pre>
+<pre><code>Backfitting 1 factors (tolerance: 1.49e-03)...
+  --Maximum number of iterations reached!
+Wrapping up...
+Done.</code></pre>
+<pre class="r"><code>cor(L,fit.fl.b$L_pm)</code></pre>
+<pre><code>     Lhat
+[1,] 0.40
+[2,] 0.64
+[3,] 0.52</code></pre>
+</div>
+</div>
+<div id="independent-binary-groups-9-groups" class="section level2">
+<h2>Independent binary groups (9 groups)</h2>
+<p>Here I simulate 9 groups to make the problem harder. But still there
+is a very clear non-gaussian signal in the data.</p>
+<pre class="r"><code>K=9
+p = 1000
+n = 100
+set.seed(1)
+L = matrix(-1,nrow=n,ncol=K)
+for(i in 1:K){L[sample(1:n,50),i]=1}
+FF = matrix(rnorm(p*K), nrow = p, ncol=K)
+
+X = L %*% t(FF) + rnorm(n*p,0,0.01)
+plot(X %*% FF[,1])</code></pre>
+<p><img src="figure/fastica_02.Rmd/unnamed-chunk-32-1.png" width="672" style="display: block; margin: auto;" /></p>
+<div id="fastica-2" class="section level3">
+<h3>fastICA</h3>
+<p>Running single unit fastICA on these data picks out a single
+source:</p>
+<pre class="r"><code>X1 = preprocess(X)
+w = rnorm(nrow(X1))
+for(i in 1:100)
+  w = fastica_r1update(X1,w)
+cor(L,t(X1) %*% w)</code></pre>
+<pre><code>               [,1]
+ [1,] -8.889918e-09
+ [2,] -3.999999e-02
+ [3,] -2.000000e-01
+ [4,] -4.000000e-02
+ [5,] -9.999999e-01
+ [6,] -8.000001e-02
+ [7,]  1.200000e-01
+ [8,]  4.000002e-02
+ [9,] -1.200000e-01</code></pre>
+</div>
+</div>
+<div id="smaller-binary-groups-3-groups" class="section level2">
+<h2>Smaller binary groups (3 groups)</h2>
+<p>Here I simulate 3 groups, with only 20 members each, to make the
+problem harder. Again the nongaussian signal is there but now it might
+be harder to find, or maybe it will just not score as highly in terms of
+non-gaussianity?</p>
+<pre class="r"><code>K=3
+p = 1000
+n = 100
+set.seed(1)
+L = matrix(-1,nrow=n,ncol=K)
+for(i in 1:K){L[sample(1:n,20),i]=1}
+FF = matrix(rnorm(p*K), nrow = p, ncol=K)
+
+X = L %*% t(FF) + rnorm(n*p,0,0.01)
+plot(X %*% FF[,1])</code></pre>
+<p><img src="figure/fastica_02.Rmd/unnamed-chunk-34-1.png" width="672" style="display: block; margin: auto;" /></p>
+<div id="fastica-3" class="section level3">
+<h3>fastICA</h3>
+<p>Running single unit fastICA on these data does not pick out a single
+source:</p>
+<pre class="r"><code>X1 = preprocess(X)
+w = rnorm(nrow(X1))
+for(i in 1:100)
+  w = fastica_r1update(X1,w)
+cor(L,t(X1) %*% w)</code></pre>
+<pre><code>            [,1]
+[1,] -0.09720849
+[2,]  0.39491239
+[3,]  0.06322010</code></pre>
+<pre class="r"><code>plot(t(X1) %*% w)</code></pre>
+<p><img src="figure/fastica_02.Rmd/unnamed-chunk-35-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Try initializing near a true source. It moves away from it, and
+indeed finds a solution with a better value of its logcosh objective
+function.</p>
+<pre class="r"><code>w = X1 %*% L[,1]
+plot(t(X1) %*% w)</code></pre>
+<p><img src="figure/fastica_02.Rmd/unnamed-chunk-36-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>init_val = t(X1) %*% w
+init_val = init_val/sqrt(mean(init_val^2))
+
+for(i in 1:100)
+  w = fastica_r1update(X1,w)
+cor(L,t(X1) %*% w)</code></pre>
+<pre><code>             [,1]
+[1,] -0.189724430
+[2,]  0.087759753
+[3,]  0.008005991</code></pre>
+<pre class="r"><code>plot(t(X1) %*% w)</code></pre>
+<p><img src="figure/fastica_02.Rmd/unnamed-chunk-36-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>final_val = t(X1) %*% w
+final_val = final_val/sqrt(mean(final_val^2))</code></pre>
+<p>Looking at the mean logcosh of the initial value, we see it is
+actually very close to that of a normal. The algorithm moves it further
+away, so is indeed doing what it should do. Note that the logcosh of
+bernoulli(+-1) is about 0.433, and above the logcosh for a normal, 0.38.
+So what is happening is that the “unbalanced” (approximate) bernoulli
+distribution of our source, does not have a large logcosh value, and
+indeed does not even have a larger logcosh distribution than a
+normal.</p>
+<pre class="r"><code>mean(log(cosh(init_val)))</code></pre>
+<pre><code>[1] 0.3610922</code></pre>
+<pre class="r"><code>mean(log(cosh(final_val)))</code></pre>
+<pre><code>[1] 0.3958629</code></pre>
+<pre class="r"><code>mean(log(cosh(rnorm(10000))))</code></pre>
+<pre><code>[1] 0.3682596</code></pre>
+<pre class="r"><code>log(cosh(1))</code></pre>
+<pre><code>[1] 0.4337808</code></pre>
+<p>Thoughts on this: note that the expected log cosh value is not
+invariant to shifts of the distribution. We could shift our asymmetric
+bernoulli distribution, and scale to have variance 1, and it’s expected
+log-cosh would be the same as the original bernoulli. However, fastICA
+does not do this shifting, and so the expected log-cosh value depends on
+the mean of the distribution. Maybe fastICA could be improved for this
+example by modifying the objective function to be shift invariant?</p>
+</div>
+<div id="flashier-2" class="section level3">
+<h3>flashier</h3>
+<p>Neither does running flashier:</p>
+<pre class="r"><code>fit.fl = flash(X, ebnm_fn = c(ebnm_point_exponential,ebnm_point_laplace), greedy_Kmax = 1)</code></pre>
+<pre><code>Adding factor 1 to flash object...
+Wrapping up...
+Done.
+Nullchecking 1 factors...
+Done.</code></pre>
+<pre class="r"><code>cor(L,fit.fl$L_pm)</code></pre>
+<pre><code>           [,1]
+[1,] -0.5473206
+[2,] -0.5509876
+[3,] -0.5392459</code></pre>
+</div>
+<div id="multiunit" class="section level3">
+<h3>Multiunit</h3>
+<p>Run multi-unit ICA. It doesn’t really help much?</p>
+<pre class="r"><code>fit.ica = fastICA(X, n.comp = 9)
+apply(abs(cor(L,fit.ica$S)),1, max)</code></pre>
+<pre><code>[1] 0.5301741 0.5551561 0.5043458</code></pre>
+<p>Here is multi-unit flashier; it does a better job, but not
+perfect.</p>
+<pre class="r"><code>fit.fl = flash(X, ebnm_fn = c(ebnm_point_exponential,ebnm_normal), greedy_Kmax = 9, backfit=TRUE)</code></pre>
+<pre><code>Adding factor 1 to flash object...
+Adding factor 2 to flash object...
+Adding factor 3 to flash object...
+Adding factor 4 to flash object...
+Adding factor 5 to flash object...
+Adding factor 6 to flash object...
+Adding factor 7 to flash object...
+Adding factor 8 to flash object...
+Adding factor 9 to flash object...
+Wrapping up...
+Done.
+Backfitting 9 factors (tolerance: 1.49e-03)...
+  Difference between iterations is within 1.0e+05...
+  Difference between iterations is within 1.0e+04...
+  Difference between iterations is within 1.0e+03...
+  Difference between iterations is within 1.0e+02...
+  --Estimate of factor 8 is numerically zero!
+  --Estimate of factor 8 is numerically zero!
+  Difference between iterations is within 1.0e+01...
+  Difference between iterations is within 1.0e+00...
+  --Estimate of factor 9 is numerically zero!
+  --Estimate of factor 6 is numerically zero!
+  --Estimate of factor 6 is numerically zero!
+  --Estimate of factor 7 is numerically zero!
+  --Estimate of factor 7 is numerically zero!
+  --Estimate of factor 7 is numerically zero!
+  --Maximum number of iterations reached!
+Wrapping up...
+Done.
+Nullchecking 9 factors...
+  4 factors are identically zero.
+Wrapping up...
+  Removed 4 factors.
+Done.</code></pre>
+<pre class="r"><code>apply(abs(cor(L,fit.fl$L_pm)),1,max)</code></pre>
+<pre><code>[1] 0.9909129 0.9824303 0.9674084</code></pre>
+<pre class="r"><code>fit.fl.gb = flash_init(X) |&gt; flash_factors_init(init = list(fit.fl$L_pm, fit.fl$F_pm), ebnm_fn = c(ebnm_generalized_binary,ebnm_normal)) |&gt; flash_backfit()</code></pre>
+<pre><code>Backfitting 5 factors (tolerance: 1.49e-03)...
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+  Difference between iterations is within 1.0e-02...
+  Difference between iterations is within 1.0e-03...
+Wrapping up...
+Done.</code></pre>
+<pre class="r"><code>apply(abs(cor(L,fit.fl.gb$L_pm)),1,max)</code></pre>
+<pre><code>[1] 0.9976096 0.9905730 0.9802214</code></pre>
+</div>
+</div>
+<div id="smaller-binary-groups-9-groups" class="section level2">
+<h2>Smaller binary groups (9 groups)</h2>
+<p>Here I simulate 9 groups with only 20 members each, to make the
+problem harder again. Again the nongaussian signal is there. ICA won’t
+work here (not shown for brevity); flashier does somewhat OK, but maybe
+could be improved?</p>
+<pre class="r"><code>K=9
+p = 1000
+n = 100
+set.seed(1)
+L = matrix(0,nrow=n,ncol=K)
+for(i in 1:K){L[sample(1:n,20),i]=1}
+FF = matrix(rnorm(p*K), nrow = p, ncol=K)
+
+X = L %*% t(FF) + rnorm(n*p,0,0.01)
+plot(X %*% FF[,1])</code></pre>
+<p><img src="figure/fastica_02.Rmd/unnamed-chunk-41-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Here is multi-unit flashier; it does a better job, but not
+perfect.</p>
+<pre class="r"><code>fit.fl = flash(X, ebnm_fn = c(ebnm_point_exponential,ebnm_normal), greedy_Kmax = 9, backfit=TRUE)</code></pre>
+<pre><code>Adding factor 1 to flash object...
+Adding factor 2 to flash object...
+Adding factor 3 to flash object...
+Adding factor 4 to flash object...
+Adding factor 5 to flash object...
+Adding factor 6 to flash object...
+Adding factor 7 to flash object...
+Adding factor 8 to flash object...
+Adding factor 9 to flash object...
+Wrapping up...
+Done.
+Backfitting 9 factors (tolerance: 1.49e-03)...
+  Difference between iterations is within 1.0e+04...
+  Difference between iterations is within 1.0e+03...
+  Difference between iterations is within 1.0e+02...
+  Difference between iterations is within 1.0e+01...
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+  Difference between iterations is within 1.0e-02...
+  --Maximum number of iterations reached!
+Wrapping up...
+Done.
+Nullchecking 9 factors...
+Done.</code></pre>
+<pre class="r"><code>apply(abs(cor(L,fit.fl$L_pm)),1,max)</code></pre>
+<pre><code>[1] 0.8266448 0.9127410 0.9613268 0.9354222 0.9138529 0.8364142 0.6324835
+[8] 0.8612061 0.9465002</code></pre>
+<pre class="r"><code>fit.fl.gb = flash_init(X) |&gt; flash_factors_init(init = list(fit.fl$L_pm, fit.fl$F_pm), ebnm_fn = c(ebnm_generalized_binary,ebnm_normal)) |&gt; flash_backfit()</code></pre>
+<pre><code>Backfitting 9 factors (tolerance: 1.49e-03)...
+  Difference between iterations is within 1.0e+01...
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+  Difference between iterations is within 1.0e-02...
+  --Maximum number of iterations reached!
+Wrapping up...
+Done.</code></pre>
+<pre class="r"><code>apply(abs(cor(L,fit.fl.gb$L_pm)),1,max)</code></pre>
+<pre><code>[1] 0.8286910 0.9124418 0.9585522 0.9339699 0.9116221 0.8391904 0.6321243
+[8] 0.8615571 0.9438830</code></pre>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -1059,7 +1781,7 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] flashier_1.0.56 ebnm_1.1-34    
+[1] fastICA_1.2-7   flashier_1.0.56 ebnm_1.1-34    
 
 loaded via a namespace (and not attached):
  [1] softImpute_1.4-3     gtable_0.3.6         xfun_0.52           
