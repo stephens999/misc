@@ -9,6 +9,7 @@ editor_options:
 
 ```{r}
 library(flashier)
+library(fastICA)
 ```
 
 ## Introduction
@@ -155,5 +156,363 @@ frob_norm = function(X){
 (frob_norm((G-fitted(fit.fl))) - frob_norm((G-s%*%t(a))))/(ncol(G)*nrow(G))
 ```
 
+## Independent binary groups (3 groups of +-1)
+
+
+Here I try simulating 3 binary groups (each an independent 
+50-50 split in n=100). I use +-1 for the groups here (so it is not a nonnegative simulation here). Specifically I simulate $X=LF'+E$ where $L$ are +-1 and $F$ are iid normal. I add a small error term.
+```{r}
+K=3
+p = 1000
+n = 100
+set.seed(1)
+L = matrix(-1,nrow=n,ncol=K)
+for(i in 1:K){L[sample(1:n,n/2),i]=1}
+FF = matrix(rnorm(p*K), nrow = p, ncol=K)
+X = L %*% t(FF) + rnorm(n*p,0,0.01)
+image(X)
+```
+
+Since $F$ is simulated here to be independent, it should be that $F'F \approx I$, so $XF$ shoudl be something close to $L$, and indeed it is. I'm hoping ICA will find $W=F$.
+
+```{r}
+par(mfcol=c(3,1))
+plot(X %*% FF[,1], L[,1])
+plot(X %*% FF[,2], L[,2])
+plot(X %*% FF[,3], L[,3])
+```
+
+
+### fastICA
+
+Single unit fastICA on these data picks out a single source:
+```{r}
+X1 = preprocess(X)
+w = rnorm(nrow(X1))
+for(i in 1:10)
+  w = fastica_r1update(X1,w)
+cor(L,t(X1) %*% w)
+```
+
+Here is multi-unit fastICA; it finds all 3 groups essentially perfectly.
+```{r}
+fit.ica = fastICA(X, n.comp = 3)
+apply(abs(cor(L,fit.ica$S)),1, max)
+par(mfcol=c(2,2))
+for(k in 1:3)
+  plot(fit.ica$S[,k])
+```
+
+
+### flashier
+
+Running single-unit flashier with point Laplace prior does not find any group - it finds the first PC.
+```{r}
+fit.fl = flash(X, ebnm_fn = c(ebnm_point_laplace,ebnm_normal), greedy_Kmax = 1)
+cor(L,fit.fl$L_pm)
+cor(svd(X)$u[,1],fit.fl$L_pm)
+```
+
+Similarly, running with backfitting finds the first 3 PCs.
+```{r}
+fit.fl = flash(X, ebnm_fn = c(ebnm_point_laplace,ebnm_normal), greedy_Kmax = 10,backfit=TRUE)
+cor(L,fit.fl$L_pm)
+cor(svd(X)$u[,1:3],fit.fl$L_pm)
+```
+
+
+Here I try with a (approximate) Bernoulli (+-1) prior.
+First I define the ebnm_symmetric_bernoulli function to compute the posterior for this prior:
+```{r}
+ebnm_symmetric_bernoulli = flash_ebnm(
+    prior_family = "normal_scale_mixture",
+    fix_g = TRUE,
+    g_init = ashr::normalmix(pi = c(0.5, 0.5),
+                             mean = c(-1, 1),
+                             sd = 1e-8))
+```
+
+
+Single unit flash with this prior does not find a good solution.
+```{r}
+fit.fl = flash(X, ebnm_fn = c(ebnm_symmetric_bernoulli,ebnm_normal), greedy_Kmax = 1)
+cor(L,fit.fl$L_pm)
+cor(svd(X)$u[,1],fit.fl$L_pm)
+par(mfcol=c(2,1))
+plot(fit.fl$L_pm)
+plot(X %*% fit.fl$F_pm)
+```
+
+But with backfitting it does find the correct solution:
+```{r}
+fit.fl = flash(X, ebnm_fn = c(ebnm_symmetric_bernoulli,ebnm_normal) , greedy_Kmax = 10,backfit=TRUE)
+cor(L,fit.fl$L_pm)
+```
+
+
+## Independent binary groups (3 groups of 0,1)
+
+Now I redo those simulations, but with 0-1 groups instead of +-1.
+
+```{r}
+K=3
+p = 1000
+n = 100
+set.seed(1)
+L = matrix(0,nrow=n,ncol=K)
+for(i in 1:K){L[sample(1:n,n/2),i]=1}
+FF = matrix(rnorm(p*K), nrow = p, ncol=K)
+X = L %*% t(FF) + rnorm(n*p,0,0.01)
+image(X)
+```
+
+Since $F$ is simulated here to be independent, it should be that $F'F \approx I$, so $XF$ shoudl be something close to $L$, and indeed it is. I'm hoping ICA will find $W=F$.
+
+```{r}
+par(mfcol=c(3,1))
+plot(X %*% FF[,1], L[,1])
+plot(X %*% FF[,2], L[,2])
+plot(X %*% FF[,3], L[,3])
+```
+
+
+### fastICA
+
+Single unit fastICA on these data picks out a single source:
+```{r}
+X1 = preprocess(X)
+w = rnorm(nrow(X1))
+for(i in 1:10)
+  w = fastica_r1update(X1,w)
+cor(L,t(X1) %*% w)
+```
+
+Here is multi-unit fastICA; it finds all 3 groups essentially perfectly.
+```{r}
+fit.ica = fastICA(X, n.comp = 3)
+apply(abs(cor(L,fit.ica$S)),1, max)
+par(mfcol=c(2,2))
+for(k in 1:3)
+  plot(fit.ica$S[,k])
+```
+
+
+### flashier
+
+Running single-unit flashier with point exponential prior does not find any group - it finds the first PC.
+```{r}
+fit.fl = flash(X, ebnm_fn = c(ebnm_point_exponential,ebnm_normal), greedy_Kmax = 1)
+cor(L,fit.fl$L_pm)
+cor(svd(X)$u[,1],fit.fl$L_pm)
+```
+
+Running with backfitting finds 5 factors, none of them correct.
+```{r}
+fit.fl = flash(X, ebnm_fn = c(ebnm_point_exponential,ebnm_normal), greedy_Kmax = 10,backfit=TRUE)
+cor(L,fit.fl$L_pm)
+cor(svd(X)$u[,1:3],fit.fl$L_pm)
+```
+
+
+Here I try with a Bernoulli (0,1) prior.
+First I define the ebnm_bernoulli function to compute the posterior for this prior:
+```{r}
+ebnm_bernoulli = flash_ebnm(
+    prior_family = "normal_scale_mixture",
+    fix_g = TRUE,
+    g_init = ashr::normalmix(pi = c(0.5, 0.5),
+                             mean = c(0, 1),
+                             sd = 1e-8))
+```
+
+
+Single unit flash with this prior does not find a good solution.
+```{r}
+fit.fl = flash(X, ebnm_fn = c(ebnm_bernoulli,ebnm_normal), greedy_Kmax = 1)
+cor(L,fit.fl$L_pm)
+cor(svd(X)$u[,1],fit.fl$L_pm)
+par(mfcol=c(2,1))
+plot(fit.fl$L_pm)
+plot(X %*% fit.fl$F_pm)
+```
+
+In this case backfitting also doesn't work. 
+```{r}
+fit.fl = flash(X, ebnm_fn = c(ebnm_bernoulli,ebnm_normal) , greedy_Kmax = 10,backfit=TRUE)
+cor(L,fit.fl$L_pm)
+```
+
+Try generalized binary - also fails.
+```{r}
+fit.fl = flash(X, ebnm_fn = c(ebnm_point_exponential,ebnm_normal), greedy_Kmax = 100, backfit=TRUE)
+apply(abs(cor(L,fit.fl$L_pm)),1,max)
+
+fit.fl.gb = flash_init(X) |> flash_factors_init(init = list(fit.fl$L_pm, fit.fl$F_pm), ebnm_fn = c(ebnm_generalized_binary,ebnm_normal)) |> flash_backfit()
+apply(abs(cor(L,fit.fl.gb$L_pm)),1,max)
+```
+
+Single unit flash with GB prior initialized at ICA solution:
+```{r}
+Lhat = t(X1) %*% w
+Fhat = t(X) %*% Lhat / sum(Lhat^2) 
+fit.fl.gb = flash_init(X) |> flash_factors_init(init = list( cbind(Lhat),cbind(Fhat)), ebnm_fn = c(ebnm_generalized_binary,ebnm_normal)) |> flash_backfit()
+cor(L,fit.fl.gb$L_pm)
+```
+
+Single unit flash with bernoulli prior initialized at ICA solution:
+```{r}
+Lhat = t(X1) %*% w/sqrt(p)
+Fhat = t(X) %*% Lhat / sum(Lhat^2) 
+fit.fl.b = flash_init(X) |> flash_factors_init(init = list( cbind(Lhat),cbind(Fhat)), ebnm_fn = c(ebnm_bernoulli,ebnm_normal)) |> flash_backfit()
+cor(L,fit.fl.b$L_pm)
+```
+
+Single unit flash with bernoulli prior initialized at true value - I was suprised this doesn't work and thought maybe I was doing something wrong. However, I think that what is happening is that now the Ls are not close to orthogonal because of the non-negative values. In contrast, the previous (+-1) Ls were close to orthogonal. This seems to have a major impact. I should think harder about this and what it implies about how to deal with binary groups.
+```{r}
+Lhat = L[,1]
+Fhat = FF[,1]
+fit.fl.b = flash_init(X) |> flash_factors_init(init = list( cbind(Lhat),cbind(Fhat)), ebnm_fn = c(ebnm_bernoulli,ebnm_normal)) |> flash_backfit(maxiter=2)
+cor(L,fit.fl.b$L_pm)
+
+```
+
+
+## Independent binary groups (9 groups)
+
+Here I simulate 9 groups to make the problem harder. But still there is a very clear non-gaussian signal in the data.
+```{r}
+K=9
+p = 1000
+n = 100
+set.seed(1)
+L = matrix(-1,nrow=n,ncol=K)
+for(i in 1:K){L[sample(1:n,50),i]=1}
+FF = matrix(rnorm(p*K), nrow = p, ncol=K)
+
+X = L %*% t(FF) + rnorm(n*p,0,0.01)
+plot(X %*% FF[,1])
+```
+
+### fastICA
+
+Running single unit fastICA on these data picks out a single source:
+```{r}
+X1 = preprocess(X)
+w = rnorm(nrow(X1))
+for(i in 1:100)
+  w = fastica_r1update(X1,w)
+cor(L,t(X1) %*% w)
+```
+
+
+## Smaller binary groups (3 groups)
+
+Here I simulate 3 groups, with only 20 members each, to make the problem harder. Again the nongaussian signal is there but now it might be harder to find, or maybe it will just not score as highly in terms of non-gaussianity?
+```{r}
+K=3
+p = 1000
+n = 100
+set.seed(1)
+L = matrix(-1,nrow=n,ncol=K)
+for(i in 1:K){L[sample(1:n,20),i]=1}
+FF = matrix(rnorm(p*K), nrow = p, ncol=K)
+
+X = L %*% t(FF) + rnorm(n*p,0,0.01)
+plot(X %*% FF[,1])
+```
+
+### fastICA
+
+Running single unit fastICA on these data does not pick out a single source:
+```{r}
+X1 = preprocess(X)
+w = rnorm(nrow(X1))
+for(i in 1:100)
+  w = fastica_r1update(X1,w)
+cor(L,t(X1) %*% w)
+plot(t(X1) %*% w)
+```
+
+Try initializing near a true source. It moves away from it,
+and indeed finds a solution with a better value of its logcosh objective function.
+```{r}
+w = X1 %*% L[,1]
+plot(t(X1) %*% w)
+init_val = t(X1) %*% w
+init_val = init_val/sqrt(mean(init_val^2))
+
+for(i in 1:100)
+  w = fastica_r1update(X1,w)
+cor(L,t(X1) %*% w)
+plot(t(X1) %*% w)
+
+final_val = t(X1) %*% w
+final_val = final_val/sqrt(mean(final_val^2))
+```
+
+Looking at the mean logcosh of the initial value, we see it is actually very close to that of a normal. The algorithm moves it further away, so is indeed doing what it should do. Note that the logcosh of bernoulli(+-1) is about 0.433, and above the logcosh for a normal, 0.38. So what is happening is that the "unbalanced" (approximate) bernoulli distribution of our source, does not have a large logcosh value, and indeed does not even have a larger logcosh distribution than a normal.
+```{r}
+mean(log(cosh(init_val)))
+mean(log(cosh(final_val)))
+mean(log(cosh(rnorm(10000))))
+log(cosh(1))
+```
+
+Thoughts on this: note that the expected log cosh value is not invariant to shifts of the distribution. We could shift our asymmetric bernoulli distribution, and scale to have variance 1, and it's expected log-cosh would be the same as the original bernoulli. However, fastICA does not do this shifting, and so the expected log-cosh value depends on the mean of the distribution. Maybe fastICA could be improved for this example by modifying the objective function to be shift invariant?
+
+
+
+### flashier
+
+Neither does running flashier:
+```{r}
+fit.fl = flash(X, ebnm_fn = c(ebnm_point_exponential,ebnm_point_laplace), greedy_Kmax = 1)
+cor(L,fit.fl$L_pm)
+```
+
+### Multiunit
+
+Run multi-unit ICA. It doesn't really help much?
+```{r}
+fit.ica = fastICA(X, n.comp = 9)
+apply(abs(cor(L,fit.ica$S)),1, max)
+```
+
+Here is multi-unit flashier; it does a better job, but not perfect.
+```{r}
+fit.fl = flash(X, ebnm_fn = c(ebnm_point_exponential,ebnm_normal), greedy_Kmax = 9, backfit=TRUE)
+apply(abs(cor(L,fit.fl$L_pm)),1,max)
+
+fit.fl.gb = flash_init(X) |> flash_factors_init(init = list(fit.fl$L_pm, fit.fl$F_pm), ebnm_fn = c(ebnm_generalized_binary,ebnm_normal)) |> flash_backfit()
+apply(abs(cor(L,fit.fl.gb$L_pm)),1,max)
+
+```
+
+## Smaller binary groups (9 groups)
+
+Here I simulate 9 groups with only 20 members each, to make the problem harder again. Again the nongaussian signal is there. ICA won't work here (not shown for brevity); flashier does somewhat OK, but maybe could be improved? 
+```{r}
+K=9
+p = 1000
+n = 100
+set.seed(1)
+L = matrix(0,nrow=n,ncol=K)
+for(i in 1:K){L[sample(1:n,20),i]=1}
+FF = matrix(rnorm(p*K), nrow = p, ncol=K)
+
+X = L %*% t(FF) + rnorm(n*p,0,0.01)
+plot(X %*% FF[,1])
+```
+
+
+Here is multi-unit flashier; it does a better job, but not perfect.
+```{r}
+fit.fl = flash(X, ebnm_fn = c(ebnm_point_exponential,ebnm_normal), greedy_Kmax = 9, backfit=TRUE)
+apply(abs(cor(L,fit.fl$L_pm)),1,max)
+
+fit.fl.gb = flash_init(X) |> flash_factors_init(init = list(fit.fl$L_pm, fit.fl$F_pm), ebnm_fn = c(ebnm_generalized_binary,ebnm_normal)) |> flash_backfit()
+apply(abs(cor(L,fit.fl.gb$L_pm)),1,max)
+
+```
 
 
