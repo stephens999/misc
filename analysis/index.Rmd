@@ -98,6 +98,7 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 
 * [Initial try of fastICA on simulated data](fastica_01.html)
 * [Single unit fastICA on simulated data](fastica_02.html)
+* [Single unit fastICA with centering, to help find asymmetric binary groups](fastica_centered.html)
 * [Motivated by ICA, I try a flash+low-rank approach](flash_pca.html)
 
 # Multinomial factor models
