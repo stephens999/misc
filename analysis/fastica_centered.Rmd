@@ -211,7 +211,7 @@ compute_objective(X1,res$w,res$c)
 
 ### centered fastICA (true factor start)
 
-Now I try initializing at (or close to) a true factor: it converges to the solution I wanted, and more importantly *it has a much higher objective* than then random start. This confirms that the changed objective function is having the desired effect.
+Now I try initializing at (or close to) a true factor: it converges to the solution I wanted, with a similar objective function as the random start.
 ```{r}
 w = X1 %*% L[,1]
 plot(t(X1) %*% w)
@@ -225,7 +225,7 @@ plot(as.vector(t(X1) %*% res$w))
 print(compute_objective(X1,res$w,res$c), digits=20)
 ```
 
-Try initializing from a different true factor - we see the objective function is almost identical as for the first factor in this case (but slightly lower).
+Try initializing from a different true factor - we see the objective function is almost identical as for the first factor in this case.
 ```{r}
 w = X1 %*% L[,2]
 plot(t(X1) %*% w)
@@ -239,8 +239,7 @@ plot(as.vector(t(X1) %*% res$w))
 print(compute_objective(X1,res$w,res$c), digits=20)
 ```
 
-Same for the third factor: so the objective function for all 3 factors is approximately equal. This is not a coincidence; in general the objective function for all binary factors of equal size should be approximately equal with this centering approach. (But the objective function will tend to favor 
-unbalanced factors.)
+Same for the third factor: so the objective function for all 3 factors is approximately equal. This is not a coincidence; in general the objective function for all binary factors of equal size should be approximately equal with this centering approach. (There is a question of whether the objective function favors balanced or unbalanced factors, something I need to return to. At first I thought it would always favor unbalanced, but I now believe that this may depend on $n$ because of the constraint $w'w=1$ (rather than $w'w = n$).)
 ```{r}
 w = X1 %*% L[,3]
 plot(t(X1) %*% w)
