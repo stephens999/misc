@@ -509,15 +509,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreec0b37e9e5440d29107082b8796548725f4076734targetblankc0b37e9a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree7057ebc37696247e7026d1cb8c99c15404b5d035targetblank7057ebca">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/stephens999/misc/tree/c0b37e9e5440d29107082b8796548725f4076734" target="_blank">c0b37e9</a>
+<a href="https://github.com/stephens999/misc/tree/7057ebc37696247e7026d1cb8c99c15404b5d035" target="_blank">7057ebc</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreec0b37e9e5440d29107082b8796548725f4076734targetblankc0b37e9a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree7057ebc37696247e7026d1cb8c99c15404b5d035targetblank7057ebca"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -527,7 +527,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/stephens999/misc/tree/c0b37e9e5440d29107082b8796548725f4076734" target="_blank">c0b37e9</a>.
+<a href="https://github.com/stephens999/misc/tree/7057ebc37696247e7026d1cb8c99c15404b5d035" target="_blank">7057ebc</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -779,6 +779,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/7057ebc37696247e7026d1cb8c99c15404b5d035/analysis/fastica_centered.Rmd" target="_blank">7057ebc</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+<td>
+workflowr::wflow_publish("analysis/fastica_centered.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/a830cac951ee2e5465a5e17b0197098b14189195/docs/fastica_centered.html" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -1180,6 +1214,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-4-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/9584c9b382cea2b3a3317c8fa4610f25f3b15c40/docs/figure/fastica_centered.Rmd/unnamed-chunk-4-1.png" target="_blank">9584c9b</a>
 </td>
 <td>
@@ -1201,9 +1246,8 @@ Matthew Stephens
 <div id="centered-fastica-true-factor-start" class="section level3">
 <h3>centered fastICA (true factor start)</h3>
 <p>Now I try initializing at (or close to) a true factor: it converges
-to the solution I wanted, and more importantly <em>it has a much higher
-objective</em> than then random start. This confirms that the changed
-objective function is having the desired effect.</p>
+to the solution I wanted, with a similar objective function as the
+random start.</p>
 <pre class="r"><code>w = X1 %*% L[,1]
 plot(t(X1) %*% w)</code></pre>
 <p><img src="figure/fastica_centered.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
@@ -1279,6 +1323,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-5-2.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/9584c9b382cea2b3a3317c8fa4610f25f3b15c40/docs/figure/fastica_centered.Rmd/unnamed-chunk-5-2.png" target="_blank">9584c9b</a>
 </td>
 <td>
@@ -1295,8 +1350,7 @@ Matthew Stephens
 <pre class="r"><code>print(compute_objective(X1,res$w,res$c), digits=20)</code></pre>
 <pre><code>[1] 0.51871922791959368393</code></pre>
 <p>Try initializing from a different true factor - we see the objective
-function is almost identical as for the first factor in this case (but
-slightly lower).</p>
+function is almost identical as for the first factor in this case.</p>
 <pre class="r"><code>w = X1 %*% L[,2]
 plot(t(X1) %*% w)</code></pre>
 <p><img src="figure/fastica_centered.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
@@ -1383,6 +1437,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-6-2.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/7afc85fffeb23182365517f3ac733a6610a2782e/docs/figure/fastica_centered.Rmd/unnamed-chunk-6-2.png" target="_blank">7afc85f</a>
 </td>
 <td>
@@ -1401,8 +1466,13 @@ Matthew Stephens
 <p>Same for the third factor: so the objective function for all 3
 factors is approximately equal. This is not a coincidence; in general
 the objective function for all binary factors of equal size should be
-approximately equal with this centering approach. (But the objective
-function will tend to favor unbalanced factors.)</p>
+approximately equal with this centering approach. (There is a question
+of whether the objective function favors balanced or unbalanced factors,
+something I need to return to. At first I thought it would always favor
+unbalanced, but I now believe that this may depend on <span
+class="math inline">\(n\)</span> because of the constraint <span
+class="math inline">\(w&#39;w=1\)</span> (rather than <span
+class="math inline">\(w&#39;w = n\)</span>).)</p>
 <pre class="r"><code>w = X1 %*% L[,3]
 plot(t(X1) %*% w)</code></pre>
 <p><img src="figure/fastica_centered.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
@@ -1489,6 +1559,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-7-2.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/7afc85fffeb23182365517f3ac733a6610a2782e/docs/figure/fastica_centered.Rmd/unnamed-chunk-7-2.png" target="_blank">7afc85f</a>
 </td>
 <td>
@@ -1542,6 +1623,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-8-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/stephens999/misc/blob/7afc85fffeb23182365517f3ac733a6610a2782e/docs/figure/fastica_centered.Rmd/unnamed-chunk-8-1.png" target="_blank">7afc85f</a>
@@ -1630,6 +1722,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-9-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/7afc85fffeb23182365517f3ac733a6610a2782e/docs/figure/fastica_centered.Rmd/unnamed-chunk-9-1.png" target="_blank">7afc85f</a>
 </td>
 <td>
@@ -1693,6 +1796,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-10-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/7afc85fffeb23182365517f3ac733a6610a2782e/docs/figure/fastica_centered.Rmd/unnamed-chunk-10-1.png" target="_blank">7afc85f</a>
 </td>
 <td>
@@ -1752,6 +1866,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-11-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/stephens999/misc/blob/7afc85fffeb23182365517f3ac733a6610a2782e/docs/figure/fastica_centered.Rmd/unnamed-chunk-11-1.png" target="_blank">7afc85f</a>
@@ -1826,6 +1951,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-12-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/7afc85fffeb23182365517f3ac733a6610a2782e/docs/figure/fastica_centered.Rmd/unnamed-chunk-12-1.png" target="_blank">7afc85f</a>
 </td>
 <td>
@@ -1880,6 +2016,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-13-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/stephens999/misc/blob/7afc85fffeb23182365517f3ac733a6610a2782e/docs/figure/fastica_centered.Rmd/unnamed-chunk-13-1.png" target="_blank">7afc85f</a>
@@ -2004,6 +2151,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-15-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-15-1.png" target="_blank">c7ec3a6</a>
@@ -2133,6 +2291,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-16-2.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-16-2.png" target="_blank">c7ec3a6</a>
 </td>
 <td>
@@ -2188,6 +2357,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-17-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-17-1.png" target="_blank">c7ec3a6</a>
 </td>
 <td>
@@ -2214,6 +2394,43 @@ Matthew Stephens
 </div>
 <pre class="r"><code>plot(sort(obj[obj&gt;0.46]))</code></pre>
 <p><img src="figure/fastica_centered.Rmd/unnamed-chunk-17-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-17-2">
+Past versions of unnamed-chunk-17-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-17-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-17-2.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This is the top seed - finds group 1</p>
 <pre class="r"><code>seed= order(obj,decreasing=TRUE)[1]
 set.seed(seed)
@@ -2255,6 +2472,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-18-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-18-1.png" target="_blank">c7ec3a6</a>
@@ -2327,6 +2555,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-19-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-19-1.png" target="_blank">c7ec3a6</a>
 </td>
 <td>
@@ -2378,6 +2617,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-20-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-20-1.png" target="_blank">c7ec3a6</a>
@@ -2447,6 +2697,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-20-2.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-20-2.png" target="_blank">c7ec3a6</a>
 </td>
 <td>
@@ -2500,6 +2761,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-21-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-21-1.png" target="_blank">c7ec3a6</a>
@@ -2569,6 +2841,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-21-2.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-21-2.png" target="_blank">c7ec3a6</a>
 </td>
 <td>
@@ -2630,6 +2913,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-22-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-22-1.png" target="_blank">c7ec3a6</a>
@@ -2697,6 +2991,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-23-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-23-1.png" target="_blank">c7ec3a6</a>
 </td>
 <td>
@@ -2712,6 +3017,43 @@ Matthew Stephens
 </div>
 <pre class="r"><code>plot(sort(obj[obj&gt;0.48]))</code></pre>
 <p><img src="figure/fastica_centered.Rmd/unnamed-chunk-23-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-23-2">
+Past versions of unnamed-chunk-23-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-23-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-23-2.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>print(sort(obj,decreasing=TRUE)[1:20],digits=20)</code></pre>
 <pre><code> [1] 0.55695390343418005319 0.55695390343417972012 0.55695390343417883194
  [4] 0.55694765457779737972 0.55694765457779682460 0.55692504937686326816
@@ -2756,6 +3098,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-24-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-24-1.png" target="_blank">c7ec3a6</a>
@@ -2808,6 +3161,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-25-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-25-1.png" target="_blank">c7ec3a6</a>
@@ -2863,6 +3227,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-26-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-26-1.png" target="_blank">c7ec3a6</a>
 </td>
 <td>
@@ -2912,6 +3287,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-27-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-27-1.png" target="_blank">c7ec3a6</a>
@@ -2970,6 +3356,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-28-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-28-1.png" target="_blank">c7ec3a6</a>
 </td>
 <td>
@@ -3021,6 +3418,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-29-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-29-1.png" target="_blank">c7ec3a6</a>
 </td>
 <td>
@@ -3053,6 +3461,43 @@ cor(L,t(X1) %*% res$w)</code></pre>
  [9,] -0.1249999</code></pre>
 <pre class="r"><code>plot(as.vector(t(X1) %*% res$w))</code></pre>
 <p><img src="figure/fastica_centered.Rmd/unnamed-chunk-29-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-29-2">
+Past versions of unnamed-chunk-29-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-29-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-29-2.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>print(compute_objective(X1,res$w,res$c), digits=20)</code></pre>
 <pre><code>[1] 0.40575990507975584487</code></pre>
 </div>
@@ -3097,6 +3542,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-30-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-30-1.png" target="_blank">c7ec3a6</a>
@@ -3160,6 +3616,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-31-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-31-1.png" target="_blank">c7ec3a6</a>
 </td>
 <td>
@@ -3175,6 +3642,43 @@ Matthew Stephens
 </div>
 <pre class="r"><code>image(Lhat[order(obj,decreasing=TRUE),])</code></pre>
 <p><img src="figure/fastica_centered.Rmd/unnamed-chunk-31-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-31-2">
+Past versions of unnamed-chunk-31-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-31-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-31-2.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>The top seed is a single group:</p>
 <pre class="r"><code>seed = order(obj,decreasing=TRUE)[1]
 set.seed(seed)
@@ -3214,6 +3718,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-32-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-32-1.png" target="_blank">c7ec3a6</a>
@@ -3268,6 +3783,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-33-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-33-1.png" target="_blank">c7ec3a6</a>
@@ -3333,6 +3859,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-34-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-34-1.png" target="_blank">c7ec3a6</a>
 </td>
 <td>
@@ -3379,6 +3916,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-35-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-35-1.png" target="_blank">c7ec3a6</a>
@@ -3432,6 +3980,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-36-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-36-1.png" target="_blank">c7ec3a6</a>
 </td>
 <td>
@@ -3479,6 +4038,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-37-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-37-1.png" target="_blank">c7ec3a6</a>
@@ -3532,6 +4102,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/a830cac951ee2e5465a5e17b0197098b14189195/docs/figure/fastica_centered.Rmd/unnamed-chunk-38-1.png" target="_blank">a830cac</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-38-1.png" target="_blank">c7ec3a6</a>
