@@ -313,6 +313,294 @@ plot(log(max(obj)-obj))
 print(sort(obj-max(obj),decreasing=TRUE),digits=20)
 ```
 
+
+## 9 groups
+
+Now I try 9 groups, with 20 members each, which should be harder. 
+```{r}
+K=9
+p = 1000
+n = 100
+set.seed(1)
+L = matrix(0,nrow=n,ncol=K)
+for(i in 1:K){L[sample(1:n,20),i]=1}
+FF = matrix(rnorm(p*K), nrow = p, ncol=K)
+
+X = L %*% t(FF) + rnorm(n*p,0,0.01)
+plot(X %*% FF[,1])
+```
+
+### centered fastICA (random start)
+
+As expected from above, initialization to a random w does not pick out a single source:
+```{r}
+X1 = preprocess(X)
+w = rnorm(nrow(X1))
+c = 0 # this does not matter as c is updated first
+res = list(w=w,c=c)
+for(i in 1:100)
+  res = fastica_r1update_wc(X1,res$w,res$c)
+cor(L,t(X1) %*% res$w)
+plot(as.vector(t(X1) %*% res$w))
+res$c
+compute_objective(X1,res$w,res$c)
+```
+
+
+### centered fastICA (true factor start)
+
+Now I try initializing at (or close to) a true factor: again it converges to the solution I wanted, and  has a much higher objective than then random start. 
+```{r}
+w = X1 %*% L[,1]
+plot(t(X1) %*% w)
+
+c = 0 # note this does not matter much because c gets updated first in the algorithm
+res = list(w=w,c=c)
+print(compute_objective(X1,res$w,res$c), digits=20)
+
+
+for(i in 1:100)
+  res = fastica_r1update_wc(X1,res$w,res$c)
+cor(L,t(X1) %*% res$w)
+plot(as.vector(t(X1) %*% res$w))
+print(compute_objective(X1,res$w,res$c), digits=20)
+```
+
+
+
+### centered fastICA (many random starts)
+
+Here I try with 100 random starts - there are lots of different results, and some of them reach objectives similar to that from the true starts.
+```{r}
+obj = rep(0,100)
+for(seed in 1:100){
+  set.seed(seed)
+  res = list(w = rnorm(nrow(X1)), c=0)
+  for(i in 1:100)
+    res = fastica_r1update_wc(X1,res$w,res$c)
+  obj[seed] = compute_objective(X1,res$w,res$c)
+}
+plot(obj)
+print(sort(obj,decreasing=TRUE)[1:20],digits=20)
+```
+
+This is the top seed - finds group 9
+```{r}
+seed= order(obj,decreasing=TRUE)[1]
+set.seed(seed)
+res = list(w = rnorm(nrow(X1)), c=0)
+for(i in 1:100)
+  res = fastica_r1update_wc(X1,res$w,res$c)
+cor(L,t(X1) %*% res$w)
+plot(as.vector(t(X1) %*% res$w))
+max(obj)
+```
+
+Here is the seed for the 2nd biggest objective (finds the 6th factor)
+```{r}
+seed= order(obj,decreasing=TRUE)[2]
+set.seed(seed)
+res = list(w = rnorm(nrow(X1)), c=0)
+for(i in 1:100)
+  res = fastica_r1update_wc(X1,res$w,res$c)
+cor(L,t(X1) %*% res$w)
+plot(as.vector(t(X1) %*% res$w))
+```
+
+Here is the seed for the 4rd biggest objective (finds factor 5)
+```{r}
+seed= order(obj,decreasing=TRUE)[4]
+set.seed(seed)
+res = list(w = rnorm(nrow(X1)), c=0)
+for(i in 1:100)
+  res = fastica_r1update_wc(X1,res$w,res$c)
+cor(L,t(X1) %*% res$w)
+plot(as.vector(t(X1) %*% res$w))
+```
+
+### Try finding two groups
+
+It turns out that factors 3 and 9 are not overlapping in this simulation, so I wondered whether combining them would
+be a good solution. Initializing at that combination does find the combined solution, but the objective is lower than for a single group because the objective favors unbalanced groups.
+```{r}
+w = X1 %*% (L[,3] + L[,9])
+plot(t(X1) %*% w)
+
+c = 0 # note this does not matter much because c gets updated first in the algorithm
+res = list(w=w,c=c)
+print(compute_objective(X1,res$w,res$c), digits=20)
+
+for(i in 1:100)
+  res = fastica_r1update_wc(X1,res$w,res$c)
+cor(L,t(X1) %*% res$w)
+plot(as.vector(t(X1) %*% res$w))
+print(compute_objective(X1,res$w,res$c), digits=20)
+```
+
+Interestingly this seems to be an unstable solution: if I initialize nearby then it moves away to a single group. 
+```{r}
+w = X1 %*% (0.45*L[,3] + 0.55*L[,9])
+plot(t(X1) %*% w)
+
+c = 0 # note this does not matter much because c gets updated first in the algorithm
+res = list(w=w,c=c)
+print(compute_objective(X1,res$w,res$c), digits=20)
+
+for(i in 1:100)
+  res = fastica_r1update_wc(X1,res$w,res$c)
+cor(L,t(X1) %*% res$w)
+plot(as.vector(t(X1) %*% res$w))
+print(compute_objective(X1,res$w,res$c), digits=20)
+```
+
+## Four non-overlapping groups
+
+Here I look at 4 equal non-overlapping groups. I'm interested in whether it converges to a single group or a combination of groups, and whether the combination of 2 groups is a stable or unstable solution. It turns out that the vast majority of random starts converge to a combination of 2 groups, which is very different behavior than above. It gets me wondering whether this is because i) the non-overlapping situation, or ii) the symmetry created by the fact there are only 4 groups (2 vs 2). 
+
+```{r}
+set.seed(1)
+n = 100
+p = 1000
+L = matrix(0,nrow=n,ncol=4)
+L[1:25,1] = 1 
+L[26:50,2] = 1 
+L[51:75,3]  = 1
+L[76:100,4] = 1
+FF = matrix(rnorm(p*4),nrow=p) 
+X = L %*% t(FF) + rnorm(n*p,0,0.01)
+image(X%*% t(X))
+X1 = preprocess(X,n.comp=4)
+```
+
+
+### centered fastICA (many random starts)
+
+Here I try with 100 random starts. Two seeds find a big objective (turns out to correspond to a single group) and others find what looks like a very similar objective (turns out to correspond to a combination of two groups).
+```{r}
+obj = rep(0,100)
+for(seed in 1:100){
+  set.seed(seed)
+  res = list(w = rnorm(nrow(X1)), c=0)
+  for(i in 1:100)
+    res = fastica_r1update_wc(X1,res$w,res$c)
+  obj[seed] = compute_objective(X1,res$w,res$c)
+}
+plot(obj)
+```
+
+Here is the seed for the biggest objective (finds factor 3)
+```{r}
+seed= order(obj,decreasing=TRUE)[1]
+set.seed(seed)
+res = list(w = rnorm(nrow(X1)), c=0)
+for(i in 1:100)
+  res = fastica_r1update_wc(X1,res$w,res$c)
+cor(L,t(X1) %*% res$w)
+plot(as.vector(t(X1) %*% res$w))
+```
+
+Here is the seed for the 2nd biggest objective (finds factor 2)
+```{r}
+seed= order(obj,decreasing=TRUE)[2]
+set.seed(seed)
+res = list(w = rnorm(nrow(X1)), c=0)
+for(i in 1:100)
+  res = fastica_r1update_wc(X1,res$w,res$c)
+cor(L,t(X1) %*% res$w)
+plot(as.vector(t(X1) %*% res$w))
+```
+
+Here is the seed for the 3rd biggest objective (finds two combined factors)
+```{r}
+seed= order(obj,decreasing=TRUE)[3]
+set.seed(seed)
+res = list(w = rnorm(nrow(X1)), c=0)
+for(i in 1:100)
+  res = fastica_r1update_wc(X1,res$w,res$c)
+cor(L,t(X1) %*% res$w)
+plot(as.vector(t(X1) %*% res$w))
+```
+
+## Nine non-overlapping groups
+
+Here I look at 9 equal non-overlapping groups. 
+
+Start by creating L to be a binary matrix with 9 columns, 25*9 rows, and a single 1 in each row.
+```{r}
+set.seed(1)
+n = 225
+p = 1000
+L = matrix(0,nrow=n,ncol=9)
+for(i in 1:9){L[((i-1)*25+1):(i*25),i] = 1}
+FF = matrix(rnorm(p*9),nrow=p)
+X = L %*% t(FF) + rnorm(n*p,0,0.01)
+image(X%*% t(X))
+X1 = preprocess(X,n.comp=10)
+```
+
+
+### centered fastICA (many random starts)
+
+Here I try with 100 random starts - it turns out that the objective goes off to infinity a lot, with c getting very large. This was unexpected, but maybe with hindsight the surprising thing is that we did not see the behaviour previously! The objective is indeed unbounded as we let c go to infinity. I think that intuitively this is equivalent to putting all the points in a single group. We need to do something to avoid this - maybe constrain c so that the values of Xw+c span both sides of 0. So max(Xw)+c > 0 and min(Xw) + c < 0. Or equivalently -max(Xw)< c < -min(Xw).
+```{r}
+obj = rep(0,100)
+for(seed in 1:100){
+  set.seed(seed)
+  res = list(w = rnorm(nrow(X1)), c=0)
+  for(i in 1:100)
+    res = fastica_r1update_wc(X1,res$w,res$c)
+  obj[seed] = compute_objective(X1,res$w,res$c)
+}
+plot(obj)
+obj
+res$c
+```
+
+Here are some results for non-infinite objectives: they find solutions corresponding to a split of the data into two groups.
+```{r}
+seed= 1
+set.seed(seed)
+res = list(w = rnorm(nrow(X1)), c=0)
+for(i in 1:100)
+  res = fastica_r1update_wc(X1,res$w,res$c)
+cor(L,t(X1) %*% res$w)
+plot(as.vector(t(X1) %*% res$w))
+res$c
+```
+
+
+```{r}
+seed= 2
+set.seed(seed)
+res = list(w = rnorm(nrow(X1)), c=0)
+for(i in 1:100)
+  res = fastica_r1update_wc(X1,res$w,res$c)
+cor(L,t(X1) %*% res$w)
+plot(as.vector(t(X1) %*% res$w))
+res$c
+```
+
+Here I try initializing at a single group: I find the solution goes off to c=infinity.
+```{r}
+w = X1 %*% L[,1]
+plot(t(X1) %*% w)
+
+c = 0 # note this does not matter much because c gets updated first in the algorithm
+res = list(w=w,c=c)
+print(compute_objective(X1,res$w,res$c), digits=20)
+
+
+for(i in 1:100)
+  res = fastica_r1update_wc(X1,res$w,res$c)
+cor(L,t(X1) %*% res$w)
+plot(as.vector(t(X1) %*% res$w))
+print(compute_objective(X1,res$w,res$c), digits=20)
+```
+
+
+
+
+
 ### Tree simulations
 
 Here is a simple tree-based simulations; it's a 4-leaf tree with two bifurcating branches.
@@ -388,129 +676,49 @@ cor(L,t(X1) %*% res$w)
 plot(as.vector(t(X1) %*% res$w))
 ```
 
-### Joint updates (Ignore for now?)
 
-After some more conversations with Gemini, we came up with another approach that uses the total derivative of the profiled objective $J(w, c(w))$ to update $w$. We also came up with an approximation for $\hat{c}(w)$ as the negative cubed root of $E(w^3)$. I am not sure that the update is correct, but Gemini gave me a new update rule for $w$ that includes a correction term accounting for the dependence of $c$ on $w$, and also using the approximation for $c$. I try this empirically here and include for completeness, but I think there are a number of issues and don't think this is right. (It could be useful to investigate the approximation for c and the new update separately rather than doing both at once as here.) Just a placeholder for the idea that maybe we should jointly update w,c rather than block updates?
+### Initialize in the original space
 
-```{r}
-#'
-#' This is the function that the "profiled" and "skew" update rules
-#' are trying to find an extremum (max/min) of.
-#'
-#' @param X The pre-processed (centered and whitened) data matrix (p x n).
-#' @param w The weight vector (p x 1).
-#' @return The scalar value of the objective function.
-
-compute_profiled_objective = function(X, w) {
-  
-  # 1. Normalize w to stay on the ||w||=1 constraint
-  w = w / sqrt(sum(w^2))
-  
-  # 2. Calculate the projection
-  P = as.vector(t(X) %*% w) # (n x 1) vector
-  
-  # 3. Approximate c(w) from skewness (same as in your update rule)
-  skewness_estimate = mean(P^3)
-  c_approx = - sign(skewness_estimate) * (abs(skewness_estimate))^(1/3)
-  
-  # 4. Create the shifted projection
-  S = P + c_approx
-  
-  # 5. Apply G(u) = log(cosh(u))
-  G_S = log(cosh(S))
-  
-  # 6. Compute the expectation (as a sample mean)
-  objective_value = mean(G_S)
-  
-  return(objective_value)
-}
-
-#' Single-unit FastICA update using the total derivative of the
-#' profiled objective J(w, c(w))
-#'
-#' @param X The pre-processed (centered and whitened) data matrix (p x n).
-#' @param w The current weight vector (p x 1).
-#' @return The updated, unnormalized weight vector 'w'.
-
-fastica_r1update_profiled = function(X, w){
-  
-  n_samples = ncol(X)
-  
-  # 1. Normalize w
-  w = w / sqrt(sum(w^2))
-  
-  # 2. Get projection and approximate c(w)
-  P = as.vector(t(X) %*% w)
-  skewness_estimate = mean(P^3)
-  c_approx = - sign(skewness_estimate) * (abs(skewness_estimate))^(1/3)
-  
-  # 3. Create the shifted projection
-  P_shifted = P + c_approx
-  
-  # 4. Calculate g(P) and g'(P)
-  G = tanh(P_shifted)
-  G2 = 1 - tanh(P_shifted)^2
-  
-  # 5. Calculate all the expectation terms
-  # (Note: We use sums/matrix products for (n * E[...]))
-  E_Xg = X %*% G             # n * E[X g(P)]
-  E_g2 = sum(G2)             # n * E[g'(P)]
-  
-  # --- New terms required for the correction ---
-  E_g = sum(G)               # n * E[g(P)]
-  E_Xg2 = X %*% G2           # n * E[X g'(P)]
-  
-  # Calculate the scalar correction factor
-  # (E_g / n) / (E_g2 / n) = E_g / E_g2
-  # Add epsilon for stability
-  correction_scalar = E_g / (E_g2 + 1e-6) 
-  
-  # 6. Calculate the new correction term vector
-  correction_term = correction_scalar * E_Xg2
-  
-  # 7. Apply the full, new update rule
-  # w_new = (E_Xg - correction_term) - E_g2 * w
-  w_new = (E_Xg - correction_term) - E_g2 * w
-  
-  return(w_new)
-}
-```
-
+Here I try initializing by a random linear combination of the columns of the original X. Then I choose w so that X1' w equals this l1.
 ```{r}
 set.seed(1)
-w = X1 %*% L[,1] + rnorm(nrow(X1),0,5)
-plot(t(X1) %*% w)
-init_val = t(X1) %*% w
-init_val = init_val/sqrt(mean(init_val^2))
-
-for(i in 1:100)
-  w = fastica_r1update_profiled(X1,w)
-cor(L,t(X1) %*% w)
-plot(as.vector(t(X1) %*% w))
-compute_profiled_objective(X1,w)
+w1 = rnorm(ncol(X)) # linear comb of columns in the original space
+l1 = X %*% w1
+w = X1 %*% l1
+w.init = w/mean(w^2)
+plot(t(X1) %*% w.init, l1)
 ```
 
-Try with more random start and several random seeds - there are lots of different results, and none of them reach as big a value of the objective. 
+Initializing here gives the two groups.
 ```{r}
-obj = rep(0,100)
-for(seed in 1:100){
-  set.seed(seed)
-  w = rnorm(nrow(X1))
-  for(i in 1:100)
-    w = fastica_r1update_profiled(X1,w)
-  obj[seed] = compute_profiled_objective(X1,w)
-}
-plot(obj)
+res = list(w = w.init, c=0)
+for(i in 1:100)
+  res = fastica_r1update_wc(X1,res$w,res$c)
+cor(L,t(X1) %*% res$w)
+plot(as.vector(t(X1) %*% res$w))
+lhat = t(X1) %*% res$w
+what = t(X) %*% lhat # finds an optimal w in the original space
 ```
 
-Here are the results for the seed achieving the max. It roughly combines two of the groups.
+Now find the what in the original space that corresponds to this solution, and initialize orthogonal to what in the original space
 ```{r}
-seed= which.max(obj)
-set.seed(seed)
-w = rnorm(nrow(X1))
-for(i in 1:100)
-  w = fastica_r1update_profiled(X1,w)
-cor(L,t(X1) %*% w)
-plot(as.vector(t(X1) %*% w))
+w1 = rnorm(ncol(X))
+w1 = w1 - sum(w1 * what)/(sum(what^2)) * what # orthogonal to what
+
+l1 = X %*% w1
+w = X1 %*% l1
+w.init = w/mean(w^2)
+plot(t(X1) %*% w.init, l1)
 ```
+
+Running from this one produces a mixed group. And this seems to happen repeatedly with this strategy. Need to investigate this more carefully.
+```{r}
+res = list(w = w.init, c=0)
+for(i in 1:100)
+  res = fastica_r1update_wc(X1,res$w,res$c)
+cor(L,t(X1) %*% res$w)
+plot(as.vector(t(X1) %*% res$w))
+```
+
+
 
