@@ -509,15 +509,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree80ad6368f56baf4440e54811aac16752b92c731etargetblank80ad636a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreec0b37e9e5440d29107082b8796548725f4076734targetblankc0b37e9a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/stephens999/misc/tree/80ad6368f56baf4440e54811aac16752b92c731e" target="_blank">80ad636</a>
+<a href="https://github.com/stephens999/misc/tree/c0b37e9e5440d29107082b8796548725f4076734" target="_blank">c0b37e9</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree80ad6368f56baf4440e54811aac16752b92c731etargetblank80ad636a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreec0b37e9e5440d29107082b8796548725f4076734targetblankc0b37e9a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -527,7 +527,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/stephens999/misc/tree/80ad6368f56baf4440e54811aac16752b92c731e" target="_blank">80ad636</a>.
+<a href="https://github.com/stephens999/misc/tree/c0b37e9e5440d29107082b8796548725f4076734" target="_blank">c0b37e9</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -548,7 +548,6 @@ Ignored files:
     Ignored:    analysis/.RData
     Ignored:    analysis/.Rhistory
     Ignored:    analysis/ALStruct_cache/
-    Ignored:    analysis/figure/
     Ignored:    data/.Rhistory
     Ignored:    data/methylation-data-for-matthew.rds
     Ignored:    data/pbmc/
@@ -785,6 +784,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/c0b37e9e5440d29107082b8796548725f4076734/analysis/fastica_centered.Rmd" target="_blank">c0b37e9</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+<td>
+workflowr::wflow_publish("analysis/fastica_centered.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/fastica_centered.html" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/80ad6368f56baf4440e54811aac16752b92c731e/analysis/fastica_centered.Rmd" target="_blank">80ad636</a>
 </td>
 <td>
@@ -913,6 +946,13 @@ iteration:</p>
 class="math inline">\(E[g(w^TX + c)] = 0\)</span>.</p>
 <p>Update w: Then, using that new c, perform the standard FastICA update
 for w.”</p>
+<p>EDIT1: I found that we also need to constrain c so that -max(w’X)&lt;
+c &lt; -min(w’X) to avoid c going to infinity, so I added this check to
+the code as a first try.</p>
+<p>EDIT2: I found sometimes we converged to suboptimal c, so I added a
+quick and dirty estimate of c based on 3rd moment of w’X. (this idea
+also came from a chat with Gemini, and comes from taylor series
+expansion of the objective)</p>
 <pre class="r"><code>#&#39; Single-unit FastICA update with an intercept term &#39;c&#39;
 #&#39;
 #&#39; @param X The pre-processed (centered and whitened) data matrix (p x n).
@@ -933,11 +973,21 @@ fastica_r1update_wc = function(X, w, c, c_update_steps = 1) {
   # P_current is an (n x 1) vector
   P_current = as.vector(t(X) %*% w) 
   
+  # Get a rough estimate of the optimal c using the third moment
+  skewness_estimate = mean(P_current^3)
+  # Calculate c (using sign() and abs() for robustness with negative numbers)
+  c_approx = - sign(skewness_estimate) * (abs(skewness_estimate))^(1/3)
+  
+  # check if this approximation is better than the current value. Note that my current objective is logcosh, and not the squared deviation from normal, so this is really only going to work for 
+  if(compute_objective(X, w, c_approx) &gt; compute_objective(X, w, c)){
+    c = c_approx
+  }
+  
   # We want to find &#39;c&#39; that solves E[g(P_current + c)] = 0
   # We use one (or more) Newton steps: c_new = c - f(c) / f&#39;(c)
-  
   for (i in 1:c_update_steps) {
     P_shifted = P_current + c
+    
     
     # g(P_current + c)
     G_c = tanh(P_shifted) 
@@ -953,6 +1003,16 @@ fastica_r1update_wc = function(X, w, c, c_update_steps = 1) {
     
     # The Newton step (add epsilon for stability)
     c = c - mean_G / (mean_G2 + 1e-6)
+    
+    # impose -max(w&#39;X)&lt; c &lt; -min(w&#39;X)
+    P_min = min(P_current)
+    P_max = max(P_current)
+    if(c &lt;= -P_max){
+      c = -P_max + 1e-6
+    }
+    if(c &gt;= -P_min){
+      c = -P_min - 1e-6
+    }
   }
   
   # --- Step 2: Update the weight vector &#39;w&#39; ---
@@ -1079,8 +1139,10 @@ Matthew Stephens
 </div>
 <div id="centered-fastica-random-start" class="section level3">
 <h3>centered fastICA (random start)</h3>
-<p>When I initialize these new updates with a random w, it does not pick
-out a single source:</p>
+<p>When I initialize these new updates with a random w, it picks out a
+single source! (Note: in earlier tries, before the EDITs above, and in
+particular before the quick-and-dirty estimation of c, this did not
+happen.)</p>
 <pre class="r"><code>X1 = preprocess(X)
 w = rnorm(nrow(X1))
 c = 0 # this does not matter as c is updated first
@@ -1088,10 +1150,10 @@ res = list(w=w,c=c)
 for(i in 1:100)
   res = fastica_r1update_wc(X1,res$w,res$c)
 cor(L,t(X1) %*% res$w)</code></pre>
-<pre><code>           [,1]
-[1,] -0.2146838
-[2,] -0.1209332
-[3,]  0.3947973</code></pre>
+<pre><code>              [,1]
+[1,] -6.246369e-02
+[2,]  6.874933e-06
+[3,]  9.999997e-01</code></pre>
 <pre class="r"><code>plot(as.vector(t(X1) %*% res$w))</code></pre>
 <p><img src="figure/fastica_centered.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
@@ -1132,9 +1194,9 @@ Matthew Stephens
 </div>
 </div>
 <pre class="r"><code>res$c</code></pre>
-<pre><code>[1] -0.03965451</code></pre>
+<pre><code>[1] -0.5017599</code></pre>
 <pre class="r"><code>compute_objective(X1,res$w,res$c)</code></pre>
-<pre><code>[1] 0.4035189</code></pre>
+<pre><code>[1] 0.5188668</code></pre>
 </div>
 <div id="centered-fastica-true-factor-start" class="section level3">
 <h3>centered fastICA (true factor start)</h3>
@@ -1188,9 +1250,9 @@ for(i in 1:100)
   res = fastica_r1update_wc(X1,res$w,res$c)
 cor(L,t(X1) %*% res$w)</code></pre>
 <pre><code>              [,1]
-[1,]  9.999997e-01
-[2,] -7.339242e-06
-[3,] -6.260554e-02</code></pre>
+[1,]  9.999996e-01
+[2,] -1.759454e-05
+[3,] -6.264399e-02</code></pre>
 <pre class="r"><code>plot(as.vector(t(X1) %*% res$w))</code></pre>
 <p><img src="figure/fastica_centered.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
@@ -1231,7 +1293,7 @@ Matthew Stephens
 </div>
 </div>
 <pre class="r"><code>print(compute_objective(X1,res$w,res$c), digits=20)</code></pre>
-<pre><code>[1] 1.1605289119177262247</code></pre>
+<pre><code>[1] 0.51871922791959368393</code></pre>
 <p>Try initializing from a different true factor - we see the objective
 function is almost identical as for the first factor in this case (but
 slightly lower).</p>
@@ -1292,9 +1354,9 @@ for(i in 1:100)
   res = fastica_r1update_wc(X1,res$w,res$c)
 cor(L,t(X1) %*% res$w)</code></pre>
 <pre><code>             [,1]
-[1,] 2.587794e-05
-[2,] 9.999997e-01
-[3,] 9.652197e-05</code></pre>
+[1,] 0.0000446438
+[2,] 0.9999996967
+[3,] 0.0001353547</code></pre>
 <pre class="r"><code>plot(as.vector(t(X1) %*% res$w))</code></pre>
 <p><img src="figure/fastica_centered.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
@@ -1335,7 +1397,7 @@ Matthew Stephens
 </div>
 </div>
 <pre class="r"><code>print(compute_objective(X1,res$w,res$c), digits=20)</code></pre>
-<pre><code>[1] 1.1605281825359521353</code></pre>
+<pre><code>[1] 0.51930698537828645645</code></pre>
 <p>Same for the third factor: so the objective function for all 3
 factors is approximately equal. This is not a coincidence; in general
 the objective function for all binary factors of equal size should be
@@ -1398,8 +1460,8 @@ for(i in 1:100)
   res = fastica_r1update_wc(X1,res$w,res$c)
 cor(L,t(X1) %*% res$w)</code></pre>
 <pre><code>              [,1]
-[1,] -6.247381e-02
-[2,]  9.005038e-06
+[1,] -6.246369e-02
+[2,]  6.874933e-06
 [3,]  9.999997e-01</code></pre>
 <pre class="r"><code>plot(as.vector(t(X1) %*% res$w))</code></pre>
 <p><img src="figure/fastica_centered.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
@@ -1441,7 +1503,7 @@ Matthew Stephens
 </div>
 </div>
 <pre class="r"><code>print(compute_objective(X1,res$w,res$c),digits=20)</code></pre>
-<pre><code>[1] 1.1605283389603271438</code></pre>
+<pre><code>[1] 0.51886684941364447088</code></pre>
 </div>
 <div id="centered-fastica-many-random-starts" class="section level3">
 <h3>centered fastICA (many random starts)</h3>
@@ -1495,26 +1557,53 @@ Matthew Stephens
 </table>
 </div>
 </div>
-<pre class="r"><code>print(sort(obj,decreasing=TRUE)[1:15],digits=20)</code></pre>
-<pre><code> [1] 1.16052891191772644675 1.16052891191772622470 1.16052891191772555857
- [4] 1.16052833896032758787 1.16052833896032714378 1.16052833894469764608
- [7] 1.16052818253595213527 1.16052818253595169118 0.40573150817501507648
-[10] 0.40573150817501502097 0.40573150817501502097 0.40573150817501502097
-[13] 0.40573150817501496546 0.40573150817501496546 0.40573150817501424381</code></pre>
-<p>Close inspection of the objective values suggest that the top 7 seeds
-find the first factor, seeds 8-10 find the third factor, and seeds 11-14
-find the second factor. This turns out to be correct! For example, here
-are the results for the seed achieving the max objective.</p>
+<pre class="r"><code>print(sort(obj,decreasing=TRUE),digits=20)</code></pre>
+<pre><code>  [1] 0.51930698537828845485 0.51930698537828656747 0.51930698537828656747
+  [4] 0.51930698537828656747 0.51930698537828656747 0.51930698537828656747
+  [7] 0.51930698537828656747 0.51930698537828656747 0.51930698537828656747
+ [10] 0.51930698537828656747 0.51930698537828656747 0.51930698537828656747
+ [13] 0.51930698537828656747 0.51930698537828656747 0.51930698537828645645
+ [16] 0.51930698537828645645 0.51930698537828645645 0.51930698537828645645
+ [19] 0.51930698537828645645 0.51930698537828645645 0.51930698537828645645
+ [22] 0.51930698537828645645 0.51930698537828645645 0.51930698537828645645
+ [25] 0.51930698537828645645 0.51930698537828645645 0.51930698537828645645
+ [28] 0.51930698537828645645 0.51930698537828645645 0.51930698537828645645
+ [31] 0.51930698537828645645 0.51930698537828645645 0.51930698537828623440
+ [34] 0.51930698537828556827 0.51886684941364458190 0.51886684941364458190
+ [37] 0.51886684941364458190 0.51886684941364458190 0.51886684941364458190
+ [40] 0.51886684941364458190 0.51886684941364447088 0.51886684941364447088
+ [43] 0.51886684941364447088 0.51886684941364447088 0.51886684941364447088
+ [46] 0.51886684941364447088 0.51886684941364447088 0.51886684941364447088
+ [49] 0.51886684941364447088 0.51886684941364447088 0.51886684941364447088
+ [52] 0.51886684941364447088 0.51886684941364435986 0.51886684941364435986
+ [55] 0.51886684941364435986 0.51886684941364435986 0.51886684941364435986
+ [58] 0.51886684941364435986 0.51886684941364435986 0.51886684941364435986
+ [61] 0.51886684941364435986 0.51886684941364435986 0.51886684941364424883
+ [64] 0.51886684941364302759 0.51886684941364236145 0.51886684941364002999
+ [67] 0.51886684941360528001 0.51871922791959379495 0.51871922791959379495
+ [70] 0.51871922791959379495 0.51871922791959379495 0.51871922791959379495
+ [73] 0.51871922791959379495 0.51871922791959379495 0.51871922791959368393
+ [76] 0.51871922791959368393 0.51871922791959368393 0.51871922791959368393
+ [79] 0.51871922791959368393 0.51871922791959368393 0.40573162852656541322
+ [82] 0.40573162852656530220 0.40573162852656530220 0.40573162852656530220
+ [85] 0.40573162852656524668 0.40573162852656524668 0.40412605315115385229
+ [88] 0.40412381520672896462 0.40367461059680193047 0.40361775430260704578
+ [91] 0.40361771206330265827 0.40361771034898891175 0.40361770196262586330
+ [94] 0.40221790981214344818 0.40215685345839463638 0.40212945707550534769
+ [97] 0.40127191419568858377 0.40127191419555457985 0.39804479888674620947
+[100] 0.39218264817917902754</code></pre>
+<p>Close inspection of the objective values suggest that first 34 seeds
+find one factor, seeds 35-67 find another and 68-80 a third.</p>
 <pre class="r"><code>seed= order(obj,decreasing=TRUE)[1]
 set.seed(seed)
 res = list(w = rnorm(nrow(X1)), c=0)
 for(i in 1:100)
   res = fastica_r1update_wc(X1,res$w,res$c)
 cor(L,t(X1) %*% res$w)</code></pre>
-<pre><code>              [,1]
-[1,] -9.999997e-01
-[2,]  7.339242e-06
-[3,]  6.260554e-02</code></pre>
+<pre><code>             [,1]
+[1,] 0.0000446438
+[2,] 0.9999996967
+[3,] 0.0001353547</code></pre>
 <pre class="r"><code>plot(as.vector(t(X1) %*% res$w))</code></pre>
 <p><img src="figure/fastica_centered.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
@@ -1566,19 +1655,18 @@ Matthew Stephens
 </div>
 </div>
 <pre class="r"><code>max(obj)</code></pre>
-<pre><code>[1] 1.160529</code></pre>
-<p>Here is the seed for the 8th biggest objective (finds the third
-factor)</p>
-<pre class="r"><code>seed= order(obj,decreasing=TRUE)[8]
+<pre><code>[1] 0.519307</code></pre>
+<p>Here is the seed for the 35th biggest objective</p>
+<pre class="r"><code>seed= order(obj,decreasing=TRUE)[35]
 set.seed(seed)
 res = list(w = rnorm(nrow(X1)), c=0)
 for(i in 1:100)
   res = fastica_r1update_wc(X1,res$w,res$c)
 cor(L,t(X1) %*% res$w)</code></pre>
 <pre><code>              [,1]
-[1,] -2.587794e-05
-[2,] -9.999997e-01
-[3,] -9.652197e-05</code></pre>
+[1,] -6.246369e-02
+[2,]  6.874933e-06
+[3,]  9.999997e-01</code></pre>
 <pre class="r"><code>plot(as.vector(t(X1) %*% res$w))</code></pre>
 <p><img src="figure/fastica_centered.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
@@ -1629,18 +1717,17 @@ Matthew Stephens
 </table>
 </div>
 </div>
-<p>Here is the seed for the 11th biggest objective (finds the second
-factor)</p>
-<pre class="r"><code>seed= order(obj,decreasing=TRUE)[11]
+<p>Here is the seed for the 68th biggest objective</p>
+<pre class="r"><code>seed= order(obj,decreasing=TRUE)[68]
 set.seed(seed)
 res = list(w = rnorm(nrow(X1)), c=0)
 for(i in 1:100)
   res = fastica_r1update_wc(X1,res$w,res$c)
 cor(L,t(X1) %*% res$w)</code></pre>
-<pre><code>            [,1]
-[1,]  0.04258654
-[2,] -0.11148268
-[3,] -0.10750148</code></pre>
+<pre><code>              [,1]
+[1,] -9.999996e-01
+[2,]  1.759454e-05
+[3,]  6.264399e-02</code></pre>
 <pre class="r"><code>plot(as.vector(t(X1) %*% res$w))</code></pre>
 <p><img src="figure/fastica_centered.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
@@ -1694,13 +1781,16 @@ Matthew Stephens
 </div>
 <div id="centered-fastica-pc-starts" class="section level3">
 <h3>centered fastICA (PC starts)</h3>
-<p>We would probably like to find better ways to initialize so that we
-can find all the three solutions with fewer starts. I thought maybe it
-could be helpful to initialize from the PCs (ie w = (1,0,0..0) etc).
-There are 10 of these because I’m whitening to 10 dimensions. The first
-two PCs do indeed both find a group, and a different group for each one.
-This is promising - it suggests maybe we can get good starting points
-using the top PCs.</p>
+<p>In initial tries (before introducing checks and quick-dirty
+approximation for c) most random initializations did not converge well,
+so I experimented with different initialization strategies.</p>
+<p>I thought maybe it could be helpful to initialize from the PCs (ie w
+= (1,0,0..0) etc). There are 10 of these because I’m whitening to 10
+dimensions. Before my checks I found initializations using the top PCs
+do indeed both find a group, and a different group for each one. But now
+I’ve added my checks all the PCs provide a good result. Still,
+initializations using the top PCs might be a strategy worth keeping in
+mind for the future.</p>
 <pre class="r"><code>obj = rep(0,10)
 for(pc in 1:10){
   w = rep(0,10)
@@ -1750,14 +1840,14 @@ Matthew Stephens
 </div>
 </div>
 <pre class="r"><code>print(sort(obj,decreasing=TRUE)[1:10],digits=20)</code></pre>
-<pre><code> [1] 1.16052891191772578061 1.16052833896032780991 0.33569309204304309535
- [4] 0.33569236181006040232 0.33569236180855116514 0.33569236180844630457
- [7] 0.33569236180806799608 0.33569236180661360391 0.33479965888634471982
-[10] 0.33478918679229641153</code></pre>
+<pre><code> [1] 0.51930698537839492523 0.51930698537828656747 0.51930698537828656747
+ [4] 0.51930698537828656747 0.51930698537828656747 0.51930698537828645645
+ [7] 0.51886684941364458190 0.51886684941364435986 0.51886684941364435986
+[10] 0.51871922791959379495</code></pre>
 <p>Here I try random starts, but only weighting the top 3 PCs (which
 should be the ones with the signals). This successfully enriches for
-finding a good solution. It is a bit hard to see but these random starts
-do find all 3 of the different factors.</p>
+finding a good solution and these random starts do find all 3 of the
+different factors.</p>
 <pre class="r"><code>obj = rep(0,100)
 for(seed in 1:100){
   set.seed(seed)
@@ -1766,7 +1856,7 @@ for(seed in 1:100){
     res = fastica_r1update_wc(X1,res$w,res$c)
   obj[seed] = compute_objective(X1,res$w,res$c)
 }
-plot(log(max(obj)-obj))</code></pre>
+plot(obj)</code></pre>
 <p><img src="figure/fastica_centered.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
 <button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-13-1">
@@ -1805,57 +1895,6 @@ Matthew Stephens
 </table>
 </div>
 </div>
-<pre class="r"><code>print(sort(obj-max(obj),decreasing=TRUE),digits=20)</code></pre>
-<pre><code>  [1]  0.0000000000000000000e+00  0.0000000000000000000e+00
-  [3]  0.0000000000000000000e+00 -4.4408920985006261617e-16
-  [5] -4.4408920985006261617e-16 -6.6613381477509392425e-16
-  [7] -6.6613381477509392425e-16 -6.6613381477509392425e-16
-  [9] -6.6613381477509392425e-16 -6.6613381477509392425e-16
- [11] -6.6613381477509392425e-16 -6.6613381477509392425e-16
- [13] -8.8817841970012523234e-16 -8.8817841970012523234e-16
- [15] -1.1102230246251565404e-15 -1.1102230246251565404e-15
- [17] -1.1102230246251565404e-15 -1.1102230246251565404e-15
- [19] -1.1102230246251565404e-15 -1.1102230246251565404e-15
- [21] -1.1102230246251565404e-15 -1.1102230246251565404e-15
- [23] -1.3322676295501878485e-15 -5.7295739863683081694e-07
- [25] -5.7295739863683081694e-07 -5.7295739863683081694e-07
- [27] -5.7295739863683081694e-07 -5.7295739908092002679e-07
- [29] -5.7295739930296463172e-07 -5.7295739930296463172e-07
- [31] -5.7295739930296463172e-07 -5.7295739930296463172e-07
- [33] -5.7295739930296463172e-07 -5.7295739930296463172e-07
- [35] -5.7295739930296463172e-07 -5.7295739952500923664e-07
- [37] -5.7295739952500923664e-07 -5.7295739952500923664e-07
- [39] -5.7295739952500923664e-07 -5.7295739952500923664e-07
- [41] -5.7295739952500923664e-07 -5.7295739952500923664e-07
- [43] -5.7295739952500923664e-07 -5.7295739952500923664e-07
- [45] -5.7295739974705384157e-07 -5.7295739974705384157e-07
- [47] -5.7295739974705384157e-07 -5.7295739974705384157e-07
- [49] -5.7295739996909844649e-07 -7.2938177386738800578e-07
- [51] -7.2938177408943261071e-07 -7.2938177408943261071e-07
- [53] -7.2938177408943261071e-07 -7.2938177431147721563e-07
- [55] -7.2938177431147721563e-07 -7.2938177431147721563e-07
- [57] -7.2938177431147721563e-07 -7.2938177431147721563e-07
- [59] -7.2938177431147721563e-07 -7.2938177431147721563e-07
- [61] -7.2938177453352182056e-07 -7.2938177453352182056e-07
- [63] -7.2938177453352182056e-07 -7.2938177453352182056e-07
- [65] -7.2938177453352182056e-07 -7.2938177475556642548e-07
- [67] -7.2938177475556642548e-07 -7.2938177475556642548e-07
- [69] -7.2938177475556642548e-07 -7.2938177497761103041e-07
- [71] -7.5641382430351467026e-01 -7.5641930268669210768e-01
- [73] -7.5701004594153054050e-01 -7.5701004600101584607e-01
- [75] -7.5701004984525943620e-01 -7.5765238076761654007e-01
- [77] -7.5888592804964782879e-01 -7.6483359217003621389e-01
- [79] -7.6754568945918366651e-01 -7.6802334733171306880e-01
- [81] -8.1911547324708500195e-01 -8.1911547327230171955e-01
- [83] -8.2480729140233477459e-01 -8.2483523861430496638e-01
- [85] -8.2483586062517444404e-01 -8.2483652447530753093e-01
- [87] -8.2483654468173117635e-01 -8.2483654787839433276e-01
- [89] -8.2483654806860839948e-01 -8.2483654950253981752e-01
- [91] -8.2483655010470391389e-01 -8.2483655011049950012e-01
- [93] -8.2483655011380496713e-01 -8.2567807766327172558e-01
- [95] -8.2571756401397278236e-01 -8.2572693829891297135e-01
- [97] -8.2574645378866295964e-01 -8.2586640225611351873e-01
- [99] -8.2598187574810000289e-01 -8.2653432775865576243e-01</code></pre>
 </div>
 </div>
 <div id="groups" class="section level2">
@@ -1896,6 +1935,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-14-1.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/7afc85fffeb23182365517f3ac733a6610a2782e/docs/figure/fastica_centered.Rmd/unnamed-chunk-14-1.png" target="_blank">7afc85f</a>
 </td>
 <td>
@@ -1911,8 +1961,8 @@ Matthew Stephens
 </div>
 <div id="centered-fastica-random-start-1" class="section level3">
 <h3>centered fastICA (random start)</h3>
-<p>As expected from above, initialization to a random w does not pick
-out a single source:</p>
+<p>Again, now that I have added checks on c, initialization to a random
+w picks out a single source.</p>
 <pre class="r"><code>X1 = preprocess(X)
 w = rnorm(nrow(X1))
 c = 0 # this does not matter as c is updated first
@@ -1920,16 +1970,16 @@ res = list(w=w,c=c)
 for(i in 1:100)
   res = fastica_r1update_wc(X1,res$w,res$c)
 cor(L,t(X1) %*% res$w)</code></pre>
-<pre><code>             [,1]
- [1,] -0.09726728
- [2,]  0.30070236
- [3,]  0.13628099
- [4,]  0.48908080
- [5,]  0.11271536
- [6,]  0.30924678
- [7,]  0.42893419
- [8,]  0.55328213
- [9,] -0.02730030</code></pre>
+<pre><code>               [,1]
+ [1,] -2.194553e-05
+ [2,] -2.163660e-05
+ [3,]  6.260970e-02
+ [4,]  9.999996e-01
+ [5,] -6.240341e-02
+ [6,]  6.267150e-02
+ [7,]  6.258475e-02
+ [8,] -1.250395e-01
+ [9,]  6.242655e-02</code></pre>
 <pre class="r"><code>plot(as.vector(t(X1) %*% res$w))</code></pre>
 <p><img src="figure/fastica_centered.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
@@ -1956,6 +2006,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-15-1.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/7afc85fffeb23182365517f3ac733a6610a2782e/docs/figure/fastica_centered.Rmd/unnamed-chunk-15-1.png" target="_blank">7afc85f</a>
 </td>
 <td>
@@ -1970,9 +2031,9 @@ Matthew Stephens
 </div>
 </div>
 <pre class="r"><code>res$c</code></pre>
-<pre><code>[1] 0.03743987</code></pre>
+<pre><code>[1] -0.5021346</code></pre>
 <pre class="r"><code>compute_objective(X1,res$w,res$c)</code></pre>
-<pre><code>[1] 0.4095468</code></pre>
+<pre><code>[1] 0.5190276</code></pre>
 </div>
 <div id="centered-fastica-true-factor-start-1" class="section level3">
 <h3>centered fastICA (true factor start)</h3>
@@ -2006,6 +2067,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-16-1.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/7afc85fffeb23182365517f3ac733a6610a2782e/docs/figure/fastica_centered.Rmd/unnamed-chunk-16-1.png" target="_blank">7afc85f</a>
 </td>
 <td>
@@ -2021,31 +2093,67 @@ Matthew Stephens
 </div>
 <pre class="r"><code>c = 0 # note this does not matter much because c gets updated first in the algorithm
 res = list(w=w,c=c)
-print(compute_objective(X1,res$w,res$c), digits=20)</code></pre>
-<pre><code>[1] 0.36109216320642395504</code></pre>
-<pre class="r"><code>for(i in 1:100)
+
+for(i in 1:100)
   res = fastica_r1update_wc(X1,res$w,res$c)
 cor(L,t(X1) %*% res$w)</code></pre>
 <pre><code>               [,1]
  [1,]  9.999996e-01
- [2,]  1.243654e-04
- [3,] -6.253190e-02
- [4,]  1.551905e-05
- [5,]  6.251122e-02
- [6,] -3.316446e-05
- [7,] -6.251458e-02
- [8,]  6.260251e-02
- [9,] -6.256465e-02</code></pre>
+ [2,]  1.853389e-04
+ [3,] -6.254243e-02
+ [4,]  1.938982e-05
+ [5,]  6.250741e-02
+ [6,] -5.766694e-05
+ [7,] -6.252991e-02
+ [8,]  6.266391e-02
+ [9,] -6.259863e-02</code></pre>
 <pre class="r"><code>plot(as.vector(t(X1) %*% res$w))</code></pre>
 <p><img src="figure/fastica_centered.Rmd/unnamed-chunk-16-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-16-2">
+Past versions of unnamed-chunk-16-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-16-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-16-2.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>print(compute_objective(X1,res$w,res$c), digits=20)</code></pre>
-<pre><code>[1] 1.1605285638478726185</code></pre>
+<pre><code>[1] 0.51910790814180762798</code></pre>
 </div>
 <div id="centered-fastica-many-random-starts-1" class="section level3">
 <h3>centered fastICA (many random starts)</h3>
-<p>Here I try with 100 random starts - there are lots of different
-results, and some of them reach objectives similar to that from the true
-starts.</p>
+<p>Here I try with 100 random starts - almost all of them reach
+objectives similar to that from the true starts. And we can see there
+seem to be 9 different solutions corresponding to the 9 groups.</p>
 <pre class="r"><code>obj = rep(0,100)
 for(seed in 1:100){
   set.seed(seed)
@@ -2080,6 +2188,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-17-1.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/7afc85fffeb23182365517f3ac733a6610a2782e/docs/figure/fastica_centered.Rmd/unnamed-chunk-17-1.png" target="_blank">7afc85f</a>
 </td>
 <td>
@@ -2093,31 +2212,25 @@ Matthew Stephens
 </table>
 </div>
 </div>
-<pre class="r"><code>print(sort(obj,decreasing=TRUE)[1:20],digits=20)</code></pre>
-<pre><code> [1] 1.1614533280555634498 1.1605284588712569960 1.1605284588712567739
- [4] 1.1605283085989401837 1.1605283085989401837 1.1605283085989397396
- [7] 1.1605282664300622386 1.1605282663666407483 1.1605282663666405263
-[10] 1.1605282663666400822 1.1605282663666400822 1.1605282663666400822
-[13] 1.1605282226977386983 1.1605282226977384763 1.1605282226977380322
-[16] 1.1605281785009746720 1.1605281785009744500 1.1605281374473852551
-[19] 1.1605281374473850331 1.1605281374473845890</code></pre>
-<p>This is the top seed - finds group 9</p>
+<pre class="r"><code>plot(sort(obj[obj&gt;0.46]))</code></pre>
+<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-17-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>This is the top seed - finds group 1</p>
 <pre class="r"><code>seed= order(obj,decreasing=TRUE)[1]
 set.seed(seed)
 res = list(w = rnorm(nrow(X1)), c=0)
 for(i in 1:100)
   res = fastica_r1update_wc(X1,res$w,res$c)
 cor(L,t(X1) %*% res$w)</code></pre>
-<pre><code>             [,1]
- [1,] -0.06252853
- [2,] -0.06257660
- [3,] -0.25000013
- [4,]  0.06255022
- [5,] -0.06239568
- [6,]  0.06260440
- [7,] -0.06246353
- [8,] -0.12503198
- [9,]  0.99999964</code></pre>
+<pre><code>               [,1]
+ [1,] -9.999996e-01
+ [2,] -1.853389e-04
+ [3,]  6.254243e-02
+ [4,] -1.938982e-05
+ [5,] -6.250741e-02
+ [6,]  5.766694e-05
+ [7,]  6.252991e-02
+ [8,] -6.266391e-02
+ [9,]  6.259863e-02</code></pre>
 <pre class="r"><code>plot(as.vector(t(X1) %*% res$w))</code></pre>
 <p><img src="figure/fastica_centered.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
@@ -2144,6 +2257,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-18-1.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/7afc85fffeb23182365517f3ac733a6610a2782e/docs/figure/fastica_centered.Rmd/unnamed-chunk-18-1.png" target="_blank">7afc85f</a>
 </td>
 <td>
@@ -2158,45 +2282,79 @@ Matthew Stephens
 </div>
 </div>
 <pre class="r"><code>max(obj)</code></pre>
-<pre><code>[1] 1.161453</code></pre>
-<p>Here is the seed for the 2nd biggest objective (finds the 6th
+<pre><code>[1] 0.5191079</code></pre>
+<p>Here is the seed for the 20th biggest objective (finds the 4th
 factor)</p>
-<pre class="r"><code>seed= order(obj,decreasing=TRUE)[2]
+<pre class="r"><code>seed= order(obj,decreasing=TRUE)[20]
 set.seed(seed)
 res = list(w = rnorm(nrow(X1)), c=0)
 for(i in 1:100)
   res = fastica_r1update_wc(X1,res$w,res$c)
 cor(L,t(X1) %*% res$w)</code></pre>
 <pre><code>               [,1]
- [1,] -1.660329e-04
- [2,]  6.260188e-02
- [3,]  1.037251e-05
- [4,]  6.251477e-02
- [5,] -6.248630e-02
- [6,]  9.999997e-01
- [7,] -6.258321e-02
- [8,] -6.251282e-02
- [9,]  6.251728e-02</code></pre>
+ [1,] -2.194553e-05
+ [2,] -2.163660e-05
+ [3,]  6.260970e-02
+ [4,]  9.999996e-01
+ [5,] -6.240341e-02
+ [6,]  6.267150e-02
+ [7,]  6.258475e-02
+ [8,] -1.250395e-01
+ [9,]  6.242655e-02</code></pre>
 <pre class="r"><code>plot(as.vector(t(X1) %*% res$w))</code></pre>
 <p><img src="figure/fastica_centered.Rmd/unnamed-chunk-19-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Here is the seed for the 4rd biggest objective (finds factor 5)</p>
-<pre class="r"><code>seed= order(obj,decreasing=TRUE)[4]
-set.seed(seed)
-res = list(w = rnorm(nrow(X1)), c=0)
-for(i in 1:100)
-  res = fastica_r1update_wc(X1,res$w,res$c)
-cor(L,t(X1) %*% res$w)</code></pre>
-<pre><code>               [,1]
- [1,]  0.0625264460
- [2,]  0.0624722551
- [3,] -0.0000935853
- [4,] -0.0625035238
- [5,]  0.9999996548
- [6,] -0.0625365535
- [7,]  0.0624249370
- [8,]  0.0623628638
- [9,] -0.0625123794</code></pre>
-<pre class="r"><code>plot(as.vector(t(X1) %*% res$w))</code></pre>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-19-1">
+Past versions of unnamed-chunk-19-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-19-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-19-1.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="try-finding-two-groups" class="section level3">
+<h3>Try finding two groups</h3>
+<p>It turns out that factors 3 and 9 are not overlapping in this
+simulation, so I wondered whether combining them would be a good
+solution. Initializing at that combination does find the combined
+solution, but the objective is lower than for a single group because the
+objective favors unbalanced groups.</p>
+<pre class="r"><code># show 3 and 9 are not overlapping
+L[,3]*L[,9]</code></pre>
+<pre><code>  [1] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ [38] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ [75] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0</code></pre>
+<pre class="r"><code>w = X1 %*% (L[,3] + L[,9])
+plot(t(X1) %*% w)</code></pre>
 <p><img src="figure/fastica_centered.Rmd/unnamed-chunk-20-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
 <button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-20-1">
@@ -2222,6 +2380,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-20-1.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/7afc85fffeb23182365517f3ac733a6610a2782e/docs/figure/fastica_centered.Rmd/unnamed-chunk-20-1.png" target="_blank">7afc85f</a>
 </td>
 <td>
@@ -2235,15 +2404,78 @@ Matthew Stephens
 </table>
 </div>
 </div>
+<pre class="r"><code>c = 0 # note this does not matter much because c gets updated first in the algorithm
+res = list(w=w,c=c)
+print(compute_objective(X1,res$w,res$c), digits=20)</code></pre>
+<pre><code>[1] 0.42683383934382418401</code></pre>
+<pre class="r"><code>for(i in 1:100)
+  res = fastica_r1update_wc(X1,res$w,res$c)
+cor(L,t(X1) %*% res$w)</code></pre>
+<pre><code>             [,1]
+ [1,] -0.10209488
+ [2,] -0.05104919
+ [3,]  0.61269106
+ [4,]  0.10209630
+ [5,] -0.05105701
+ [6,]  0.05102748
+ [7,]  0.10209547
+ [8,]  0.05123931
+ [9,]  0.61205320</code></pre>
+<pre class="r"><code>plot(as.vector(t(X1) %*% res$w))</code></pre>
+<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-20-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-20-2">
+Past versions of unnamed-chunk-20-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-20-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-20-2.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/7afc85fffeb23182365517f3ac733a6610a2782e/docs/figure/fastica_centered.Rmd/unnamed-chunk-20-2.png" target="_blank">7afc85f</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-16
+</td>
+</tr>
+</tbody>
+</table>
 </div>
-<div id="try-finding-two-groups" class="section level3">
-<h3>Try finding two groups</h3>
-<p>It turns out that factors 3 and 9 are not overlapping in this
-simulation, so I wondered whether combining them would be a good
-solution. Initializing at that combination does find the combined
-solution, but the objective is lower than for a single group because the
-objective favors unbalanced groups.</p>
-<pre class="r"><code>w = X1 %*% (L[,3] + L[,9])
+</div>
+<pre class="r"><code>print(compute_objective(X1,res$w,res$c), digits=20)</code></pre>
+<pre><code>[1] 0.42186263963088549422</code></pre>
+<p>Interestingly this seems to be an unstable solution: if I initialize
+nearby then it moves away to a single group.</p>
+<pre class="r"><code>w = X1 %*% (0.45*L[,3] + 0.55*L[,9])
 plot(t(X1) %*% w)</code></pre>
 <p><img src="figure/fastica_centered.Rmd/unnamed-chunk-21-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
@@ -2270,6 +2502,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-21-1.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/7afc85fffeb23182365517f3ac733a6610a2782e/docs/figure/fastica_centered.Rmd/unnamed-chunk-21-1.png" target="_blank">7afc85f</a>
 </td>
 <td>
@@ -2286,28 +2529,84 @@ Matthew Stephens
 <pre class="r"><code>c = 0 # note this does not matter much because c gets updated first in the algorithm
 res = list(w=w,c=c)
 print(compute_objective(X1,res$w,res$c), digits=20)</code></pre>
-<pre><code>[1] 0.42683383934382418401</code></pre>
+<pre><code>[1] 0.4231997098956051806</code></pre>
 <pre class="r"><code>for(i in 1:100)
   res = fastica_r1update_wc(X1,res$w,res$c)
 cor(L,t(X1) %*% res$w)</code></pre>
-<pre><code>             [,1]
- [1,] -0.10209493
- [2,] -0.05104159
- [3,]  0.61284517
- [4,]  0.10209644
- [5,] -0.05104948
- [6,]  0.05101982
- [7,]  0.10212606
- [8,]  0.05127832
- [9,]  0.61189897</code></pre>
+<pre><code>               [,1]
+ [1,]  6.251312e-02
+ [2,] -3.529253e-05
+ [3,] -9.999997e-01
+ [4,] -6.255070e-02
+ [5,]  5.136064e-05
+ [6,] -1.202743e-04
+ [7,] -1.873849e-01
+ [8,] -1.873305e-01
+ [9,]  2.500000e-01</code></pre>
 <pre class="r"><code>plot(as.vector(t(X1) %*% res$w))</code></pre>
 <p><img src="figure/fastica_centered.Rmd/unnamed-chunk-21-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-21-2">
+Past versions of unnamed-chunk-21-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-21-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-21-2.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>print(compute_objective(X1,res$w,res$c), digits=20)</code></pre>
-<pre><code>[1] 0.42186249079217386093</code></pre>
-<p>Interestingly this seems to be an unstable solution: if I initialize
-nearby then it moves away to a single group.</p>
-<pre class="r"><code>w = X1 %*% (0.45*L[,3] + 0.55*L[,9])
-plot(t(X1) %*% w)</code></pre>
+<pre><code>[1] 0.51892160151124533396</code></pre>
+</div>
+</div>
+<div id="four-non-overlapping-groups" class="section level2">
+<h2>Four non-overlapping groups</h2>
+<p>Here I look at 4 equal non-overlapping groups. I’m interested in
+whether it converges to a single group or a combination of groups, and
+whether the combination of 2 groups is a stable or unstable solution. It
+turns out that the majority of random starts converge to a combination
+of 2 groups, which is very different behavior than above. It gets me
+wondering whether this is because i) the non-overlapping situation, or
+ii) the symmetry created by the fact there are only 4 groups (2 vs
+2).</p>
+<pre class="r"><code>set.seed(1)
+n = 100
+p = 1000
+L = matrix(0,nrow=n,ncol=4)
+L[1:25,1] = 1 
+L[26:50,2] = 1 
+L[51:75,3]  = 1
+L[76:100,4] = 1
+FF = matrix(rnorm(p*4),nrow=p) 
+X = L %*% t(FF) + rnorm(n*p,0,0.01)
+image(X%*% t(X))</code></pre>
 <p><img src="figure/fastica_centered.Rmd/unnamed-chunk-22-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
 <button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-22-1">
@@ -2333,6 +2632,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-22-1.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/7afc85fffeb23182365517f3ac733a6610a2782e/docs/figure/fastica_centered.Rmd/unnamed-chunk-22-1.png" target="_blank">7afc85f</a>
 </td>
 <td>
@@ -2346,58 +2656,13 @@ Matthew Stephens
 </table>
 </div>
 </div>
-<pre class="r"><code>c = 0 # note this does not matter much because c gets updated first in the algorithm
-res = list(w=w,c=c)
-print(compute_objective(X1,res$w,res$c), digits=20)</code></pre>
-<pre><code>[1] 0.4231997098956051806</code></pre>
-<pre class="r"><code>for(i in 1:100)
-  res = fastica_r1update_wc(X1,res$w,res$c)
-cor(L,t(X1) %*% res$w)</code></pre>
-<pre><code>               [,1]
- [1,]  6.251420e-02
- [2,] -1.862304e-05
- [3,] -9.999997e-01
- [4,] -6.252398e-02
- [5,]  2.902059e-05
- [6,] -7.230353e-05
- [7,] -1.874381e-01
- [8,] -1.874072e-01
- [9,]  2.500002e-01</code></pre>
-<pre class="r"><code>plot(as.vector(t(X1) %*% res$w))</code></pre>
-<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-22-2.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>print(compute_objective(X1,res$w,res$c), digits=20)</code></pre>
-<pre><code>[1] 1.1605280894817924242</code></pre>
-</div>
-</div>
-<div id="four-non-overlapping-groups" class="section level2">
-<h2>Four non-overlapping groups</h2>
-<p>Here I look at 4 equal non-overlapping groups. I’m interested in
-whether it converges to a single group or a combination of groups, and
-whether the combination of 2 groups is a stable or unstable solution. It
-turns out that the vast majority of random starts converge to a
-combination of 2 groups, which is very different behavior than above. It
-gets me wondering whether this is because i) the non-overlapping
-situation, or ii) the symmetry created by the fact there are only 4
-groups (2 vs 2).</p>
-<pre class="r"><code>set.seed(1)
-n = 100
-p = 1000
-L = matrix(0,nrow=n,ncol=4)
-L[1:25,1] = 1 
-L[26:50,2] = 1 
-L[51:75,3]  = 1
-L[76:100,4] = 1
-FF = matrix(rnorm(p*4),nrow=p) 
-X = L %*% t(FF) + rnorm(n*p,0,0.01)
-image(X%*% t(X))</code></pre>
-<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-23-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>X1 = preprocess(X,n.comp=4)</code></pre>
 <div id="centered-fastica-many-random-starts-2" class="section level3">
 <h3>centered fastICA (many random starts)</h3>
-<p>Here I try with 100 random starts. Two seeds find a big objective
-(turns out to correspond to a single group) and others find what looks
-like a very similar objective (turns out to correspond to a combination
-of two groups).</p>
+<p>Here I try with 100 random starts. Some seeds (18) find a big
+objective (turns out to correspond to a single group) and others find
+what looks like a very similar objective (turns out to correspond to a
+combination of two groups).</p>
 <pre class="r"><code>obj = rep(0,100)
 for(seed in 1:100){
   set.seed(seed)
@@ -2407,8 +2672,55 @@ for(seed in 1:100){
   obj[seed] = compute_objective(X1,res$w,res$c)
 }
 plot(obj)</code></pre>
-<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-24-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Here is the seed for the biggest objective (finds factor 3)</p>
+<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-23-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-23-1">
+Past versions of unnamed-chunk-23-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-23-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-23-1.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>plot(sort(obj[obj&gt;0.48]))</code></pre>
+<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-23-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>print(sort(obj,decreasing=TRUE)[1:20],digits=20)</code></pre>
+<pre><code> [1] 0.55695390343418005319 0.55695390343417972012 0.55695390343417883194
+ [4] 0.55694765457779737972 0.55694765457779682460 0.55692504937686326816
+ [7] 0.55692504937686315714 0.55692504937686304611 0.55692504937686304611
+[10] 0.55692504937686293509 0.55692504937686293509 0.55677152073054514414
+[13] 0.55677152073054492210 0.55677152073054492210 0.55677152073054470005
+[16] 0.55677152073054458903 0.55677152073054447801 0.55677152073054381187
+[19] 0.43378076008527427510 0.43378076008527427510</code></pre>
+<p>Here is the seed for the biggest objective (finds factor 1)</p>
 <pre class="r"><code>seed= order(obj,decreasing=TRUE)[1]
 set.seed(seed)
 res = list(w = rnorm(nrow(X1)), c=0)
@@ -2416,41 +2728,101 @@ for(i in 1:100)
   res = fastica_r1update_wc(X1,res$w,res$c)
 cor(L,t(X1) %*% res$w)</code></pre>
 <pre><code>           [,1]
-[1,] -0.3333332
-[2,] -0.3333333
-[3,]  0.9999998
-[4,] -0.3333333</code></pre>
-<pre class="r"><code>plot(as.vector(t(X1) %*% res$w))</code></pre>
-<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-25-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Here is the seed for the 2nd biggest objective (finds factor 2)</p>
-<pre class="r"><code>seed= order(obj,decreasing=TRUE)[2]
-set.seed(seed)
-res = list(w = rnorm(nrow(X1)), c=0)
-for(i in 1:100)
-  res = fastica_r1update_wc(X1,res$w,res$c)
-cor(L,t(X1) %*% res$w)</code></pre>
-<pre><code>           [,1]
-[1,]  0.3333333
-[2,] -0.9999998
+[1,] -0.9999998
+[2,]  0.3333333
 [3,]  0.3333333
 [4,]  0.3333332</code></pre>
 <pre class="r"><code>plot(as.vector(t(X1) %*% res$w))</code></pre>
-<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-26-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Here is the seed for the 3rd biggest objective (finds two combined
+<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-24-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-24-1">
+Past versions of unnamed-chunk-24-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-24-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-24-1.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Here is the seed for the 19th biggest objective (finds two combined
 factors)</p>
-<pre class="r"><code>seed= order(obj,decreasing=TRUE)[3]
+<pre class="r"><code>seed= order(obj,decreasing=TRUE)[19]
 set.seed(seed)
 res = list(w = rnorm(nrow(X1)), c=0)
 for(i in 1:100)
   res = fastica_r1update_wc(X1,res$w,res$c)
 cor(L,t(X1) %*% res$w)</code></pre>
 <pre><code>           [,1]
-[1,] -0.5773502
-[2,]  0.5773502
-[3,]  0.5773501
-[4,] -0.5773501</code></pre>
+[1,]  0.5773502
+[2,] -0.5773502
+[3,] -0.5773501
+[4,]  0.5773501</code></pre>
 <pre class="r"><code>plot(as.vector(t(X1) %*% res$w))</code></pre>
-<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-27-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-25-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-25-1">
+Past versions of unnamed-chunk-25-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-25-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-25-1.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 </div>
 <div id="nine-non-overlapping-groups" class="section level2">
@@ -2466,19 +2838,48 @@ for(i in 1:9){L[((i-1)*25+1):(i*25),i] = 1}
 FF = matrix(rnorm(p*9),nrow=p)
 X = L %*% t(FF) + rnorm(n*p,0,0.01)
 image(X%*% t(X))</code></pre>
-<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-28-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-26-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-26-1">
+Past versions of unnamed-chunk-26-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-26-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-26-1.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>X1 = preprocess(X,n.comp=10)</code></pre>
 <div id="centered-fastica-many-random-starts-3" class="section level3">
 <h3>centered fastICA (many random starts)</h3>
-<p>Here I try with 100 random starts - it turns out that the objective
-goes off to infinity a lot, with c getting very large. This was
-unexpected, but maybe with hindsight the surprising thing is that we did
-not see the behaviour previously! The objective is indeed unbounded as
-we let c go to infinity. I think that intuitively this is equivalent to
-putting all the points in a single group. We need to do something to
-avoid this - maybe constrain c so that the values of Xw+c span both
-sides of 0. So max(Xw)+c &gt; 0 and min(Xw) + c &lt; 0. Or equivalently
--max(Xw)&lt; c &lt; -min(Xw).</p>
+<p>Here I try with 100 random starts.</p>
 <pre class="r"><code>obj = rep(0,100)
 for(seed in 1:100){
   set.seed(seed)
@@ -2488,74 +2889,151 @@ for(seed in 1:100){
   obj[seed] = compute_objective(X1,res$w,res$c)
 }
 plot(obj)</code></pre>
-<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-29-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>obj</code></pre>
-<pre><code>  [1]   0.4300068   0.4300067   0.4300068   0.4300068   0.4300067   0.4300068
-  [7]   0.4300068   0.4300068   0.4300068   0.4300068   0.4300068   0.4300068
- [13]   0.4300068   0.4300068   0.4300068   0.4300068   0.4300068         Inf
- [19]   0.4300068   0.4300068   0.4300068   0.4300068   0.4300068         Inf
- [25]   0.4300068 228.6990605   0.4300068   0.4300068         Inf   0.4300068
- [31]   0.4300068   0.4300068   0.4300068   0.4300068   0.4300067   0.4300068
- [37]   0.4300068   0.4300067   0.4300068  94.9776736         Inf   0.4300068
- [43]   0.4300068         Inf         Inf   0.4300067   0.4300068   0.4300068
- [49]         Inf   0.4300068         Inf   0.4300068   0.4300068  34.5982027
- [55]         Inf   0.4300068         Inf         Inf         Inf   0.4300068
- [61]   0.4300068   0.4300068         Inf         Inf         Inf   0.4300068
- [67]   0.4300068         Inf   0.4300068   0.4300068   0.4300068   0.4300068
- [73]   0.4300068   0.4300068  41.0272630         Inf         Inf   0.4300068
- [79]   0.4300068   0.4300068   0.4300068         Inf         Inf   0.4300068
- [85]   0.4300068   0.4300068   0.4300068         Inf   0.4300068   0.4300068
- [91]   0.4300068   0.4300068         Inf   0.4300067   0.4300068   0.4300068
- [97]         Inf   0.4300068   0.4300068   0.4300068</code></pre>
-<pre class="r"><code>res$c</code></pre>
-<pre><code>[1] 0.08702684</code></pre>
-<p>Here are some results for non-infinite objectives: they find
-solutions corresponding to a split of the data into two groups.</p>
-<pre class="r"><code>seed= 1
+<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-27-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-27-1">
+Past versions of unnamed-chunk-27-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-27-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-27-1.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Results for the top seed: it finds a split that combines groups.</p>
+<pre class="r"><code>seed= order(obj,decreasing=TRUE)[1]
 set.seed(seed)
 res = list(w = rnorm(nrow(X1)), c=0)
 for(i in 1:100)
   res = fastica_r1update_wc(X1,res$w,res$c)
 cor(L,t(X1) %*% res$w)</code></pre>
 <pre><code>            [,1]
- [1,] -0.3952846
- [2,]  0.3162276
- [3,] -0.3952845
- [4,]  0.3162278
- [5,]  0.3162278
- [6,]  0.3162278
- [7,] -0.3952846
- [8,]  0.3162273
- [9,] -0.3952846</code></pre>
+ [1,] -0.3952845
+ [2,] -0.3952846
+ [3,]  0.3162277
+ [4,] -0.3952846
+ [5,]  0.3162274
+ [6,] -0.3952846
+ [7,]  0.3162276
+ [8,]  0.3162277
+ [9,]  0.3162279</code></pre>
 <pre class="r"><code>plot(as.vector(t(X1) %*% res$w))</code></pre>
-<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-30-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-28-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-28-1">
+Past versions of unnamed-chunk-28-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-28-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-28-1.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>res$c</code></pre>
-<pre><code>[1] -0.08702687</code></pre>
-<pre class="r"><code>seed= 2
-set.seed(seed)
-res = list(w = rnorm(nrow(X1)), c=0)
-for(i in 1:100)
-  res = fastica_r1update_wc(X1,res$w,res$c)
-cor(L,t(X1) %*% res$w)</code></pre>
-<pre><code>            [,1]
- [1,]  0.3162278
- [2,] -0.3952847
- [3,] -0.3952844
- [4,] -0.3952845
- [5,]  0.3162276
- [6,]  0.3162274
- [7,] -0.3952845
- [8,]  0.3162278
- [9,]  0.3162276</code></pre>
-<pre class="r"><code>plot(as.vector(t(X1) %*% res$w))</code></pre>
-<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-31-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>res$c</code></pre>
-<pre><code>[1] -0.087027</code></pre>
-<p>Here I try initializing at a single group: I find the solution goes
-off to c=infinity.</p>
+<pre><code>[1] -0.05158043</code></pre>
+<pre class="r"><code>obj[seed]</code></pre>
+<pre><code>[1] 0.4302831</code></pre>
+<p>Here I try initializing at a single group. I discovered that the
+objective is actually lower than for the combined groups - so maybe this
+explains why it is finding the combined group result! This was a
+surprise to me. I should try to understand better what is going on here.
+One possibility is that, because we are imposing w’w = 1, the results
+may depend on n - as w get’s smaller, the behavior of log cosh is
+different. Maybe we should impose w’w = n?</p>
 <pre class="r"><code>w = X1 %*% L[,1]
 plot(t(X1) %*% w)</code></pre>
-<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-32-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-29-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-29-1">
+Past versions of unnamed-chunk-29-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-29-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-29-1.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>c = 0 # note this does not matter much because c gets updated first in the algorithm
 res = list(w=w,c=c)
 print(compute_objective(X1,res$w,res$c), digits=20)</code></pre>
@@ -2563,20 +3041,20 @@ print(compute_objective(X1,res$w,res$c), digits=20)</code></pre>
 <pre class="r"><code>for(i in 1:100)
   res = fastica_r1update_wc(X1,res$w,res$c)
 cor(L,t(X1) %*% res$w)</code></pre>
-<pre><code>               [,1]
- [1,]  5.123949e-03
- [2,]  4.897611e-03
- [3,] -1.774167e-02
- [4,] -8.640341e-05
- [5,] -2.313242e-03
- [6,]  6.944872e-03
- [7,] -1.625867e-02
- [8,]  1.497577e-03
- [9,]  1.793597e-02</code></pre>
+<pre><code>            [,1]
+ [1,]  0.9999996
+ [2,] -0.1250000
+ [3,] -0.1249999
+ [4,] -0.1249998
+ [5,] -0.1250000
+ [6,] -0.1250000
+ [7,] -0.1249999
+ [8,] -0.1250001
+ [9,] -0.1249999</code></pre>
 <pre class="r"><code>plot(as.vector(t(X1) %*% res$w))</code></pre>
-<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-32-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-29-2.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>print(compute_objective(X1,res$w,res$c), digits=20)</code></pre>
-<pre><code>[1] Inf</code></pre>
+<pre><code>[1] 0.40575990507975584487</code></pre>
 </div>
 <div id="tree-simulations" class="section level3">
 <h3>Tree simulations</h3>
@@ -2596,17 +3074,53 @@ L[76:100,6] = 1
 FF = matrix(rnorm(p*6),nrow=p) 
 X = L %*% t(FF) + rnorm(n*p,0,0.01)
 image(X%*% t(X))</code></pre>
-<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-33-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-30-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-30-1">
+Past versions of unnamed-chunk-30-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-30-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-30-1.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>X1 = preprocess(X)</code></pre>
 <p>Run 100 seeds, weighting only the top 3 PCs in the initialization
 (note: when I did the same weighting the top 4 PCs I got more mixed
 branch solutions). We see that the top seeds pick out a single group.
 Next seeds are the top branch, but then after that we have a bunch of
 seeds that combine two groups that are not adjacent on the tree - these
-solutions are less attractive to us. We need to find a way to find more
-of the single-branch solutions, and, ideally, avoid these mixed-branch
-solutions (although it might be possible to filter these somehow at the
-end). One thing I don’t quite understand is that the objective for the
+solutions are less attractive to us. It would be nice to find a wy to
+avoid these mixed-branch solutions (or develop a filter to remove
+them?). One thing I don’t quite understand is that the objective for the
 mixed branch solutions seems to be consistently, but very slightly,
 lower than for the single-branch solution. That would be good to
 understand better.</p>
@@ -2621,9 +3135,46 @@ for(seed in 1:100){
   Lhat[seed,] = t(X1) %*% res$w
 }
 plot(obj)</code></pre>
-<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-34-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-31-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-31-1">
+Past versions of unnamed-chunk-31-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-31-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-31-1.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>image(Lhat[order(obj,decreasing=TRUE),])</code></pre>
-<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-34-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-31-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>The top seed is a single group:</p>
 <pre class="r"><code>seed = order(obj,decreasing=TRUE)[1]
 set.seed(seed)
@@ -2633,16 +3184,53 @@ for(i in 1:100)
 
 cor(L,t(X1) %*% res$w)</code></pre>
 <pre><code>           [,1]
-[1,] -0.5773503
-[2,]  0.5773503
-[3,]  0.3333332
-[4,] -0.9999999
-[5,]  0.3333333
-[6,]  0.3333333</code></pre>
+[1,] -0.5773502
+[2,]  0.5773502
+[3,] -0.3333333
+[4,] -0.3333333
+[5,]  0.9999998
+[6,] -0.3333332</code></pre>
 <pre class="r"><code>plot(as.vector(t(X1) %*% res$w))</code></pre>
-<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-35-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Results for the third biggest seed:</p>
-<pre class="r"><code>seed = order(obj,decreasing=TRUE)[3]
+<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-32-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-32-1">
+Past versions of unnamed-chunk-32-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-32-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-32-1.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Results for the 10th biggest seed:</p>
+<pre class="r"><code>seed = order(obj,decreasing=TRUE)[10]
 set.seed(seed)
 res = list(w = c(rnorm(3),rep(0,7)), c=0)
 for(i in 1:100)
@@ -2652,12 +3240,54 @@ cor(L,t(X1) %*% res$w)</code></pre>
 <pre><code>           [,1]
 [1,] -0.5773502
 [2,]  0.5773502
-[3,] -0.9999999
-[4,]  0.3333332
-[5,]  0.3333334
+[3,]  0.3333332
+[4,] -0.9999999
+[5,]  0.3333333
 [6,]  0.3333333</code></pre>
 <pre class="r"><code>plot(as.vector(t(X1) %*% res$w))</code></pre>
-<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-36-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-33-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-33-1">
+Past versions of unnamed-chunk-33-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-33-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-33-1.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div id="exploratory-stuff-maybe-best-ignored-for-now"
+class="section level2">
+<h2>Exploratory stuff (maybe best ignored for now?)</h2>
 <p>Noting here an idea to investigate: maybe initialize w “orthogonal”
 to previous ones (but don’t impose orthogonality during iterations) to
 try to find different solutions? Here’s what I mean. The problem is that
@@ -2670,15 +3300,51 @@ res = list(w = w.init, c=0)
 for(i in 1:100)
   res = fastica_r1update_wc(X1,res$w,res$c)
 cor(L,t(X1) %*% res$w)</code></pre>
-<pre><code>           [,1]
-[1,]  0.9999999
-[2,] -0.9999999
-[3,]  0.5773503
-[4,]  0.5773502
-[5,] -0.5773503
-[6,] -0.5773502</code></pre>
+<pre><code>              [,1]
+[1,] -9.728420e-09
+[2,]  9.728420e-09
+[3,] -5.773502e-01
+[4,]  5.773502e-01
+[5,] -5.773501e-01
+[6,]  5.773501e-01</code></pre>
 <pre class="r"><code>plot(as.vector(t(X1) %*% res$w))</code></pre>
-<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-37-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-34-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-34-1">
+Past versions of unnamed-chunk-34-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-34-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-34-1.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 <div id="initialize-in-the-original-space" class="section level3">
 <h3>Initialize in the original space</h3>
@@ -2690,7 +3356,44 @@ l1 = X %*% w1
 w = X1 %*% l1
 w.init = w/mean(w^2)
 plot(t(X1) %*% w.init, l1)</code></pre>
-<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-38-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-35-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-35-1">
+Past versions of unnamed-chunk-35-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-35-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-35-1.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Initializing here gives the two groups.</p>
 <pre class="r"><code>res = list(w = w.init, c=0)
 for(i in 1:100)
@@ -2704,7 +3407,44 @@ cor(L,t(X1) %*% res$w)</code></pre>
 [5,] -0.5773503
 [6,] -0.5773502</code></pre>
 <pre class="r"><code>plot(as.vector(t(X1) %*% res$w))</code></pre>
-<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-39-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-36-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-36-1">
+Past versions of unnamed-chunk-36-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-36-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-36-1.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>lhat = t(X1) %*% res$w
 what = t(X) %*% lhat # finds an optimal w in the original space</code></pre>
 <p>Now find the what in the original space that corresponds to this
@@ -2716,7 +3456,44 @@ l1 = X %*% w1
 w = X1 %*% l1
 w.init = w/mean(w^2)
 plot(t(X1) %*% w.init, l1)</code></pre>
-<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-40-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-37-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-37-1">
+Past versions of unnamed-chunk-37-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-37-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-37-1.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Running from this one produces a mixed group. And this seems to
 happen repeatedly with this strategy. Need to investigate this more
 carefully.</p>
@@ -2725,14 +3502,51 @@ for(i in 1:100)
   res = fastica_r1update_wc(X1,res$w,res$c)
 cor(L,t(X1) %*% res$w)</code></pre>
 <pre><code>              [,1]
-[1,] -8.913993e-09
-[2,]  8.913993e-09
+[1,] -8.913989e-09
+[2,]  8.913989e-09
 [3,]  5.773502e-01
 [4,] -5.773502e-01
 [5,] -5.773502e-01
 [6,]  5.773502e-01</code></pre>
 <pre class="r"><code>plot(as.vector(t(X1) %*% res$w))</code></pre>
-<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-41-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/fastica_centered.Rmd/unnamed-chunk-38-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-38-1">
+Past versions of unnamed-chunk-38-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-38-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c7ec3a6d02422e9e91c418bef6fa9fc0154b4a76/docs/figure/fastica_centered.Rmd/unnamed-chunk-38-1.png" target="_blank">c7ec3a6</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2025-11-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
