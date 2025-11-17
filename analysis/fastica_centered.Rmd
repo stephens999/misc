@@ -32,6 +32,11 @@ Update c: First, for a fixed w, find the c that solves $E[g(w^TX + c)] = 0$.
 
 Update w: Then, using that new c, perform the standard FastICA update for w."
 
+EDIT1: I found that we also need to constrain c so that
+ -max(w'X)< c < -min(w'X) to avoid c going to infinity, so I added this check to the code as a first try.
+
+EDIT2: I found sometimes we converged to suboptimal c, so I added a quick and dirty estimate of c based on 3rd moment of w'X. (this idea also came from a chat with Gemini, and comes from taylor series expansion of the objective)
+
 ```{r}
 #' Single-unit FastICA update with an intercept term 'c'
 #'
@@ -53,11 +58,21 @@ fastica_r1update_wc = function(X, w, c, c_update_steps = 1) {
   # P_current is an (n x 1) vector
   P_current = as.vector(t(X) %*% w) 
   
+  # Get a rough estimate of the optimal c using the third moment
+  skewness_estimate = mean(P_current^3)
+  # Calculate c (using sign() and abs() for robustness with negative numbers)
+  c_approx = - sign(skewness_estimate) * (abs(skewness_estimate))^(1/3)
+  
+  # check if this approximation is better than the current value. Note that my current objective is logcosh, and not the squared deviation from normal, so this is really only going to work for 
+  if(compute_objective(X, w, c_approx) > compute_objective(X, w, c)){
+    c = c_approx
+  }
+  
   # We want to find 'c' that solves E[g(P_current + c)] = 0
   # We use one (or more) Newton steps: c_new = c - f(c) / f'(c)
-  
   for (i in 1:c_update_steps) {
     P_shifted = P_current + c
+    
     
     # g(P_current + c)
     G_c = tanh(P_shifted) 
@@ -73,6 +88,16 @@ fastica_r1update_wc = function(X, w, c, c_update_steps = 1) {
     
     # The Newton step (add epsilon for stability)
     c = c - mean_G / (mean_G2 + 1e-6)
+    
+    # impose -max(w'X)< c < -min(w'X)
+    P_min = min(P_current)
+    P_max = max(P_current)
+    if(c <= -P_max){
+      c = -P_max + 1e-6
+    }
+    if(c >= -P_min){
+      c = -P_min - 1e-6
+    }
   }
   
   # --- Step 2: Update the weight vector 'w' ---
@@ -169,7 +194,7 @@ plot(X %*% FF[,1])
 
 ### centered fastICA (random start)
 
-When I initialize these new updates with a random w, it does not pick out a single source:
+When I initialize these new updates with a random w, it picks out a single source! (Note: in earlier tries, before the EDITs above, and in particular before the quick-and-dirty estimation of c, this did not happen.)
 ```{r}
 X1 = preprocess(X)
 w = rnorm(nrow(X1))
@@ -244,10 +269,10 @@ for(seed in 1:100){
   obj[seed] = compute_objective(X1,res$w,res$c)
 }
 plot(obj)
-print(sort(obj,decreasing=TRUE)[1:15],digits=20)
+print(sort(obj,decreasing=TRUE),digits=20)
 ```
 
-Close inspection of the objective values suggest that the top 7 seeds find the first factor, seeds 8-10 find the third factor, and seeds 11-14 find the second factor. This turns out to be correct! For example, here are the results for the seed achieving the max objective. 
+Close inspection of the objective values suggest that first 34 seeds find one factor, seeds 35-67 find another and 68-80 a third.
 ```{r}
 seed= order(obj,decreasing=TRUE)[1]
 set.seed(seed)
@@ -259,9 +284,9 @@ plot(as.vector(t(X1) %*% res$w))
 max(obj)
 ```
 
-Here is the seed for the 8th biggest objective (finds the third factor)
+Here is the seed for the 35th biggest objective 
 ```{r}
-seed= order(obj,decreasing=TRUE)[8]
+seed= order(obj,decreasing=TRUE)[35]
 set.seed(seed)
 res = list(w = rnorm(nrow(X1)), c=0)
 for(i in 1:100)
@@ -270,9 +295,9 @@ cor(L,t(X1) %*% res$w)
 plot(as.vector(t(X1) %*% res$w))
 ```
 
-Here is the seed for the 11th biggest objective (finds the second factor)
+Here is the seed for the 68th biggest objective 
 ```{r}
-seed= order(obj,decreasing=TRUE)[11]
+seed= order(obj,decreasing=TRUE)[68]
 set.seed(seed)
 res = list(w = rnorm(nrow(X1)), c=0)
 for(i in 1:100)
@@ -283,8 +308,9 @@ plot(as.vector(t(X1) %*% res$w))
 
 ### centered fastICA (PC starts)
 
-We would probably like to find better ways to initialize so that we can find all the three solutions with fewer starts. 
-I thought maybe it could be helpful to initialize from the PCs (ie w = (1,0,0..0) etc). There are 10 of these because I'm whitening to 10 dimensions. The first two PCs do indeed both find a group, and a different group for each one. This is promising - it suggests maybe we can get good starting points using the top PCs.
+In initial tries (before introducing checks and quick-dirty approximation for c) most random initializations did not converge well, so I experimented with different initialization strategies.
+ 
+I thought maybe it could be helpful to initialize from the PCs (ie w = (1,0,0..0) etc). There are 10 of these because I'm whitening to 10 dimensions. Before my checks I found initializations using the top PCs do indeed both find a group, and a different group for each one. But now I've added my checks all the PCs provide a good result. Still, initializations using the top PCs might be a strategy worth keeping in mind for the future.
 ```{r}
 obj = rep(0,10)
 for(pc in 1:10){
@@ -299,7 +325,7 @@ plot(obj)
 print(sort(obj,decreasing=TRUE)[1:10],digits=20)
 ```
 
-Here I try random starts, but only weighting the top 3 PCs (which should be the ones with the signals). This successfully enriches for finding a good solution. It is a bit hard to see but these random starts do find all 3 of the different factors.
+Here I try random starts, but only weighting the top 3 PCs (which should be the ones with the signals). This successfully enriches for finding a good solution and these random starts do find all 3 of the different factors.
 ```{r}
 obj = rep(0,100)
 for(seed in 1:100){
@@ -309,8 +335,7 @@ for(seed in 1:100){
     res = fastica_r1update_wc(X1,res$w,res$c)
   obj[seed] = compute_objective(X1,res$w,res$c)
 }
-plot(log(max(obj)-obj))
-print(sort(obj-max(obj),decreasing=TRUE),digits=20)
+plot(obj)
 ```
 
 
@@ -332,7 +357,7 @@ plot(X %*% FF[,1])
 
 ### centered fastICA (random start)
 
-As expected from above, initialization to a random w does not pick out a single source:
+Again, now that I have added checks on c, initialization to a random w picks out a single source.
 ```{r}
 X1 = preprocess(X)
 w = rnorm(nrow(X1))
@@ -356,8 +381,6 @@ plot(t(X1) %*% w)
 
 c = 0 # note this does not matter much because c gets updated first in the algorithm
 res = list(w=w,c=c)
-print(compute_objective(X1,res$w,res$c), digits=20)
-
 
 for(i in 1:100)
   res = fastica_r1update_wc(X1,res$w,res$c)
@@ -370,7 +393,7 @@ print(compute_objective(X1,res$w,res$c), digits=20)
 
 ### centered fastICA (many random starts)
 
-Here I try with 100 random starts - there are lots of different results, and some of them reach objectives similar to that from the true starts.
+Here I try with 100 random starts - almost all of them reach objectives similar to that from the true starts. And we can see there seem to be 9 different solutions corresponding to the 9 groups.
 ```{r}
 obj = rep(0,100)
 for(seed in 1:100){
@@ -381,10 +404,10 @@ for(seed in 1:100){
   obj[seed] = compute_objective(X1,res$w,res$c)
 }
 plot(obj)
-print(sort(obj,decreasing=TRUE)[1:20],digits=20)
+plot(sort(obj[obj>0.46]))
 ```
 
-This is the top seed - finds group 9
+This is the top seed - finds group 1
 ```{r}
 seed= order(obj,decreasing=TRUE)[1]
 set.seed(seed)
@@ -396,9 +419,9 @@ plot(as.vector(t(X1) %*% res$w))
 max(obj)
 ```
 
-Here is the seed for the 2nd biggest objective (finds the 6th factor)
+Here is the seed for the 20th biggest objective (finds the 4th factor)
 ```{r}
-seed= order(obj,decreasing=TRUE)[2]
+seed= order(obj,decreasing=TRUE)[20]
 set.seed(seed)
 res = list(w = rnorm(nrow(X1)), c=0)
 for(i in 1:100)
@@ -407,22 +430,14 @@ cor(L,t(X1) %*% res$w)
 plot(as.vector(t(X1) %*% res$w))
 ```
 
-Here is the seed for the 4rd biggest objective (finds factor 5)
-```{r}
-seed= order(obj,decreasing=TRUE)[4]
-set.seed(seed)
-res = list(w = rnorm(nrow(X1)), c=0)
-for(i in 1:100)
-  res = fastica_r1update_wc(X1,res$w,res$c)
-cor(L,t(X1) %*% res$w)
-plot(as.vector(t(X1) %*% res$w))
-```
 
 ### Try finding two groups
 
 It turns out that factors 3 and 9 are not overlapping in this simulation, so I wondered whether combining them would
 be a good solution. Initializing at that combination does find the combined solution, but the objective is lower than for a single group because the objective favors unbalanced groups.
 ```{r}
+# show 3 and 9 are not overlapping
+L[,3]*L[,9]
 w = X1 %*% (L[,3] + L[,9])
 plot(t(X1) %*% w)
 
@@ -455,7 +470,7 @@ print(compute_objective(X1,res$w,res$c), digits=20)
 
 ## Four non-overlapping groups
 
-Here I look at 4 equal non-overlapping groups. I'm interested in whether it converges to a single group or a combination of groups, and whether the combination of 2 groups is a stable or unstable solution. It turns out that the vast majority of random starts converge to a combination of 2 groups, which is very different behavior than above. It gets me wondering whether this is because i) the non-overlapping situation, or ii) the symmetry created by the fact there are only 4 groups (2 vs 2). 
+Here I look at 4 equal non-overlapping groups. I'm interested in whether it converges to a single group or a combination of groups, and whether the combination of 2 groups is a stable or unstable solution. It turns out that the majority of random starts converge to a combination of 2 groups, which is very different behavior than above. It gets me wondering whether this is because i) the non-overlapping situation, or ii) the symmetry created by the fact there are only 4 groups (2 vs 2). 
 
 ```{r}
 set.seed(1)
@@ -475,7 +490,7 @@ X1 = preprocess(X,n.comp=4)
 
 ### centered fastICA (many random starts)
 
-Here I try with 100 random starts. Two seeds find a big objective (turns out to correspond to a single group) and others find what looks like a very similar objective (turns out to correspond to a combination of two groups).
+Here I try with 100 random starts. Some seeds (18) find a big objective (turns out to correspond to a single group) and others find what looks like a very similar objective (turns out to correspond to a combination of two groups).
 ```{r}
 obj = rep(0,100)
 for(seed in 1:100){
@@ -486,9 +501,11 @@ for(seed in 1:100){
   obj[seed] = compute_objective(X1,res$w,res$c)
 }
 plot(obj)
+plot(sort(obj[obj>0.48]))
+print(sort(obj,decreasing=TRUE)[1:20],digits=20)
 ```
 
-Here is the seed for the biggest objective (finds factor 3)
+Here is the seed for the biggest objective (finds factor 1)
 ```{r}
 seed= order(obj,decreasing=TRUE)[1]
 set.seed(seed)
@@ -499,20 +516,10 @@ cor(L,t(X1) %*% res$w)
 plot(as.vector(t(X1) %*% res$w))
 ```
 
-Here is the seed for the 2nd biggest objective (finds factor 2)
-```{r}
-seed= order(obj,decreasing=TRUE)[2]
-set.seed(seed)
-res = list(w = rnorm(nrow(X1)), c=0)
-for(i in 1:100)
-  res = fastica_r1update_wc(X1,res$w,res$c)
-cor(L,t(X1) %*% res$w)
-plot(as.vector(t(X1) %*% res$w))
-```
 
-Here is the seed for the 3rd biggest objective (finds two combined factors)
+Here is the seed for the 19th biggest objective (finds two combined factors)
 ```{r}
-seed= order(obj,decreasing=TRUE)[3]
+seed= order(obj,decreasing=TRUE)[19]
 set.seed(seed)
 res = list(w = rnorm(nrow(X1)), c=0)
 for(i in 1:100)
@@ -541,7 +548,7 @@ X1 = preprocess(X,n.comp=10)
 
 ### centered fastICA (many random starts)
 
-Here I try with 100 random starts - it turns out that the objective goes off to infinity a lot, with c getting very large. This was unexpected, but maybe with hindsight the surprising thing is that we did not see the behaviour previously! The objective is indeed unbounded as we let c go to infinity. I think that intuitively this is equivalent to putting all the points in a single group. We need to do something to avoid this - maybe constrain c so that the values of Xw+c span both sides of 0. So max(Xw)+c > 0 and min(Xw) + c < 0. Or equivalently -max(Xw)< c < -min(Xw).
+Here I try with 100 random starts.
 ```{r}
 obj = rep(0,100)
 for(seed in 1:100){
@@ -552,13 +559,11 @@ for(seed in 1:100){
   obj[seed] = compute_objective(X1,res$w,res$c)
 }
 plot(obj)
-obj
-res$c
 ```
 
-Here are some results for non-infinite objectives: they find solutions corresponding to a split of the data into two groups.
+Results for the top seed: it finds a split that combines groups.
 ```{r}
-seed= 1
+seed= order(obj,decreasing=TRUE)[1]
 set.seed(seed)
 res = list(w = rnorm(nrow(X1)), c=0)
 for(i in 1:100)
@@ -566,21 +571,10 @@ for(i in 1:100)
 cor(L,t(X1) %*% res$w)
 plot(as.vector(t(X1) %*% res$w))
 res$c
+obj[seed]
 ```
 
-
-```{r}
-seed= 2
-set.seed(seed)
-res = list(w = rnorm(nrow(X1)), c=0)
-for(i in 1:100)
-  res = fastica_r1update_wc(X1,res$w,res$c)
-cor(L,t(X1) %*% res$w)
-plot(as.vector(t(X1) %*% res$w))
-res$c
-```
-
-Here I try initializing at a single group: I find the solution goes off to c=infinity.
+Here I try initializing at a single group. I discovered that the objective is actually lower than for the combined groups - so maybe this explains why it is finding the combined group result! This was a surprise to me. I should try to understand better what is going on here. One possibility is that, because we are imposing w'w = 1, the results may depend on n - as w get's smaller, the behavior of log cosh is different. Maybe we should impose w'w = n?
 ```{r}
 w = X1 %*% L[,1]
 plot(t(X1) %*% w)
@@ -588,7 +582,6 @@ plot(t(X1) %*% w)
 c = 0 # note this does not matter much because c gets updated first in the algorithm
 res = list(w=w,c=c)
 print(compute_objective(X1,res$w,res$c), digits=20)
-
 
 for(i in 1:100)
   res = fastica_r1update_wc(X1,res$w,res$c)
@@ -623,7 +616,7 @@ X1 = preprocess(X)
 ```
 
 
-Run 100 seeds, weighting only the top 3 PCs in the initialization (note: when I did the same weighting the top 4 PCs I got more mixed branch solutions). We see that the top seeds pick out a single group. Next seeds are the top branch, but then after that we have a bunch of seeds that combine two groups that are not adjacent on the tree - these solutions are less attractive to us. We need to find a way to find more of the single-branch solutions, and, ideally, avoid these mixed-branch solutions (although it might be possible to filter these somehow at the end). One thing I don't quite understand is that the objective for the mixed branch solutions seems to be consistently, but very slightly, lower than for the single-branch solution. That would be good to understand better.
+Run 100 seeds, weighting only the top 3 PCs in the initialization (note: when I did the same weighting the top 4 PCs I got more mixed branch solutions). We see that the top seeds pick out a single group. Next seeds are the top branch, but then after that we have a bunch of seeds that combine two groups that are not adjacent on the tree - these solutions are less attractive to us. It would be nice to find a wy to avoid these mixed-branch solutions (or develop a filter to remove them?). One thing I don't quite understand is that the objective for the mixed branch solutions seems to be consistently, but very slightly, lower than for the single-branch solution. That would be good to understand better.
 ```{r}
 obj = rep(0,100)
 Lhat = matrix(nrow=100,ncol=n)
@@ -651,9 +644,9 @@ cor(L,t(X1) %*% res$w)
 plot(as.vector(t(X1) %*% res$w))
 ```
 
-Results for the third biggest seed:
+Results for the 10th biggest seed:
 ```{r}
-seed = order(obj,decreasing=TRUE)[3]
+seed = order(obj,decreasing=TRUE)[10]
 set.seed(seed)
 res = list(w = c(rnorm(3),rep(0,7)), c=0)
 for(i in 1:100)
@@ -663,6 +656,8 @@ cor(L,t(X1) %*% res$w)
 plot(as.vector(t(X1) %*% res$w))
 ```
 
+
+## Exploratory stuff (maybe best ignored for now?)
 
 Noting here an idea to investigate: maybe initialize w "orthogonal" to previous ones (but don't impose orthogonality during iterations) to try to find different solutions? Here's what I mean. The problem is that there are 5 solutions we want to find here - not sure how to try to find all of them.
 ```{r}
