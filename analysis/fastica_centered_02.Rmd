@@ -1,0 +1,403 @@
+---
+title: "fastica_centered_02"
+author: "Matthew Stephens"
+date: "2025-11-18"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+I found [previously](fastica_02.html) that the original fastICA algorithm seems to have trouble finding groups that are unbalanced. I believe that this is because the log-cosh objective function favours symmetry. ie maximizing or minimizing $\log \cosh (X'w)$ (subject to $w'w=1$, which implies ||X'w||= 1 if $XX'=I$) tends to find symmetric $X'w$.
+I want to try to fix this using an intercept. That is,
+maximize $\log \cosh (X'w + c)$ over both $w$ and $c$. 
+I made an [initial attempt](fastica_centered.Rmd) but I now believe that was flawed. The issue is that simply adding in a c makes the objective unbounded, and I actually ended up minimising over c while maximising over w, which is a mess.
+Here I'm going to try a different approach, which simply constriains ||X'w + c||=1, which is equivalent to adding a row of 1s to the whitened matrix X.
+
+
+## Illustrating the problem
+
+Before trying to fix the problem, let's illustrate it again.
+First here is a simple single-unit ICA function and preprocessing (for centering and whitening).
+```{r}
+fastica_r1update = function(X,w){
+  w= w/sqrt(sum(w^2)) # redundant, but just to be safe
+  P = t(X) %*% w
+  G = tanh(P)
+  G2 = 1-tanh(P)^2
+  w = X %*% G - sum(G2) * w 
+  w = w/sqrt(sum(w^2)) # to ensure the returned value satisfies constraints
+  return(w)
+}
+
+
+preprocess = function(X, n.comp=10){
+  n <- nrow(X)
+  p <- ncol(X)
+  X <- scale(X, scale = FALSE)
+  X <- t(X)
+  
+  ## This appears to be equivalant to X1 = t(svd(X)$v[,1:n.comp])       
+  V <- X %*% t(X)/n
+  s <- La.svd(V)
+  D <- diag(c(1/sqrt(s$d)))
+  K <- D %*% t(s$u)
+  K <- matrix(K[1:n.comp, ], n.comp, p)
+  X1 <- K %*% X
+  return(X1)
+}
+
+compute_objective = function(X,w){
+  P = t(X) %*% w
+  return(mean(log(cosh(P))))
+}
+```
+
+### Three group simulation
+
+Here I simulate 3 groups, with only 20 members each.
+```{r}
+K=3
+p = 1000
+n = 100
+set.seed(1)
+L = matrix(-1,nrow=n,ncol=K)
+for(i in 1:K){L[sample(1:n,20),i]=1}
+FF = matrix(rnorm(p*K), nrow = p, ncol=K)
+
+X = L %*% t(FF) + rnorm(n*p,0,0.01)
+plot(X %*% FF[,1])
+X1 = preprocess(X)
+```
+
+### fastICA
+
+Running single unit fastICA on these data does not pick out a single source:
+```{r}
+w = rnorm(nrow(X1))
+for(i in 1:100)
+  w = fastica_r1update(X1,w)
+cor(L,t(X1) %*% w)
+plot(t(X1) %*% w)
+compute_objective(X1,w)
+```
+
+Try initializing near a true source. Note that the initialization, because everything is centered, is mean 0, but because it is so skew it is not "centered" on 0. Furthermore, its expected log(cosh) value is close to a Gaussian even though this source is very non-gaussian!
+```{r}
+init_w = X1 %*% L[,1]
+init_w = init_w/sqrt(sum(init_w^2))
+plot(t(X1) %*% init_w,main="initial value of source estimate")
+abline(h=0)
+compute_objective(X1,init_w)
+mean(log(cosh(rnorm(10000)))) # expected logcosh for normal
+```
+
+Running fastICA from this initialization finds something with a larger objective, but actually more "gaussian". This indicates that the objective function is not doing what we want.
+```{r}
+w = init_w
+for(i in 1:100)
+  w = fastica_r1update(X1,w)
+cor(L,t(X1) %*% w)
+plot(t(X1) %*% w)
+compute_objective(X1,w)
+```
+
+## Attempt to fix the problem: noncentered fastICA
+
+Here I attempt to fix the problem by adding an intercept to create a "noncentered" version of fastICA. We do this simply by adding a row of 1s to X1. Note that the resulting augmented X1 is still whitened (X1 X1' is nI).
+```{r}
+X1 = rbind(X1, rep(1,ncol(X1)))
+image(X1 %*% t(X1))
+```
+
+
+Initialize again near the true source: note that now the initial source is "centered" at 0 (but it is not mean 0).
+It is very close to a binary distribution on -1,1 which maximizes expected log(cosh) subject to the second moment constraint.
+```{r}
+init_w = X1 %*% L[,1]
+init_w = init_w/sqrt(sum(init_w^2))
+plot(t(X1) %*% init_w,main="initial value of source estimate")
+abline(h=0)
+compute_objective(X1,init_w)
+```
+
+Running fastICA from this initialization now finds the correct source!
+```{r}
+w = init_w
+for(i in 1:100)
+  w = fastica_r1update(X1,w)
+cor(L,t(X1) %*% w)
+plot(t(X1) %*% w)
+compute_objective(X1,w)
+```
+
+Running fastICA from a random initialization also finds a binary source: 
+```{r}
+w = rnorm(nrow(X1))
+for(i in 1:100)
+  w = fastica_r1update(X1,w)
+cor(L,t(X1) %*% w)
+plot(t(X1) %*% w)
+compute_objective(X1,w)
+```
+
+Here I run from 100 different random seeds. Most runs appear to find a binary source with objective around 0.44. But a good fraction find ones with small objective around 0.3, presumably corresponding to a minima (or local minima) of the objective.
+```{r}
+obj = rep(0,100)
+for(seed in 1:100){
+  set.seed(seed)
+  w = rnorm(nrow(X1))
+  for(i in 1:100)
+    w = fastica_r1update(X1,w)
+  obj[seed] = compute_objective(X1,w)
+}
+plot(obj)
+```
+
+Interestingly the small values are also binary sources. Here is the seed with the smallest objective:
+```{r}
+seed = which.min(obj)
+set.seed(seed)
+w = rnorm(nrow(X1))
+for(i in 1:100)
+  w = fastica_r1update(X1,w)
+plot(t(X1) %*% w)
+cor(L, t(X1) %*% w)
+```
+
+So: what is going on here is that there are two different representations of binary sources, the (-1,1) representaion that maximizes Elogcosh, and a (0,nonzero) representation that minimizes Elogcosh. It makes sense that a (0,nonzero) binary distribution tends to *minimize* log cosh: indeed among all distributions with second moment 1, the minimum of Elogcosh is 0: you put all the mass at 0, except for epsilon^2 at 1/epsilon). Also of note, presumably very unbalanced sources will produce lower Elogcosh than balanced sources (whereas in the +-1 representation the maximum Elogcosh is the same for balanced vs unbalanced sources). Thus, in order to find unbalanced sources, it might be preferable to minimize Elogcosh - something to keep in mind for the future?
+
+## More simulations
+
+
+### 9 group simulations
+
+Here I try 9 groups, with 20 members each, which should be harder. 
+```{r}
+K=9
+p = 1000
+n = 100
+set.seed(1)
+L = matrix(0,nrow=n,ncol=K)
+for(i in 1:K){L[sample(1:n,20),i]=1}
+FF = matrix(rnorm(p*K), nrow = p, ncol=K)
+
+X = L %*% t(FF) + rnorm(n*p,0,0.01)
+plot(X %*% FF[,1])
+X1 = preprocess(X)
+X1 = rbind(rep(1,ncol(X1)), X1)
+```
+
+### noncentered fastICA (100 random starts)
+
+Here I try with 100 random starts - most of them reach an objective corresponding to a binary group. And we can see there seem to be 9 different solutions corresponding to the 9 groups.
+```{r}
+obj = rep(0,100)
+for(seed in 1:100){
+  set.seed(seed)
+  w = rnorm(nrow(X1))
+  for(i in 1:100)
+    w = fastica_r1update(X1,w)
+  obj[seed] = compute_objective(X1,w)
+}
+plot(obj)
+plot(sort(obj[obj>0.425]))
+```
+
+This is the top seed: it turns out to put all the objects in the same group! So that's not ideal, but it makes sense that this is a solution. We either have to hope that this is not common, or find a way to avoid that solution?
+```{r}
+seed= order(obj,decreasing=TRUE)[1]
+set.seed(seed)
+w = rnorm(nrow(X1))
+for(i in 1:100)
+  w = fastica_r1update(X1,w)
+cor(L,t(X1) %*% w)
+plot(t(X1) %*% w)
+```
+
+This is the 10th biggest seed: it finds one of the groups.
+```{r}
+seed= order(obj,decreasing=TRUE)[10]
+set.seed(seed)
+w = rnorm(nrow(X1))
+for(i in 1:100)
+  w = fastica_r1update(X1,w)
+cor(L,t(X1) %*% w)
+```
+
+This is the 19th biggest seed: it finds another of the groups.
+```{r}
+seed= order(obj,decreasing=TRUE)[19]
+set.seed(seed)
+w = rnorm(nrow(X1))
+for(i in 1:100)
+  w = fastica_r1update(X1,w)
+cor(L,t(X1) %*% w)
+```
+
+This is the smallest seed: it also finds a binary group.
+```{r}
+seed= order(obj,decreasing=TRUE)[100]
+set.seed(seed)
+w = rnorm(nrow(X1))
+for(i in 1:100)
+  w = fastica_r1update(X1,w)
+cor(L,t(X1) %*% w)
+plot(t(X1) %*% w)
+```
+
+## Four non-overlapping groups
+
+Here I look at 4 equal non-overlapping groups. I'm interested in whether it converges to a single group or a combination of groups. It turns out that the majority of random starts converge to a combination of 2 groups, which is very different behavior than above. It gets me wondering whether this is because i) the non-overlapping situation, or ii) the symmetry created by the fact there are only 4 groups (2 vs 2). 
+
+```{r}
+set.seed(1)
+n = 100
+p = 1000
+L = matrix(0,nrow=n,ncol=4)
+L[1:25,1] = 1 
+L[26:50,2] = 1 
+L[51:75,3]  = 1
+L[76:100,4] = 1
+FF = matrix(rnorm(p*4),nrow=p) 
+X = L %*% t(FF) + rnorm(n*p,0,0.01)
+image(X%*% t(X))
+X1 = preprocess(X,n.comp=4)
+X1 = rbind(rep(1,ncol(X1)), X1)
+```
+
+Here I try with 100 random starts - all of them reach an objective corresponding to a binary group. The highest objectives correspond to a single group (the trivial solution). Then the next highest correspond to single groups. The lowest correspond to combinations of 2 groups. 
+```{r}
+obj = rep(0,100)
+Lhat = matrix(nrow=100,ncol=n)
+for(seed in 1:100){
+  set.seed(seed)
+  w = rnorm(nrow(X1))
+  for(i in 1:100)
+    w = fastica_r1update(X1,w)
+  obj[seed] = compute_objective(X1,w)
+  Lhat[seed,] = t(X1) %*% w
+}
+plot(sort(obj))
+image(Lhat[order(obj,decreasing=TRUE),])
+```
+
+Here's the results for the smallest objective for illustration:
+```{r}
+seed= order(obj,decreasing=FALSE)[1]
+set.seed(seed)
+w = rnorm(nrow(X1))
+for(i in 1:100)
+  w = fastica_r1update(X1,w)
+plot(t(X1) %*% w)
+```
+
+
+## Nine non-overlapping groups
+
+Here I look at 9 equal non-overlapping groups. 
+
+Start by creating L to be a binary matrix with 9 columns, 25*9 rows, and a single 1 in each row.
+```{r}
+set.seed(1)
+n = 225
+p = 1000
+L = matrix(0,nrow=n,ncol=9)
+for(i in 1:9){L[((i-1)*25+1):(i*25),i] = 1}
+FF = matrix(rnorm(p*9),nrow=p)
+X = L %*% t(FF) + rnorm(n*p,0,0.01)
+image(X%*% t(X))
+X1 = preprocess(X,n.comp=10)
+X1 = rbind(rep(1,ncol(X1)), X1)
+```
+
+Here I try with 100 random starts - all of them reach an objective corresponding to a binary group, but now it finds both maxima and minima. The highest and lowest objectives correspond to single groups. 
+```{r}
+obj = rep(0,100)
+Lhat = matrix(nrow=100,ncol=n)
+for(seed in 1:100){
+  set.seed(seed)
+  w = rnorm(nrow(X1))
+  for(i in 1:100)
+    w = fastica_r1update(X1,w)
+  obj[seed] = compute_objective(X1,w)
+  Lhat[seed,] = t(X1) %*% w
+}
+plot(sort(obj))
+plot(sort(obj[obj>0.4]))
+image(Lhat[order(obj,decreasing=TRUE),])
+```
+
+
+## Bifurcating Tree simulations
+
+Here is a simple tree-based simulations; it's a 4-leaf tree with two bifurcating branches.
+```{r}
+# set up L to be a tree with 4 tips and 7 branches (including top shared branch)
+set.seed(1)
+n = 100
+p = 1000
+L = matrix(0,nrow=n,ncol=6)
+L[1:50,1] = 1 #top split L
+L[51:100,2] = 1 # top split R
+L[1:25,3]  = 1
+L[26:50,4] = 1
+L[51:75,5] = 1
+L[76:100,6] = 1
+FF = matrix(rnorm(p*6),nrow=p) 
+X = L %*% t(FF) + rnorm(n*p,0,0.01)
+image(X%*% t(X))
+X1 = preprocess(X)
+X1 = rbind(rep(1,ncol(X1)), X1)
+```
+
+Here I try with 100 random starts - most of them seem to reach an objective corresponding to a binary group, but now it finds both maxima and minima. The highest objectives are the trivial solutions; the next highest are the top split in the tree; the next highest are single branches. The lowest objectives are a bit messy so I'll look at them in more detail next.
+```{r}
+obj = rep(0,100)
+Lhat = matrix(nrow=100,ncol=n)
+for(seed in 1:100){
+  set.seed(seed)
+  w = rnorm(nrow(X1))
+  for(i in 1:100)
+    w = fastica_r1update(X1,w)
+  obj[seed] = compute_objective(X1,w)
+  Lhat[seed,] = t(X1) %*% w
+}
+plot(sort(obj))
+plot(sort(obj[obj>0.43]))
+image(Lhat[order(obj,decreasing=TRUE),])
+```
+
+Here is the smallest seed: it does not actually correspond to a binary solution.
+```{r}
+seed= order(obj,decreasing=FALSE)[1]
+set.seed(seed)
+w = rnorm(nrow(X1))
+for(i in 1:100)
+  w = fastica_r1update(X1,w)
+plot(t(X1) %*% w)
+cor(L,t(X1) %*% w)
+```
+
+Here I try preprocessing to fewer PCs to reduce the noise.
+```{r}
+X1 = preprocess(X,n.comp=4)
+X1 = rbind(rep(1,ncol(X1)), X1)
+```
+
+Run 100 seeds: we lose the noisy minimizing solutions.
+```{r}
+obj = rep(0,100)
+Lhat = matrix(nrow=100,ncol=n)
+for(seed in 1:100){
+  set.seed(seed)
+  w = rnorm(nrow(X1))
+  for(i in 1:100)
+    w = fastica_r1update(X1,w)
+  obj[seed] = compute_objective(X1,w)
+  Lhat[seed,] = t(X1) %*% w
+}
+plot(sort(obj))
+image(Lhat[order(obj,decreasing=TRUE),])
+```
