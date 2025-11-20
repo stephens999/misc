@@ -21,11 +21,14 @@ Here I'm going to try a different approach, which simply constriains ||X'w + c||
 Before trying to fix the problem, let's illustrate it again.
 First here is a simple single-unit ICA function and preprocessing (for centering and whitening).
 ```{r}
-fastica_r1update = function(X,w){
+fastica_r1update = function(X,w, includeG2=TRUE){
   w= w/sqrt(sum(w^2)) # redundant, but just to be safe
   P = t(X) %*% w
   G = tanh(P)
-  G2 = 1-tanh(P)^2
+  G2 = 0
+  if(includeG2) # Note: if you don't include G2, this is like the EBCD updates rather than ICA and I believe it will always try to maximize logcosh
+    G2 = 1-tanh(P)^2
+
   w = X %*% G - sum(G2) * w 
   w = w/sqrt(sum(w^2)) # to ensure the returned value satisfies constraints
   return(w)
@@ -400,4 +403,149 @@ for(seed in 1:100){
 }
 plot(sort(obj))
 image(Lhat[order(obj,decreasing=TRUE),])
+```
+
+
+## Adding noise
+
+In the above the preprocessing was mostly done with adding minimal noise (ie as if we knew the true number of components). I found that performance of ICA was much degraded, even in simple examples, by more noise. This section was added to document this.
+
+### 9 group simulations
+
+To illustrate, I use the simple 9 group simulation with 20 members each. But in my preprocessing I use 20 components rather than the 10 I used above.
+```{r}
+K=9
+p = 1000
+n = 100
+set.seed(1)
+L = matrix(0,nrow=n,ncol=K)
+for(i in 1:K){L[sample(1:n,20),i]=1}
+FF = matrix(rnorm(p*K), nrow = p, ncol=K)
+
+X = L %*% t(FF) + rnorm(n*p,0,0.01)
+plot(X %*% FF[,1])
+X1 = preprocess(X,n.comp=20)
+X1 = rbind(rep(1,ncol(X1)), X1)
+```
+
+### noncentered fastICA (100 random starts)
+
+Here I try with 100 random starts - a small minority find a good group solution. Also, most of the runs seems to end up at a local minima of the objective rather than a local maximum.
+```{r}
+obj = rep(0,100)
+for(seed in 1:100){
+  set.seed(seed)
+  w = rnorm(nrow(X1))
+  for(i in 1:100)
+    w = fastica_r1update(X1,w)
+  obj[seed] = compute_objective(X1,w)
+}
+plot(obj)
+plot(sort(obj[obj>0.425]))
+```
+
+This is the bottom seed: you can see it picks out a "laplace-like" distribution, which gives a small logcosh value.
+```{r}
+seed= order(obj,decreasing=TRUE)[100]
+set.seed(seed)
+w = rnorm(nrow(X1))
+for(i in 1:100)
+  w = fastica_r1update(X1,w)
+cor(L,t(X1) %*% w)
+plot(t(X1) %*% w)
+```
+
+### EBCD, 100 random starts
+
+When we remove the G2 term from the fastICA updates, this is essentially the single-unit
+EBCD updates from Kang + Stephens. These are designed to maximize the objective, so I try those here. Now all the runs get a larger value for the objective. However, they mostly don't seem to be quite finding the single group solutions, and indeed further investigation suggests they are finding a combination of groups.
+```{r}
+obj = rep(0,100)
+for(seed in 1:100){
+  set.seed(seed)
+  w = rnorm(nrow(X1))
+  for(i in 1:100)
+    w = fastica_r1update(X1,w,includeG2=FALSE)
+  obj[seed] = compute_objective(X1,w)
+}
+plot(obj)
+```
+
+This is the bottom seed:
+```{r}
+seed= order(obj,decreasing=TRUE)[100]
+set.seed(seed)
+w = rnorm(nrow(X1))
+for(i in 1:100)
+  w = fastica_r1update(X1,w,includeG2=FALSE)
+cor(L,t(X1) %*% w)
+plot(t(X1) %*% w)
+```
+
+This is a middle seed
+```{r}
+seed= order(obj,decreasing=TRUE)[50]
+set.seed(seed)
+w = rnorm(nrow(X1))
+for(i in 1:100)
+  w = fastica_r1update(X1,w,includeG2=FALSE)
+cor(L,t(X1) %*% w)
+plot(t(X1) %*% w)
+```
+
+It looks like these solutions are "on their way" to binary, but not yet binary. I could
+try running more iterations to see if it changes, but here I add on the fastICA updates (with G2) to see what happens. That is, here I'm initializing fastICA with the EBCD results. It does not seem to change much.
+```{r}
+obj = rep(0,100)
+for(seed in 1:100){
+  set.seed(seed)
+  w = rnorm(nrow(X1))
+  for(i in 1:100)
+    w = fastica_r1update(X1,w,includeG2=FALSE)
+  for(i in 1:100)
+    w = fastica_r1update(X1,w,includeG2=TRUE)
+  obj[seed] = compute_objective(X1,w)
+}
+plot(obj)
+```
+
+This is a middle seed
+```{r}
+seed= order(obj,decreasing=TRUE)[50]
+set.seed(seed)
+w = rnorm(nrow(X1))
+for(i in 1:100)
+    w = fastica_r1update(X1,w,includeG2=FALSE)
+for(i in 1:100)
+    w = fastica_r1update(X1,w,includeG2=TRUE)
+cor(L,t(X1) %*% w)
+plot(t(X1) %*% w)
+```
+
+Here I try running just a couple of EBCD updates to encourage fastICA to maximize rather than minimize. It definitely helps it to find a local maximum, but a lot of the local optima are still not the single-group solutions.
+```{r}
+obj = rep(0,100)
+for(seed in 1:100){
+  set.seed(seed)
+  w = rnorm(nrow(X1))
+  for(i in 1:2)
+    w = fastica_r1update(X1,w,includeG2=FALSE)
+  for(i in 1:100)
+    w = fastica_r1update(X1,w,includeG2=TRUE)
+  obj[seed] = compute_objective(X1,w)
+}
+plot(obj)
+```
+
+This is a middle seed again:
+```{r}
+seed= order(obj,decreasing=TRUE)[50]
+set.seed(seed)
+w = rnorm(nrow(X1))
+for(i in 1:2)
+    w = fastica_r1update(X1,w,includeG2=FALSE)
+for(i in 1:100)
+    w = fastica_r1update(X1,w,includeG2=TRUE)
+cor(L,t(X1) %*% w)
+plot(t(X1) %*% w)
 ```
