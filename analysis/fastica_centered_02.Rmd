@@ -493,6 +493,8 @@ cor(L,t(X1) %*% w)
 plot(t(X1) %*% w)
 ```
 
+### EBCD + fastICA updates
+
 It looks like these solutions are "on their way" to binary, but not yet binary. I could
 try running more iterations to see if it changes, but here I add on the fastICA updates (with G2) to see what happens. That is, here I'm initializing fastICA with the EBCD results. It does not seem to change much.
 ```{r}
@@ -549,3 +551,21 @@ for(i in 1:100)
 cor(L,t(X1) %*% w)
 plot(t(X1) %*% w)
 ```
+
+### EBCD on the original data
+
+Here i run EBCD on the original (unwhitened) data after standardizing. 
+However, this just finds the first PC! 
+Presumably this is the problem that the fit term is dominating over the prior? 
+```{r}
+X2 = t(scale(X,center=FALSE)) # make it so the rows are the features and standard devation is 1
+set.seed(1)
+w = rnorm(nrow(X2))
+for(i in 1:100)
+  w = fastica_r1update(X2,w,includeG2=FALSE)
+cor(L,t(X2) %*% w)
+plot(t(X2) %*% w)
+plot(svd(X2)$u[,1],w)
+```
+
+
