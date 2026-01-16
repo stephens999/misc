@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Matthew Stephens" />
+
+<meta name="date" content="2025-11-19" />
+
+<title>fastica_centered_03</title>
+
+<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">misc</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/stephens999/misc">source</a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">fastica_centered_03</h1>
+<h4 class="author">Matthew Stephens</h4>
+<h4 class="date">2025-11-19</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2026-01-16
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>misc/analysis/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.1). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed1code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(1)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed1code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(1)</code> was run prior to running the
+code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreea69ee87abdc13b7eb5ccd80a632ea6c1acf5257etargetblanka69ee87a">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/stephens999/misc/tree/a69ee87abdc13b7eb5ccd80a632ea6c1acf5257e" target="_blank">a69ee87</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreea69ee87abdc13b7eb5ccd80a632ea6c1acf5257etargetblanka69ee87a"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/stephens999/misc/tree/a69ee87abdc13b7eb5ccd80a632ea6c1acf5257e" target="_blank">a69ee87</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.RData
+    Ignored:    analysis/.Rhistory
+    Ignored:    analysis/ALStruct_cache/
+    Ignored:    data/.Rhistory
+    Ignored:    data/methylation-data-for-matthew.rds
+    Ignored:    data/pbmc/
+    Ignored:    data/pbmc_purified.RData
+
+Untracked files:
+    Untracked:  .dropbox
+    Untracked:  Icon
+    Untracked:  analysis/GHstan.Rmd
+    Untracked:  analysis/GTEX-cogaps.Rmd
+    Untracked:  analysis/PACS.Rmd
+    Untracked:  analysis/Rplot.png
+    Untracked:  analysis/SPCAvRP.rmd
+    Untracked:  analysis/abf_comparisons.Rmd
+    Untracked:  analysis/admm_02.Rmd
+    Untracked:  analysis/admm_03.Rmd
+    Untracked:  analysis/bispca.Rmd
+    Untracked:  analysis/cache/
+    Untracked:  analysis/cholesky.Rmd
+    Untracked:  analysis/compare-transformed-models.Rmd
+    Untracked:  analysis/cormotif.Rmd
+    Untracked:  analysis/cp_ash.Rmd
+    Untracked:  analysis/eQTL.perm.rand.pdf
+    Untracked:  analysis/eb_power2.Rmd
+    Untracked:  analysis/eb_prepilot.Rmd
+    Untracked:  analysis/eb_var.Rmd
+    Untracked:  analysis/ebpmf1.Rmd
+    Untracked:  analysis/ebpmf_sla_text.Rmd
+    Untracked:  analysis/ebspca_sims.Rmd
+    Untracked:  analysis/explore_psvd.Rmd
+    Untracked:  analysis/fa_check_identify.Rmd
+    Untracked:  analysis/fa_iterative.Rmd
+    Untracked:  analysis/fastica_heated.Rmd
+    Untracked:  analysis/flash_cov_overlapping_groups_init.Rmd
+    Untracked:  analysis/flash_test_tree.Rmd
+    Untracked:  analysis/flashier_newgroups.Rmd
+    Untracked:  analysis/flashier_nmf_triples.Rmd
+    Untracked:  analysis/flashier_pbmc.Rmd
+    Untracked:  analysis/flashier_snn_shifted_prior.Rmd
+    Untracked:  analysis/greedy_ebpmf_exploration_00.Rmd
+    Untracked:  analysis/ieQTL.perm.rand.pdf
+    Untracked:  analysis/lasso_em_03.Rmd
+    Untracked:  analysis/m6amash.Rmd
+    Untracked:  analysis/mash_bhat_z.Rmd
+    Untracked:  analysis/mash_ieqtl_permutations.Rmd
+    Untracked:  analysis/matrix_beta.Rmd
+    Untracked:  analysis/methylation_example.Rmd
+    Untracked:  analysis/mixsqp.Rmd
+    Untracked:  analysis/mr.ash_lasso_init.Rmd
+    Untracked:  analysis/mr.mash.test.Rmd
+    Untracked:  analysis/mr_ash_modular.Rmd
+    Untracked:  analysis/mr_ash_parameterization.Rmd
+    Untracked:  analysis/mr_ash_ridge.Rmd
+    Untracked:  analysis/mv_gaussian_message_passing.Rmd
+    Untracked:  analysis/nejm.Rmd
+    Untracked:  analysis/nmf_bg.Rmd
+    Untracked:  analysis/nonneg_underapprox.Rmd
+    Untracked:  analysis/normal_conditional_on_r2.Rmd
+    Untracked:  analysis/normalize.Rmd
+    Untracked:  analysis/pbmc.Rmd
+    Untracked:  analysis/pca_binary_weighted.Rmd
+    Untracked:  analysis/pca_l1.Rmd
+    Untracked:  analysis/poisson_nmf_approx.Rmd
+    Untracked:  analysis/poisson_shrink.Rmd
+    Untracked:  analysis/poisson_transform.Rmd
+    Untracked:  analysis/qrnotes.txt
+    Untracked:  analysis/ridge_iterative_02.Rmd
+    Untracked:  analysis/ridge_iterative_splitting.Rmd
+    Untracked:  analysis/samps/
+    Untracked:  analysis/sc_bimodal.Rmd
+    Untracked:  analysis/shrinkage_comparisons_changepoints.Rmd
+    Untracked:  analysis/susie_cov.Rmd
+    Untracked:  analysis/susie_en.Rmd
+    Untracked:  analysis/susie_z_investigate.Rmd
+    Untracked:  analysis/svd-timing.Rmd
+    Untracked:  analysis/temp.RDS
+    Untracked:  analysis/temp.Rmd
+    Untracked:  analysis/test-figure/
+    Untracked:  analysis/test.Rmd
+    Untracked:  analysis/test.Rpres
+    Untracked:  analysis/test.md
+    Untracked:  analysis/test_qr.R
+    Untracked:  analysis/test_sparse.Rmd
+    Untracked:  analysis/tree_dist_top_eigenvector.Rmd
+    Untracked:  analysis/z.txt
+    Untracked:  code/coordinate_descent_symNMF.R
+    Untracked:  code/multivariate_testfuncs.R
+    Untracked:  code/rqb.hacked.R
+    Untracked:  data/4matthew/
+    Untracked:  data/4matthew2/
+    Untracked:  data/E-MTAB-2805.processed.1/
+    Untracked:  data/ENSG00000156738.Sim_Y2.RDS
+    Untracked:  data/GDS5363_full.soft.gz
+    Untracked:  data/GSE41265_allGenesTPM.txt
+    Untracked:  data/Muscle_Skeletal.ACTN3.pm1Mb.RDS
+    Untracked:  data/P.rds
+    Untracked:  data/Thyroid.FMO2.pm1Mb.RDS
+    Untracked:  data/bmass.HaemgenRBC2016.MAF01.Vs2.MergedDataSources.200kRanSubset.ChrBPMAFMarkerZScores.vs1.txt.gz
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.PreviousSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/eb_prepilot/
+    Untracked:  data/finemap_data/fmo2.sim/b.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/data
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.ld
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.z
+    Untracked:  data/finemap_data/fmo2.sim/pos.txt
+    Untracked:  data/logm.csv
+    Untracked:  data/m.cd.RDS
+    Untracked:  data/m.cdu.old.RDS
+    Untracked:  data/m.new.cd.RDS
+    Untracked:  data/m.old.cd.RDS
+    Untracked:  data/mainbib.bib.old
+    Untracked:  data/mat.csv
+    Untracked:  data/mat.txt
+    Untracked:  data/mat_new.csv
+    Untracked:  data/matrix_lik.rds
+    Untracked:  data/paintor_data/
+    Untracked:  data/running_data_chris.csv
+    Untracked:  data/running_data_matthew.csv
+    Untracked:  data/temp.txt
+    Untracked:  data/y.txt
+    Untracked:  data/y_f.txt
+    Untracked:  data/zscore_jointLCLs_m6AQTLs_susie_eQTLpruned.rds
+    Untracked:  data/zscore_jointLCLs_random.rds
+    Untracked:  explore_udi.R
+    Untracked:  output/fit.k10.rds
+    Untracked:  output/fit.nn.pbmc.purified.rds
+    Untracked:  output/fit.nn.rds
+    Untracked:  output/fit.nn.s.001.rds
+    Untracked:  output/fit.nn.s.01.rds
+    Untracked:  output/fit.nn.s.1.rds
+    Untracked:  output/fit.nn.s.10.rds
+    Untracked:  output/fit.snn.s.001.rds
+    Untracked:  output/fit.snn.s.01.nninit.rds
+    Untracked:  output/fit.snn.s.01.rds
+    Untracked:  output/fit.varbvs.RDS
+    Untracked:  output/fit2.nn.pbmc.purified.rds
+    Untracked:  output/glmnet.fit.RDS
+    Untracked:  output/snn07.txt
+    Untracked:  output/snn34.txt
+    Untracked:  output/test.bv.txt
+    Untracked:  output/test.gamma.txt
+    Untracked:  output/test.hyp.txt
+    Untracked:  output/test.log.txt
+    Untracked:  output/test.param.txt
+    Untracked:  output/test2.bv.txt
+    Untracked:  output/test2.gamma.txt
+    Untracked:  output/test2.hyp.txt
+    Untracked:  output/test2.log.txt
+    Untracked:  output/test2.param.txt
+    Untracked:  output/test3.bv.txt
+    Untracked:  output/test3.gamma.txt
+    Untracked:  output/test3.hyp.txt
+    Untracked:  output/test3.log.txt
+    Untracked:  output/test3.param.txt
+    Untracked:  output/test4.bv.txt
+    Untracked:  output/test4.gamma.txt
+    Untracked:  output/test4.hyp.txt
+    Untracked:  output/test4.log.txt
+    Untracked:  output/test4.param.txt
+    Untracked:  output/test5.bv.txt
+    Untracked:  output/test5.gamma.txt
+    Untracked:  output/test5.hyp.txt
+    Untracked:  output/test5.log.txt
+    Untracked:  output/test5.param.txt
+
+Unstaged changes:
+    Modified:   .gitignore
+    Modified:   analysis/eb_snmu.Rmd
+    Modified:   analysis/ebnm_binormal.Rmd
+    Modified:   analysis/ebpower.Rmd
+    Modified:   analysis/fastica_centered.Rmd
+    Modified:   analysis/flashier_log1p.Rmd
+    Modified:   analysis/flashier_sla_text.Rmd
+    Modified:   analysis/logistic_z_scores.Rmd
+    Modified:   analysis/mr_ash_pen.Rmd
+    Modified:   analysis/nmu_em.Rmd
+    Modified:   analysis/susie_flash.Rmd
+    Modified:   analysis/tap_free_energy.Rmd
+    Modified:   misc.Rproj
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown (<code>analysis/fastica_centered_03.Rmd</code>)
+and HTML (<code>docs/fastica_centered_03.html</code>) files. If you’ve
+configured a remote Git repository (see <code>?wflow_git_remote</code>),
+click on the hyperlinks in the table below to view the files as they
+were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/a69ee87abdc13b7eb5ccd80a632ea6c1acf5257e/analysis/fastica_centered_03.Rmd" target="_blank">a69ee87</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-01-16
+</td>
+<td>
+workflowr::wflow_publish("analysis/fastica_centered_03.Rmd")
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<pre class="r"><code>library(fastICA)</code></pre>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>I <a href="fastica_centered_02.html">previously</a> found that single
+unit fastICA can find binary sources when adding an intercept to the
+data matrix. Here I want to take a look at multiunit versions.</p>
+</div>
+<div id="modify-fastica-code" class="section level2">
+<h2>Modify fastICA code</h2>
+<p>The fastICA package has two multiunit algorithms, parallel and
+deflationary. Although both take a data matrix and a n.comp parameter,
+the code seems to require that the number of components is equal to the
+number of rows of X. I modified the deflationary code to allow me to
+specify to only find n.comp components less than the number of rows of
+X. And I modified the parallel code to allow me to specify whether or
+not to orthogonalize between iterations. I also provide defaults for
+some of the parameters for convenience. Here is the modified code.</p>
+<pre class="r"><code>ica.R.def &lt;- function (X, n.comp, w.init, tol=1e-4, fun=&quot;logcosh&quot;, alpha=1, maxit=200, verbose=FALSE) 
+{
+    # 1. Define dimensions clearly
+    d &lt;- nrow(X)    # Dimension of the signal (e.g., 10 rows)
+    p &lt;- ncol(X)    # Number of samples (e.g., 1000 columns)
+    
+    if (verbose &amp;&amp; fun == &quot;logcosh&quot;) 
+        message(&quot;Deflation FastICA using logcosh approx. to neg-entropy function&quot;)
+    if (verbose &amp;&amp; fun == &quot;exp&quot;) 
+        message(&quot;Deflation FastICA using exponential approx. to neg-entropy function&quot;)
+        
+    # 2. Initialize W to be (n.comp x d)
+    # We want 3 rows (components), but each row must have 10 columns (weights)
+    W &lt;- matrix(0, n.comp, d) 
+    
+    for (i in 1:n.comp) {
+        if (verbose) 
+            message(&quot;Component &quot;, i)
+        
+        # 3. Initialize current weight vector w to be length d (10), not n.comp (3)
+        w &lt;- matrix(w.init[i, ], d, 1)
+        
+        # Deflation (Orthogonalization against previous components)
+        if (i &gt; 1) {
+            t &lt;- w
+            t[1:length(t)] &lt;- 0
+            for (u in 1:(i - 1)) {
+                k &lt;- sum(w * W[u, ])
+                t &lt;- t + k * W[u, ]
+            }
+            w &lt;- w - t
+        }
+        w &lt;- w/sqrt(sum(w^2))
+        
+        lim &lt;- rep(1000, maxit)
+        it &lt;- 1
+        
+        if (fun == &quot;logcosh&quot;) {
+            while (lim[it] &gt; tol &amp;&amp; it &lt; maxit) {
+                wx &lt;- t(w) %*% X
+                gwx &lt;- tanh(alpha * wx)
+
+                # 4. Broadcast gwx to match input dimension d, not n.comp
+                # This creates a (d x p) matrix for element-wise multiplication with X
+                gwx &lt;- matrix(gwx, d, p, byrow = TRUE)
+
+                xgwx &lt;- X * gwx
+                v1 &lt;- apply(xgwx, 1, FUN = mean)
+
+                g.wx &lt;- alpha * (1 - (tanh(alpha * wx))^2)
+                v2 &lt;- mean(g.wx) * w
+
+                w1 &lt;- v1 - v2
+
+                # The above updates are basically equivalent to:
+                # P = t(X) %*% w
+                # G = tanh(P)
+                # G2 = 1-tanh(P)^2
+                # w1 = X %*% G - sum(G2) * w 
+                # 
+                # 5. Ensure w1 stays dimension d
+                w1 &lt;- matrix(w1, d, 1)
+                
+                it &lt;- it + 1
+                
+                # Deflation inside the loop
+                if (i &gt; 1) {
+                    t &lt;- w1
+                    t[1:length(t)] &lt;- 0
+                    for (u in 1:(i - 1)) {
+                        k &lt;- sum(w1 * W[u, ])
+                        t &lt;- t + k * W[u, ]
+                    }
+                    w1 &lt;- w1 - t
+                }
+                w1 &lt;- w1/sqrt(sum(w1^2))
+                lim[it] &lt;- Mod(Mod(sum((w1 * w))) - 1)
+                if (verbose) 
+                    message(&quot;Iteration &quot;, it - 1, &quot; tol = &quot;, format(lim[it]))
+                w &lt;- matrix(w1, d, 1)
+            }
+        }
+        
+        if (fun == &quot;exp&quot;) {
+            while (lim[it] &gt; tol &amp;&amp; it &lt; maxit) {
+                wx &lt;- t(w) %*% X
+                gwx &lt;- wx * exp(-(wx^2)/2)
+                
+                # Broadcast fix
+                gwx &lt;- matrix(gwx, d, p, byrow = TRUE)
+                
+                xgwx &lt;- X * gwx
+                v1 &lt;- apply(xgwx, 1, FUN = mean)
+                g.wx &lt;- (1 - wx^2) * exp(-(wx^2)/2)
+                v2 &lt;- mean(g.wx) * w
+                w1 &lt;- v1 - v2
+                
+                # Dimension fix
+                w1 &lt;- matrix(w1, d, 1)
+                
+                it &lt;- it + 1
+                if (i &gt; 1) {
+                    t &lt;- w1
+                    t[1:length(t)] &lt;- 0
+                    for (u in 1:(i - 1)) {
+                        k &lt;- sum(w1 * W[u, ])
+                        t &lt;- t + k * W[u, ]
+                    }
+                    w1 &lt;- w1 - t
+                }
+                w1 &lt;- w1/sqrt(sum(w1^2))
+                lim[it] &lt;- Mod(Mod(sum((w1 * w))) - 1)
+                if (verbose) 
+                    message(&quot;Iteration &quot;, it - 1, &quot; tol = &quot;, format(lim[it]))
+                w &lt;- matrix(w1, d, 1)
+            }
+        }
+        # Store the result
+        W[i, ] &lt;- w
+    }
+    W
+}
+
+# w.init should be (n.comp x nrow(X))
+# n.comp is actually ignored: the number of components is determined by number of rows of w.init
+ica.R.par=function(X, n.comp, w.init, tol=1e-4, fun=&quot;logcosh&quot;, alpha=1, maxit=200, verbose=FALSE, orthogonalize=TRUE) 
+{
+    Diag &lt;- function(d) if (length(d) &gt; 1L) 
+        diag(d)
+    else as.matrix(d)
+    p &lt;- ncol(X)
+    W &lt;- w.init
+    
+    if(orthogonalize){
+      sW &lt;- La.svd(W)
+      W &lt;- sW$u %*% Diag(1/sW$d) %*% t(sW$u) %*% W
+    } else { # just normalize the rows to sum to 1
+      W &lt;- W/sqrt(rowSums(W^2))
+    }
+    W1 &lt;- W #this line seems unnecessary?
+    
+    lim &lt;- rep(1000, maxit)
+    it &lt;- 1
+    if (fun == &quot;logcosh&quot;) {
+        if (verbose) 
+            message(&quot;Symmetric FastICA using logcosh approx. to neg-entropy function&quot;)
+        while (lim[it] &gt; tol &amp;&amp; it &lt; maxit) {
+            wx &lt;- W %*% X
+            gwx &lt;- tanh(alpha * wx)
+            v1 &lt;- gwx %*% t(X)/p
+            g.wx &lt;- alpha * (1 - (gwx)^2)
+            v2 &lt;- Diag(apply(g.wx, 1, FUN = mean)) %*% W
+            W1 &lt;- v1 - v2
+            
+            if(orthogonalize){
+              sW1 &lt;- La.svd(W1)
+              W1 &lt;- sW1$u %*% Diag(1/sW1$d) %*% t(sW1$u) %*% W1
+            } else { # just normalize the rows to sum to 1
+              W1 &lt;- W1/sqrt(rowSums(W1^2))
+            }
+            
+            lim[it + 1] &lt;- max(Mod(Mod(diag(W1 %*% t(W))) - 1))
+            W &lt;- W1
+            if (verbose) 
+                message(&quot;Iteration &quot;, it, &quot; tol = &quot;, format(lim[it + 
+                  1]))
+            it &lt;- it + 1
+        }
+    }
+    if (fun == &quot;exp&quot;) {
+        if (verbose) 
+            message(&quot;Symmetric FastICA using exponential approx. to neg-entropy function&quot;)
+        while (lim[it] &gt; tol &amp;&amp; it &lt; maxit) {
+            wx &lt;- W %*% X
+            gwx &lt;- wx * exp(-(wx^2)/2)
+            v1 &lt;- gwx %*% t(X)/p
+            g.wx &lt;- (1 - wx^2) * exp(-(wx^2)/2)
+            v2 &lt;- Diag(apply(g.wx, 1, FUN = mean)) %*% W
+            W1 &lt;- v1 - v2
+            sW1 &lt;- La.svd(W1)
+            W1 &lt;- sW1$u %*% Diag(1/sW1$d) %*% t(sW1$u) %*% W1
+            lim[it + 1] &lt;- max(Mod(Mod(diag(W1 %*% t(W))) - 1))
+            W &lt;- W1
+            if (verbose) 
+                message(&quot;Iteration &quot;, it, &quot; tol = &quot;, format(lim[it + 
+                  1]))
+            it &lt;- it + 1
+        }
+    }
+    W
+}
+
+preprocess = function(X, n.comp=10){
+  n &lt;- nrow(X)
+  p &lt;- ncol(X)
+  X &lt;- scale(X, scale = FALSE)
+  X &lt;- t(X)
+  
+  ## This appears to be equivalant to X1 = t(svd(X)$v[,1:n.comp])       
+  V &lt;- X %*% t(X)/n
+  s &lt;- La.svd(V)
+  D &lt;- diag(c(1/sqrt(s$d)))
+  K &lt;- D %*% t(s$u)
+  K &lt;- matrix(K[1:n.comp, ], n.comp, p)
+  X1 &lt;- K %*% X
+  return(X1)
+}</code></pre>
+</div>
+<div id="three-group-simulation" class="section level2">
+<h2>Three group simulation</h2>
+<p>Here I simulate 3 groups, with only 20 members each.</p>
+<pre class="r"><code>K=3
+p = 1000
+n = 100
+set.seed(1)
+L = matrix(-1,nrow=n,ncol=K)
+for(i in 1:K){L[sample(1:n,20),i]=1}
+FF = matrix(rnorm(p*K), nrow = p, ncol=K)
+
+X = L %*% t(FF) + rnorm(n*p,0,0.01)
+plot(X %*% FF[,1])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>X1 = preprocess(X,3)
+X1 = rbind(rep(1,ncol(X1)),X1)</code></pre>
+<div id="parallel-fastica" class="section level3">
+<h3>Parallel fastICA</h3>
+<p>Here I try the parallel version of fastICA with 4 components, with
+two different seeds. While the binary components are less “clean” than
+in the single unit case, they still look pretty good.</p>
+<pre class="r"><code>set.seed(1)
+n.comp = 4 
+w.init = matrix(rnorm(nrow(X1)*n.comp), nrow=n.comp)
+fit.par = ica.R.par(X1,n.comp,w.init = w.init)
+S = t(fit.par %*% X1) 
+cor(S,L)</code></pre>
+<pre><code>            [,1]        [,2]       [,3]
+[1,]  0.08403629 -0.99257932  0.0824624
+[2,] -0.12025284 -0.08896430  0.9943317
+[3,] -0.99487249  0.08509843  0.1167245
+[4,] -0.55638739 -0.57292972 -0.5658669</code></pre>
+<pre class="r"><code>plot(S[,1])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(S[,2])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(S[,3])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-4-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(S[,4])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-4-4.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>set.seed(2)
+n.comp = 4
+w.init = matrix(rnorm(nrow(X1)*n.comp), nrow=n.comp)
+fit.par = ica.R.par(X1,n.comp,w.init = w.init)
+S = t(fit.par %*% X1) 
+cor(S,L)</code></pre>
+<pre><code>            [,1]       [,2]        [,3]
+[1,] -0.98455827 -0.1520249  0.14815968
+[2,] -0.03577012 -0.9985716 -0.03737348
+[3,] -0.60875474  0.4666760 -0.60228323
+[4,] -0.14573193  0.1488690  0.98525544</code></pre>
+<pre class="r"><code>plot(S[,1])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(S[,2])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(S[,3])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-5-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(S[,4])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-5-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Here I try without orthogonalizing. This is mostly just a check on my
+modified code since this should be just the same as running multiple
+versions of the single-unit method in parallel. (Since we are not
+orthogonalizing we can run more components than the number of true
+sources without issue.) The results look very similar to the single-unit
+results. My idea is that this might be a useful initialization for the
+orthogonal method.</p>
+<pre class="r"><code>set.seed(1)
+n.comp = 10
+w.init = matrix(rnorm(nrow(X1)*n.comp), nrow=n.comp)
+fit.par = ica.R.par(X1,n.comp,w.init = w.init,orthogonalize = FALSE)
+S = t(fit.par %*% X1) 
+cor(S,L)</code></pre>
+<pre><code>               [,1]          [,2]          [,3]
+ [1,] -9.999999e-01 -1.652949e-08  6.250002e-02
+ [2,]  3.817551e-01  6.271691e-01 -6.998843e-01
+ [3,]  8.752288e-09  9.999999e-01  6.602051e-09
+ [4,]  9.999999e-01 -1.681281e-05 -6.257330e-02
+ [5,]  6.249998e-02  1.401655e-08 -9.999999e-01
+ [6,] -3.577856e-01 -4.923289e-01  8.132397e-01
+ [7,] -9.999999e-01 -1.652949e-08  6.250002e-02
+ [8,]  1.349310e-05 -9.999999e-01 -1.016738e-04
+ [9,]  6.249998e-02  1.401655e-08 -9.999999e-01
+[10,] -9.999999e-01 -1.652949e-08  6.250002e-02</code></pre>
+<pre class="r"><code>plot(S[,1])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(S[,2])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(S[,3])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-6-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(S[,4])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-6-4.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="deflationary-fastica" class="section level3">
+<h3>Deflationary fastICA</h3>
+<p>Now try deflationary fastICA. Here I can set it to 3 components. The
+first component is very well found (as we saw with single unit fastICA).
+Subsequent components are less clean, presumably because of the
+orthogonality constraint. It seems that the exact fit of the first
+component ends up paying a price in terms of noisier fits to subsequent
+components, whereas in parallel fastICA all components are fit
+simultaneously and so can share the “error” from the orthogonality
+constraint more evenly.</p>
+<pre class="r"><code>set.seed(1)
+n.comp=3
+fit.def = ica.R.def(X1,n.comp, w.init = matrix(rnorm(n.comp*nrow(X1)), n.comp, nrow(X1)))
+S = t(fit.def %*% X1)
+cor(S,L)</code></pre>
+<pre><code>              [,1]       [,2]          [,3]
+[1,] -1.361601e-05 -0.9999999 -7.151533e-05
+[2,]  6.860840e-02 -0.3033097 -9.528488e-01
+[3,]  9.462371e-01 -0.1386017  2.325638e-01</code></pre>
+<pre class="r"><code>plot(S[,1])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(S[,2])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(S[,3])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-7-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>A second seed gives similar results</p>
+<pre class="r"><code>set.seed(2)
+n.comp=3
+fit.def = ica.R.def(X1,n.comp, tol= 1e-4, fun = &quot;logcosh&quot;,alpha = 1, maxit=200, verbose = FALSE, w.init = matrix(rnorm(n.comp*nrow(X1)), n.comp, nrow(X1)))
+S = t(fit.def %*% X1)
+cor(S,L)</code></pre>
+<pre><code>              [,1]       [,2]          [,3]
+[1,] -1.146943e-08  0.9999999  1.897259e-08
+[2,]  5.934043e-02  0.3349836 -9.422238e-01
+[3,] -9.402238e-01 -0.2105460 -2.083869e-01</code></pre>
+<pre class="r"><code>plot(S[,1])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(S[,2])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(S[,3])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-8-3.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="group-simulations" class="section level3">
+<h3>9 group simulations</h3>
+<p>Here I try 9 groups, with 20 members each, which should be
+harder.</p>
+<pre class="r"><code>K=9
+p = 1000
+n = 100
+set.seed(1)
+L = matrix(0,nrow=n,ncol=K)
+for(i in 1:K){L[sample(1:n,20),i]=1}
+FF = matrix(rnorm(p*K), nrow = p, ncol=K)
+
+X = L %*% t(FF) + rnorm(n*p,0,0.01)
+plot(X %*% FF[,1])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>X1 = preprocess(X)
+X1 = rbind(rep(1,ncol(X1)), X1)</code></pre>
+<p>Run parallel ICA: it basically finds 8 of the groups with correlation
+above 0.94, and the 9th has correlation 0.87.</p>
+<pre class="r"><code>set.seed(1)
+n.comp = nrow(X1)
+w.init = matrix(rnorm(nrow(X1)*n.comp), nrow=n.comp)
+fit.par = ica.R.par(X1,n.comp, w.init = w.init)
+S = t(fit.par %*% X1) 
+apply(abs(cor(S,L)),1,max)</code></pre>
+<pre><code> [1] 0.9887991 0.9653187 0.1640476 0.4108103 0.9825396 0.9445731 0.9816406
+ [8] 0.9810462 0.8655577 0.9717311 0.9808735</code></pre>
+<pre class="r"><code>plot(S[,1])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(S[,2])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-10-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(S[,9])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-10-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>A second seed gives similar, maybe slightly better, results:</p>
+<pre class="r"><code>set.seed(2)
+n.comp = nrow(X1) 
+w.init = matrix(rnorm(nrow(X1)*n.comp), nrow=n.comp)
+fit.par = ica.R.par(X1,n.comp, w.init = w.init)
+S = t(fit.par %*% X1) 
+apply(abs(cor(S,L)),1,max)</code></pre>
+<pre><code> [1] 0.9616801 0.9659977 0.9811932 0.9769977 0.9633711 0.9903067 0.2067006
+ [8] 0.9451592 0.4021428 0.9659679 0.9704595</code></pre>
+<pre class="r"><code>plot(S[,1])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(S[,2])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-11-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(S[,8])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-11-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>I wondered whether giving it more dimensions would actually reduce
+the error introduced by the orthgonality constraint, but it seems that
+the extra noise introduced stops it finding the binary components (it
+finds one):</p>
+<pre class="r"><code>X1 = preprocess(X,n.comp=20)
+X1 = rbind(rep(1,ncol(X1)), X1)
+set.seed(1)
+n.comp = 11
+fit.par = ica.R.par(X1,n.comp, w.init = matrix(rnorm(n.comp*nrow(X1)), nrow=n.comp))
+S = t(fit.par %*% X1) 
+apply(abs(cor(S,L)),1,max)</code></pre>
+<pre><code> [1] 0.3399597 0.5224804 0.4435216 0.6417451 0.5968186 0.9909028 0.3654300
+ [8] 0.4601215 0.4428418 0.3052099 0.5842388</code></pre>
+<pre class="r"><code>plot(S[,6])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>It seems that this this is actually also an issue for the single unit
+method: here I run the single-unit method 100 times and only fraction of
+the time does it find a source:</p>
+<pre class="r"><code>set.seed(1)
+n.comp = 100
+fit.par = ica.R.par(X1,n.comp, w.init = matrix(rnorm(n.comp*nrow(X1)), nrow=n.comp), orthogonalize = FALSE)
+S = t(fit.par %*% X1) 
+apply(abs(cor(S,L)),1,max)</code></pre>
+<pre><code>  [1] 0.36566397 0.61139186 0.36690680 0.41366624 0.99999972 0.55283194
+  [7] 0.61138737 0.34867476 0.34890997 0.61137353 0.61237223 0.31919968
+ [13] 0.49988132 0.66483829 0.23441964 0.55283194 0.34869940 0.34902699
+ [19] 0.43343084 0.36678852 0.99999979 0.65019017 0.31919971 0.39614399
+ [25] 0.42353345 0.36524037 0.36536007 0.34871055 0.36682633 0.36056308
+ [31] 0.44476468 0.36610865 0.99999970 0.44065152 0.61134637 0.34987071
+ [37] 0.55283194 0.99999973 0.34874208 0.55283194 0.99999974 0.28913791
+ [43] 0.34870740 0.34982873 0.31919921 0.34869758 0.35033992 0.36468234
+ [49] 0.61145713 0.34904972 0.55597233 0.61141691 0.24227342 0.55283194
+ [55] 0.99999974 0.99999970 0.99999974 0.99999977 0.36623253 0.43153991
+ [61] 0.65019016 0.65019016 0.57733849 0.36677937 0.34871108 0.57662778
+ [67] 0.37000021 0.43326903 0.34866823 0.01302384 0.55546140 0.34887250
+ [73] 0.38023022 0.99999979 0.99999973 0.36295810 0.61136720 0.99999979
+ [79] 0.55283194 0.99999974 0.36683987 0.55283078 0.48479320 0.34920756
+ [85] 0.36526713 0.65018995 0.36308335 0.36591484 0.36674796 0.99999970
+ [91] 0.99999972 0.36601384 0.36674252 0.34877462 0.36516655 0.36661481
+ [97] 0.34893272 0.43916033 0.41414493 0.61141866</code></pre>
+<pre class="r"><code>plot(S[,2])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>I wondered if we initialize by focussing on the top PCS we will find
+more sources, but it seems not?</p>
+<pre class="r"><code>set.seed(1)
+n.comp = 21 # this is also the number of rows of X1
+w.init = diag(21) # initialize at each PC/row of X1
+fit.par = ica.R.par(X1,n.comp, w.init = w.init, orthogonalize = FALSE)
+S = t(fit.par %*% X1) 
+apply(abs(cor(S,L)),1,max)</code></pre>
+<pre><code> [1] 0.01061445 0.37473433 0.55229597 0.36507315 0.61141132 0.55283194
+ [7] 0.99999977 0.45525268 0.34881836 0.61237223 0.35076485 0.31919957
+[13] 0.55283193 0.61139851 0.01239867 0.36672403 0.61061492 0.61140778
+[19] 0.31919956 0.66492514 0.68317124</code></pre>
+<pre class="r"><code>plot(S[,2])</code></pre>
+<p><img src="figure/fastica_centered_03.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.4.2 (2024-10-31)
+Platform: aarch64-apple-darwin20
+Running under: macOS Sequoia 15.6.1
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.0
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+time zone: America/Chicago
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] fastICA_1.2-7
+
+loaded via a namespace (and not attached):
+ [1] vctrs_0.6.5       cli_3.6.5         knitr_1.50        rlang_1.1.6      
+ [5] xfun_0.52         stringi_1.8.7     promises_1.3.3    jsonlite_2.0.0   
+ [9] workflowr_1.7.1   glue_1.8.0        rprojroot_2.0.4   git2r_0.35.0     
+[13] htmltools_0.5.8.1 httpuv_1.6.15     sass_0.4.10       rmarkdown_2.29   
+[17] evaluate_1.0.4    jquerylib_0.1.4   tibble_3.3.0      fastmap_1.2.0    
+[21] yaml_2.3.10       lifecycle_1.0.4   whisker_0.4.1     stringr_1.5.1    
+[25] compiler_4.4.2    fs_1.6.6          Rcpp_1.0.14       pkgconfig_2.0.3  
+[29] rstudioapi_0.17.1 later_1.4.2       digest_0.6.37     R6_2.6.1         
+[33] pillar_1.10.2     magrittr_2.0.3    bslib_0.9.0       tools_4.4.2      
+[37] cachem_1.1.0     </code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
