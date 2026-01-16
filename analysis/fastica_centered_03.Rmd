@@ -1,0 +1,399 @@
+---
+title: "fastica_centered_03"
+author: "Matthew Stephens"
+date: "2025-11-19"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+library(fastICA)
+```
+
+## Introduction
+
+I [previously](fastica_centered_02.html) found that single unit fastICA can find binary sources when adding an intercept to the data matrix. Here I want to take a look at multiunit versions.
+
+## Modify fastICA code
+
+The fastICA package has two multiunit algorithms, parallel and deflationary. Although both take a data matrix and a n.comp parameter, the code seems to require that the number of components is equal to the number of rows of X. I modified the deflationary code to allow me to specify to only find n.comp components less than the number of rows of X. And I modified the parallel code to allow me to specify whether or not to orthogonalize between iterations. I also provide defaults for some of the parameters for convenience. Here is the modified code.
+
+```{r}
+ica.R.def <- function (X, n.comp, w.init, tol=1e-4, fun="logcosh", alpha=1, maxit=200, verbose=FALSE) 
+{
+    # 1. Define dimensions clearly
+    d <- nrow(X)    # Dimension of the signal (e.g., 10 rows)
+    p <- ncol(X)    # Number of samples (e.g., 1000 columns)
+    
+    if (verbose && fun == "logcosh") 
+        message("Deflation FastICA using logcosh approx. to neg-entropy function")
+    if (verbose && fun == "exp") 
+        message("Deflation FastICA using exponential approx. to neg-entropy function")
+        
+    # 2. Initialize W to be (n.comp x d)
+    # We want 3 rows (components), but each row must have 10 columns (weights)
+    W <- matrix(0, n.comp, d) 
+    
+    for (i in 1:n.comp) {
+        if (verbose) 
+            message("Component ", i)
+        
+        # 3. Initialize current weight vector w to be length d (10), not n.comp (3)
+        w <- matrix(w.init[i, ], d, 1)
+        
+        # Deflation (Orthogonalization against previous components)
+        if (i > 1) {
+            t <- w
+            t[1:length(t)] <- 0
+            for (u in 1:(i - 1)) {
+                k <- sum(w * W[u, ])
+                t <- t + k * W[u, ]
+            }
+            w <- w - t
+        }
+        w <- w/sqrt(sum(w^2))
+        
+        lim <- rep(1000, maxit)
+        it <- 1
+        
+        if (fun == "logcosh") {
+            while (lim[it] > tol && it < maxit) {
+                wx <- t(w) %*% X
+                gwx <- tanh(alpha * wx)
+
+                # 4. Broadcast gwx to match input dimension d, not n.comp
+                # This creates a (d x p) matrix for element-wise multiplication with X
+                gwx <- matrix(gwx, d, p, byrow = TRUE)
+
+                xgwx <- X * gwx
+                v1 <- apply(xgwx, 1, FUN = mean)
+
+                g.wx <- alpha * (1 - (tanh(alpha * wx))^2)
+                v2 <- mean(g.wx) * w
+
+                w1 <- v1 - v2
+
+                # The above updates are basically equivalent to:
+                # P = t(X) %*% w
+                # G = tanh(P)
+                # G2 = 1-tanh(P)^2
+                # w1 = X %*% G - sum(G2) * w 
+                # 
+                # 5. Ensure w1 stays dimension d
+                w1 <- matrix(w1, d, 1)
+                
+                it <- it + 1
+                
+                # Deflation inside the loop
+                if (i > 1) {
+                    t <- w1
+                    t[1:length(t)] <- 0
+                    for (u in 1:(i - 1)) {
+                        k <- sum(w1 * W[u, ])
+                        t <- t + k * W[u, ]
+                    }
+                    w1 <- w1 - t
+                }
+                w1 <- w1/sqrt(sum(w1^2))
+                lim[it] <- Mod(Mod(sum((w1 * w))) - 1)
+                if (verbose) 
+                    message("Iteration ", it - 1, " tol = ", format(lim[it]))
+                w <- matrix(w1, d, 1)
+            }
+        }
+        
+        if (fun == "exp") {
+            while (lim[it] > tol && it < maxit) {
+                wx <- t(w) %*% X
+                gwx <- wx * exp(-(wx^2)/2)
+                
+                # Broadcast fix
+                gwx <- matrix(gwx, d, p, byrow = TRUE)
+                
+                xgwx <- X * gwx
+                v1 <- apply(xgwx, 1, FUN = mean)
+                g.wx <- (1 - wx^2) * exp(-(wx^2)/2)
+                v2 <- mean(g.wx) * w
+                w1 <- v1 - v2
+                
+                # Dimension fix
+                w1 <- matrix(w1, d, 1)
+                
+                it <- it + 1
+                if (i > 1) {
+                    t <- w1
+                    t[1:length(t)] <- 0
+                    for (u in 1:(i - 1)) {
+                        k <- sum(w1 * W[u, ])
+                        t <- t + k * W[u, ]
+                    }
+                    w1 <- w1 - t
+                }
+                w1 <- w1/sqrt(sum(w1^2))
+                lim[it] <- Mod(Mod(sum((w1 * w))) - 1)
+                if (verbose) 
+                    message("Iteration ", it - 1, " tol = ", format(lim[it]))
+                w <- matrix(w1, d, 1)
+            }
+        }
+        # Store the result
+        W[i, ] <- w
+    }
+    W
+}
+
+# w.init should be (n.comp x nrow(X))
+# n.comp is actually ignored: the number of components is determined by number of rows of w.init
+ica.R.par=function(X, n.comp, w.init, tol=1e-4, fun="logcosh", alpha=1, maxit=200, verbose=FALSE, orthogonalize=TRUE) 
+{
+    Diag <- function(d) if (length(d) > 1L) 
+        diag(d)
+    else as.matrix(d)
+    p <- ncol(X)
+    W <- w.init
+    
+    if(orthogonalize){
+      sW <- La.svd(W)
+      W <- sW$u %*% Diag(1/sW$d) %*% t(sW$u) %*% W
+    } else { # just normalize the rows to sum to 1
+      W <- W/sqrt(rowSums(W^2))
+    }
+    W1 <- W #this line seems unnecessary?
+    
+    lim <- rep(1000, maxit)
+    it <- 1
+    if (fun == "logcosh") {
+        if (verbose) 
+            message("Symmetric FastICA using logcosh approx. to neg-entropy function")
+        while (lim[it] > tol && it < maxit) {
+            wx <- W %*% X
+            gwx <- tanh(alpha * wx)
+            v1 <- gwx %*% t(X)/p
+            g.wx <- alpha * (1 - (gwx)^2)
+            v2 <- Diag(apply(g.wx, 1, FUN = mean)) %*% W
+            W1 <- v1 - v2
+            
+            if(orthogonalize){
+              sW1 <- La.svd(W1)
+              W1 <- sW1$u %*% Diag(1/sW1$d) %*% t(sW1$u) %*% W1
+            } else { # just normalize the rows to sum to 1
+              W1 <- W1/sqrt(rowSums(W1^2))
+            }
+            
+            lim[it + 1] <- max(Mod(Mod(diag(W1 %*% t(W))) - 1))
+            W <- W1
+            if (verbose) 
+                message("Iteration ", it, " tol = ", format(lim[it + 
+                  1]))
+            it <- it + 1
+        }
+    }
+    if (fun == "exp") {
+        if (verbose) 
+            message("Symmetric FastICA using exponential approx. to neg-entropy function")
+        while (lim[it] > tol && it < maxit) {
+            wx <- W %*% X
+            gwx <- wx * exp(-(wx^2)/2)
+            v1 <- gwx %*% t(X)/p
+            g.wx <- (1 - wx^2) * exp(-(wx^2)/2)
+            v2 <- Diag(apply(g.wx, 1, FUN = mean)) %*% W
+            W1 <- v1 - v2
+            sW1 <- La.svd(W1)
+            W1 <- sW1$u %*% Diag(1/sW1$d) %*% t(sW1$u) %*% W1
+            lim[it + 1] <- max(Mod(Mod(diag(W1 %*% t(W))) - 1))
+            W <- W1
+            if (verbose) 
+                message("Iteration ", it, " tol = ", format(lim[it + 
+                  1]))
+            it <- it + 1
+        }
+    }
+    W
+}
+
+preprocess = function(X, n.comp=10){
+  n <- nrow(X)
+  p <- ncol(X)
+  X <- scale(X, scale = FALSE)
+  X <- t(X)
+  
+  ## This appears to be equivalant to X1 = t(svd(X)$v[,1:n.comp])       
+  V <- X %*% t(X)/n
+  s <- La.svd(V)
+  D <- diag(c(1/sqrt(s$d)))
+  K <- D %*% t(s$u)
+  K <- matrix(K[1:n.comp, ], n.comp, p)
+  X1 <- K %*% X
+  return(X1)
+}
+
+```
+
+
+
+## Three group simulation
+
+Here I simulate 3 groups, with only 20 members each.
+```{r}
+K=3
+p = 1000
+n = 100
+set.seed(1)
+L = matrix(-1,nrow=n,ncol=K)
+for(i in 1:K){L[sample(1:n,20),i]=1}
+FF = matrix(rnorm(p*K), nrow = p, ncol=K)
+
+X = L %*% t(FF) + rnorm(n*p,0,0.01)
+plot(X %*% FF[,1])
+X1 = preprocess(X,3)
+X1 = rbind(rep(1,ncol(X1)),X1)
+```
+
+### Parallel fastICA
+
+Here I try the parallel version of fastICA with 4 components, with two different seeds. While the binary components are less "clean" than in the single unit case, they still look pretty good.
+```{r}
+set.seed(1)
+n.comp = 4 
+w.init = matrix(rnorm(nrow(X1)*n.comp), nrow=n.comp)
+fit.par = ica.R.par(X1,n.comp,w.init = w.init)
+S = t(fit.par %*% X1) 
+cor(S,L)
+plot(S[,1])
+plot(S[,2])
+plot(S[,3])
+plot(S[,4])
+```
+
+```{r}
+set.seed(2)
+n.comp = 4
+w.init = matrix(rnorm(nrow(X1)*n.comp), nrow=n.comp)
+fit.par = ica.R.par(X1,n.comp,w.init = w.init)
+S = t(fit.par %*% X1) 
+cor(S,L)
+plot(S[,1])
+plot(S[,2])
+plot(S[,3])
+plot(S[,4])
+```
+
+Here I try without orthogonalizing. This is mostly just a check on my modified code since this should be just the same as running multiple versions of the single-unit method in parallel. (Since we are not orthogonalizing we can run more components than the number of true sources without issue.) The results look very similar to the single-unit results. My idea is that this might be a useful initialization for the orthogonal method. 
+```{r}
+set.seed(1)
+n.comp = 10
+w.init = matrix(rnorm(nrow(X1)*n.comp), nrow=n.comp)
+fit.par = ica.R.par(X1,n.comp,w.init = w.init,orthogonalize = FALSE)
+S = t(fit.par %*% X1) 
+cor(S,L)
+plot(S[,1])
+plot(S[,2])
+plot(S[,3])
+plot(S[,4])
+```
+
+
+
+### Deflationary fastICA
+
+Now try deflationary fastICA. Here I can set it to 3 components. The first component is very well found (as we saw with single unit fastICA). Subsequent components are less clean, presumably because of the orthogonality constraint. It seems that the exact fit of the first component ends up paying a price in terms of noisier fits to subsequent components, whereas in parallel fastICA all components are fit simultaneously and so can share the "error" from the orthogonality constraint more evenly.
+```{r}
+set.seed(1)
+n.comp=3
+fit.def = ica.R.def(X1,n.comp, w.init = matrix(rnorm(n.comp*nrow(X1)), n.comp, nrow(X1)))
+S = t(fit.def %*% X1)
+cor(S,L)
+plot(S[,1])
+plot(S[,2])
+plot(S[,3])
+```
+
+A second seed gives similar results
+```{r}
+set.seed(2)
+n.comp=3
+fit.def = ica.R.def(X1,n.comp, tol= 1e-4, fun = "logcosh",alpha = 1, maxit=200, verbose = FALSE, w.init = matrix(rnorm(n.comp*nrow(X1)), n.comp, nrow(X1)))
+S = t(fit.def %*% X1)
+cor(S,L)
+plot(S[,1])
+plot(S[,2])
+plot(S[,3])
+```
+
+### 9 group simulations
+
+Here I try 9 groups, with 20 members each, which should be harder. 
+```{r}
+K=9
+p = 1000
+n = 100
+set.seed(1)
+L = matrix(0,nrow=n,ncol=K)
+for(i in 1:K){L[sample(1:n,20),i]=1}
+FF = matrix(rnorm(p*K), nrow = p, ncol=K)
+
+X = L %*% t(FF) + rnorm(n*p,0,0.01)
+plot(X %*% FF[,1])
+X1 = preprocess(X)
+X1 = rbind(rep(1,ncol(X1)), X1)
+```
+
+Run parallel ICA: it basically finds 8 of the groups with correlation above 0.94, and the 9th has correlation 0.87. 
+```{r}
+set.seed(1)
+n.comp = nrow(X1)
+w.init = matrix(rnorm(nrow(X1)*n.comp), nrow=n.comp)
+fit.par = ica.R.par(X1,n.comp, w.init = w.init)
+S = t(fit.par %*% X1) 
+apply(abs(cor(S,L)),1,max)
+plot(S[,1])
+plot(S[,2])
+plot(S[,9])
+```
+
+A second seed gives similar, maybe slightly better, results:
+```{r}
+set.seed(2)
+n.comp = nrow(X1) 
+w.init = matrix(rnorm(nrow(X1)*n.comp), nrow=n.comp)
+fit.par = ica.R.par(X1,n.comp, w.init = w.init)
+S = t(fit.par %*% X1) 
+apply(abs(cor(S,L)),1,max)
+plot(S[,1])
+plot(S[,2])
+plot(S[,8])
+```
+
+I wondered whether giving it more dimensions would actually reduce the error introduced by the orthgonality constraint, but it seems that the extra noise introduced stops it finding the binary components (it finds one):
+```{r}
+X1 = preprocess(X,n.comp=20)
+X1 = rbind(rep(1,ncol(X1)), X1)
+set.seed(1)
+n.comp = 11
+fit.par = ica.R.par(X1,n.comp, w.init = matrix(rnorm(n.comp*nrow(X1)), nrow=n.comp))
+S = t(fit.par %*% X1) 
+apply(abs(cor(S,L)),1,max)
+plot(S[,6])
+```
+
+It seems that this this is actually also an issue for the single unit method: here I run the single-unit method 100 times and only fraction of the time does it find a source:
+```{r}
+set.seed(1)
+n.comp = 100
+fit.par = ica.R.par(X1,n.comp, w.init = matrix(rnorm(n.comp*nrow(X1)), nrow=n.comp), orthogonalize = FALSE)
+S = t(fit.par %*% X1) 
+apply(abs(cor(S,L)),1,max)
+plot(S[,2])
+```
+
+I wondered if we initialize by focussing on the top PCS we will find more sources, but it seems not?
+```{r}
+set.seed(1)
+n.comp = 21 # this is also the number of rows of X1
+w.init = diag(21) # initialize at each PC/row of X1
+fit.par = ica.R.par(X1,n.comp, w.init = w.init, orthogonalize = FALSE)
+S = t(fit.par %*% X1) 
+apply(abs(cor(S,L)),1,max)
+plot(S[,2])
+```
