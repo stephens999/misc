@@ -14,7 +14,7 @@ I want to try to fix this using an intercept. That is,
 maximize $\log \cosh (X'w + c)$ over both $w$ and $c$. 
 
 I gave Gemini this problem and it gave me the following 
-response and code.
+response and code. EDIT: I now believe this approach is flawed. See [this approach instead](fastica_centered_02.html) instead.
 
 "This adds a new parameter, $c$, that we also need to optimize. We can derive the update rules by taking the partial derivatives of the objective function (negentropy approximation) with respect to both $w$ and $c$ and setting them to zero (this is the Karush-Kuhn-Tucker or KKT-based approach).
 
@@ -68,6 +68,34 @@ fastica_r1update_wc = function(X, w, c, c_update_steps = 1) {
     c = c_approx
   }
   
+  c = update_c(X, w, c, c_update_steps = c_update_steps)
+  
+  # --- Step 2: Update the weight vector 'w' ---
+  
+  # Now we use the *updated* 'c' to update 'w'
+  # P = w'X + c (using the new 'c' from Step 1)
+  P = P_current + c 
+  
+  # g(P)
+  G = tanh(P)
+  
+  # g'(P)
+  G2 = 1 - tanh(P)^2
+  
+  # The FastICA update rule for 'w':
+  # w_new = E[X * g(P)] - E[g'(P)] * w
+  # (Note: We use sum(G2) as an estimate for E[g'(P)] * n)
+  # (and X %*% G as an estimate for E[X*g(P)] * n)
+  # The 'n' scaling factor cancels, as 'w' is normalized next iteration.
+  w_new = X %*% G - sum(G2) * w 
+  
+  # 4. Return the updated vector and intercept
+  return(list(w = w_new, c = c))
+}
+
+
+update_c = function(X,w,c, c_update_steps = 1){
+  P_current = as.vector(t(X) %*% w) 
   # We want to find 'c' that solves E[g(P_current + c)] = 0
   # We use one (or more) Newton steps: c_new = c - f(c) / f'(c)
   for (i in 1:c_update_steps) {
@@ -99,28 +127,7 @@ fastica_r1update_wc = function(X, w, c, c_update_steps = 1) {
       c = -P_min - 1e-6
     }
   }
-  
-  # --- Step 2: Update the weight vector 'w' ---
-  
-  # Now we use the *updated* 'c' to update 'w'
-  # P = w'X + c (using the new 'c' from Step 1)
-  P = P_current + c 
-  
-  # g(P)
-  G = tanh(P)
-  
-  # g'(P)
-  G2 = 1 - tanh(P)^2
-  
-  # The FastICA update rule for 'w':
-  # w_new = E[X * g(P)] - E[g'(P)] * w
-  # (Note: We use sum(G2) as an estimate for E[g'(P)] * n)
-  # (and X %*% G as an estimate for E[X*g(P)] * n)
-  # The 'n' scaling factor cancels, as 'w' is normalized next iteration.
-  w_new = X %*% G - sum(G2) * w 
-  
-  # 4. Return the updated vector and intercept
-  return(list(w = w_new, c = c))
+  return(c)
 }
 
 #'
@@ -202,10 +209,12 @@ c = 0 # this does not matter as c is updated first
 res = list(w=w,c=c)
 for(i in 1:100)
   res = fastica_r1update_wc(X1,res$w,res$c)
+res$w = res$w / sqrt(sum(res$w^2))
 cor(L,t(X1) %*% res$w)
-plot(as.vector(t(X1) %*% res$w))
-res$c
+plot(as.vector(t(X1) %*% res$w)+res$c)
 compute_objective(X1,res$w,res$c)
+mean(tanh(t(X1) %*% res$w + res$c))
+
 ```
 
 
@@ -511,8 +520,9 @@ set.seed(seed)
 res = list(w = rnorm(nrow(X1)), c=0)
 for(i in 1:100)
   res = fastica_r1update_wc(X1,res$w,res$c)
+res$w = res$w / sqrt(sum(res$w^2))
 cor(L,t(X1) %*% res$w)
-plot(as.vector(t(X1) %*% res$w))
+plot(as.vector(t(X1) %*% res$w)+res$c)
 ```
 
 
@@ -523,8 +533,9 @@ set.seed(seed)
 res = list(w = rnorm(nrow(X1)), c=0)
 for(i in 1:100)
   res = fastica_r1update_wc(X1,res$w,res$c)
+res$w = res$w / sqrt(sum(res$w^2))
 cor(L,t(X1) %*% res$w)
-plot(as.vector(t(X1) %*% res$w))
+plot(as.vector(t(X1) %*% res$w)+res$c)
 ```
 
 ## Nine non-overlapping groups
@@ -567,13 +578,14 @@ set.seed(seed)
 res = list(w = rnorm(nrow(X1)), c=0)
 for(i in 1:100)
   res = fastica_r1update_wc(X1,res$w,res$c)
+res$w = res$w / sqrt(sum(res$w^2))
 cor(L,t(X1) %*% res$w)
 plot(as.vector(t(X1) %*% res$w))
 res$c
 obj[seed]
 ```
 
-Here I try initializing at a single group. I discovered that the objective is actually lower than for the combined groups - so maybe this explains why it is finding the combined group result! This was a surprise to me. I should try to understand better what is going on here. One possibility is that, because we are imposing w'w = 1, the results may depend on n - as w get's smaller, the behavior of log cosh is different. Maybe we should impose w'w = n?
+Here I try initializing at a single group. I discovered that the objective is actually lower than for the combined groups! This was a surprise to me. An initial investigation suggests that it's getting c wrong: it's going outside the boundary condition so setting it to the boundary, but this is not optimal. In fact the approximate c lies outside the boundary - that's an issue I did not deal with.  Needs more investigation.
 ```{r}
 w = X1 %*% L[,1]
 plot(t(X1) %*% w)
@@ -584,6 +596,7 @@ print(compute_objective(X1,res$w,res$c), digits=20)
 
 for(i in 1:100)
   res = fastica_r1update_wc(X1,res$w,res$c)
+res$w = res$w/ sqrt(sum(res$w^2))
 cor(L,t(X1) %*% res$w)
 plot(as.vector(t(X1) %*% res$w))
 print(compute_objective(X1,res$w,res$c), digits=20)
