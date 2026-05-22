@@ -13,7 +13,7 @@ I found [previously](fastica_02.html) that the original fastICA algorithm seems 
 I want to try to fix this using an intercept. That is,
 maximize $\log \cosh (X'w + c)$ over both $w$ and $c$. 
 I made an [initial attempt](fastica_centered.Rmd) but I now believe that was flawed. The issue is that simply adding in a c makes the objective unbounded, and I actually ended up minimising over c while maximising over w, which is a mess.
-Here I'm going to try a different approach, which simply constriains ||X'w + c||=1, which is equivalent to adding a row of 1s to the whitened matrix X.
+Here I'm going to try a different approach, which simply constrains ||X'w + c||=1, which is equivalent to adding a row of 1s to the whitened matrix X.
 
 
 ## Illustrating the problem
@@ -41,7 +41,7 @@ preprocess = function(X, n.comp=10){
   X <- scale(X, scale = FALSE)
   X <- t(X)
   
-  ## This appears to be equivalant to X1 = t(svd(X)$v[,1:n.comp])       
+  ## This appears to be equivalent to X1 = (sqrt(n)) * t(svd(X)$v[,1:n.comp])       
   V <- X %*% t(X)/n
   s <- La.svd(V)
   D <- diag(c(1/sqrt(s$d)))

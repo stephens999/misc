@@ -42,7 +42,7 @@ preprocess = function(X, n.comp=10){
   X <- scale(X, scale = FALSE)
   X <- t(X)
   
-  ## This appears to be equivalant to X1 = t(svd(X)$v[,1:n.comp])       
+  ## This appears to be equivalant to X1 = (sqrt(n)) * t(svd(X)$v[,1:n.comp])       
   V <- X %*% t(X)/n
   s <- La.svd(V)
   D <- diag(c(1/sqrt(s$d)))
