@@ -1,0 +1,228 @@
+---
+title: "EB_subspace"
+author: "Matthew Stephens"
+date: "2026-06-19"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+I want to look at simple EB/variational/Bayesian approach to estimating a binary vector that lives in a given subspace. The key idea is that your are given an $nxn$ projection matrix P and you want to find a binary vector $v$, with elements in -1,1, that approximately lies in the subspace; that is that 
+maximizes $\rho :=v'Pv/n$. If $v$ lies entirely in the subspace defined by $P$ then $\rho = v'v/n = 1$.
+
+My investigation [here](https://gemini.google.com/share/74ba2c261e51) 
+suggests the following simple update as a starting point: 
+$$v = tanh(Pv/(1-\rho))$$
+The natural idea is to update $\rho$ each iteration, but I will start by fixing it and see what happens.
+
+
+## Three group simulation (low noise)
+
+Here I simulate 3 groups, with 20 members each.
+```{r}
+K=3
+p = 1000
+n = 100
+set.seed(1)
+L = matrix(-1,nrow=n,ncol=K)
+for(i in 1:K){L[sample(1:n,20),i]=1}
+FF = matrix(rnorm(p*K), nrow = p, ncol=K)
+
+X = L %*% t(FF) + rnorm(n*p,0,1)
+```
+
+The column space of $X$ approximately contains three binary vectors (columns of $L$). Here I find the projection matrix corresponding to the column space of $X$ (approximated using a rank 3 matrix, which helps remove the noise.)
+We can see the values of rho for the true L are very high.
+
+```{r}
+U = svd(X)$u[,1:3] 
+P = U %*% t(U) 
+true_rho = diag(t(L) %*% P %*% L/n)
+true_rho
+```
+
+Now, initializing from a random vector. If we set rho=0 then the iterates converge to something close to 0 (as expected, because tanh is a contraction).
+However, interestingly it does find a binary source!
+```{r}
+set.seed(1)
+v.init = sample(c(-1,1),n,replace=TRUE)
+maxiter = 10000
+
+rho = 0
+v = v.init
+for(i in 1:maxiter){
+  v = tanh(P %*% v/(1-rho))
+}
+t(v) %*% P %*% v/n # print out rho
+plot(v)
+cor(v,L) 
+```
+
+Try instead setting rho=0.5. It converges to a binary source again, but this time close to v in (-1,1).
+```{r}
+rho = 0.5
+v = v.init
+for(i in 1:maxiter){
+  v = tanh(P %*% v/(1-rho))
+}
+t(v) %*% P %*% v/n # print out rho
+plot(v)
+cor(v,L)
+```
+
+This time we estimate rho. It converges to a binary source again, but this time close to v in (-1,1).
+```{r}
+rho = 0
+v = v.init
+for(i in 1:maxiter){
+  rho = as.numeric(t(v) %*% P %*% v/n) # update rho
+  v = tanh(P %*% v/(1-rho))
+}
+t(v) %*% P %*% v/n # print out rho
+plot(v)
+cor(v,L)
+```
+
+
+## Three group simulation (higher noise)
+
+Here I repeat the above, with more noise:
+```{r}
+K=3
+p = 1000
+n = 100
+set.seed(1)
+L = matrix(-1,nrow=n,ncol=K)
+for(i in 1:K){L[sample(1:n,20),i]=1}
+FF = matrix(rnorm(p*K), nrow = p, ncol=K)
+
+X = L %*% t(FF) + rnorm(n*p,0,10)
+```
+
+The column space of $X$ approximately contains three binary vectors (columns of $L$). The true value of rho is near 0.8.
+
+```{r}
+U = svd(X)$u[,1:3] 
+P = U %*% t(U) 
+true_rho = diag(t(L) %*% P %*% L/n)
+true_rho
+```
+
+Now, initializing from a random vector. If we set rho=0 then the iterates converge to something close to 0 (as expected, because tanh is a contraction).
+This time it does not really find a binary source!
+```{r}
+set.seed(1)
+v.init.1 = sample(c(-1,1),n,replace=TRUE)
+maxiter = 10000
+
+rho = 0
+v = v.init.1
+for(i in 1:maxiter){
+  v = tanh(P %*% v/(1-rho))
+}
+t(v) %*% P %*% v/n # print out rho
+plot(v)
+cor(v,L) 
+```
+
+Try instead setting rho=0.5. It is getting closer to a binary source.
+```{r}
+rho = 0.5
+v = v.init.1
+for(i in 1:maxiter){
+  v = tanh(P %*% v/(1-rho))
+}
+t(v) %*% P %*% v/n # print out rho
+plot(v)
+cor(v,L)
+```
+
+This time we estimate rho. It converges to something closer to a binary source but does not get it exactly right.
+```{r}
+rho = 0
+v = v.init.1
+for(i in 1:maxiter){
+  rho = as.numeric(t(v) %*% P %*% v/n) # update rho
+  v = tanh(P %*% v/(1-rho))
+}
+t(v) %*% P %*% v/n # print out rho
+plot(v)
+cor(v,L)
+```
+
+Try a different random start: it gets closer (and also a larger rho).
+```{r}
+set.seed(3)
+v.init.3 = sample(c(-1,1),n,replace=TRUE)
+rho = 0
+v = v.init.3
+for(i in 1:maxiter){
+  rho = as.numeric(t(v) %*% P %*% v/n) # update rho
+  v = tanh(P %*% v/(1-rho))
+}
+t(v) %*% P %*% v/n # print out rho
+plot(v)
+cor(v,L)
+```
+
+Try EBICA
+```{r}
+set.seed(3)
+v.init.3 = sample(c(-1,1),n,replace=TRUE)
+rho = 0
+v = v.init.3
+
+for(i in 1:maxiter){
+  v = tanh(n*P %*% v/as.numeric(sqrt(n * t(v) %*% P %*% v)))
+}
+t(v) %*% P %*% v/n # print out rho
+plot(v)
+cor(v,L)
+```
+
+## Try centering X
+
+In the above I did not center X. So here I do so. This reduces the "true rho" substantially (below 0.5). The issue is that the original binary vectors are no longer in the subspace spanned by columns of Xcenter - the centering shifts the +-1 vectors so they are no longer +-1.
+```{r}
+Xcenter = scale(X,scale=FALSE)
+Ucenter = svd(Xcenter)$u[,1:3] 
+Pcenter = Ucenter %*% t(Ucenter) 
+diag(t(L) %*% Pcenter %*% L/n)
+```
+
+The method now fails to find them (not suprisingly):
+```{r}
+set.seed(3)
+v.init.3 = sample(c(-1,1),n,replace=TRUE)
+rho = 0
+v = v.init.3
+for(i in 1:maxiter){
+  rho = as.numeric(t(v) %*% Pcenter %*% v/n) # update rho
+  v = tanh(Pcenter %*% v/(1-rho))
+}
+t(v) %*% Pcenter %*% v/n # print out rho
+plot(v)
+cor(v,L)
+```
+
+If we add an intercept we have a problem: the method finds the trivial solution of all 1s. (When I ran this about five times with different seeds it did eventually find one of the sources. But the trivial solution has the largest rho, so it tends to win.)
+```{r}
+Ucenter = cbind(rep(1/sqrt(n),n),Ucenter) # add an intercept
+Pcenter = Ucenter %*% t(Ucenter) 
+diag(t(L) %*% Pcenter %*% L/n) #rho is back to 0.8 or so
+
+set.seed(3)
+v.init.3 = sample(c(-1,1),n,replace=TRUE)
+rho = 0
+v = v.init.3
+v = sample(c(-1,1),n,replace=TRUE)
+for(i in 1:maxiter){
+  rho = as.numeric(t(v) %*% Pcenter %*% v/n) # update rho
+  v = tanh(Pcenter %*% v/(1-rho))
+}
+t(v) %*% Pcenter %*% v/n # print out rho
+plot(v)
+cor(v,L)
+```
