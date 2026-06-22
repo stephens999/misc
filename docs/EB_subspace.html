@@ -378,7 +378,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2026-06-21
+<strong>Last updated:</strong> 2026-06-22
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -509,15 +509,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree4b69522ac2f59758a36e72344b059cc6407f47e2targetblank4b69522a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreeaee6a54266e5fab4e7a38a3668433616b4634ea9targetblankaee6a54a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/stephens999/misc/tree/4b69522ac2f59758a36e72344b059cc6407f47e2" target="_blank">4b69522</a>
+<a href="https://github.com/stephens999/misc/tree/aee6a54266e5fab4e7a38a3668433616b4634ea9" target="_blank">aee6a54</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree4b69522ac2f59758a36e72344b059cc6407f47e2targetblank4b69522a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreeaee6a54266e5fab4e7a38a3668433616b4634ea9targetblankaee6a54a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -527,7 +527,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/stephens999/misc/tree/4b69522ac2f59758a36e72344b059cc6407f47e2" target="_blank">4b69522</a>.
+<a href="https://github.com/stephens999/misc/tree/aee6a54266e5fab4e7a38a3668433616b4634ea9" target="_blank">aee6a54</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -788,6 +788,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/aee6a54266e5fab4e7a38a3668433616b4634ea9/analysis/EB_subspace.Rmd" target="_blank">aee6a54</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-06-22
+</td>
+<td>
+workflowr::wflow_publish("EB_subspace.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/d112e19b02531f1bb72b557c598c0f8b0b8d08e2/docs/EB_subspace.html" target="_blank">d112e19</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-06-21
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/4b69522ac2f59758a36e72344b059cc6407f47e2/analysis/EB_subspace.Rmd" target="_blank">4b69522</a>
 </td>
 <td>
@@ -810,21 +844,42 @@ workflowr::wflow_publish("EB_subspace.Rmd")
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
 <p>I want to look at simple EB/variational/Bayesian approach to
-estimating a binary vector that lives in a given subspace. The key idea
-is that your are given an <span class="math inline">\(nxn\)</span>
-projection matrix P and you want to find a binary vector <span
-class="math inline">\(v\)</span>, with elements in -1,1, that
-approximately lies in the subspace; that is that maximizes <span
-class="math inline">\(\rho :=v&#39;Pv/n\)</span>. If <span
-class="math inline">\(v\)</span> lies entirely in the subspace defined
-by <span class="math inline">\(P\)</span> then <span
-class="math inline">\(\rho = v&#39;v/n = 1\)</span>.</p>
-<p>My investigation <a
-href="https://gemini.google.com/share/74ba2c261e51">here</a> suggests
-the following simple update as a starting point: <span
-class="math display">\[v = tanh(Pv/(1-\rho))\]</span> The natural idea
-is to update <span class="math inline">\(\rho\)</span> each iteration,
-but I will start by fixing it and see what happens.</p>
+estimating a binary vector that lives approximately in a given subspace.
+You are given an <span class="math inline">\(nxn\)</span>, rank <span
+class="math inline">\(k\)</span>, projection matrix P and you want to
+find a vector <span class="math inline">\(v\)</span> such that <span
+class="math inline">\(\rho(v) :=v&#39;Pv/v&#39;v\)</span> is large. If
+<span class="math inline">\(v\)</span> lies entirely in the subspace
+defined by <span class="math inline">\(P\)</span> then <span
+class="math inline">\(\rho(v) = v&#39;v/v&#39;v = 1\)</span>.</p>
+<p>My derivations <a
+href="https://www.overleaf.com/project/67c8cfa8666bbc398ebb08fa">here</a>
+suggest using a log-likelihood <span class="math inline">\(l(v) \approx
+-(n-k-2b/2)\log(1-\rho(v))\)</span>, where <span
+class="math inline">\(b\)</span> is a hyperparameter. For now we make
+the approximation that <span class="math inline">\(k,b\)</span> are
+small so <span class="math inline">\(l(v) \approx -n/2
+\log(1-\rho(v))\)</span>. We also make the approximation <span
+class="math inline">\(E_q(l(v)) = -(n/2) \log(1-\rho(q))\)</span> where
+<span class="math inline">\(\rho(q) =
+\bar{v}&#39;P\bar{v}/&lt;v&#39;v&gt;\)</span>. Here <span
+class="math inline">\(\bar{v},&lt;v&#39;v&gt;\)</span> denote the
+expectations of <span class="math inline">\(v,v&#39;v\)</span> under
+<span class="math inline">\(q\)</span>.</p>
+<p>The variational EB approach then iterates: <span
+class="math display">\[q \leftarrow EBNM\left(
+\frac{\mathbf{P}\bar{v}}{\rho(q)}, \frac{(1-\rho(q))
+&lt;v^Tv&gt;}{n\rho(q)} \right)\]</span></p>
+<p>For the Rademacher prior we have <span
+class="math inline">\(&lt;v&#39;v&gt;=n\)</span> and the update can be
+written entirely in terms of the posterior mean: <span
+class="math display">\[\bar{v} = tanh(P\bar{v}/(1-\rho))\]</span> While
+the idea is to use <span class="math inline">\(\rho=v&#39;Pv/n\)</span>,
+I will also try fixing <span class="math inline">\(\rho\)</span> in
+these updates to see what happens. Note that this approach is not really
+EB because the prior is fixed Rademacher. TODO: we should try estimating
+a generalized (asymmetric) Rademacher prior, so this becomes a genuinely
+EB approach.</p>
 </div>
 <div id="three-group-simulation-low-noise" class="section level2">
 <h2>Three group simulation (low noise)</h2>
@@ -867,6 +922,43 @@ t(v) %*% P %*% v/n # print out rho</code></pre>
 [1,] 0.0001436779</code></pre>
 <pre class="r"><code>plot(v)</code></pre>
 <p><img src="figure/EB_subspace.Rmd/unnamed-chunk-3-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-1">
+Past versions of unnamed-chunk-3-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-3-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/d112e19b02531f1bb72b557c598c0f8b0b8d08e2/docs/figure/EB_subspace.Rmd/unnamed-chunk-3-1.png" target="_blank">d112e19</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-06-21
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>cor(v,L) </code></pre>
 <pre><code>           [,1]        [,2]       [,3]
 [1,] -0.9990229 -0.01279823 0.07729109</code></pre>
@@ -882,6 +974,43 @@ t(v) %*% P %*% v/n # print out rho</code></pre>
 [1,] 0.9152038</code></pre>
 <pre class="r"><code>plot(v)</code></pre>
 <p><img src="figure/EB_subspace.Rmd/unnamed-chunk-4-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-1">
+Past versions of unnamed-chunk-4-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/d112e19b02531f1bb72b557c598c0f8b0b8d08e2/docs/figure/EB_subspace.Rmd/unnamed-chunk-4-1.png" target="_blank">d112e19</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-06-21
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>cor(v,L)</code></pre>
 <pre><code>           [,1]          [,2]       [,3]
 [1,] -0.9999768 -0.0002258368 0.06234581</code></pre>
@@ -898,6 +1027,43 @@ t(v) %*% P %*% v/n # print out rho</code></pre>
 [1,] 0.9989868</code></pre>
 <pre class="r"><code>plot(v)</code></pre>
 <p><img src="figure/EB_subspace.Rmd/unnamed-chunk-5-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-1">
+Past versions of unnamed-chunk-5-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/d112e19b02531f1bb72b557c598c0f8b0b8d08e2/docs/figure/EB_subspace.Rmd/unnamed-chunk-5-1.png" target="_blank">d112e19</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-06-21
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>cor(v,L)</code></pre>
 <pre><code>     [,1]          [,2]   [,3]
 [1,]   -1 -5.724587e-17 0.0625</code></pre>
@@ -940,6 +1106,43 @@ t(v) %*% P %*% v/n # print out rho</code></pre>
 [1,] 8.746538e-05</code></pre>
 <pre class="r"><code>plot(v)</code></pre>
 <p><img src="figure/EB_subspace.Rmd/unnamed-chunk-8-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-1">
+Past versions of unnamed-chunk-8-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-8-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/d112e19b02531f1bb72b557c598c0f8b0b8d08e2/docs/figure/EB_subspace.Rmd/unnamed-chunk-8-1.png" target="_blank">d112e19</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-06-21
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>cor(v,L) </code></pre>
 <pre><code>          [,1]       [,2]       [,3]
 [1,] -0.428421 -0.7348204 0.09921965</code></pre>
@@ -955,6 +1158,43 @@ t(v) %*% P %*% v/n # print out rho</code></pre>
 [1,] 0.6826304</code></pre>
 <pre class="r"><code>plot(v)</code></pre>
 <p><img src="figure/EB_subspace.Rmd/unnamed-chunk-9-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-1">
+Past versions of unnamed-chunk-9-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/d112e19b02531f1bb72b557c598c0f8b0b8d08e2/docs/figure/EB_subspace.Rmd/unnamed-chunk-9-1.png" target="_blank">d112e19</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-06-21
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>cor(v,L)</code></pre>
 <pre><code>           [,1]       [,2]        [,3]
 [1,] -0.1350534 -0.8809243 -0.08754405</code></pre>
@@ -971,6 +1211,43 @@ t(v) %*% P %*% v/n # print out rho</code></pre>
 [1,] 0.8272076</code></pre>
 <pre class="r"><code>plot(v)</code></pre>
 <p><img src="figure/EB_subspace.Rmd/unnamed-chunk-10-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-10-1">
+Past versions of unnamed-chunk-10-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-10-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/d112e19b02531f1bb72b557c598c0f8b0b8d08e2/docs/figure/EB_subspace.Rmd/unnamed-chunk-10-1.png" target="_blank">d112e19</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-06-21
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>cor(v,L)</code></pre>
 <pre><code>            [,1]       [,2]        [,3]
 [1,] -0.07294291 -0.8723976 -0.07514556</code></pre>
@@ -989,6 +1266,43 @@ t(v) %*% P %*% v/n # print out rho</code></pre>
 [1,] 0.8254599</code></pre>
 <pre class="r"><code>plot(v)</code></pre>
 <p><img src="figure/EB_subspace.Rmd/unnamed-chunk-11-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-1">
+Past versions of unnamed-chunk-11-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-11-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/d112e19b02531f1bb72b557c598c0f8b0b8d08e2/docs/figure/EB_subspace.Rmd/unnamed-chunk-11-1.png" target="_blank">d112e19</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-06-21
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>cor(v,L)</code></pre>
 <pre><code>           [,1]        [,2]       [,3]
 [1,] 0.02204825 -0.07501538 -0.9648287</code></pre>
@@ -1006,6 +1320,43 @@ t(v) %*% P %*% v/n # print out rho</code></pre>
 [1,] 0.487831</code></pre>
 <pre class="r"><code>plot(v)</code></pre>
 <p><img src="figure/EB_subspace.Rmd/unnamed-chunk-12-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-1">
+Past versions of unnamed-chunk-12-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/d112e19b02531f1bb72b557c598c0f8b0b8d08e2/docs/figure/EB_subspace.Rmd/unnamed-chunk-12-1.png" target="_blank">d112e19</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-06-21
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>cor(v,L)</code></pre>
 <pre><code>           [,1]       [,2]      [,3]
 [1,] 0.01389254 -0.1671942 -0.906508</code></pre>
@@ -1036,6 +1387,43 @@ t(v) %*% Pcenter %*% v/n # print out rho</code></pre>
 [1,] 0.4034526</code></pre>
 <pre class="r"><code>plot(v)</code></pre>
 <p><img src="figure/EB_subspace.Rmd/unnamed-chunk-14-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-14-1">
+Past versions of unnamed-chunk-14-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-14-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/d112e19b02531f1bb72b557c598c0f8b0b8d08e2/docs/figure/EB_subspace.Rmd/unnamed-chunk-14-1.png" target="_blank">d112e19</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-06-21
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>cor(v,L)</code></pre>
 <pre><code>          [,1]       [,2]      [,3]
 [1,] 0.4690021 0.06030247 0.5967123</code></pre>
@@ -1061,6 +1449,43 @@ t(v) %*% Pcenter %*% v/n # print out rho</code></pre>
 [1,]    1</code></pre>
 <pre class="r"><code>plot(v)</code></pre>
 <p><img src="figure/EB_subspace.Rmd/unnamed-chunk-15-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-15-1">
+Past versions of unnamed-chunk-15-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-15-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/d112e19b02531f1bb72b557c598c0f8b0b8d08e2/docs/figure/EB_subspace.Rmd/unnamed-chunk-15-1.png" target="_blank">d112e19</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-06-21
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>cor(v,L)</code></pre>
 <pre><code>Warning in cor(v, L): the standard deviation is zero</code></pre>
 <pre><code>     [,1] [,2] [,3]
