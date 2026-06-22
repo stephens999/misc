@@ -11,7 +11,9 @@ editor_options:
 
 I want to look at simple EB/variational/Bayesian approach to estimating a binary vector that lives approximately in a given subspace. You are given an $nxn$, rank $k$, projection matrix P and you want to find a vector $v$ such that $\rho(v) :=v'Pv/v'v$ is large. If $v$ lies entirely in the subspace defined by $P$ then $\rho(v) = v'v/v'v = 1$.
 
-My derivations [here](https://www.overleaf.com/project/67c8cfa8666bbc398ebb08fa) suggest using a log-likelihood $l(v) \approx -(n-k-2b/2)\log(1-\rho(v))$, where $b$ is a hyperparameter. For now we make the approximation that $k,b$ are small so $l(v) \approx -n/2 \log(1-\rho(v))$. We also make the approximation $E_q(l(v)) = -(n/2) \log(1-\rho(q))$ where $\rho(q) = \bar{v}'P\bar{v}/<v'v>$. Here $\bar{v},<v'v>$ denote the expectations of $v,v'v$ under $q$. 
+My derivations [here](https://www.overleaf.com/project/67c8cfa8666bbc398ebb08fa) suggest using a log-likelihood 
+$$l(v) \approx -0.5(n-k-2b)\log(1-\rho(v)),$$ 
+where $b$ is a hyperparameter. For now we make the approximation that $k,b$ are small so $l(v) \approx -0.5n \log(1-\rho(v))$. We also make the approximation $E_q(l(v)) = -0.5n \log(1-\rho(q))$ where $\rho(q) = \bar{v}'P\bar{v}/<v'v>$. Here $\bar{v},<v'v>$ denote the expectations of $v,v'v$ under $q$. 
 
 The variational EB approach then iterates: 
 $$q \leftarrow EBNM\left( \frac{\mathbf{P}\bar{v}}{\rho(q)}, \frac{(1-\rho(q)) <v^Tv>}{n\rho(q)} \right)$$
@@ -155,7 +157,7 @@ plot(v)
 cor(v,L)
 ```
 
-Try a different random start: it gets closer (and also a larger rho).
+Try a different random start: this solution is closer to a true source  (TODO: check the objective function).
 ```{r}
 set.seed(3)
 v.init.3 = sample(c(-1,1),n,replace=TRUE)
@@ -210,7 +212,7 @@ plot(v)
 cor(v,L)
 ```
 
-If we add an intercept we have a problem: the method finds the trivial solution of all 1s. (When I ran this about five times with different seeds it did eventually find one of the sources. But the trivial solution has the largest rho, so it tends to win.)
+I tried adding an intercept to P (so now the intercept is in the space spanned by $P$). But now the method finds the trivial solution of all 1s. (When I ran this about five times with different seeds it did eventually find one of the sources. But the trivial solution has the largest rho, so it tends to win.) TODO: we should try generalizing the Rademacher prior to try to solve this problem. 
 ```{r}
 Ucenter = cbind(rep(1/sqrt(n),n),Ucenter) # add an intercept
 Pcenter = Ucenter %*% t(Ucenter) 
