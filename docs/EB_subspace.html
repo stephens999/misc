@@ -509,15 +509,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreeaee6a54266e5fab4e7a38a3668433616b4634ea9targetblankaee6a54a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree8a8e61ab18eb0ca94fc5fd544ca8fc67740030b6targetblank8a8e61aa">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/stephens999/misc/tree/aee6a54266e5fab4e7a38a3668433616b4634ea9" target="_blank">aee6a54</a>
+<a href="https://github.com/stephens999/misc/tree/8a8e61ab18eb0ca94fc5fd544ca8fc67740030b6" target="_blank">8a8e61a</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreeaee6a54266e5fab4e7a38a3668433616b4634ea9targetblankaee6a54a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree8a8e61ab18eb0ca94fc5fd544ca8fc67740030b6targetblank8a8e61aa"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -527,7 +527,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/stephens999/misc/tree/aee6a54266e5fab4e7a38a3668433616b4634ea9" target="_blank">aee6a54</a>.
+<a href="https://github.com/stephens999/misc/tree/8a8e61ab18eb0ca94fc5fd544ca8fc67740030b6" target="_blank">8a8e61a</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -788,6 +788,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/8a8e61ab18eb0ca94fc5fd544ca8fc67740030b6/analysis/EB_subspace.Rmd" target="_blank">8a8e61a</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-06-22
+</td>
+<td>
+workflowr::wflow_publish("EB_subspace.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/4e5468d5438c66af99774ae94fb698b69b4a2d1e/docs/EB_subspace.html" target="_blank">4e5468d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-06-22
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/aee6a54266e5fab4e7a38a3668433616b4634ea9/analysis/EB_subspace.Rmd" target="_blank">aee6a54</a>
 </td>
 <td>
@@ -854,13 +888,13 @@ defined by <span class="math inline">\(P\)</span> then <span
 class="math inline">\(\rho(v) = v&#39;v/v&#39;v = 1\)</span>.</p>
 <p>My derivations <a
 href="https://www.overleaf.com/project/67c8cfa8666bbc398ebb08fa">here</a>
-suggest using a log-likelihood <span class="math inline">\(l(v) \approx
--(n-k-2b/2)\log(1-\rho(v))\)</span>, where <span
+suggest using a log-likelihood <span class="math display">\[l(v) \approx
+-0.5(n-k-2b)\log(1-\rho(v)),\]</span> where <span
 class="math inline">\(b\)</span> is a hyperparameter. For now we make
 the approximation that <span class="math inline">\(k,b\)</span> are
-small so <span class="math inline">\(l(v) \approx -n/2
+small so <span class="math inline">\(l(v) \approx -0.5n
 \log(1-\rho(v))\)</span>. We also make the approximation <span
-class="math inline">\(E_q(l(v)) = -(n/2) \log(1-\rho(q))\)</span> where
+class="math inline">\(E_q(l(v)) = -0.5n \log(1-\rho(q))\)</span> where
 <span class="math inline">\(\rho(q) =
 \bar{v}&#39;P\bar{v}/&lt;v&#39;v&gt;\)</span>. Here <span
 class="math inline">\(\bar{v},&lt;v&#39;v&gt;\)</span> denote the
@@ -1251,8 +1285,8 @@ Matthew Stephens
 <pre class="r"><code>cor(v,L)</code></pre>
 <pre><code>            [,1]       [,2]        [,3]
 [1,] -0.07294291 -0.8723976 -0.07514556</code></pre>
-<p>Try a different random start: it gets closer (and also a larger
-rho).</p>
+<p>Try a different random start: this solution is closer to a true
+source (TODO: check the objective function).</p>
 <pre class="r"><code>set.seed(3)
 v.init.3 = sample(c(-1,1),n,replace=TRUE)
 rho = 0
@@ -1427,10 +1461,13 @@ Matthew Stephens
 <pre class="r"><code>cor(v,L)</code></pre>
 <pre><code>          [,1]       [,2]      [,3]
 [1,] 0.4690021 0.06030247 0.5967123</code></pre>
-<p>If we add an intercept we have a problem: the method finds the
-trivial solution of all 1s. (When I ran this about five times with
-different seeds it did eventually find one of the sources. But the
-trivial solution has the largest rho, so it tends to win.)</p>
+<p>I tried adding an intercept to P (so now the intercept is in the
+space spanned by <span class="math inline">\(P\)</span>). But now the
+method finds the trivial solution of all 1s. (When I ran this about five
+times with different seeds it did eventually find one of the sources.
+But the trivial solution has the largest rho, so it tends to win.) TODO:
+we should try generalizing the Rademacher prior to try to solve this
+problem.</p>
 <pre class="r"><code>Ucenter = cbind(rep(1/sqrt(n),n),Ucenter) # add an intercept
 Pcenter = Ucenter %*% t(Ucenter) 
 diag(t(L) %*% Pcenter %*% L/n) #rho is back to 0.8 or so</code></pre>
