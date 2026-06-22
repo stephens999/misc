@@ -9,13 +9,16 @@ editor_options:
 
 ## Introduction
 
-I want to look at simple EB/variational/Bayesian approach to estimating a binary vector that lives in a given subspace. The key idea is that your are given an $nxn$ projection matrix P and you want to find a binary vector $v$, with elements in -1,1, that approximately lies in the subspace; that is that 
-maximizes $\rho :=v'Pv/n$. If $v$ lies entirely in the subspace defined by $P$ then $\rho = v'v/n = 1$.
+I want to look at simple EB/variational/Bayesian approach to estimating a binary vector that lives approximately in a given subspace. You are given an $nxn$, rank $k$, projection matrix P and you want to find a vector $v$ such that $\rho(v) :=v'Pv/v'v$ is large. If $v$ lies entirely in the subspace defined by $P$ then $\rho(v) = v'v/v'v = 1$.
 
-My investigation [here](https://gemini.google.com/share/74ba2c261e51) 
-suggests the following simple update as a starting point: 
-$$v = tanh(Pv/(1-\rho))$$
-The natural idea is to update $\rho$ each iteration, but I will start by fixing it and see what happens.
+My derivations [here](https://www.overleaf.com/project/67c8cfa8666bbc398ebb08fa) suggest using a log-likelihood $l(v) \approx -(n-k-2b/2)\log(1-\rho(v))$, where $b$ is a hyperparameter. For now we make the approximation that $k,b$ are small so $l(v) \approx -n/2 \log(1-\rho(v))$. We also make the approximation $E_q(l(v)) = -(n/2) \log(1-\rho(q))$ where $\rho(q) = \bar{v}'P\bar{v}/<v'v>$. Here $\bar{v},<v'v>$ denote the expectations of $v,v'v$ under $q$. 
+
+The variational EB approach then iterates: 
+$$q \leftarrow EBNM\left( \frac{\mathbf{P}\bar{v}}{\rho(q)}, \frac{(1-\rho(q)) <v^Tv>}{n\rho(q)} \right)$$
+
+For the Rademacher prior we have $<v'v>=n$ and the update can be written entirely in terms of the posterior mean:
+$$\bar{v} = tanh(P\bar{v}/(1-\rho))$$
+While the idea is to use $\rho=v'Pv/n$, I will also try fixing $\rho$ in these updates to see what happens. Note that this approach is not really EB because the prior is fixed Rademacher. TODO: we should try estimating a generalized (asymmetric) Rademacher prior, so this becomes a genuinely EB approach.
 
 
 ## Three group simulation (low noise)
