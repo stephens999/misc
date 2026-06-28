@@ -430,18 +430,21 @@ X1 = rbind(rep(1,ncol(X1)), X1)
 
 ### noncentered fastICA (100 random starts)
 
-Here I try with 100 random starts - a small minority find a good group solution. Also, most of the runs seems to end up at a local minima of the objective rather than a local maximum.
+Here I try with 100 random starts - a minority still find a good group solution. Most of the runs seems to end up at a local minima of the objective rather than a local maximum.
 ```{r}
 obj = rep(0,100)
+Lhat = matrix(nrow=100,ncol=n)
 for(seed in 1:100){
   set.seed(seed)
   w = rnorm(nrow(X1))
   for(i in 1:100)
     w = fastica_r1update(X1,w)
   obj[seed] = compute_objective(X1,w)
+  Lhat[seed,] = t(X1) %*% w
 }
 plot(obj)
 plot(sort(obj[obj>0.425]))
+image(Lhat[order(obj,decreasing=TRUE),])
 ```
 
 This is the bottom seed: you can see it picks out a "laplace-like" distribution, which gives a small logcosh value.
@@ -455,6 +458,27 @@ cor(L,t(X1) %*% w)
 plot(t(X1) %*% w)
 ```
 
+This is the top seed: it picks out the trivial solution.
+```{r}
+seed= order(obj,decreasing=TRUE)[1]
+set.seed(seed)
+w = rnorm(nrow(X1))
+for(i in 1:100)
+  w = fastica_r1update(X1,w)
+cor(L,t(X1) %*% w)
+plot(t(X1) %*% w)
+```
+
+This is the third seed: it picks out a group (second seed also picked out trivial solution)
+```{r}
+seed= order(obj,decreasing=TRUE)[3]
+set.seed(seed)
+w = rnorm(nrow(X1))
+for(i in 1:100)
+  w = fastica_r1update(X1,w)
+cor(L,t(X1) %*% w)
+plot(t(X1) %*% w)
+```
 ### EBCD, 100 random starts
 
 When we remove the G2 term from the fastICA updates, this is essentially the single-unit
