@@ -355,6 +355,12 @@ X1 = preprocess(X)
 X1 = rbind(rep(1,ncol(X1)), X1)
 ```
 
+Note that whitening the tree effectively results in removing the top shared branch and just leaving an identity matrix:
+```{r}
+image(t(X1) %*% X1)
+```
+
+
 Here I try with 100 random starts - most of them seem to reach an objective corresponding to a binary group, but now it finds both maxima and minima. The highest objectives are the trivial solutions; the next highest are the top split in the tree; the next highest are single branches. The lowest objectives are a bit messy so I'll look at them in more detail next.
 ```{r}
 obj = rep(0,100)
