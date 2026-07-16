@@ -1,0 +1,451 @@
+---
+title: "FastICA for Non-Whitened Data"
+author: "Matthew Stephens"
+date: "2026-07-16"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+Standard FastICA pre-whitens data: given $X$ ($p \times n$) with thin SVD
+$X = UDV'$, it sets $Z = \sqrt{n}\,V'$ ($k \times n$) and maximizes
+$E[G(w'z)]$ subject to $\|w\|^2 = 1$.  The constraint $\|w\|^2 = 1$ is
+equivalent to $E[(w'z)^2] = n$ because $ZZ' = nI_k$ for whitened data.
+
+Here we skip the whitening step and instead work with
+$$Z = DV' \qquad (k \times n),$$
+so that $ZZ' = D^2$.  The natural constraint to keep evaluation scale-free is
+$$w'D^2 w = n,$$
+which again enforces $E[(w'z)^2] = n$.  The FastICA fixed-point update itself
+is unchanged; only the normalization step changes from $w \leftarrow w/\|w\|$
+to $w \leftarrow w\sqrt{n}/\sqrt{w'D^2 w}$.
+
+## Motivation: robustness to the number of PCs
+
+In practice we do not know how many independent components are present.
+Standard whitening requires a hard choice of $k$: too small and we miss
+components, too large and we include pure-noise PCs.  The problem with
+whitening is that all $k$ retained PCs are placed on equal footing — the
+noise PCs get the same unit variance as the signal PCs.  This can overwhelm
+the signal when $k$ is much larger than the true number of components.
+
+With the non-whitened approach the $k$ PCs enter with their original singular
+values $d_1 \ge d_2 \ge \cdots \ge d_k$.  Signal PCs have large $d_i$; excess
+noise PCs have small $d_i$ and therefore small weight in the objective.  The
+constraint $w'D^2 w = n$ automatically concentrates $w$ on the high-variance
+directions, so inflating $k$ adds far less noise than in the whitened case.
+
+To test this we use $k = 20$ PCs for all experiments below, even though the
+true number of sources is smaller (1, 4, or 9).  We expect whitened FastICA
+to degrade noticeably with the extra noise PCs, while non-whitened FastICA
+should remain robust.
+
+## Implementation
+
+```{r}
+# ---- whitened helpers (for comparison) ----
+
+fastica_r1update = function(X, w) {
+  w = w / sqrt(sum(w^2))
+  P  = t(X) %*% w
+  G  = tanh(P)
+  G2 = 1 - tanh(P)^2
+  w  = X %*% G - mean(G2) * ncol(X) * w
+  w / sqrt(sum(w^2))
+}
+
+fastica_r1update_tlc = function(X, w, lambda = 1) {
+  w = w / sqrt(sum(w^2))
+  P  = t(X) %*% w
+  G  = tanh(P) + 2 * lambda * abs(P)
+  G2 = 1 - tanh(P)^2 + 2 * lambda * sign(P)
+  w  = X %*% G - mean(G2) * ncol(X) * w
+  w / sqrt(sum(w^2))
+}
+
+compute_objective     = function(X, w) mean(log(cosh(t(X) %*% w)))
+compute_objective_tlc = function(X, w, lambda = 1) {
+  P = t(X) %*% w
+  mean(log(cosh(P)) + lambda * abs(P) * P)
+}
+
+prewhiten = function(X, n.comp) {
+  X = X - rowMeans(X)
+  sqrt(ncol(X)) * t(svd(X)$v[, 1:n.comp])
+}
+
+# ---- non-whitened helpers ----
+
+# Returns list(Z, D2): Z = DV' (k x n), D2 = diag(d^2) (k x k)
+preprocess_nonwhitened = function(X, n.comp) {
+  X  = X - rowMeans(X)
+  sv = svd(X, nu = 0, nv = n.comp)
+  d  = sv$d[1:n.comp]
+  Z  = diag(d, nrow = length(d)) %*% t(sv$v)   # k x n
+  D2 = diag(d^2, nrow = length(d))              # k x k
+  list(Z = Z, D2 = D2)
+}
+
+# Normalize w so that w'D2 w = n
+normalize_nw = function(w, D2, n) {
+  w * sqrt(n) / sqrt(as.numeric(t(w) %*% D2 %*% w))
+}
+
+fastica_r1update_nw = function(Z, D2, w) {
+  n  = ncol(Z)
+  w  = normalize_nw(w, D2, n)
+  P  = t(Z) %*% w
+  G  = tanh(P)
+  G2 = 1 - tanh(P)^2
+  w  = Z %*% G - mean(G2) * n * w
+  normalize_nw(w, D2, n)
+}
+
+fastica_r1update_nw_tlc = function(Z, D2, w, lambda = 1) {
+  n  = ncol(Z)
+  w  = normalize_nw(w, D2, n)
+  P  = t(Z) %*% w
+  G  = tanh(P) + 2 * lambda * abs(P)
+  G2 = 1 - tanh(P)^2 + 2 * lambda * sign(P)
+  w  = Z %*% G - mean(G2) * n * w
+  normalize_nw(w, D2, n)
+}
+
+compute_objective_nw = function(Z, D2, w) {
+  n = ncol(Z)
+  w = normalize_nw(w, D2, n)
+  mean(log(cosh(t(Z) %*% w)))
+}
+
+compute_objective_nw_tlc = function(Z, D2, w, lambda = 1) {
+  n = ncol(Z)
+  w = normalize_nw(w, D2, n)
+  P = t(Z) %*% w
+  mean(log(cosh(P)) + lambda * abs(P) * P)
+}
+
+# ---- generic runner: works for both whitened and non-whitened ----
+# update_fn(data, w, ...) and obj_fn(data, w, ...) where data is a list
+# (non-whitened) or a matrix (whitened).
+
+run_seeds = function(data, S_true, update_fn, obj_fn, n_seeds = 50,
+                     n_iter = 200, ...) {
+  obj    = numeric(n_seeds)
+  maxcor = numeric(n_seeds)
+  for (seed in seq_len(n_seeds)) {
+    set.seed(seed)
+    w = rnorm(nrow(if (is.list(data)) data$Z else data))
+    for (i in seq_len(n_iter))
+      w = update_fn(data, w, ...)
+    obj[seed]    = obj_fn(data, w, ...)
+    proj         = if (is.list(data)) t(data$Z) %*% w else t(data) %*% w
+    maxcor[seed] = max(abs(cor(t(S_true), proj)))
+  }
+  list(obj = obj, maxcor = maxcor)
+}
+
+# Wrappers so run_seeds gets a single 'data' argument
+update_nw = function(data, w, lambda = NULL) {
+  if (is.null(lambda)) fastica_r1update_nw(data$Z, data$D2, w)
+  else fastica_r1update_nw_tlc(data$Z, data$D2, w, lambda = lambda)
+}
+obj_nw = function(data, w, lambda = NULL) {
+  if (is.null(lambda)) compute_objective_nw(data$Z, data$D2, w)
+  else compute_objective_nw_tlc(data$Z, data$D2, w, lambda = lambda)
+}
+
+k_pca = 20   # number of PCs used for all tests (larger than true k)
+```
+
+## Test 1: Symmetric binary source (1 true source, 20 PCs)
+
+The data have a single Rademacher source, but we extract `k_pca = 20` PCs.
+Whitening inflates all 20 to unit variance; non-whitening retains the true
+signal-to-noise contrast in the singular values.
+
+### Singular values
+
+```{r}
+set.seed(10)
+n = 200; p = 1000; k_true = 1
+A     = matrix(rnorm(p * k_true), nrow = p)
+S_rad = matrix(sample(c(-1, 1), n, replace = TRUE), nrow = 1)
+sigma = 0.1
+X_rad = A %*% S_rad + matrix(rnorm(p * n, 0, sigma), nrow = p)
+
+sv_rad = svd(X_rad - rowMeans(X_rad), nu = 0, nv = k_pca)
+plot(sv_rad$d[1:k_pca], type = "b", pch = 19, cex = 0.7,
+     xlab = "PC index", ylab = "singular value",
+     main = "Top 20 singular values (1 true source)")
+abline(v = k_true + 0.5, lty = 2, col = "red")
+legend("topright", "true k", lty = 2, col = "red")
+```
+
+The first singular value is much larger than the rest, which are pure noise.
+Whitening would equalise all 20; non-whitening keeps this gap intact.
+
+### Single-seed detailed comparison
+
+```{r}
+Z_rad  = prewhiten(X_rad, k_pca)
+nw_rad = preprocess_nonwhitened(X_rad, k_pca)
+
+run_one = function(data, update_fn, obj_fn, seed = 1, n_iter = 200, ...) {
+  set.seed(seed)
+  w = rnorm(nrow(if (is.list(data)) data$Z else data))
+  for (i in seq_len(n_iter))
+    w = update_fn(data, w, ...)
+  proj = if (is.list(data)) t(data$Z) %*% w else t(data) %*% w
+  list(w = w, proj = as.vector(proj), obj = obj_fn(data, w, ...))
+}
+
+r_wh_lc  = run_one(Z_rad,  fastica_r1update,     compute_objective)
+r_wh_tlc = run_one(Z_rad,  fastica_r1update_tlc, compute_objective_tlc, lambda = 1)
+r_nw_lc  = run_one(nw_rad, update_nw,            obj_nw)
+r_nw_tlc = run_one(nw_rad, update_nw,            obj_nw, lambda = 1)
+
+cat("whitened  log-cosh: obj =", round(r_wh_lc$obj,  4),
+    "  max|cor| =", round(max(abs(cor(as.vector(S_rad), r_wh_lc$proj))),  3), "\n")
+cat("whitened  TLC:      obj =", round(r_wh_tlc$obj, 4),
+    "  max|cor| =", round(max(abs(cor(as.vector(S_rad), r_wh_tlc$proj))), 3), "\n")
+cat("nonwhiten log-cosh: obj =", round(r_nw_lc$obj,  4),
+    "  max|cor| =", round(max(abs(cor(as.vector(S_rad), r_nw_lc$proj))),  3), "\n")
+cat("nonwhiten TLC:      obj =", round(r_nw_tlc$obj, 4),
+    "  max|cor| =", round(max(abs(cor(as.vector(S_rad), r_nw_tlc$proj))), 3), "\n")
+```
+
+### Projections w'z
+
+```{r fig.height=6}
+par(mfrow = c(2, 2))
+ord = order(as.vector(S_rad))
+col = ifelse(as.vector(S_rad)[ord] == 1, "tomato", "steelblue")
+
+plot_proj = function(proj, title) {
+  plot(proj[ord], col = col, pch = 19, cex = 0.5,
+       main = title, xlab = "sample (sorted by true source)", ylab = "w'z",
+       cex.main = 0.85)
+  abline(h = 0, lty = 2)
+}
+
+plot_proj(r_wh_lc$proj,  "whitened log-cosh")
+plot_proj(r_wh_tlc$proj, "whitened TLC")
+plot_proj(r_nw_lc$proj,  "nonwhitened log-cosh")
+plot_proj(r_nw_tlc$proj, "nonwhitened TLC")
+par(mfrow = c(1, 1))
+```
+
+Samples are sorted by true source value (+1 = red, -1 = blue).
+A good recovery shows two clearly separated bands.
+
+### Many seeds
+
+```{r}
+res_wh_lc  = run_seeds(Z_rad,  S_rad, fastica_r1update,     compute_objective)
+res_wh_tlc = run_seeds(Z_rad,  S_rad, fastica_r1update_tlc, compute_objective_tlc, lambda = 1)
+res_nw_lc  = run_seeds(nw_rad, S_rad, update_nw,            obj_nw)
+res_nw_tlc = run_seeds(nw_rad, S_rad, update_nw,            obj_nw, lambda = 1)
+
+cat("whitened  log-cosh: mean max|cor| =", round(mean(res_wh_lc$maxcor),  3),
+    " frac > 0.9:", mean(res_wh_lc$maxcor  > 0.9), "\n")
+cat("whitened  TLC:      mean max|cor| =", round(mean(res_wh_tlc$maxcor), 3),
+    " frac > 0.9:", mean(res_wh_tlc$maxcor > 0.9), "\n")
+cat("nonwhiten log-cosh: mean max|cor| =", round(mean(res_nw_lc$maxcor),  3),
+    " frac > 0.9:", mean(res_nw_lc$maxcor  > 0.9), "\n")
+cat("nonwhiten TLC:      mean max|cor| =", round(mean(res_nw_tlc$maxcor), 3),
+    " frac > 0.9:", mean(res_nw_tlc$maxcor > 0.9), "\n")
+```
+
+## Test 2: Non-overlapping groups (4 true sources, 20 PCs)
+
+```{r}
+set.seed(1)
+n = 100; p = 1000; k_true = 4
+A = matrix(rnorm(p * k_true), nrow = p)
+S = matrix(0, nrow = k_true, ncol = n)
+S[1, 1:25] = 1; S[2, 26:50] = 1; S[3, 51:75] = 1; S[4, 76:100] = 1
+sigma = 0.1
+X  = A %*% S + matrix(rnorm(p * n, 0, sigma), nrow = p)
+
+Z  = prewhiten(X, k_pca)
+nw = preprocess_nonwhitened(X, k_pca)
+
+res_wh_lc  = run_seeds(Z,  S, fastica_r1update,     compute_objective)
+res_wh_tlc = run_seeds(Z,  S, fastica_r1update_tlc, compute_objective_tlc, lambda = 1)
+res_nw_lc  = run_seeds(nw, S, update_nw,            obj_nw)
+res_nw_tlc = run_seeds(nw, S, update_nw,            obj_nw, lambda = 1)
+
+par(mfrow = c(2, 2))
+hist(res_wh_lc$maxcor,  breaks = seq(0, 1, by = 0.05), main = "whitened log-cosh",    xlab = "max |cor|")
+hist(res_wh_tlc$maxcor, breaks = seq(0, 1, by = 0.05), main = "whitened TLC",         xlab = "max |cor|")
+hist(res_nw_lc$maxcor,  breaks = seq(0, 1, by = 0.05), main = "nonwhitened log-cosh", xlab = "max |cor|")
+hist(res_nw_tlc$maxcor, breaks = seq(0, 1, by = 0.05), main = "nonwhitened TLC",      xlab = "max |cor|")
+par(mfrow = c(1, 1))
+```
+
+## Test 3: Sparse binary sources (4 true sources, p=0.2, 20 PCs)
+
+```{r}
+set.seed(2)
+n = 500; p = 1000; k_true = 4
+prob_active = 0.2
+A = matrix(rnorm(p * k_true), nrow = p)
+S_sparse = matrix(0, nrow = k_true, ncol = n)
+for (j in 1:k_true)
+  S_sparse[j, sample(n, round(prob_active * n))] = 1
+sigma = 0.1
+X_sp = A %*% S_sparse + matrix(rnorm(p * n, 0, sigma), nrow = p)
+
+Z_sp  = prewhiten(X_sp, k_pca)
+nw_sp = preprocess_nonwhitened(X_sp, k_pca)
+
+res_wh_lc_sp  = run_seeds(Z_sp,  S_sparse, fastica_r1update,     compute_objective,     n_seeds = 100)
+res_wh_tlc_sp = run_seeds(Z_sp,  S_sparse, fastica_r1update_tlc, compute_objective_tlc, n_seeds = 100, lambda = 1)
+res_nw_lc_sp  = run_seeds(nw_sp, S_sparse, update_nw,            obj_nw,                n_seeds = 100)
+res_nw_tlc_sp = run_seeds(nw_sp, S_sparse, update_nw,            obj_nw,                n_seeds = 100, lambda = 1)
+
+cat("whitened  log-cosh: mean max|cor| =", round(mean(res_wh_lc_sp$maxcor),  3),
+    " frac > 0.9:", mean(res_wh_lc_sp$maxcor  > 0.9), "\n")
+cat("whitened  TLC:      mean max|cor| =", round(mean(res_wh_tlc_sp$maxcor), 3),
+    " frac > 0.9:", mean(res_wh_tlc_sp$maxcor > 0.9), "\n")
+cat("nonwhiten log-cosh: mean max|cor| =", round(mean(res_nw_lc_sp$maxcor),  3),
+    " frac > 0.9:", mean(res_nw_lc_sp$maxcor  > 0.9), "\n")
+cat("nonwhiten TLC:      mean max|cor| =", round(mean(res_nw_tlc_sp$maxcor), 3),
+    " frac > 0.9:", mean(res_nw_tlc_sp$maxcor > 0.9), "\n")
+
+par(mfrow = c(2, 2))
+hist(res_wh_lc_sp$maxcor,  breaks = seq(0, 1, by = 0.05), main = "whitened log-cosh",    xlab = "max |cor|")
+hist(res_wh_tlc_sp$maxcor, breaks = seq(0, 1, by = 0.05), main = "whitened TLC",         xlab = "max |cor|")
+hist(res_nw_lc_sp$maxcor,  breaks = seq(0, 1, by = 0.05), main = "nonwhitened log-cosh", xlab = "max |cor|")
+hist(res_nw_tlc_sp$maxcor, breaks = seq(0, 1, by = 0.05), main = "nonwhitened TLC",      xlab = "max |cor|")
+par(mfrow = c(1, 1))
+```
+
+## Test 4: 9 overlapping groups, 20 members each, n=100 (20 PCs)
+
+Multi-component extraction via deflation.  After finding weight $w_1$, the
+next search is restricted to vectors satisfying $w \perp_{D^2} w_1$, i.e.
+$w_1' D^2 w = 0$, so the extracted components are orthogonal in the
+$D^2$-inner-product sense (equivalently, orthogonal projections in the
+original data space).  We extract 9 components from a 20-PC space.
+
+```{r}
+fastica_deflation_nw = function(nw, k, update_fn, obj_fn, n_iter = 200,
+                                n_starts = 5, ...) {
+  Z  = nw$Z
+  D2 = nw$D2
+  n  = ncol(Z)
+  W  = matrix(0, nrow(Z), k)
+  for (comp in seq_len(k)) {
+    best_obj = -Inf; best_w = NULL
+    for (s in seq_len(n_starts)) {
+      set.seed(s + comp * 1000)
+      w = rnorm(nrow(Z))
+      if (comp > 1) {
+        for (j in 1:(comp - 1))
+          w = w - as.numeric(t(W[, j]) %*% D2 %*% w) /
+                  as.numeric(t(W[, j]) %*% D2 %*% W[, j]) * W[, j]
+      }
+      w = normalize_nw(w, D2, n)
+      for (i in seq_len(n_iter)) {
+        w = update_fn(nw, w, ...)
+        if (comp > 1) {
+          for (j in 1:(comp - 1))
+            w = w - as.numeric(t(W[, j]) %*% D2 %*% w) /
+                    as.numeric(t(W[, j]) %*% D2 %*% W[, j]) * W[, j]
+          w = normalize_nw(w, D2, n)
+        }
+      }
+      o = obj_fn(nw, w, ...)
+      if (o > best_obj) { best_obj = o; best_w = w }
+    }
+    W[, comp] = best_w
+  }
+  W
+}
+
+fastica_deflation_wh = function(X, k, update_fn, obj_fn, n_iter = 200,
+                                n_starts = 5, ...) {
+  W = matrix(0, nrow(X), k)
+  for (comp in seq_len(k)) {
+    best_obj = -Inf; best_w = NULL
+    for (s in seq_len(n_starts)) {
+      set.seed(s + comp * 1000)
+      w = rnorm(nrow(X))
+      if (comp > 1)
+        w = w - W[, 1:(comp-1), drop=FALSE] %*%
+                (t(W[, 1:(comp-1), drop=FALSE]) %*% w)
+      w = w / sqrt(sum(w^2))
+      for (i in seq_len(n_iter)) {
+        w = update_fn(X, w, ...)
+        if (comp > 1)
+          w = w - W[, 1:(comp-1), drop=FALSE] %*%
+                  (t(W[, 1:(comp-1), drop=FALSE]) %*% w)
+        w = w / sqrt(sum(w^2))
+      }
+      o = obj_fn(X, w, ...)
+      if (o > best_obj) { best_obj = o; best_w = w }
+    }
+    W[, comp] = best_w
+  }
+  W
+}
+
+set.seed(1)
+n = 100; p = 1000; K = 9
+L  = matrix(0, nrow = n, ncol = K)
+for (i in 1:K) L[sample(n, 20), i] = 1
+FF = matrix(rnorm(p * K), nrow = p, ncol = K)
+sigma = 0.1
+X9  = t(L %*% t(FF) + matrix(rnorm(n * p, 0, sigma), nrow = n))
+Z9  = prewhiten(X9, k_pca)
+nw9 = preprocess_nonwhitened(X9, k_pca)
+
+W9_wh_lc  = fastica_deflation_wh(Z9,  K, fastica_r1update,     compute_objective,     n_starts = 10)
+W9_wh_tlc = fastica_deflation_wh(Z9,  K, fastica_r1update_tlc, compute_objective_tlc, n_starts = 10, lambda = 1)
+W9_nw_lc  = fastica_deflation_nw(nw9, K, update_nw,            obj_nw,                n_starts = 10)
+W9_nw_tlc = fastica_deflation_nw(nw9, K, update_nw,            obj_nw,                n_starts = 10, lambda = 1)
+
+cor9_wh_lc  = cor(L, t(Z9)    %*% W9_wh_lc)
+cor9_wh_tlc = cor(L, t(Z9)    %*% W9_wh_tlc)
+cor9_nw_lc  = cor(L, t(nw9$Z) %*% W9_nw_lc)
+cor9_nw_tlc = cor(L, t(nw9$Z) %*% W9_nw_tlc)
+
+cat("whitened log-cosh    — max |cor| per true source:\n")
+print(round(apply(abs(cor9_wh_lc),  2, max), 3))
+cat("whitened TLC         — max |cor| per true source:\n")
+print(round(apply(abs(cor9_wh_tlc), 2, max), 3))
+cat("nonwhitened log-cosh — max |cor| per true source:\n")
+print(round(apply(abs(cor9_nw_lc),  2, max), 3))
+cat("nonwhitened TLC      — max |cor| per true source:\n")
+print(round(apply(abs(cor9_nw_tlc), 2, max), 3))
+```
+
+Extracted projections (whitened TLC vs nonwhitened TLC):
+
+```{r fig.height=8}
+proj9_wh_tlc = t(Z9)    %*% W9_wh_tlc
+proj9_nw_tlc = t(nw9$Z) %*% W9_nw_tlc
+
+par(mfrow = c(K, 2), mar = c(1, 2, 1.5, 0.5))
+for (i in 1:K) {
+  plot(proj9_wh_tlc[, i], main = paste0("whitened TLC comp ",    i),
+       ylab = "", xlab = "", cex.main = 0.8)
+  plot(proj9_nw_tlc[, i], main = paste0("nonwhitened TLC comp ", i),
+       ylab = "", xlab = "", cex.main = 0.8)
+}
+par(mfrow = c(1, 1))
+```
+
+## Summary
+
+The non-whitened FastICA replaces the whitened data $Z = \sqrt{n}V'$ with
+$Z = DV'$ and changes only the normalization: $\|w\|^2 = 1$ becomes
+$w'D^2 w = n$.  This preserves the fixed-point structure of the algorithm.
+The deflation step uses the $D^2$-inner-product for orthogonalization instead
+of the standard inner product.  When $k$ is chosen larger than the true number
+of components, the non-whitened approach is more robust because excess noise
+PCs — which have small singular values $d_i$ — contribute little to the
+objective, whereas whitening equalises all $k$ PCs and amplifies noise.
