@@ -1,0 +1,313 @@
+---
+title: "FastICA with Tilted Log-Cosh"
+author: "Matthew Stephens"
+date: "2026-07-07"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+This implements and tests the "Tilted Log-Cosh" (TLC) contrast function for FastICA,
+motivated by the paper `skew_fastICA.pdf`. The standard log-cosh contrast fails to detect
+highly skewed (sparse) binary sources because its expectation falls *below* the Gaussian
+baseline as $p \to 0$ or $p \to 1$. The tilted version adds a $\lambda z|z|$ term:
+
+$$G(z) = \log(\cosh(z)) + \lambda z|z|$$
+
+with derivatives:
+$$g(z) = \tanh(z) + 2\lambda|z|, \quad g'(z) = 1 - \tanh^2(z) + 2\lambda \text{sign}(z)$$
+
+The odd term $z|z|$ has expectation $2p-1$ for a standardized binary source, so the
+tilted objective monotonically increases as $p \to 1$, unlike log-cosh which peaks at $p=0.5$.
+
+## Implementation
+
+```{r}
+# Standard log-cosh FastICA (single component, rank-1 update)
+fastica_r1update = function(X, w) {
+  w = w / sqrt(sum(w^2))
+  P = t(X) %*% w
+  G  = tanh(P)
+  G2 = 1 - tanh(P)^2
+  w  = X %*% G - mean(G2) * ncol(X) * w
+  w / sqrt(sum(w^2))
+}
+
+compute_objective = function(X, w) {
+  P = t(X) %*% w
+  mean(log(cosh(P)))
+}
+
+# Tilted log-cosh FastICA (single component)
+fastica_r1update_tlc = function(X, w, lambda = 1) {
+  w = w / sqrt(sum(w^2))
+  P = t(X) %*% w
+  G  = tanh(P) + 2 * lambda * abs(P)
+  G2 = 1 - tanh(P)^2 + 2 * lambda * sign(P)
+  w  = X %*% G - mean(G2) * ncol(X) * w
+  w / sqrt(sum(w^2))
+}
+
+compute_objective_tlc = function(X, w, lambda = 1) {
+  P = t(X) %*% w
+  mean(log(cosh(P)) + lambda * abs(P) * P)
+}
+
+prewhiten = function(X, n.comp) {
+  X = X - rowMeans(X)
+  sqrt(ncol(X)) * t(svd(X)$v[, 1:n.comp])
+}
+
+run_seeds = function(X, S_true, update_fn, obj_fn, n_seeds = 50, n_iter = 200, ...) {
+  obj    = numeric(n_seeds)
+  maxcor = numeric(n_seeds)
+  for (seed in seq_len(n_seeds)) {
+    set.seed(seed)
+    w = rnorm(nrow(X))
+    for (i in seq_len(n_iter))
+      w = update_fn(X, w, ...)
+    obj[seed]    = obj_fn(X, w, ...)
+    maxcor[seed] = max(abs(cor(t(S_true), t(X) %*% w)))
+  }
+  list(obj = obj, maxcor = maxcor)
+}
+```
+
+## Show theoretical motivation: log-cosh fails for skewed binary sources
+
+```{r}
+# E[log(cosh(z))] for a standardized binary source with P(x=-1)=p
+expected_logcosh = function(p) {
+  z_neg =  -sqrt((1 - p) / p)
+  z_pos =   sqrt(p / (1 - p))
+  p * log(cosh(z_neg)) + (1 - p) * log(cosh(z_pos))
+}
+
+expected_tlc = function(p, lambda = 1) {
+  expected_logcosh(p) + lambda * (2 * p - 1)
+}
+
+log_cosh_stable = function(z) abs(z) + log1p(exp(-2 * abs(z))) - log(2)
+gaussian_baseline = integrate(function(z) log_cosh_stable(z) * dnorm(z), -Inf, Inf)$value
+
+pvec = seq(0.01, 0.99, by = 0.01)
+lc  = sapply(pvec, expected_logcosh)
+tlc = sapply(pvec, expected_tlc)
+
+plot(pvec, lc, type = "l", col = "blue", ylim = range(c(lc, tlc)),
+     xlab = "p (prob of -1)", ylab = "E[G(z)]",
+     main = "Log-cosh vs Tilted Log-Cosh for binary source")
+lines(pvec, tlc, col = "red")
+abline(h = gaussian_baseline, lty = 2, col = "gray")
+legend("bottomleft", c("log-cosh", "tilted log-cosh (λ=1)", "Gaussian baseline"),
+       col = c("blue","red","gray"), lty = c(1,1,2))
+```
+
+Standard log-cosh falls below the Gaussian baseline for skewed sources. The tilted version
+increases monotonically toward the sparse extreme.
+
+## Test 1: Symmetric binary source (k=1, p=0.5)
+
+The simplest case: a single Rademacher source (-1 or +1 with equal probability).
+Both methods should work here since log-cosh peaks at p=0.5.
+
+```{r}
+set.seed(10)
+n = 200
+p = 1000
+k = 1
+A = matrix(rnorm(p * k), nrow = p)
+S_rad = matrix(sample(c(-1, 1), n, replace = TRUE), nrow = 1)
+X_rad = A %*% S_rad
+Z_rad = sqrt(n) * t(svd(X_rad)$v[, 1:k, drop = FALSE])
+
+res_lc_rad  = run_seeds(Z_rad, S_rad, fastica_r1update,     compute_objective,     n_seeds = 50)
+res_tlc_rad = run_seeds(Z_rad, S_rad, fastica_r1update_tlc, compute_objective_tlc, n_seeds = 50)
+
+cat("log-cosh  : mean max|cor| =", round(mean(res_lc_rad$maxcor),  3),
+    " fraction > 0.9:", mean(res_lc_rad$maxcor  > 0.9), "\n")
+cat("tilted lc : mean max|cor| =", round(mean(res_tlc_rad$maxcor), 3),
+    " fraction > 0.9:", mean(res_tlc_rad$maxcor > 0.9), "\n")
+```
+
+## Test 2: Non-overlapping groups (k=4, p=0.2 per source)
+
+Here we have 4 non-overlapping groups of 25 samples each in n=125, so each source is active
+for 20% of samples (p=0.2). We use n=125 rather than n=100 so that the 4 groups do not
+perfectly partition all samples — if every sample belongs to exactly one group, the centered
+data has rank k-1 rather than k, making the k-th whitened component the constant direction
+(which TLC is attracted to). With background samples this rank deficiency does not arise.
+
+```{r}
+set.seed(1)
+n = 125
+p = 1000
+k = 4
+A = matrix(rnorm(p * k), nrow = p)
+S = matrix(0, nrow = k, ncol = n)
+S[1, 1:25]    = 1
+S[2, 26:50]   = 1
+S[3, 51:75]   = 1
+S[4, 76:100]  = 1
+X  = A %*% S
+Z  = prewhiten(X, k)
+
+res_lc  = run_seeds(Z, S, fastica_r1update,     compute_objective)
+res_tlc = run_seeds(Z, S, fastica_r1update_tlc, compute_objective_tlc)
+
+par(mfrow = c(1, 2))
+hist(res_lc$maxcor,  breaks = seq(0, 1, by = 0.05), main = "log-cosh: max |cor| with true S",  xlab = "")
+hist(res_tlc$maxcor, breaks = seq(0, 1, by = 0.05), main = "tilted log-cosh: max |cor| with true S", xlab = "")
+par(mfrow = c(1, 1))
+```
+
+Best and worst seeds for tilted log-cosh on Test 2:
+
+```{r}
+get_projection = function(X, seed, update_fn, n_iter = 200, ...) {
+  set.seed(seed)
+  w = rnorm(nrow(X))
+  for (i in seq_len(n_iter))
+    w = update_fn(X, w, ...)
+  as.vector(t(X) %*% w)
+}
+
+best_seed  = which.max(res_tlc$maxcor)
+worst_seed = which.min(res_tlc$maxcor)
+
+proj_best  = get_projection(Z, best_seed,  fastica_r1update_tlc)
+proj_worst = get_projection(Z, worst_seed, fastica_r1update_tlc)
+
+par(mfrow = c(1, 2))
+plot(proj_best,  main = paste0("TLC best seed (", best_seed, "), max|cor|=",
+     round(res_tlc$maxcor[best_seed], 3)), xlab = "sample", ylab = "projection")
+plot(proj_worst, main = paste0("TLC worst seed (", worst_seed, "), max|cor|=",
+     round(res_tlc$maxcor[worst_seed], 3)), xlab = "sample", ylab = "projection")
+par(mfrow = c(1, 1))
+```
+
+## Test 3: Sparse binary sources (p=0.2)
+
+Here the true source takes value 1 with probability 0.2. From the theoretical plot,
+p=0.2 is near where E[log(cosh(z))] dips furthest below the Gaussian baseline, so this
+should be a harder case for standard log-cosh than p=0.5.
+
+```{r}
+set.seed(2)
+n   = 500
+p   = 1000
+k   = 4
+prob_active = 0.2  # 20% of samples are "on" per source
+
+A = matrix(rnorm(p * k), nrow = p)
+S_sparse = matrix(0, nrow = k, ncol = n)
+for (j in 1:k)
+  S_sparse[j, sample(n, round(prob_active * n))] = 1
+
+X_sp = A %*% S_sparse
+Z_sp = prewhiten(X_sp, k)
+
+res_lc_sp  = run_seeds(Z_sp, S_sparse, fastica_r1update,     compute_objective,     n_seeds = 100)
+res_tlc_sp = run_seeds(Z_sp, S_sparse, fastica_r1update_tlc, compute_objective_tlc, n_seeds = 100)
+
+cat("log-cosh:    mean max|cor| =", round(mean(res_lc_sp$maxcor),  3),
+    " fraction > 0.9:", mean(res_lc_sp$maxcor  > 0.9), "\n")
+cat("tilted lc:   mean max|cor| =", round(mean(res_tlc_sp$maxcor), 3),
+    " fraction > 0.9:", mean(res_tlc_sp$maxcor > 0.9), "\n")
+
+par(mfrow = c(1, 2))
+hist(res_lc_sp$maxcor,  breaks = seq(0, 1, by = 0.05),
+     main = "log-cosh: sparse binary source",    xlab = "max |cor| with true S")
+hist(res_tlc_sp$maxcor, breaks = seq(0, 1, by = 0.05),
+     main = "tilted log-cosh: sparse binary source", xlab = "max |cor| with true S")
+par(mfrow = c(1, 1))
+```
+
+## Multi-component extraction via deflation
+
+To extract $k$ components we use deflation: find one component at a time, then project
+it out of the weight space before searching for the next. Specifically, after finding
+weight vector $w_1$, the next search is restricted to vectors orthogonal to $w_1$ by
+subtracting the projection onto $w_1$ after each update. This ensures each extracted
+component is distinct. We use multiple random starts per component and keep the one
+with the highest objective value.
+
+```{r}
+fastica_deflation = function(X, k, update_fn, obj_fn, n_iter = 200, n_starts = 5, ...) {
+  W = matrix(0, nrow(X), k)
+  for (comp in seq_len(k)) {
+    best_obj = -Inf
+    best_w   = NULL
+    for (s in seq_len(n_starts)) {
+      set.seed(s + comp * 1000)
+      w = rnorm(nrow(X))
+      # project out already-found components
+      if (comp > 1)
+        w = w - W[, 1:(comp-1), drop=FALSE] %*% (t(W[, 1:(comp-1), drop=FALSE]) %*% w)
+      w = w / sqrt(sum(w^2))
+      for (i in seq_len(n_iter)) {
+        w = update_fn(X, w, ...)
+        # deflate
+        if (comp > 1)
+          w = w - W[, 1:(comp-1), drop=FALSE] %*% (t(W[, 1:(comp-1), drop=FALSE]) %*% w)
+        w = w / sqrt(sum(w^2))
+      }
+      o = obj_fn(X, w, ...)
+      if (o > best_obj) { best_obj = o; best_w = w }
+    }
+    W[, comp] = best_w
+  }
+  W
+}
+
+# Extract 4 components on the sparse simulation
+W_lc  = fastica_deflation(Z_sp, k, fastica_r1update,     compute_objective)
+W_tlc = fastica_deflation(Z_sp, k, fastica_r1update_tlc, compute_objective_tlc)
+
+cor_lc  = cor(t(S_sparse), t(Z_sp) %*% W_lc)
+cor_tlc = cor(t(S_sparse), t(Z_sp) %*% W_tlc)
+
+cat("log-cosh deflation — max |cor| per true source:\n")
+print(round(apply(abs(cor_lc),  1, max), 3))
+
+cat("tilted log-cosh deflation — max |cor| per true source:\n")
+print(round(apply(abs(cor_tlc), 1, max), 3))
+```
+
+## Test 4: 9 overlapping groups, 20 members each, n=100
+
+Here each source is active for 20 out of 100 samples (p=0.2), and groups can overlap.
+This is harder than the non-overlapping case and matches the simulation from the original file.
+We use deflation to extract all 9 components.
+
+```{r}
+set.seed(1)
+n = 100
+p = 1000
+K = 9
+L = matrix(0, nrow = n, ncol = K)
+for (i in 1:K) L[sample(n, 20), i] = 1
+FF = matrix(rnorm(p * K), nrow = p, ncol = K)
+X9 = t(L %*% t(FF) + rnorm(n * p, 0, 0.01))  # p x n
+Z9 = prewhiten(X9, K)
+
+W9_lc  = fastica_deflation(Z9, K, fastica_r1update,     compute_objective,     n_starts = 10)
+W9_tlc = fastica_deflation(Z9, K, fastica_r1update_tlc, compute_objective_tlc, n_starts = 10)
+
+cor9_lc  = cor(L, t(Z9) %*% W9_lc)
+cor9_tlc = cor(L, t(Z9) %*% W9_tlc)
+
+cat("log-cosh — max |cor| per true source:\n")
+print(round(apply(abs(cor9_lc),  2, max), 3))
+
+cat("tilted log-cosh — max |cor| per true source:\n")
+print(round(apply(abs(cor9_tlc), 2, max), 3))
+```
+
+## Summary
+
+The tilted log-cosh contrast G(z) = log(cosh(z)) + λz|z| addresses the fundamental
+failure of standard log-cosh for sparse binary sources. The odd term z|z| has expectation
+2p−1, so sparse sources (p→1) score highly rather than falling below the Gaussian baseline.
