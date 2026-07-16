@@ -120,7 +120,8 @@ p = 1000
 k = 1
 A = matrix(rnorm(p * k), nrow = p)
 S_rad = matrix(sample(c(-1, 1), n, replace = TRUE), nrow = 1)
-X_rad = A %*% S_rad
+sigma = 0.1
+X_rad = A %*% S_rad + matrix(rnorm(p * n, 0, sigma), nrow = p)
 Z_rad = sqrt(n) * t(svd(X_rad)$v[, 1:k, drop = FALSE])
 
 res_lc_rad  = run_seeds(Z_rad, S_rad, fastica_r1update,     compute_objective,     n_seeds = 50)
@@ -132,26 +133,26 @@ cat("tilted lc : mean max|cor| =", round(mean(res_tlc_rad$maxcor), 3),
     " fraction > 0.9:", mean(res_tlc_rad$maxcor > 0.9), "\n")
 ```
 
-## Test 2: Non-overlapping groups (k=4, p=0.2 per source)
+## Test 2: Non-overlapping groups (k=4, p=0.25 per source)
 
-Here we have 4 non-overlapping groups of 25 samples each in n=125, so each source is active
-for 20% of samples (p=0.2). We use n=125 rather than n=100 so that the 4 groups do not
-perfectly partition all samples — if every sample belongs to exactly one group, the centered
-data has rank k-1 rather than k, making the k-th whitened component the constant direction
-(which TLC is attracted to). With background samples this rank deficiency does not arise.
+Here we have 4 non-overlapping groups of 25 samples each in n=100, so each source is active
+for 25% of samples (p=0.25). Without noise the 4 groups would perfectly partition all samples,
+making the centered data rank k-1 and the k-th whitened component the constant direction.
+The added noise breaks this exact rank deficiency.
 
 ```{r}
 set.seed(1)
-n = 125
+n = 100
 p = 1000
 k = 4
 A = matrix(rnorm(p * k), nrow = p)
 S = matrix(0, nrow = k, ncol = n)
-S[1, 1:25]    = 1
-S[2, 26:50]   = 1
-S[3, 51:75]   = 1
-S[4, 76:100]  = 1
-X  = A %*% S
+S[1, 1:25]   = 1
+S[2, 26:50]  = 1
+S[3, 51:75]  = 1
+S[4, 76:100] = 1
+sigma = 0.1
+X  = A %*% S + matrix(rnorm(p * n, 0, sigma), nrow = p)
 Z  = prewhiten(X, k)
 
 res_lc  = run_seeds(Z, S, fastica_r1update,     compute_objective)
@@ -191,8 +192,8 @@ par(mfrow = c(1, 1))
 ## Test 3: Sparse binary sources (p=0.2)
 
 Here the true source takes value 1 with probability 0.2. From the theoretical plot,
-p=0.2 is near where E[log(cosh(z))] dips furthest below the Gaussian baseline, so this
-should be a harder case for standard log-cosh than p=0.5.
+p=0.2 is near where E[log(cosh(z))] is closest to the Gaussian baseline, making it hard
+for standard log-cosh to distinguish the source from Gaussian noise.
 
 ```{r}
 set.seed(2)
@@ -206,7 +207,8 @@ S_sparse = matrix(0, nrow = k, ncol = n)
 for (j in 1:k)
   S_sparse[j, sample(n, round(prob_active * n))] = 1
 
-X_sp = A %*% S_sparse
+sigma = 0.1
+X_sp = A %*% S_sparse + matrix(rnorm(p * n, 0, sigma), nrow = p)
 Z_sp = prewhiten(X_sp, k)
 
 res_lc_sp  = run_seeds(Z_sp, S_sparse, fastica_r1update,     compute_objective,     n_seeds = 100)
@@ -290,7 +292,8 @@ K = 9
 L = matrix(0, nrow = n, ncol = K)
 for (i in 1:K) L[sample(n, 20), i] = 1
 FF = matrix(rnorm(p * K), nrow = p, ncol = K)
-X9 = t(L %*% t(FF) + rnorm(n * p, 0, 0.01))  # p x n
+sigma = 0.1
+X9 = t(L %*% t(FF) + matrix(rnorm(n * p, 0, sigma), nrow = n))  # p x n
 Z9 = prewhiten(X9, K)
 
 W9_lc  = fastica_deflation(Z9, K, fastica_r1update,     compute_objective,     n_starts = 10)
@@ -304,6 +307,20 @@ print(round(apply(abs(cor9_lc),  2, max), 3))
 
 cat("tilted log-cosh — max |cor| per true source:\n")
 print(round(apply(abs(cor9_tlc), 2, max), 3))
+```
+
+Extracted sources (rows = components, columns = samples):
+
+```{r fig.height=6}
+proj9_lc  = t(Z9) %*% W9_lc
+proj9_tlc = t(Z9) %*% W9_tlc
+
+par(mfrow = c(K, 2), mar = c(1, 2, 1.5, 0.5))
+for (i in 1:K) {
+  plot(proj9_lc[, i],  main = paste0("log-cosh comp ", i),     ylab = "", xlab = "", cex.main = 0.8)
+  plot(proj9_tlc[, i], main = paste0("tilted lc comp ", i), ylab = "", xlab = "", cex.main = 0.8)
+}
+par(mfrow = c(1, 1))
 ```
 
 ## Summary
