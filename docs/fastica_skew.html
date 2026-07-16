@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Matthew Stephens" />
+
+<meta name="date" content="2026-07-07" />
+
+<title>FastICA with Tilted Log-Cosh</title>
+
+<script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">misc</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/stephens999/misc">source</a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">FastICA with Tilted Log-Cosh</h1>
+<h4 class="author">Matthew Stephens</h4>
+<h4 class="date">2026-07-07</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2026-07-16
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>misc/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version 1.7.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed1code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(1)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed1code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(1)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree159d4665e5764959a1c9929fcce3673a317b8a0etargetblank159d466a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/159d4665e5764959a1c9929fcce3673a317b8a0e" target="_blank">159d466</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree159d4665e5764959a1c9929fcce3673a317b8a0etargetblank159d466a" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/159d4665e5764959a1c9929fcce3673a317b8a0e" target="_blank">159d466</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    .claude/
+    Ignored:    GSE87571/
+    Ignored:    analysis/.RData
+    Ignored:    analysis/.Rhistory
+    Ignored:    analysis/ALStruct_cache/
+    Ignored:    data/.Rhistory
+    Ignored:    data/methylation-data-for-matthew.rds
+    Ignored:    data/pbmc/
+    Ignored:    data/pbmc_purified.RData
+
+Untracked files:
+    Untracked:  .dropbox
+    Untracked:  GSE41037/
+    Untracked:  Icon
+    Untracked:  analysis/GHstan.Rmd
+    Untracked:  analysis/GTEX-cogaps.Rmd
+    Untracked:  analysis/PACS.Rmd
+    Untracked:  analysis/Rplot.png
+    Untracked:  analysis/SPCAvRP.rmd
+    Untracked:  analysis/abf_comparisons.Rmd
+    Untracked:  analysis/admm_02.Rmd
+    Untracked:  analysis/admm_03.Rmd
+    Untracked:  analysis/bispca.Rmd
+    Untracked:  analysis/cache/
+    Untracked:  analysis/cholesky.Rmd
+    Untracked:  analysis/compare-transformed-models.Rmd
+    Untracked:  analysis/cormotif.Rmd
+    Untracked:  analysis/cp_ash.Rmd
+    Untracked:  analysis/eQTL.perm.rand.pdf
+    Untracked:  analysis/eb_power2.Rmd
+    Untracked:  analysis/eb_prepilot.Rmd
+    Untracked:  analysis/eb_var.Rmd
+    Untracked:  analysis/ebpmf1.Rmd
+    Untracked:  analysis/ebpmf_sla_text.Rmd
+    Untracked:  analysis/ebspca_sims.Rmd
+    Untracked:  analysis/explore_psvd.Rmd
+    Untracked:  analysis/fa_check_identify.Rmd
+    Untracked:  analysis/fa_iterative.Rmd
+    Untracked:  analysis/fastica_heated.Rmd
+    Untracked:  analysis/flash_cov_overlapping_groups_init.Rmd
+    Untracked:  analysis/flash_test_tree.Rmd
+    Untracked:  analysis/flashier_newgroups.Rmd
+    Untracked:  analysis/flashier_nmf_triples.Rmd
+    Untracked:  analysis/flashier_pbmc.Rmd
+    Untracked:  analysis/flashier_snn_shifted_prior.Rmd
+    Untracked:  analysis/greedy_ebpmf_exploration_00.Rmd
+    Untracked:  analysis/ieQTL.perm.rand.pdf
+    Untracked:  analysis/lasso_em_03.Rmd
+    Untracked:  analysis/m6amash.Rmd
+    Untracked:  analysis/mash_bhat_z.Rmd
+    Untracked:  analysis/mash_ieqtl_permutations.Rmd
+    Untracked:  analysis/matrix_beta.Rmd
+    Untracked:  analysis/meth_flash_01.Rmd
+    Untracked:  analysis/methylation_example.Rmd
+    Untracked:  analysis/mixsqp.Rmd
+    Untracked:  analysis/mr.ash_lasso_init.Rmd
+    Untracked:  analysis/mr.mash.test.Rmd
+    Untracked:  analysis/mr_ash_modular.Rmd
+    Untracked:  analysis/mr_ash_parameterization.Rmd
+    Untracked:  analysis/mr_ash_ridge.Rmd
+    Untracked:  analysis/mv_gaussian_message_passing.Rmd
+    Untracked:  analysis/nejm.Rmd
+    Untracked:  analysis/nmf_bg.Rmd
+    Untracked:  analysis/nonneg_underapprox.Rmd
+    Untracked:  analysis/normal_conditional_on_r2.Rmd
+    Untracked:  analysis/normalize.Rmd
+    Untracked:  analysis/pbmc.Rmd
+    Untracked:  analysis/pca_binary_weighted.Rmd
+    Untracked:  analysis/pca_l1.Rmd
+    Untracked:  analysis/poisson_nmf_approx.Rmd
+    Untracked:  analysis/poisson_shrink.Rmd
+    Untracked:  analysis/poisson_transform.Rmd
+    Untracked:  analysis/qrnotes.txt
+    Untracked:  analysis/ridge_iterative_02.Rmd
+    Untracked:  analysis/ridge_iterative_splitting.Rmd
+    Untracked:  analysis/samps/
+    Untracked:  analysis/sc_bimodal.Rmd
+    Untracked:  analysis/shrinkage_comparisons_changepoints.Rmd
+    Untracked:  analysis/susie_cov.Rmd
+    Untracked:  analysis/susie_en.Rmd
+    Untracked:  analysis/susie_z_investigate.Rmd
+    Untracked:  analysis/svd-timing.Rmd
+    Untracked:  analysis/temp.RDS
+    Untracked:  analysis/temp.Rmd
+    Untracked:  analysis/test-figure/
+    Untracked:  analysis/test.Rmd
+    Untracked:  analysis/test.Rpres
+    Untracked:  analysis/test.md
+    Untracked:  analysis/test_qr.R
+    Untracked:  analysis/test_sparse.Rmd
+    Untracked:  analysis/tree_dist_top_eigenvector.Rmd
+    Untracked:  analysis/z.txt
+    Untracked:  code/coordinate_descent_symNMF.R
+    Untracked:  code/multivariate_testfuncs.R
+    Untracked:  code/rqb.hacked.R
+    Untracked:  data/4matthew/
+    Untracked:  data/4matthew2/
+    Untracked:  data/E-MTAB-2805.processed.1/
+    Untracked:  data/ENSG00000156738.Sim_Y2.RDS
+    Untracked:  data/GDS5363_full.soft.gz
+    Untracked:  data/GSE41265_allGenesTPM.txt
+    Untracked:  data/Muscle_Skeletal.ACTN3.pm1Mb.RDS
+    Untracked:  data/P.rds
+    Untracked:  data/Thyroid.FMO2.pm1Mb.RDS
+    Untracked:  data/bmass.HaemgenRBC2016.MAF01.Vs2.MergedDataSources.200kRanSubset.ChrBPMAFMarkerZScores.vs1.txt.gz
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.PreviousSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/eb_prepilot/
+    Untracked:  data/finemap_data/fmo2.sim/b.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/data
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.ld
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.z
+    Untracked:  data/finemap_data/fmo2.sim/pos.txt
+    Untracked:  data/logm.csv
+    Untracked:  data/m.cd.RDS
+    Untracked:  data/m.cdu.old.RDS
+    Untracked:  data/m.new.cd.RDS
+    Untracked:  data/m.old.cd.RDS
+    Untracked:  data/mainbib.bib.old
+    Untracked:  data/mat.csv
+    Untracked:  data/mat.txt
+    Untracked:  data/mat_new.csv
+    Untracked:  data/matrix_lik.rds
+    Untracked:  data/paintor_data/
+    Untracked:  data/running_data_chris.csv
+    Untracked:  data/running_data_matthew.csv
+    Untracked:  data/temp.txt
+    Untracked:  data/y.txt
+    Untracked:  data/y_f.txt
+    Untracked:  data/zscore_jointLCLs_m6AQTLs_susie_eQTLpruned.rds
+    Untracked:  data/zscore_jointLCLs_random.rds
+    Untracked:  explore_udi.R
+    Untracked:  output/fit.k10.rds
+    Untracked:  output/fit.nn.pbmc.purified.rds
+    Untracked:  output/fit.nn.rds
+    Untracked:  output/fit.nn.s.001.rds
+    Untracked:  output/fit.nn.s.01.rds
+    Untracked:  output/fit.nn.s.1.rds
+    Untracked:  output/fit.nn.s.10.rds
+    Untracked:  output/fit.snn.s.001.rds
+    Untracked:  output/fit.snn.s.01.nninit.rds
+    Untracked:  output/fit.snn.s.01.rds
+    Untracked:  output/fit.varbvs.RDS
+    Untracked:  output/fit2.nn.pbmc.purified.rds
+    Untracked:  output/glmnet.fit.RDS
+    Untracked:  output/snn07.txt
+    Untracked:  output/snn34.txt
+    Untracked:  output/test.bv.txt
+    Untracked:  output/test.gamma.txt
+    Untracked:  output/test.hyp.txt
+    Untracked:  output/test.log.txt
+    Untracked:  output/test.param.txt
+    Untracked:  output/test2.bv.txt
+    Untracked:  output/test2.gamma.txt
+    Untracked:  output/test2.hyp.txt
+    Untracked:  output/test2.log.txt
+    Untracked:  output/test2.param.txt
+    Untracked:  output/test3.bv.txt
+    Untracked:  output/test3.gamma.txt
+    Untracked:  output/test3.hyp.txt
+    Untracked:  output/test3.log.txt
+    Untracked:  output/test3.param.txt
+    Untracked:  output/test4.bv.txt
+    Untracked:  output/test4.gamma.txt
+    Untracked:  output/test4.hyp.txt
+    Untracked:  output/test4.log.txt
+    Untracked:  output/test4.param.txt
+    Untracked:  output/test5.bv.txt
+    Untracked:  output/test5.gamma.txt
+    Untracked:  output/test5.hyp.txt
+    Untracked:  output/test5.log.txt
+    Untracked:  output/test5.param.txt
+
+Unstaged changes:
+    Modified:   .gitignore
+    Modified:   analysis/eb_snmu.Rmd
+    Modified:   analysis/ebnm_binormal.Rmd
+    Modified:   analysis/ebpower.Rmd
+    Modified:   analysis/flashier_log1p.Rmd
+    Modified:   analysis/flashier_sla_text.Rmd
+    Modified:   analysis/logistic_z_scores.Rmd
+    Modified:   analysis/mr_ash_pen.Rmd
+    Modified:   analysis/nmu_em.Rmd
+    Modified:   analysis/susie_flash.Rmd
+    Modified:   analysis/tap_free_energy.Rmd
+    Modified:   misc.Rproj
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/fastica_skew.Rmd</code>) and HTML (<code>docs/fastica_skew.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/159d4665e5764959a1c9929fcce3673a317b8a0e/analysis/fastica_skew.Rmd" target="_blank">159d466</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-07-16
+</td>
+<td>
+Add tilted log-cosh FastICA analysis
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>This implements and tests the “Tilted Log-Cosh” (TLC) contrast function for FastICA, motivated by the paper <code>skew_fastICA.pdf</code>. The standard log-cosh contrast fails to detect highly skewed (sparse) binary sources because its expectation falls <em>below</em> the Gaussian baseline as <span class="math inline">\(p \to 0\)</span> or <span class="math inline">\(p \to 1\)</span>. The tilted version adds a <span class="math inline">\(\lambda z|z|\)</span> term:</p>
+<p><span class="math display">\[G(z) = \log(\cosh(z)) + \lambda z|z|\]</span></p>
+<p>with derivatives: <span class="math display">\[g(z) = \tanh(z) + 2\lambda|z|, \quad g&#39;(z) = 1 - \tanh^2(z) + 2\lambda \text{sign}(z)\]</span></p>
+<p>The odd term <span class="math inline">\(z|z|\)</span> has expectation <span class="math inline">\(2p-1\)</span> for a standardized binary source, so the tilted objective monotonically increases as <span class="math inline">\(p \to 1\)</span>, unlike log-cosh which peaks at <span class="math inline">\(p=0.5\)</span>.</p>
+</div>
+<div id="implementation" class="section level2">
+<h2>Implementation</h2>
+<pre class="r"><code># Standard log-cosh FastICA (single component, rank-1 update)
+fastica_r1update = function(X, w) {
+  w = w / sqrt(sum(w^2))
+  P = t(X) %*% w
+  G  = tanh(P)
+  G2 = 1 - tanh(P)^2
+  w  = X %*% G - mean(G2) * ncol(X) * w
+  w / sqrt(sum(w^2))
+}
+
+compute_objective = function(X, w) {
+  P = t(X) %*% w
+  mean(log(cosh(P)))
+}
+
+# Tilted log-cosh FastICA (single component)
+fastica_r1update_tlc = function(X, w, lambda = 1) {
+  w = w / sqrt(sum(w^2))
+  P = t(X) %*% w
+  G  = tanh(P) + 2 * lambda * abs(P)
+  G2 = 1 - tanh(P)^2 + 2 * lambda * sign(P)
+  w  = X %*% G - mean(G2) * ncol(X) * w
+  w / sqrt(sum(w^2))
+}
+
+compute_objective_tlc = function(X, w, lambda = 1) {
+  P = t(X) %*% w
+  mean(log(cosh(P)) + lambda * abs(P) * P)
+}
+
+prewhiten = function(X, n.comp) {
+  X = X - rowMeans(X)
+  sqrt(ncol(X)) * t(svd(X)$v[, 1:n.comp])
+}
+
+run_seeds = function(X, S_true, update_fn, obj_fn, n_seeds = 50, n_iter = 200, ...) {
+  obj    = numeric(n_seeds)
+  maxcor = numeric(n_seeds)
+  for (seed in seq_len(n_seeds)) {
+    set.seed(seed)
+    w = rnorm(nrow(X))
+    for (i in seq_len(n_iter))
+      w = update_fn(X, w, ...)
+    obj[seed]    = obj_fn(X, w, ...)
+    maxcor[seed] = max(abs(cor(t(S_true), t(X) %*% w)))
+  }
+  list(obj = obj, maxcor = maxcor)
+}</code></pre>
+</div>
+<div id="show-theoretical-motivation-log-cosh-fails-for-skewed-binary-sources" class="section level2">
+<h2>Show theoretical motivation: log-cosh fails for skewed binary sources</h2>
+<pre class="r"><code># E[log(cosh(z))] for a standardized binary source with P(x=-1)=p
+expected_logcosh = function(p) {
+  z_neg =  -sqrt((1 - p) / p)
+  z_pos =   sqrt(p / (1 - p))
+  p * log(cosh(z_neg)) + (1 - p) * log(cosh(z_pos))
+}
+
+expected_tlc = function(p, lambda = 1) {
+  expected_logcosh(p) + lambda * (2 * p - 1)
+}
+
+log_cosh_stable = function(z) abs(z) + log1p(exp(-2 * abs(z))) - log(2)
+gaussian_baseline = integrate(function(z) log_cosh_stable(z) * dnorm(z), -Inf, Inf)$value
+
+pvec = seq(0.01, 0.99, by = 0.01)
+lc  = sapply(pvec, expected_logcosh)
+tlc = sapply(pvec, expected_tlc)
+
+plot(pvec, lc, type = &quot;l&quot;, col = &quot;blue&quot;, ylim = range(c(lc, tlc)),
+     xlab = &quot;p (prob of -1)&quot;, ylab = &quot;E[G(z)]&quot;,
+     main = &quot;Log-cosh vs Tilted Log-Cosh for binary source&quot;)
+lines(pvec, tlc, col = &quot;red&quot;)
+abline(h = gaussian_baseline, lty = 2, col = &quot;gray&quot;)
+legend(&quot;bottomleft&quot;, c(&quot;log-cosh&quot;, &quot;tilted log-cosh (λ=1)&quot;, &quot;Gaussian baseline&quot;),
+       col = c(&quot;blue&quot;,&quot;red&quot;,&quot;gray&quot;), lty = c(1,1,2))</code></pre>
+<p><img src="figure/fastica_skew.Rmd/unnamed-chunk-2-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<p>Standard log-cosh falls below the Gaussian baseline for skewed sources. The tilted version increases monotonically toward the sparse extreme.</p>
+</div>
+<div id="test-1-symmetric-binary-source-k1-p0.5" class="section level2">
+<h2>Test 1: Symmetric binary source (k=1, p=0.5)</h2>
+<p>The simplest case: a single Rademacher source (-1 or +1 with equal probability). Both methods should work here since log-cosh peaks at p=0.5.</p>
+<pre class="r"><code>set.seed(10)
+n = 200
+p = 1000
+k = 1
+A = matrix(rnorm(p * k), nrow = p)
+S_rad = matrix(sample(c(-1, 1), n, replace = TRUE), nrow = 1)
+X_rad = A %*% S_rad
+Z_rad = sqrt(n) * t(svd(X_rad)$v[, 1:k, drop = FALSE])
+
+res_lc_rad  = run_seeds(Z_rad, S_rad, fastica_r1update,     compute_objective,     n_seeds = 50)
+res_tlc_rad = run_seeds(Z_rad, S_rad, fastica_r1update_tlc, compute_objective_tlc, n_seeds = 50)
+
+cat(&quot;log-cosh  : mean max|cor| =&quot;, round(mean(res_lc_rad$maxcor),  3),
+    &quot; fraction &gt; 0.9:&quot;, mean(res_lc_rad$maxcor  &gt; 0.9), &quot;\n&quot;)</code></pre>
+<pre><code>log-cosh  : mean max|cor| = 1  fraction &gt; 0.9: 1 </code></pre>
+<pre class="r"><code>cat(&quot;tilted lc : mean max|cor| =&quot;, round(mean(res_tlc_rad$maxcor), 3),
+    &quot; fraction &gt; 0.9:&quot;, mean(res_tlc_rad$maxcor &gt; 0.9), &quot;\n&quot;)</code></pre>
+<pre><code>tilted lc : mean max|cor| = 1  fraction &gt; 0.9: 1 </code></pre>
+</div>
+<div id="test-2-non-overlapping-groups-k4-p0.2-per-source" class="section level2">
+<h2>Test 2: Non-overlapping groups (k=4, p=0.2 per source)</h2>
+<p>Here we have 4 non-overlapping groups of 25 samples each in n=125, so each source is active for 20% of samples (p=0.2). We use n=125 rather than n=100 so that the 4 groups do not perfectly partition all samples — if every sample belongs to exactly one group, the centered data has rank k-1 rather than k, making the k-th whitened component the constant direction (which TLC is attracted to). With background samples this rank deficiency does not arise.</p>
+<pre class="r"><code>set.seed(1)
+n = 125
+p = 1000
+k = 4
+A = matrix(rnorm(p * k), nrow = p)
+S = matrix(0, nrow = k, ncol = n)
+S[1, 1:25]    = 1
+S[2, 26:50]   = 1
+S[3, 51:75]   = 1
+S[4, 76:100]  = 1
+X  = A %*% S
+Z  = prewhiten(X, k)
+
+res_lc  = run_seeds(Z, S, fastica_r1update,     compute_objective)
+res_tlc = run_seeds(Z, S, fastica_r1update_tlc, compute_objective_tlc)
+
+par(mfrow = c(1, 2))
+hist(res_lc$maxcor,  breaks = seq(0, 1, by = 0.05), main = &quot;log-cosh: max |cor| with true S&quot;,  xlab = &quot;&quot;)
+hist(res_tlc$maxcor, breaks = seq(0, 1, by = 0.05), main = &quot;tilted log-cosh: max |cor| with true S&quot;, xlab = &quot;&quot;)</code></pre>
+<p><img src="figure/fastica_skew.Rmd/unnamed-chunk-4-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>par(mfrow = c(1, 1))</code></pre>
+<p>Best and worst seeds for tilted log-cosh on Test 2:</p>
+<pre class="r"><code>get_projection = function(X, seed, update_fn, n_iter = 200, ...) {
+  set.seed(seed)
+  w = rnorm(nrow(X))
+  for (i in seq_len(n_iter))
+    w = update_fn(X, w, ...)
+  as.vector(t(X) %*% w)
+}
+
+best_seed  = which.max(res_tlc$maxcor)
+worst_seed = which.min(res_tlc$maxcor)
+
+proj_best  = get_projection(Z, best_seed,  fastica_r1update_tlc)
+proj_worst = get_projection(Z, worst_seed, fastica_r1update_tlc)
+
+par(mfrow = c(1, 2))
+plot(proj_best,  main = paste0(&quot;TLC best seed (&quot;, best_seed, &quot;), max|cor|=&quot;,
+     round(res_tlc$maxcor[best_seed], 3)), xlab = &quot;sample&quot;, ylab = &quot;projection&quot;)
+plot(proj_worst, main = paste0(&quot;TLC worst seed (&quot;, worst_seed, &quot;), max|cor|=&quot;,
+     round(res_tlc$maxcor[worst_seed], 3)), xlab = &quot;sample&quot;, ylab = &quot;projection&quot;)</code></pre>
+<p><img src="figure/fastica_skew.Rmd/unnamed-chunk-5-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>par(mfrow = c(1, 1))</code></pre>
+</div>
+<div id="test-3-sparse-binary-sources-p0.2" class="section level2">
+<h2>Test 3: Sparse binary sources (p=0.2)</h2>
+<p>Here the true source takes value 1 with probability 0.2. From the theoretical plot, p=0.2 is near where E[log(cosh(z))] dips furthest below the Gaussian baseline, so this should be a harder case for standard log-cosh than p=0.5.</p>
+<pre class="r"><code>set.seed(2)
+n   = 500
+p   = 1000
+k   = 4
+prob_active = 0.2  # 20% of samples are &quot;on&quot; per source
+
+A = matrix(rnorm(p * k), nrow = p)
+S_sparse = matrix(0, nrow = k, ncol = n)
+for (j in 1:k)
+  S_sparse[j, sample(n, round(prob_active * n))] = 1
+
+X_sp = A %*% S_sparse
+Z_sp = prewhiten(X_sp, k)
+
+res_lc_sp  = run_seeds(Z_sp, S_sparse, fastica_r1update,     compute_objective,     n_seeds = 100)
+res_tlc_sp = run_seeds(Z_sp, S_sparse, fastica_r1update_tlc, compute_objective_tlc, n_seeds = 100)
+
+cat(&quot;log-cosh:    mean max|cor| =&quot;, round(mean(res_lc_sp$maxcor),  3),
+    &quot; fraction &gt; 0.9:&quot;, mean(res_lc_sp$maxcor  &gt; 0.9), &quot;\n&quot;)</code></pre>
+<pre><code>log-cosh:    mean max|cor| = 0.724  fraction &gt; 0.9: 0.07 </code></pre>
+<pre class="r"><code>cat(&quot;tilted lc:   mean max|cor| =&quot;, round(mean(res_tlc_sp$maxcor), 3),
+    &quot; fraction &gt; 0.9:&quot;, mean(res_tlc_sp$maxcor &gt; 0.9), &quot;\n&quot;)</code></pre>
+<pre><code>tilted lc:   mean max|cor| = 1  fraction &gt; 0.9: 1 </code></pre>
+<pre class="r"><code>par(mfrow = c(1, 2))
+hist(res_lc_sp$maxcor,  breaks = seq(0, 1, by = 0.05),
+     main = &quot;log-cosh: sparse binary source&quot;,    xlab = &quot;max |cor| with true S&quot;)
+hist(res_tlc_sp$maxcor, breaks = seq(0, 1, by = 0.05),
+     main = &quot;tilted log-cosh: sparse binary source&quot;, xlab = &quot;max |cor| with true S&quot;)</code></pre>
+<p><img src="figure/fastica_skew.Rmd/unnamed-chunk-6-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>par(mfrow = c(1, 1))</code></pre>
+</div>
+<div id="multi-component-extraction-via-deflation" class="section level2">
+<h2>Multi-component extraction via deflation</h2>
+<p>To extract <span class="math inline">\(k\)</span> components we use deflation: find one component at a time, then project it out of the weight space before searching for the next. Specifically, after finding weight vector <span class="math inline">\(w_1\)</span>, the next search is restricted to vectors orthogonal to <span class="math inline">\(w_1\)</span> by subtracting the projection onto <span class="math inline">\(w_1\)</span> after each update. This ensures each extracted component is distinct. We use multiple random starts per component and keep the one with the highest objective value.</p>
+<pre class="r"><code>fastica_deflation = function(X, k, update_fn, obj_fn, n_iter = 200, n_starts = 5, ...) {
+  W = matrix(0, nrow(X), k)
+  for (comp in seq_len(k)) {
+    best_obj = -Inf
+    best_w   = NULL
+    for (s in seq_len(n_starts)) {
+      set.seed(s + comp * 1000)
+      w = rnorm(nrow(X))
+      # project out already-found components
+      if (comp &gt; 1)
+        w = w - W[, 1:(comp-1), drop=FALSE] %*% (t(W[, 1:(comp-1), drop=FALSE]) %*% w)
+      w = w / sqrt(sum(w^2))
+      for (i in seq_len(n_iter)) {
+        w = update_fn(X, w, ...)
+        # deflate
+        if (comp &gt; 1)
+          w = w - W[, 1:(comp-1), drop=FALSE] %*% (t(W[, 1:(comp-1), drop=FALSE]) %*% w)
+        w = w / sqrt(sum(w^2))
+      }
+      o = obj_fn(X, w, ...)
+      if (o &gt; best_obj) { best_obj = o; best_w = w }
+    }
+    W[, comp] = best_w
+  }
+  W
+}
+
+# Extract 4 components on the sparse simulation
+W_lc  = fastica_deflation(Z_sp, k, fastica_r1update,     compute_objective)
+W_tlc = fastica_deflation(Z_sp, k, fastica_r1update_tlc, compute_objective_tlc)
+
+cor_lc  = cor(t(S_sparse), t(Z_sp) %*% W_lc)
+cor_tlc = cor(t(S_sparse), t(Z_sp) %*% W_tlc)
+
+cat(&quot;log-cosh deflation — max |cor| per true source:\n&quot;)</code></pre>
+<pre><code>log-cosh deflation &lt;U+2014&gt; max |cor| per true source:</code></pre>
+<pre class="r"><code>print(round(apply(abs(cor_lc),  1, max), 3))</code></pre>
+<pre><code>[1] 0.712 1.000 0.710 0.992</code></pre>
+<pre class="r"><code>cat(&quot;tilted log-cosh deflation — max |cor| per true source:\n&quot;)</code></pre>
+<pre><code>tilted log-cosh deflation &lt;U+2014&gt; max |cor| per true source:</code></pre>
+<pre class="r"><code>print(round(apply(abs(cor_tlc), 1, max), 3))</code></pre>
+<pre><code>[1] 0.997 0.998 1.000 1.000</code></pre>
+</div>
+<div id="test-4-9-overlapping-groups-20-members-each-n100" class="section level2">
+<h2>Test 4: 9 overlapping groups, 20 members each, n=100</h2>
+<p>Here each source is active for 20 out of 100 samples (p=0.2), and groups can overlap. This is harder than the non-overlapping case and matches the simulation from the original file. We use deflation to extract all 9 components.</p>
+<pre class="r"><code>set.seed(1)
+n = 100
+p = 1000
+K = 9
+L = matrix(0, nrow = n, ncol = K)
+for (i in 1:K) L[sample(n, 20), i] = 1
+FF = matrix(rnorm(p * K), nrow = p, ncol = K)
+X9 = t(L %*% t(FF) + rnorm(n * p, 0, 0.01))  # p x n
+Z9 = prewhiten(X9, K)
+
+W9_lc  = fastica_deflation(Z9, K, fastica_r1update,     compute_objective,     n_starts = 10)
+W9_tlc = fastica_deflation(Z9, K, fastica_r1update_tlc, compute_objective_tlc, n_starts = 10)
+
+cor9_lc  = cor(L, t(Z9) %*% W9_lc)
+cor9_tlc = cor(L, t(Z9) %*% W9_tlc)
+
+cat(&quot;log-cosh — max |cor| per true source:\n&quot;)</code></pre>
+<pre><code>log-cosh &lt;U+2014&gt; max |cor| per true source:</code></pre>
+<pre class="r"><code>print(round(apply(abs(cor9_lc),  2, max), 3))</code></pre>
+<pre><code>[1] 0.576 0.619 0.721 0.567 0.531 0.551 0.862 0.897 0.482</code></pre>
+<pre class="r"><code>cat(&quot;tilted log-cosh — max |cor| per true source:\n&quot;)</code></pre>
+<pre><code>tilted log-cosh &lt;U+2014&gt; max |cor| per true source:</code></pre>
+<pre class="r"><code>print(round(apply(abs(cor9_tlc), 2, max), 3))</code></pre>
+<pre><code>[1] 1.000 1.000 1.000 0.996 0.996 0.992 0.972 0.966 0.954</code></pre>
+</div>
+<div id="summary" class="section level2">
+<h2>Summary</h2>
+<p>The tilted log-cosh contrast G(z) = log(cosh(z)) + λz|z| addresses the fundamental failure of standard log-cosh for sparse binary sources. The odd term z|z| has expectation 2p−1, so sparse sources (p→1) score highly rather than falling below the Gaussian baseline.</p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.4.2 (2024-10-31)
+Platform: aarch64-apple-darwin20
+Running under: macOS 26.5.2
+
+Matrix products: default
+BLAS:   /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libBLAS.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.0
+
+locale:
+[1] C
+
+time zone: America/Detroit
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+ [1] vctrs_0.7.2     cli_3.6.5       knitr_1.51      rlang_1.1.7    
+ [5] xfun_0.56       stringi_1.8.7   otel_0.2.0      promises_1.5.0 
+ [9] jsonlite_2.0.0  workflowr_1.7.2 glue_1.8.0      rprojroot_2.1.1
+[13] git2r_0.36.2    htmltools_0.5.9 httpuv_1.6.16   sass_0.4.10    
+[17] rmarkdown_2.30  evaluate_1.0.5  jquerylib_0.1.4 tibble_3.3.1   
+[21] fastmap_1.2.0   yaml_2.3.12     lifecycle_1.0.5 whisker_0.4.1  
+[25] stringr_1.6.0   compiler_4.4.2  fs_1.6.6        Rcpp_1.1.1     
+[29] pkgconfig_2.0.3 later_1.4.6     digest_0.6.39   R6_2.6.1       
+[33] pillar_1.11.1   magrittr_2.0.4  bslib_0.10.0    tools_4.4.2    
+[37] cachem_1.1.0   </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
