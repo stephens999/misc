@@ -356,7 +356,7 @@ div.tocify {
 
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
-<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 </button>
 </p>
 <div id="workflowr-report" class="collapse">
@@ -365,7 +365,7 @@ div.tocify {
 <a data-toggle="tab" href="#summary">Summary</a>
 </li>
 <li>
-<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -377,7 +377,7 @@ div.tocify {
 <strong>Last updated:</strong> 2026-07-16
 </p>
 <p>
-<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
 </p>
 <p>
 <strong>Knit directory:</strong> <code>misc/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
@@ -393,12 +393,12 @@ This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a> analysi
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
 <div class="panel-body">
-<p>The R Markdown is untracked by Git. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
 </div>
 </div>
 </div>
@@ -465,16 +465,16 @@ This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a> analysi
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreee64a684dec45efa191bc54cdbc4e46970438fbf2targetblanke64a684a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/e64a684dec45efa191bc54cdbc4e46970438fbf2" target="_blank">e64a684</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreec9c23dd84301de0d8dd12a3af864b571e36c71f0targetblankc9c23dda"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/c9c23dd84301de0d8dd12a3af864b571e36c71f0" target="_blank">c9c23dd</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreee64a684dec45efa191bc54cdbc4e46970438fbf2targetblanke64a684a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreec9c23dd84301de0d8dd12a3af864b571e36c71f0targetblankc9c23dda" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/e64a684dec45efa191bc54cdbc4e46970438fbf2" target="_blank">e64a684</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/c9c23dd84301de0d8dd12a3af864b571e36c71f0" target="_blank">c9c23dd</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -523,7 +523,6 @@ Untracked files:
     Untracked:  analysis/fa_check_identify.Rmd
     Untracked:  analysis/fa_iterative.Rmd
     Untracked:  analysis/fastica_heated.Rmd
-    Untracked:  analysis/fastica_nonwhitened.Rmd
     Untracked:  analysis/fastica_unwhitened.Rmd
     Untracked:  analysis/flash_cov_overlapping_groups_init.Rmd
     Untracked:  analysis/flash_test_tree.Rmd
@@ -693,23 +692,123 @@ Note that any generated files, e.g. HTML, png, CSS, etc., are not included in t
 <hr>
 </div>
 <div id="versions" class="tab-pane fade">
+
 <p>
-There are no past versions. Publish this analysis with <code>wflow_publish()</code> to start tracking its development.
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/fastica_nonwhitened.Rmd</code>) and HTML (<code>docs/fastica_nonwhitened.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
 </p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c9c23dd84301de0d8dd12a3af864b571e36c71f0/analysis/fastica_nonwhitened.Rmd" target="_blank">c9c23dd</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-07-16
+</td>
+<td>
+Correct Newton update, rewrite introduction for exact equivariance
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/3341f0790254bb18de29a8e58fedbf64510424ef/analysis/fastica_nonwhitened.Rmd" target="_blank">3341f07</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-07-16
+</td>
+<td>
+Add fastica_nonwhitened.Rmd: FastICA for non-whitened data
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/3341f0790254bb18de29a8e58fedbf64510424ef/docs/fastica_nonwhitened.html" target="_blank">3341f07</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-07-16
+</td>
+<td>
+Add fastica_nonwhitened.Rmd: FastICA for non-whitened data
+</td>
+</tr>
+</tbody>
+</table>
+</div>
 <hr>
 </div>
 </div>
 </div>
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
-<p>Standard FastICA pre-whitens data: given <span class="math inline">\(X\)</span> (<span class="math inline">\(p \times n\)</span>) with thin SVD <span class="math inline">\(X = UDV&#39;\)</span>, it sets <span class="math inline">\(Z = \sqrt{n}\,V&#39;\)</span> (<span class="math inline">\(k \times n\)</span>) and maximizes <span class="math inline">\(E[G(w&#39;z)]\)</span> subject to <span class="math inline">\(\|w\|^2 = 1\)</span>. The constraint <span class="math inline">\(\|w\|^2 = 1\)</span> is equivalent to <span class="math inline">\(E[(w&#39;z)^2] = n\)</span> because <span class="math inline">\(ZZ&#39; = nI_k\)</span> for whitened data.</p>
-<p>Here we skip the whitening step and instead work with <span class="math display">\[Z = DV&#39; \qquad (k \times n),\]</span> so that <span class="math inline">\(ZZ&#39; = D^2\)</span>. The natural constraint to keep evaluation scale-free is <span class="math display">\[w&#39;D^2 w = n,\]</span> which again enforces <span class="math inline">\(E[(w&#39;z)^2] = n\)</span>. The FastICA fixed-point update itself is unchanged; only the normalization step changes from <span class="math inline">\(w \leftarrow w/\|w\|\)</span> to <span class="math inline">\(w \leftarrow w\sqrt{n}/\sqrt{w&#39;D^2 w}\)</span>.</p>
+<div id="standard-whitened-fastica" class="section level3">
+<h3>Standard whitened FastICA</h3>
+<p>Given <span class="math inline">\(X\)</span> (<span class="math inline">\(p \times n\)</span>) with thin SVD <span class="math inline">\(X = UDV&#39;\)</span>, standard FastICA pre-whitens by setting <span class="math inline">\(Z_{\text{wh}} = \sqrt{n}\,V&#39;\)</span> (<span class="math inline">\(k \times n\)</span>), so that the sample covariance <span class="math inline">\(E[zz&#39;] = I_k\)</span>. It maximises <span class="math inline">\(E[G(w&#39;z)]\)</span> subject to <span class="math inline">\(\|w\|^2 = 1\)</span> (equivalently <span class="math inline">\(E[(w&#39;z)^2] = 1\)</span>). Because the covariance is the identity, the Newton fixed-point update requires no matrix inversion: <span class="math display">\[w \leftarrow E[z\,g(w&#39;z)] - E[g&#39;(w&#39;z)]\,w, \qquad
+  w \leftarrow w/\|w\|.\]</span></p>
+</div>
+<div id="non-whitened-fastica" class="section level3">
+<h3>Non-whitened FastICA</h3>
+<p>We instead work with <span class="math display">\[Z = DV&#39; \quad (k \times n), \qquad
+  C = E[zz&#39;] = \tfrac{1}{n}D^2.\]</span> The scale-free constraint is <span class="math inline">\(E[(w&#39;z)^2] = 1\)</span>, i.e. <span class="math inline">\(w&#39;Cw = 1\)</span>, i.e.<br />
+<span class="math inline">\(w&#39;D^2w = n\)</span>. The Newton update for a constrained problem with non-identity covariance requires left-multiplying the gradient by <span class="math inline">\(C^{-1} = nD^{-2}\)</span>: <span class="math display">\[w \leftarrow C^{-1}E[z\,g(w&#39;z)] - E[g&#39;(w&#39;z)]\,w
+  = nD^{-2}E[z\,g(w&#39;z)] - E[g&#39;(w&#39;z)]\,w, \qquad
+  w \leftarrow w\sqrt{n}/\sqrt{w&#39;D^2 w}.\]</span> In code, since <span class="math inline">\(Z\mathbf{g}/n = E[zg(w&#39;z)]\)</span>, the term <span class="math inline">\(nD^{-2}E[zg]\)</span> is computed as <code>(Z %*% G) / diag(D2)</code> (elementwise division by <span class="math inline">\(d_i^2\)</span>).</p>
+</div>
+<div id="exact-equivariance" class="section level3">
+<h3>Exact equivariance</h3>
+<p>The two algorithms are <strong>exactly equivariant</strong> under the linear map <span class="math display">\[w_{\text{wh}} = C^{1/2}w = \tfrac{1}{\sqrt{n}}Dw, \qquad
+  w_{\text{nw}} = C^{-1/2}w_{\text{wh}} = \sqrt{n}D^{-1}w_{\text{wh}},\]</span> which preserves projections: <span class="math inline">\(w_{\text{wh}}&#39;z_{\text{wh}} = w_{\text{nw}}&#39;z_{\text{nw}}\)</span>.</p>
+<p><strong>Proof.</strong> Substitute <span class="math inline">\(z_{\text{wh}} = C^{-1/2}z = \sqrt{n}D^{-1}z\)</span> and <span class="math inline">\(w_{\text{wh}} = C^{1/2}w_{\text{nw}} = \tfrac{D}{\sqrt{n}}w_{\text{nw}}\)</span> into the whitened update: <span class="math display">\[\tfrac{D}{\sqrt{n}}\,w^+ =
+  E\!\left[\sqrt{n}D^{-1}z\cdot g(w&#39;z)\right] - E[g&#39;]\,\tfrac{D}{\sqrt{n}}w
+  = \sqrt{n}D^{-1}E[zg(w&#39;z)] - E[g&#39;]\tfrac{D}{\sqrt{n}}w.\]</span> Left-multiplying by <span class="math inline">\(\tfrac{\sqrt{n}}{D} = \sqrt{n}D^{-1}\)</span> recovers exactly the non-whitened update: <span class="math display">\[w^+ = nD^{-2}E[zg(w&#39;z)] - E[g&#39;]\,w. \qquad \checkmark\]</span> The normalisation steps also correspond: <span class="math inline">\(\|w_{\text{wh}}\|=1 \Leftrightarrow w_{\text{nw}}&#39;D^2w_{\text{nw}} = n\)</span>. Therefore the two iterations trace <strong>identical trajectories</strong> at every step, and have the same fixed points with the same stability.</p>
+</div>
+<div id="why-non-whitened-outperforms-whitened-in-practice" class="section level3">
+<h3>Why non-whitened outperforms whitened in practice</h3>
+<p>The dynamics are identical given <em>corresponding</em> initialisations, but a <strong>random</strong> <span class="math inline">\(w_{\text{nw}}\)</span> does not correspond to a random <span class="math inline">\(w_{\text{wh}}\)</span>. From a random <span class="math inline">\(w_{\text{nw}}\)</span>, the equivalent whitened start is <span class="math display">\[w_{\text{wh}} \propto \tfrac{D}{\sqrt{n}}w_{\text{nw}},\]</span> which is biased toward large-<span class="math inline">\(d_i\)</span> (signal) directions. Whitened FastICA starts from a uniformly random direction on the <span class="math inline">\(k\)</span>-sphere, giving only a <span class="math inline">\(\sim k_{\text{true}}/k\)</span> chance of landing near the signal subspace.</p>
+<p>In other words: the non-whitened parameterisation gives every random start an implicit warm start toward the signal, without changing the algorithm’s fixed-point structure at all.</p>
+</div>
 </div>
 <div id="motivation-robustness-to-the-number-of-pcs" class="section level2">
 <h2>Motivation: robustness to the number of PCs</h2>
-<p>In practice we do not know how many independent components are present. Standard whitening requires a hard choice of <span class="math inline">\(k\)</span>: too small and we miss components, too large and we include pure-noise PCs. The problem with whitening is that all <span class="math inline">\(k\)</span> retained PCs are placed on equal footing — the noise PCs get the same unit variance as the signal PCs. This can overwhelm the signal when <span class="math inline">\(k\)</span> is much larger than the true number of components.</p>
-<p>With the non-whitened approach the <span class="math inline">\(k\)</span> PCs enter with their original singular values <span class="math inline">\(d_1 \ge d_2 \ge \cdots \ge d_k\)</span>. Signal PCs have large <span class="math inline">\(d_i\)</span>; excess noise PCs have small <span class="math inline">\(d_i\)</span> and therefore small weight in the objective. The constraint <span class="math inline">\(w&#39;D^2 w = n\)</span> automatically concentrates <span class="math inline">\(w\)</span> on the high-variance directions, so inflating <span class="math inline">\(k\)</span> adds far less noise than in the whitened case.</p>
-<p>To test this we use <span class="math inline">\(k = 20\)</span> PCs for all experiments below, even though the true number of sources is smaller (1, 4, or 9). We expect whitened FastICA to degrade noticeably with the extra noise PCs, while non-whitened FastICA should remain robust.</p>
+<p>In practice we do not know how many independent components are present. Standard whitening requires a hard choice of <span class="math inline">\(k\)</span>: too small and we miss components, too large and we include pure-noise PCs. Whitening places all <span class="math inline">\(k\)</span> PCs on equal footing, so inflating <span class="math inline">\(k\)</span> adds pure-noise directions that are equally likely starting points for the iteration.</p>
+<p>The non-whitened parameterisation’s random initialisation is naturally biased toward high-variance (signal) PCs, so extra noise PCs cause much less harm. We test this by using <span class="math inline">\(k = 20\)</span> PCs throughout, even when the true number of sources is 1, 4, or 9.</p>
 </div>
 <div id="implementation" class="section level2">
 <h2>Implementation</h2>
@@ -767,7 +866,7 @@ fastica_r1update_nw = function(Z, D2, w) {
   P  = t(Z) %*% w
   G  = tanh(P)
   G2 = 1 - tanh(P)^2
-  w  = Z %*% G - mean(G2) * n * w
+  w  = (Z %*% G) / diag(D2) - mean(G2) * w   # n * D2^{-1} %*% E[zg] - E[g&#39;] * w
   normalize_nw(w, D2, n)
 }
 
@@ -777,7 +876,7 @@ fastica_r1update_nw_tlc = function(Z, D2, w, lambda = 1) {
   P  = t(Z) %*% w
   G  = tanh(P) + 2 * lambda * abs(P)
   G2 = 1 - tanh(P)^2 + 2 * lambda * sign(P)
-  w  = Z %*% G - mean(G2) * n * w
+  w  = (Z %*% G) / diag(D2) - mean(G2) * w
   normalize_nw(w, D2, n)
 }
 
@@ -845,6 +944,43 @@ plot(sv_rad$d[1:k_pca], type = &quot;b&quot;, pch = 19, cex = 0.7,
 abline(v = k_true + 0.5, lty = 2, col = &quot;red&quot;)
 legend(&quot;topright&quot;, &quot;true k&quot;, lty = 2, col = &quot;red&quot;)</code></pre>
 <p><img src="figure/fastica_nonwhitened.Rmd/unnamed-chunk-2-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-1">
+Past versions of unnamed-chunk-2-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/3341f0790254bb18de29a8e58fedbf64510424ef/docs/figure/fastica_nonwhitened.Rmd/unnamed-chunk-2-1.png" target="_blank">3341f07</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-07-16
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>The first singular value is much larger than the rest, which are pure noise. Whitening would equalise all 20; non-whitening keeps this gap intact.</p>
 </div>
 <div id="single-seed-detailed-comparison" class="section level3">
@@ -877,7 +1013,7 @@ cat(&quot;whitened  log-cosh: obj =&quot;, round(r_wh_lc$obj,  4),
 <pre><code>nonwhiten log-cosh: obj = 0.4334   max|cor| = 1 </code></pre>
 <pre class="r"><code>cat(&quot;nonwhiten TLC:      obj =&quot;, round(r_nw_tlc$obj, 4),
     &quot;  max|cor| =&quot;, round(max(abs(cor(as.vector(S_rad), r_nw_tlc$proj))), 3), &quot;\n&quot;)</code></pre>
-<pre><code>nonwhiten TLC:      obj = 0.3834   max|cor| = 1 </code></pre>
+<pre><code>nonwhiten TLC:      obj = 0.6743   max|cor| = 0.201 </code></pre>
 </div>
 <div id="projections-wz" class="section level3">
 <h3>Projections w’z</h3>
@@ -897,11 +1033,112 @@ plot_proj(r_wh_tlc$proj, &quot;whitened TLC&quot;)
 plot_proj(r_nw_lc$proj,  &quot;nonwhitened log-cosh&quot;)
 plot_proj(r_nw_tlc$proj, &quot;nonwhitened TLC&quot;)</code></pre>
 <p><img src="figure/fastica_nonwhitened.Rmd/unnamed-chunk-4-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-1">
+Past versions of unnamed-chunk-4-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/3341f0790254bb18de29a8e58fedbf64510424ef/docs/figure/fastica_nonwhitened.Rmd/unnamed-chunk-4-1.png" target="_blank">3341f07</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-07-16
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>par(mfrow = c(1, 1))</code></pre>
 <p>Samples are sorted by true source value (+1 = red, -1 = blue). A good recovery shows two clearly separated bands.</p>
 </div>
-<div id="many-seeds" class="section level3">
-<h3>Many seeds</h3>
+<div id="do-the-two-methods-share-fixed-points" class="section level3">
+<h3>Do the two methods share fixed points?</h3>
+<p>If the two iterations have the same fixed points, then initialising each method from the other’s converged solution should leave it unchanged. We run 50 seeds, converge each method independently, then continue iterating from the other’s solution and check whether the projection changes.</p>
+<pre class="r"><code>n_seeds_cross = 50
+results_cross = data.frame(
+  seed        = seq_len(n_seeds_cross),
+  wh_maxcor   = NA_real_,   # whitened from random start
+  nw_maxcor   = NA_real_,   # nonwhitened from random start
+  wh_from_nw  = NA_real_,   # whitened continued from nonwhitened solution
+  nw_from_wh  = NA_real_    # nonwhitened continued from whitened solution
+)
+
+for (seed in seq_len(n_seeds_cross)) {
+  set.seed(seed)
+  w0 = rnorm(k_pca)
+
+  # converge whitened
+  w_wh = w0
+  for (i in seq_len(2000)) w_wh = fastica_r1update(Z_rad, w_wh)
+
+  # converge nonwhitened
+  w_nw = w0
+  for (i in seq_len(2000)) w_nw = update_nw(nw_rad, w_nw)
+
+  # continue whitened from nonwhitened solution
+  w_wh_from_nw = w_nw
+  for (i in seq_len(2000)) w_wh_from_nw = fastica_r1update(Z_rad, w_wh_from_nw)
+
+  # continue nonwhitened from whitened solution
+  w_nw_from_wh = w_wh
+  for (i in seq_len(2000)) w_nw_from_wh = update_nw(nw_rad, w_nw_from_wh)
+
+  # correct transformation: u = D*w_nw = sqrt(n)*w_wh
+  # so w_nw = sqrt(n)*w_wh/d  and  w_wh = d*w_nw/sqrt(n)
+  d_rad = sv_rad$d[1:k_pca]
+  w_wh_from_nw = d_rad * w_nw / sqrt(n)
+  for (i in seq_len(2000)) w_wh_from_nw = fastica_r1update(Z_rad, w_wh_from_nw)
+
+  w_nw_from_wh = sqrt(n) * w_wh / d_rad
+  for (i in seq_len(2000)) w_nw_from_wh = update_nw(nw_rad, w_nw_from_wh)
+
+  mc    = function(w) max(abs(cor(as.vector(S_rad), as.vector(t(Z_rad)    %*% w))))
+  mc_nw = function(w) max(abs(cor(as.vector(S_rad), as.vector(t(nw_rad$Z) %*% w))))
+
+  results_cross[seed, &quot;wh_maxcor&quot;]  = mc(w_wh)
+  results_cross[seed, &quot;nw_maxcor&quot;]  = mc_nw(w_nw)
+  results_cross[seed, &quot;wh_from_nw&quot;] = mc(w_wh_from_nw)
+  results_cross[seed, &quot;nw_from_wh&quot;] = mc_nw(w_nw_from_wh)
+}
+
+cat(&quot;Whitened from random start:          mean max|cor| =&quot;,
+    round(mean(results_cross$wh_maxcor),  3), &quot;\n&quot;)</code></pre>
+<pre><code>Whitened from random start:          mean max|cor| = 0.176 </code></pre>
+<pre class="r"><code>cat(&quot;Nonwhitened from random start:       mean max|cor| =&quot;,
+    round(mean(results_cross$nw_maxcor),  3), &quot;\n&quot;)</code></pre>
+<pre><code>Nonwhitened from random start:       mean max|cor| = 0.967 </code></pre>
+<pre class="r"><code>cat(&quot;Whitened init&#39;d from NW solution:    mean max|cor| =&quot;,
+    round(mean(results_cross$wh_from_nw), 3), &quot;\n&quot;)</code></pre>
+<pre><code>Whitened init&#39;d from NW solution:    mean max|cor| = 0.967 </code></pre>
+<pre class="r"><code>cat(&quot;Nonwhitened init&#39;d from WH solution: mean max|cor| =&quot;,
+    round(mean(results_cross$nw_from_wh), 3), &quot;\n&quot;)</code></pre>
+<pre><code>Nonwhitened init&#39;d from WH solution: mean max|cor| = 0.176 </code></pre>
+<p>If the methods share fixed points, “whitened init’d from NW solution” should stay at the NW solution (high max|cor|), and “nonwhitened init’d from WH solution” should stay at the WH solution (low max|cor| for failing seeds). If they do <em>not</em> share fixed points, each will move away from the other’s solution.</p>
+</div>
+<div id="many-seeds-200-iterations" class="section level3">
+<h3>Many seeds (200 iterations)</h3>
 <pre class="r"><code>res_wh_lc  = run_seeds(Z_rad,  S_rad, fastica_r1update,     compute_objective)
 res_wh_tlc = run_seeds(Z_rad,  S_rad, fastica_r1update_tlc, compute_objective_tlc, lambda = 1)
 res_nw_lc  = run_seeds(nw_rad, S_rad, update_nw,            obj_nw)
@@ -915,10 +1152,10 @@ cat(&quot;whitened  log-cosh: mean max|cor| =&quot;, round(mean(res_wh_lc$maxcor
 <pre><code>whitened  TLC:      mean max|cor| = 0.11  frac &gt; 0.9: 0 </code></pre>
 <pre class="r"><code>cat(&quot;nonwhiten log-cosh: mean max|cor| =&quot;, round(mean(res_nw_lc$maxcor),  3),
     &quot; frac &gt; 0.9:&quot;, mean(res_nw_lc$maxcor  &gt; 0.9), &quot;\n&quot;)</code></pre>
-<pre><code>nonwhiten log-cosh: mean max|cor| = 1  frac &gt; 0.9: 1 </code></pre>
+<pre><code>nonwhiten log-cosh: mean max|cor| = 0.967  frac &gt; 0.9: 0.96 </code></pre>
 <pre class="r"><code>cat(&quot;nonwhiten TLC:      mean max|cor| =&quot;, round(mean(res_nw_tlc$maxcor), 3),
     &quot; frac &gt; 0.9:&quot;, mean(res_nw_tlc$maxcor &gt; 0.9), &quot;\n&quot;)</code></pre>
-<pre><code>nonwhiten TLC:      mean max|cor| = 1  frac &gt; 0.9: 1 </code></pre>
+<pre><code>nonwhiten TLC:      mean max|cor| = 0.189  frac &gt; 0.9: 0 </code></pre>
 </div>
 </div>
 <div id="test-2-non-overlapping-groups-4-true-sources-20-pcs" class="section level2">
@@ -944,13 +1181,50 @@ hist(res_wh_lc$maxcor,  breaks = seq(0, 1, by = 0.05), main = &quot;whitened log
 hist(res_wh_tlc$maxcor, breaks = seq(0, 1, by = 0.05), main = &quot;whitened TLC&quot;,         xlab = &quot;max |cor|&quot;)
 hist(res_nw_lc$maxcor,  breaks = seq(0, 1, by = 0.05), main = &quot;nonwhitened log-cosh&quot;, xlab = &quot;max |cor|&quot;)
 hist(res_nw_tlc$maxcor, breaks = seq(0, 1, by = 0.05), main = &quot;nonwhitened TLC&quot;,      xlab = &quot;max |cor|&quot;)</code></pre>
-<p><img src="figure/fastica_nonwhitened.Rmd/unnamed-chunk-6-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/fastica_nonwhitened.Rmd/unnamed-chunk-7-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-7-1">
+Past versions of unnamed-chunk-7-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-7-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/3341f0790254bb18de29a8e58fedbf64510424ef/docs/figure/fastica_nonwhitened.Rmd/unnamed-chunk-7-1.png" target="_blank">3341f07</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-07-16
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>par(mfrow = c(1, 1))</code></pre>
 </div>
 <div id="test-3-sparse-binary-sources-4-true-sources-p0.2-20-pcs" class="section level2">
 <h2>Test 3: Sparse binary sources (4 true sources, p=0.2, 20 PCs)</h2>
 <pre class="r"><code>set.seed(2)
-n = 500; p = 1000; k_true = 4
+n = 100; p = 1000; k_true = 4
 prob_active = 0.2
 A = matrix(rnorm(p * k_true), nrow = p)
 S_sparse = matrix(0, nrow = k_true, ncol = n)
@@ -969,26 +1243,156 @@ res_nw_tlc_sp = run_seeds(nw_sp, S_sparse, update_nw,            obj_nw,        
 
 cat(&quot;whitened  log-cosh: mean max|cor| =&quot;, round(mean(res_wh_lc_sp$maxcor),  3),
     &quot; frac &gt; 0.9:&quot;, mean(res_wh_lc_sp$maxcor  &gt; 0.9), &quot;\n&quot;)</code></pre>
-<pre><code>whitened  log-cosh: mean max|cor| = 0.347  frac &gt; 0.9: 0 </code></pre>
+<pre><code>whitened  log-cosh: mean max|cor| = 0.337  frac &gt; 0.9: 0 </code></pre>
 <pre class="r"><code>cat(&quot;whitened  TLC:      mean max|cor| =&quot;, round(mean(res_wh_tlc_sp$maxcor), 3),
     &quot; frac &gt; 0.9:&quot;, mean(res_wh_tlc_sp$maxcor &gt; 0.9), &quot;\n&quot;)</code></pre>
-<pre><code>whitened  TLC:      mean max|cor| = 1  frac &gt; 0.9: 1 </code></pre>
+<pre><code>whitened  TLC:      mean max|cor| = 0.856  frac &gt; 0.9: 0.8 </code></pre>
 <pre class="r"><code>cat(&quot;nonwhiten log-cosh: mean max|cor| =&quot;, round(mean(res_nw_lc_sp$maxcor),  3),
     &quot; frac &gt; 0.9:&quot;, mean(res_nw_lc_sp$maxcor  &gt; 0.9), &quot;\n&quot;)</code></pre>
-<pre><code>nonwhiten log-cosh: mean max|cor| = 0.738  frac &gt; 0.9: 0 </code></pre>
+<pre><code>nonwhiten log-cosh: mean max|cor| = 0.378  frac &gt; 0.9: 0 </code></pre>
 <pre class="r"><code>cat(&quot;nonwhiten TLC:      mean max|cor| =&quot;, round(mean(res_nw_tlc_sp$maxcor), 3),
     &quot; frac &gt; 0.9:&quot;, mean(res_nw_tlc_sp$maxcor &gt; 0.9), &quot;\n&quot;)</code></pre>
-<pre><code>nonwhiten TLC:      mean max|cor| = 1  frac &gt; 0.9: 1 </code></pre>
+<pre><code>nonwhiten TLC:      mean max|cor| = 0.992  frac &gt; 0.9: 0.99 </code></pre>
 <pre class="r"><code>par(mfrow = c(2, 2))
 hist(res_wh_lc_sp$maxcor,  breaks = seq(0, 1, by = 0.05), main = &quot;whitened log-cosh&quot;,    xlab = &quot;max |cor|&quot;)
 hist(res_wh_tlc_sp$maxcor, breaks = seq(0, 1, by = 0.05), main = &quot;whitened TLC&quot;,         xlab = &quot;max |cor|&quot;)
 hist(res_nw_lc_sp$maxcor,  breaks = seq(0, 1, by = 0.05), main = &quot;nonwhitened log-cosh&quot;, xlab = &quot;max |cor|&quot;)
 hist(res_nw_tlc_sp$maxcor, breaks = seq(0, 1, by = 0.05), main = &quot;nonwhitened TLC&quot;,      xlab = &quot;max |cor|&quot;)</code></pre>
-<p><img src="figure/fastica_nonwhitened.Rmd/unnamed-chunk-7-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/fastica_nonwhitened.Rmd/unnamed-chunk-8-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>par(mfrow = c(1, 1))</code></pre>
 </div>
-<div id="test-4-9-overlapping-groups-20-members-each-n100-20-pcs" class="section level2">
-<h2>Test 4: 9 overlapping groups, 20 members each, n=100 (20 PCs)</h2>
+<div id="test-4-9-overlapping-groups-20-members-each-n100-20-pcs-no-deflation" class="section level2">
+<h2>Test 4: 9 overlapping groups, 20 members each, n=100 (20 PCs, no deflation)</h2>
+<p>Single-component extraction over many seeds, same as Tests 1–3. Each seed finds one direction; we report the max |cor| with any of the 9 true sources.</p>
+<pre class="r"><code>set.seed(1)
+n = 100; p = 1000; K = 9
+L  = matrix(0, nrow = n, ncol = K)
+for (i in 1:K) L[sample(n, 20), i] = 1
+FF = matrix(rnorm(p * K), nrow = p, ncol = K)
+sigma = 0.1
+X9  = t(L %*% t(FF) + matrix(rnorm(n * p, 0, sigma), nrow = n))
+sv9 = svd(X9 - rowMeans(X9), nu = 0, nv = k_pca)
+Z9  = prewhiten(X9, k_pca)
+nw9 = preprocess_nonwhitened(X9, k_pca)</code></pre>
+<div id="singular-values-1" class="section level3">
+<h3>Singular values</h3>
+<pre class="r"><code>plot(sv9$d[1:k_pca], type = &quot;b&quot;, pch = 19, cex = 0.7,
+     xlab = &quot;PC index&quot;, ylab = &quot;singular value&quot;,
+     main = &quot;Top 20 singular values (9 true sources)&quot;)
+abline(v = K + 0.5, lty = 2, col = &quot;red&quot;)
+legend(&quot;topright&quot;, &quot;true K&quot;, lty = 2, col = &quot;red&quot;)</code></pre>
+<p><img src="figure/fastica_nonwhitened.Rmd/unnamed-chunk-10-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="single-seed-detailed-comparison-1" class="section level3">
+<h3>Single-seed detailed comparison</h3>
+<pre class="r"><code>r9_wh_lc  = run_one(Z9,  fastica_r1update,     compute_objective)
+r9_wh_tlc = run_one(Z9,  fastica_r1update_tlc, compute_objective_tlc, lambda = 1)
+r9_nw_lc  = run_one(nw9, update_nw,            obj_nw)
+r9_nw_tlc = run_one(nw9, update_nw,            obj_nw, lambda = 1)
+
+cor_fmt = function(proj) round(max(abs(cor(L, proj))), 3)
+cat(&quot;whitened  log-cosh: obj =&quot;, round(r9_wh_lc$obj,  4), &quot;  max|cor| =&quot;, cor_fmt(r9_wh_lc$proj),  &quot;\n&quot;)</code></pre>
+<pre><code>whitened  log-cosh: obj = 0.3031   max|cor| = 0.494 </code></pre>
+<pre class="r"><code>cat(&quot;whitened  TLC:      obj =&quot;, round(r9_wh_tlc$obj, 4), &quot;  max|cor| =&quot;, cor_fmt(r9_wh_tlc$proj), &quot;\n&quot;)</code></pre>
+<pre><code>whitened  TLC:      obj = 0.961   max|cor| = 1 </code></pre>
+<pre class="r"><code>cat(&quot;nonwhiten log-cosh: obj =&quot;, round(r9_nw_lc$obj,  4), &quot;  max|cor| =&quot;, cor_fmt(r9_nw_lc$proj),  &quot;\n&quot;)</code></pre>
+<pre><code>nonwhiten log-cosh: obj = 0.4131   max|cor| = 0.294 </code></pre>
+<pre class="r"><code>cat(&quot;nonwhiten TLC:      obj =&quot;, round(r9_nw_tlc$obj, 4), &quot;  max|cor| =&quot;, cor_fmt(r9_nw_tlc$proj), &quot;\n&quot;)</code></pre>
+<pre><code>nonwhiten TLC:      obj = 0.961   max|cor| = 1 </code></pre>
+<pre class="r"><code>lbls = c(&quot;whitened log-cosh&quot;, &quot;whitened TLC&quot;, &quot;nonwhitened log-cosh&quot;, &quot;nonwhitened TLC&quot;)
+par(mfrow = c(2, 2))
+for (i in seq_along(lbls)) {
+  res = list(r9_wh_lc, r9_wh_tlc, r9_nw_lc, r9_nw_tlc)[[i]]
+  best_src = which.max(abs(cor(L, res$proj)))
+  ord = order(L[, best_src])
+  col = ifelse(L[ord, best_src] == 1, &quot;tomato&quot;, &quot;steelblue&quot;)
+  plot(res$proj[ord], col = col, pch = 19, cex = 0.5,
+       main = paste0(lbls[i], &quot;\nmax|cor|=&quot;, cor_fmt(res$proj), &quot; (src &quot;, best_src, &quot;)&quot;),
+       xlab = &quot;sample (sorted by best-matching source)&quot;, ylab = &quot;w&#39;z&quot;, cex.main = 0.8)
+  abline(h = 0, lty = 2)
+}</code></pre>
+<p><img src="figure/fastica_nonwhitened.Rmd/unnamed-chunk-11-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>par(mfrow = c(1, 1))</code></pre>
+</div>
+<div id="many-seeds" class="section level3">
+<h3>Many seeds</h3>
+<pre class="r"><code>res9_wh_lc  = run_seeds(Z9,  t(L), fastica_r1update,     compute_objective,     n_seeds = 100)
+res9_wh_tlc = run_seeds(Z9,  t(L), fastica_r1update_tlc, compute_objective_tlc, n_seeds = 100, lambda = 1)
+res9_nw_lc  = run_seeds(nw9, t(L), update_nw,            obj_nw,                n_seeds = 100)
+res9_nw_tlc = run_seeds(nw9, t(L), update_nw,            obj_nw,                n_seeds = 100, lambda = 1)
+
+cat(&quot;whitened  log-cosh: mean max|cor| =&quot;, round(mean(res9_wh_lc$maxcor),  3),
+    &quot; frac &gt; 0.9:&quot;, mean(res9_wh_lc$maxcor  &gt; 0.9), &quot;\n&quot;)</code></pre>
+<pre><code>whitened  log-cosh: mean max|cor| = 0.408  frac &gt; 0.9: 0 </code></pre>
+<pre class="r"><code>cat(&quot;whitened  TLC:      mean max|cor| =&quot;, round(mean(res9_wh_tlc$maxcor), 3),
+    &quot; frac &gt; 0.9:&quot;, mean(res9_wh_tlc$maxcor &gt; 0.9), &quot;\n&quot;)</code></pre>
+<pre><code>whitened  TLC:      mean max|cor| = 0.987  frac &gt; 0.9: 0.98 </code></pre>
+<pre class="r"><code>cat(&quot;nonwhiten log-cosh: mean max|cor| =&quot;, round(mean(res9_nw_lc$maxcor),  3),
+    &quot; frac &gt; 0.9:&quot;, mean(res9_nw_lc$maxcor  &gt; 0.9), &quot;\n&quot;)</code></pre>
+<pre><code>nonwhiten log-cosh: mean max|cor| = 0.412  frac &gt; 0.9: 0 </code></pre>
+<pre class="r"><code>cat(&quot;nonwhiten TLC:      mean max|cor| =&quot;, round(mean(res9_nw_tlc$maxcor), 3),
+    &quot; frac &gt; 0.9:&quot;, mean(res9_nw_tlc$maxcor &gt; 0.9), &quot;\n&quot;)</code></pre>
+<pre><code>nonwhiten TLC:      mean max|cor| = 1  frac &gt; 0.9: 1 </code></pre>
+<pre class="r"><code>par(mfrow = c(2, 2))
+hist(res9_wh_lc$maxcor,  breaks = seq(0, 1, by = 0.05), main = &quot;whitened log-cosh&quot;,    xlab = &quot;max |cor|&quot;)
+hist(res9_wh_tlc$maxcor, breaks = seq(0, 1, by = 0.05), main = &quot;whitened TLC&quot;,         xlab = &quot;max |cor|&quot;)
+hist(res9_nw_lc$maxcor,  breaks = seq(0, 1, by = 0.05), main = &quot;nonwhitened log-cosh&quot;, xlab = &quot;max |cor|&quot;)
+hist(res9_nw_tlc$maxcor, breaks = seq(0, 1, by = 0.05), main = &quot;nonwhitened TLC&quot;,      xlab = &quot;max |cor|&quot;)</code></pre>
+<p><img src="figure/fastica_nonwhitened.Rmd/unnamed-chunk-12-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>par(mfrow = c(1, 1))</code></pre>
+</div>
+<div id="cross-initialization-test" class="section level3">
+<h3>Cross-initialization test</h3>
+<pre class="r"><code>results_cross9 = data.frame(
+  seed        = seq_len(n_seeds_cross),
+  wh_maxcor   = NA_real_,
+  nw_maxcor   = NA_real_,
+  wh_from_nw  = NA_real_,
+  nw_from_wh  = NA_real_
+)
+
+for (seed in seq_len(n_seeds_cross)) {
+  set.seed(seed)
+  w0 = rnorm(k_pca)
+
+  w_wh = w0
+  for (i in seq_len(2000)) w_wh = fastica_r1update_tlc(Z9, w_wh)
+
+  w_nw = w0
+  for (i in seq_len(2000)) w_nw = update_nw(nw9, w_nw, lambda = 1)
+
+  d9 = sv9$d[1:k_pca]
+  w_wh_from_nw = d9 * w_nw / sqrt(n)
+  for (i in seq_len(2000)) w_wh_from_nw = fastica_r1update_tlc(Z9, w_wh_from_nw)
+
+  w_nw_from_wh = sqrt(n) * w_wh / d9
+  for (i in seq_len(2000)) w_nw_from_wh = update_nw(nw9, w_nw_from_wh, lambda = 1)
+
+  mc_wh = function(w) max(abs(cor(L, as.vector(t(Z9)    %*% w))))
+  mc_nw = function(w) max(abs(cor(L, as.vector(t(nw9$Z) %*% w))))
+
+  results_cross9[seed, &quot;wh_maxcor&quot;]  = mc_wh(w_wh)
+  results_cross9[seed, &quot;nw_maxcor&quot;]  = mc_nw(w_nw)
+  results_cross9[seed, &quot;wh_from_nw&quot;] = mc_wh(w_wh_from_nw)
+  results_cross9[seed, &quot;nw_from_wh&quot;] = mc_nw(w_nw_from_wh)
+}
+
+cat(&quot;Whitened from random start:          mean max|cor| =&quot;,
+    round(mean(results_cross9$wh_maxcor),  3), &quot;\n&quot;)</code></pre>
+<pre><code>Whitened from random start:          mean max|cor| = 0.989 </code></pre>
+<pre class="r"><code>cat(&quot;Nonwhitened from random start:       mean max|cor| =&quot;,
+    round(mean(results_cross9$nw_maxcor),  3), &quot;\n&quot;)</code></pre>
+<pre><code>Nonwhitened from random start:       mean max|cor| = 1 </code></pre>
+<pre class="r"><code>cat(&quot;Whitened init&#39;d from NW solution:    mean max|cor| =&quot;,
+    round(mean(results_cross9$wh_from_nw), 3), &quot;\n&quot;)</code></pre>
+<pre><code>Whitened init&#39;d from NW solution:    mean max|cor| = 1 </code></pre>
+<pre class="r"><code>cat(&quot;Nonwhitened init&#39;d from WH solution: mean max|cor| =&quot;,
+    round(mean(results_cross9$nw_from_wh), 3), &quot;\n&quot;)</code></pre>
+<pre><code>Nonwhitened init&#39;d from WH solution: mean max|cor| = 0.989 </code></pre>
+</div>
+</div>
+<div id="test-5-9-overlapping-groups-deflation-20-pcs" class="section level2">
+<h2>Test 5: 9 overlapping groups, deflation (20 PCs)</h2>
 <p>Multi-component extraction via deflation. After finding weight <span class="math inline">\(w_1\)</span>, the next search is restricted to vectors satisfying <span class="math inline">\(w \perp_{D^2} w_1\)</span>, i.e. <span class="math inline">\(w_1&#39; D^2 w = 0\)</span>, so the extracted components are orthogonal in the <span class="math inline">\(D^2\)</span>-inner-product sense (equivalently, orthogonal projections in the original data space). We extract 9 components from a 20-PC space.</p>
 <pre class="r"><code>fastica_deflation_nw = function(nw, k, update_fn, obj_fn, n_iter = 200,
                                 n_starts = 5, ...) {
@@ -1051,16 +1455,6 @@ fastica_deflation_wh = function(X, k, update_fn, obj_fn, n_iter = 200,
   W
 }
 
-set.seed(1)
-n = 100; p = 1000; K = 9
-L  = matrix(0, nrow = n, ncol = K)
-for (i in 1:K) L[sample(n, 20), i] = 1
-FF = matrix(rnorm(p * K), nrow = p, ncol = K)
-sigma = 0.1
-X9  = t(L %*% t(FF) + matrix(rnorm(n * p, 0, sigma), nrow = n))
-Z9  = prewhiten(X9, k_pca)
-nw9 = preprocess_nonwhitened(X9, k_pca)
-
 W9_wh_lc  = fastica_deflation_wh(Z9,  K, fastica_r1update,     compute_objective,     n_starts = 10)
 W9_wh_tlc = fastica_deflation_wh(Z9,  K, fastica_r1update_tlc, compute_objective_tlc, n_starts = 10, lambda = 1)
 W9_nw_lc  = fastica_deflation_nw(nw9, K, update_nw,            obj_nw,                n_starts = 10)
@@ -1082,11 +1476,11 @@ cat(&quot;whitened log-cosh    — max |cor| per true source:\n&quot;)</code></p
 <pre class="r"><code>cat(&quot;nonwhitened log-cosh — max |cor| per true source:\n&quot;)</code></pre>
 <pre><code>nonwhitened log-cosh &lt;U+2014&gt; max |cor| per true source:</code></pre>
 <pre class="r"><code>print(round(apply(abs(cor9_nw_lc),  2, max), 3))</code></pre>
-<pre><code>[1] 0.714 0.603 0.551 0.664 0.690 0.567 0.612 0.607 0.525</code></pre>
+<pre><code>[1] 0.492 0.473 0.408 0.596 0.318 0.383 0.480 0.431 0.349</code></pre>
 <pre class="r"><code>cat(&quot;nonwhitened TLC      — max |cor| per true source:\n&quot;)</code></pre>
 <pre><code>nonwhitened TLC      &lt;U+2014&gt; max |cor| per true source:</code></pre>
 <pre class="r"><code>print(round(apply(abs(cor9_nw_tlc), 2, max), 3))</code></pre>
-<pre><code>[1] 0.996 0.990 0.990 0.964 0.974 0.969 0.945 0.937 0.846</code></pre>
+<pre><code>[1] 1.000 1.000 0.998 0.998 0.996 0.991 0.968 0.961 0.953</code></pre>
 <p>Extracted projections (whitened TLC vs nonwhitened TLC):</p>
 <pre class="r"><code>proj9_wh_tlc = t(Z9)    %*% W9_wh_tlc
 proj9_nw_tlc = t(nw9$Z) %*% W9_nw_tlc
@@ -1098,7 +1492,7 @@ for (i in 1:K) {
   plot(proj9_nw_tlc[, i], main = paste0(&quot;nonwhitened TLC comp &quot;, i),
        ylab = &quot;&quot;, xlab = &quot;&quot;, cex.main = 0.8)
 }</code></pre>
-<p><img src="figure/fastica_nonwhitened.Rmd/unnamed-chunk-9-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/fastica_nonwhitened.Rmd/unnamed-chunk-15-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>par(mfrow = c(1, 1))</code></pre>
 </div>
 <div id="summary" class="section level2">
@@ -1135,10 +1529,11 @@ loaded via a namespace (and not attached):
  [9] jsonlite_2.0.0  workflowr_1.7.2 glue_1.8.0      rprojroot_2.1.1
 [13] git2r_0.36.2    htmltools_0.5.9 httpuv_1.6.16   sass_0.4.10    
 [17] rmarkdown_2.30  evaluate_1.0.5  jquerylib_0.1.4 tibble_3.3.1   
-[21] fastmap_1.2.0   yaml_2.3.12     lifecycle_1.0.5 stringr_1.6.0  
-[25] compiler_4.4.2  fs_1.6.6        Rcpp_1.1.1      pkgconfig_2.0.3
-[29] later_1.4.6     digest_0.6.39   R6_2.6.1        pillar_1.11.1  
-[33] magrittr_2.0.4  bslib_0.10.0    tools_4.4.2     cachem_1.1.0   </code></pre>
+[21] fastmap_1.2.0   yaml_2.3.12     lifecycle_1.0.5 whisker_0.4.1  
+[25] stringr_1.6.0   compiler_4.4.2  fs_1.6.6        Rcpp_1.1.1     
+[29] pkgconfig_2.0.3 later_1.4.6     digest_0.6.39   R6_2.6.1       
+[33] pillar_1.11.1   magrittr_2.0.4  bslib_0.10.0    tools_4.4.2    
+[37] cachem_1.1.0   </code></pre>
 </div>
 </div>
 
