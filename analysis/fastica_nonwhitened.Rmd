@@ -9,38 +9,78 @@ editor_options:
 
 ## Introduction
 
-Standard FastICA pre-whitens data: given $X$ ($p \times n$) with thin SVD
-$X = UDV'$, it sets $Z = \sqrt{n}\,V'$ ($k \times n$) and maximizes
-$E[G(w'z)]$ subject to $\|w\|^2 = 1$.  The constraint $\|w\|^2 = 1$ is
-equivalent to $E[(w'z)^2] = n$ because $ZZ' = nI_k$ for whitened data.
+### Standard whitened FastICA
 
-Here we skip the whitening step and instead work with
-$$Z = DV' \qquad (k \times n),$$
-so that $ZZ' = D^2$.  The natural constraint to keep evaluation scale-free is
-$$w'D^2 w = n,$$
-which again enforces $E[(w'z)^2] = n$.  The FastICA fixed-point update itself
-is unchanged; only the normalization step changes from $w \leftarrow w/\|w\|$
-to $w \leftarrow w\sqrt{n}/\sqrt{w'D^2 w}$.
+Given $X$ ($p \times n$) with thin SVD $X = UDV'$, standard FastICA
+pre-whitens by setting $Z_{\text{wh}} = \sqrt{n}\,V'$ ($k \times n$), so
+that the sample covariance $E[zz'] = I_k$.  It maximises $E[G(w'z)]$
+subject to $\|w\|^2 = 1$ (equivalently $E[(w'z)^2] = 1$).  Because the
+covariance is the identity, the Newton fixed-point update requires no matrix
+inversion:
+$$w \leftarrow E[z\,g(w'z)] - E[g'(w'z)]\,w, \qquad
+  w \leftarrow w/\|w\|.$$
+
+### Non-whitened FastICA
+
+We instead work with
+$$Z = DV' \quad (k \times n), \qquad
+  C = E[zz'] = \tfrac{1}{n}D^2.$$
+The scale-free constraint is $E[(w'z)^2] = 1$, i.e.\ $w'Cw = 1$, i.e.\
+$w'D^2w = n$.  The Newton update for a constrained problem with non-identity
+covariance requires left-multiplying the gradient by $C^{-1} = nD^{-2}$:
+$$w \leftarrow C^{-1}E[z\,g(w'z)] - E[g'(w'z)]\,w
+  = nD^{-2}E[z\,g(w'z)] - E[g'(w'z)]\,w, \qquad
+  w \leftarrow w\sqrt{n}/\sqrt{w'D^2 w}.$$
+In code, since $Z\mathbf{g}/n = E[zg(w'z)]$, the term $nD^{-2}E[zg]$
+is computed as `(Z %*% G) / diag(D2)` (elementwise division by $d_i^2$).
+
+### Exact equivariance
+
+The two algorithms are **exactly equivariant** under the linear map
+$$w_{\text{wh}} = C^{1/2}w = \tfrac{1}{\sqrt{n}}Dw, \qquad
+  w_{\text{nw}} = C^{-1/2}w_{\text{wh}} = \sqrt{n}D^{-1}w_{\text{wh}},$$
+which preserves projections: $w_{\text{wh}}'z_{\text{wh}} = w_{\text{nw}}'z_{\text{nw}}$.
+
+**Proof.**  Substitute $z_{\text{wh}} = C^{-1/2}z = \sqrt{n}D^{-1}z$ and
+$w_{\text{wh}} = C^{1/2}w_{\text{nw}} = \tfrac{D}{\sqrt{n}}w_{\text{nw}}$
+into the whitened update:
+$$\tfrac{D}{\sqrt{n}}\,w^+ =
+  E\!\left[\sqrt{n}D^{-1}z\cdot g(w'z)\right] - E[g']\,\tfrac{D}{\sqrt{n}}w
+  = \sqrt{n}D^{-1}E[zg(w'z)] - E[g']\tfrac{D}{\sqrt{n}}w.$$
+Left-multiplying by $\tfrac{\sqrt{n}}{D} = \sqrt{n}D^{-1}$ recovers exactly
+the non-whitened update:
+$$w^+ = nD^{-2}E[zg(w'z)] - E[g']\,w. \qquad \checkmark$$
+The normalisation steps also correspond: $\|w_{\text{wh}}\|=1 \Leftrightarrow
+w_{\text{nw}}'D^2w_{\text{nw}} = n$.  Therefore the two iterations trace
+**identical trajectories** at every step, and have the same fixed points
+with the same stability.
+
+### Why non-whitened outperforms whitened in practice
+
+The dynamics are identical given *corresponding* initialisations, but a
+**random** $w_{\text{nw}}$ does not correspond to a random $w_{\text{wh}}$.
+From a random $w_{\text{nw}}$, the equivalent whitened start is
+$$w_{\text{wh}} \propto \tfrac{D}{\sqrt{n}}w_{\text{nw}},$$
+which is biased toward large-$d_i$ (signal) directions.  Whitened FastICA
+starts from a uniformly random direction on the $k$-sphere, giving only a
+$\sim k_{\text{true}}/k$ chance of landing near the signal subspace.
+
+In other words: the non-whitened parameterisation gives every random start an
+implicit warm start toward the signal, without changing the algorithm's
+fixed-point structure at all.
 
 ## Motivation: robustness to the number of PCs
 
 In practice we do not know how many independent components are present.
 Standard whitening requires a hard choice of $k$: too small and we miss
-components, too large and we include pure-noise PCs.  The problem with
-whitening is that all $k$ retained PCs are placed on equal footing — the
-noise PCs get the same unit variance as the signal PCs.  This can overwhelm
-the signal when $k$ is much larger than the true number of components.
+components, too large and we include pure-noise PCs.  Whitening places all
+$k$ PCs on equal footing, so inflating $k$ adds pure-noise directions that
+are equally likely starting points for the iteration.
 
-With the non-whitened approach the $k$ PCs enter with their original singular
-values $d_1 \ge d_2 \ge \cdots \ge d_k$.  Signal PCs have large $d_i$; excess
-noise PCs have small $d_i$ and therefore small weight in the objective.  The
-constraint $w'D^2 w = n$ automatically concentrates $w$ on the high-variance
-directions, so inflating $k$ adds far less noise than in the whitened case.
-
-To test this we use $k = 20$ PCs for all experiments below, even though the
-true number of sources is smaller (1, 4, or 9).  We expect whitened FastICA
-to degrade noticeably with the extra noise PCs, while non-whitened FastICA
-should remain robust.
+The non-whitened parameterisation's random initialisation is naturally biased
+toward high-variance (signal) PCs, so extra noise PCs cause much less harm.
+We test this by using $k = 20$ PCs throughout, even when the true number of
+sources is 1, 4, or 9.
 
 ## Implementation
 
@@ -99,7 +139,7 @@ fastica_r1update_nw = function(Z, D2, w) {
   P  = t(Z) %*% w
   G  = tanh(P)
   G2 = 1 - tanh(P)^2
-  w  = Z %*% G - mean(G2) * n * w
+  w  = (Z %*% G) / diag(D2) - mean(G2) * w   # n * D2^{-1} %*% E[zg] - E[g'] * w
   normalize_nw(w, D2, n)
 }
 
@@ -109,7 +149,7 @@ fastica_r1update_nw_tlc = function(Z, D2, w, lambda = 1) {
   P  = t(Z) %*% w
   G  = tanh(P) + 2 * lambda * abs(P)
   G2 = 1 - tanh(P)^2 + 2 * lambda * sign(P)
-  w  = Z %*% G - mean(G2) * n * w
+  w  = (Z %*% G) / diag(D2) - mean(G2) * w
   normalize_nw(w, D2, n)
 }
 
@@ -240,7 +280,78 @@ par(mfrow = c(1, 1))
 Samples are sorted by true source value (+1 = red, -1 = blue).
 A good recovery shows two clearly separated bands.
 
-### Many seeds
+### Do the two methods share fixed points?
+
+If the two iterations have the same fixed points, then initialising each
+method from the other's converged solution should leave it unchanged.
+We run 50 seeds, converge each method independently, then continue iterating
+from the other's solution and check whether the projection changes.
+
+```{r}
+n_seeds_cross = 50
+results_cross = data.frame(
+  seed        = seq_len(n_seeds_cross),
+  wh_maxcor   = NA_real_,   # whitened from random start
+  nw_maxcor   = NA_real_,   # nonwhitened from random start
+  wh_from_nw  = NA_real_,   # whitened continued from nonwhitened solution
+  nw_from_wh  = NA_real_    # nonwhitened continued from whitened solution
+)
+
+for (seed in seq_len(n_seeds_cross)) {
+  set.seed(seed)
+  w0 = rnorm(k_pca)
+
+  # converge whitened
+  w_wh = w0
+  for (i in seq_len(2000)) w_wh = fastica_r1update(Z_rad, w_wh)
+
+  # converge nonwhitened
+  w_nw = w0
+  for (i in seq_len(2000)) w_nw = update_nw(nw_rad, w_nw)
+
+  # continue whitened from nonwhitened solution
+  w_wh_from_nw = w_nw
+  for (i in seq_len(2000)) w_wh_from_nw = fastica_r1update(Z_rad, w_wh_from_nw)
+
+  # continue nonwhitened from whitened solution
+  w_nw_from_wh = w_wh
+  for (i in seq_len(2000)) w_nw_from_wh = update_nw(nw_rad, w_nw_from_wh)
+
+  # correct transformation: u = D*w_nw = sqrt(n)*w_wh
+  # so w_nw = sqrt(n)*w_wh/d  and  w_wh = d*w_nw/sqrt(n)
+  d_rad = sv_rad$d[1:k_pca]
+  w_wh_from_nw = d_rad * w_nw / sqrt(n)
+  for (i in seq_len(2000)) w_wh_from_nw = fastica_r1update(Z_rad, w_wh_from_nw)
+
+  w_nw_from_wh = sqrt(n) * w_wh / d_rad
+  for (i in seq_len(2000)) w_nw_from_wh = update_nw(nw_rad, w_nw_from_wh)
+
+  mc    = function(w) max(abs(cor(as.vector(S_rad), as.vector(t(Z_rad)    %*% w))))
+  mc_nw = function(w) max(abs(cor(as.vector(S_rad), as.vector(t(nw_rad$Z) %*% w))))
+
+  results_cross[seed, "wh_maxcor"]  = mc(w_wh)
+  results_cross[seed, "nw_maxcor"]  = mc_nw(w_nw)
+  results_cross[seed, "wh_from_nw"] = mc(w_wh_from_nw)
+  results_cross[seed, "nw_from_wh"] = mc_nw(w_nw_from_wh)
+}
+
+cat("Whitened from random start:          mean max|cor| =",
+    round(mean(results_cross$wh_maxcor),  3), "\n")
+cat("Nonwhitened from random start:       mean max|cor| =",
+    round(mean(results_cross$nw_maxcor),  3), "\n")
+cat("Whitened init'd from NW solution:    mean max|cor| =",
+    round(mean(results_cross$wh_from_nw), 3), "\n")
+cat("Nonwhitened init'd from WH solution: mean max|cor| =",
+    round(mean(results_cross$nw_from_wh), 3), "\n")
+```
+
+If the methods share fixed points, "whitened init'd from NW solution" should
+stay at the NW solution (high max|cor|), and "nonwhitened init'd from WH
+solution" should stay at the WH solution (low max|cor| for failing seeds).
+If they do *not* share fixed points, each will move away from the other's solution.
+
+
+### Many seeds (200 iterations)
 
 ```{r}
 res_wh_lc  = run_seeds(Z_rad,  S_rad, fastica_r1update,     compute_objective)
@@ -289,7 +400,7 @@ par(mfrow = c(1, 1))
 
 ```{r}
 set.seed(2)
-n = 500; p = 1000; k_true = 4
+n = 100; p = 1000; k_true = 4
 prob_active = 0.2
 A = matrix(rnorm(p * k_true), nrow = p)
 S_sparse = matrix(0, nrow = k_true, ncol = n)
@@ -323,7 +434,136 @@ hist(res_nw_tlc_sp$maxcor, breaks = seq(0, 1, by = 0.05), main = "nonwhitened TL
 par(mfrow = c(1, 1))
 ```
 
-## Test 4: 9 overlapping groups, 20 members each, n=100 (20 PCs)
+## Test 4: 9 overlapping groups, 20 members each, n=100 (20 PCs, no deflation)
+
+Single-component extraction over many seeds, same as Tests 1–3.  Each seed
+finds one direction; we report the max |cor| with any of the 9 true sources.
+
+```{r}
+set.seed(1)
+n = 100; p = 1000; K = 9
+L  = matrix(0, nrow = n, ncol = K)
+for (i in 1:K) L[sample(n, 20), i] = 1
+FF = matrix(rnorm(p * K), nrow = p, ncol = K)
+sigma = 0.1
+X9  = t(L %*% t(FF) + matrix(rnorm(n * p, 0, sigma), nrow = n))
+sv9 = svd(X9 - rowMeans(X9), nu = 0, nv = k_pca)
+Z9  = prewhiten(X9, k_pca)
+nw9 = preprocess_nonwhitened(X9, k_pca)
+```
+
+### Singular values
+
+```{r}
+plot(sv9$d[1:k_pca], type = "b", pch = 19, cex = 0.7,
+     xlab = "PC index", ylab = "singular value",
+     main = "Top 20 singular values (9 true sources)")
+abline(v = K + 0.5, lty = 2, col = "red")
+legend("topright", "true K", lty = 2, col = "red")
+```
+
+### Single-seed detailed comparison
+
+```{r fig.height=8}
+r9_wh_lc  = run_one(Z9,  fastica_r1update,     compute_objective)
+r9_wh_tlc = run_one(Z9,  fastica_r1update_tlc, compute_objective_tlc, lambda = 1)
+r9_nw_lc  = run_one(nw9, update_nw,            obj_nw)
+r9_nw_tlc = run_one(nw9, update_nw,            obj_nw, lambda = 1)
+
+cor_fmt = function(proj) round(max(abs(cor(L, proj))), 3)
+cat("whitened  log-cosh: obj =", round(r9_wh_lc$obj,  4), "  max|cor| =", cor_fmt(r9_wh_lc$proj),  "\n")
+cat("whitened  TLC:      obj =", round(r9_wh_tlc$obj, 4), "  max|cor| =", cor_fmt(r9_wh_tlc$proj), "\n")
+cat("nonwhiten log-cosh: obj =", round(r9_nw_lc$obj,  4), "  max|cor| =", cor_fmt(r9_nw_lc$proj),  "\n")
+cat("nonwhiten TLC:      obj =", round(r9_nw_tlc$obj, 4), "  max|cor| =", cor_fmt(r9_nw_tlc$proj), "\n")
+
+lbls = c("whitened log-cosh", "whitened TLC", "nonwhitened log-cosh", "nonwhitened TLC")
+par(mfrow = c(2, 2))
+for (i in seq_along(lbls)) {
+  res = list(r9_wh_lc, r9_wh_tlc, r9_nw_lc, r9_nw_tlc)[[i]]
+  best_src = which.max(abs(cor(L, res$proj)))
+  ord = order(L[, best_src])
+  col = ifelse(L[ord, best_src] == 1, "tomato", "steelblue")
+  plot(res$proj[ord], col = col, pch = 19, cex = 0.5,
+       main = paste0(lbls[i], "\nmax|cor|=", cor_fmt(res$proj), " (src ", best_src, ")"),
+       xlab = "sample (sorted by best-matching source)", ylab = "w'z", cex.main = 0.8)
+  abline(h = 0, lty = 2)
+}
+par(mfrow = c(1, 1))
+```
+
+### Many seeds
+
+```{r}
+res9_wh_lc  = run_seeds(Z9,  t(L), fastica_r1update,     compute_objective,     n_seeds = 100)
+res9_wh_tlc = run_seeds(Z9,  t(L), fastica_r1update_tlc, compute_objective_tlc, n_seeds = 100, lambda = 1)
+res9_nw_lc  = run_seeds(nw9, t(L), update_nw,            obj_nw,                n_seeds = 100)
+res9_nw_tlc = run_seeds(nw9, t(L), update_nw,            obj_nw,                n_seeds = 100, lambda = 1)
+
+cat("whitened  log-cosh: mean max|cor| =", round(mean(res9_wh_lc$maxcor),  3),
+    " frac > 0.9:", mean(res9_wh_lc$maxcor  > 0.9), "\n")
+cat("whitened  TLC:      mean max|cor| =", round(mean(res9_wh_tlc$maxcor), 3),
+    " frac > 0.9:", mean(res9_wh_tlc$maxcor > 0.9), "\n")
+cat("nonwhiten log-cosh: mean max|cor| =", round(mean(res9_nw_lc$maxcor),  3),
+    " frac > 0.9:", mean(res9_nw_lc$maxcor  > 0.9), "\n")
+cat("nonwhiten TLC:      mean max|cor| =", round(mean(res9_nw_tlc$maxcor), 3),
+    " frac > 0.9:", mean(res9_nw_tlc$maxcor > 0.9), "\n")
+
+par(mfrow = c(2, 2))
+hist(res9_wh_lc$maxcor,  breaks = seq(0, 1, by = 0.05), main = "whitened log-cosh",    xlab = "max |cor|")
+hist(res9_wh_tlc$maxcor, breaks = seq(0, 1, by = 0.05), main = "whitened TLC",         xlab = "max |cor|")
+hist(res9_nw_lc$maxcor,  breaks = seq(0, 1, by = 0.05), main = "nonwhitened log-cosh", xlab = "max |cor|")
+hist(res9_nw_tlc$maxcor, breaks = seq(0, 1, by = 0.05), main = "nonwhitened TLC",      xlab = "max |cor|")
+par(mfrow = c(1, 1))
+```
+
+### Cross-initialization test
+
+```{r}
+results_cross9 = data.frame(
+  seed        = seq_len(n_seeds_cross),
+  wh_maxcor   = NA_real_,
+  nw_maxcor   = NA_real_,
+  wh_from_nw  = NA_real_,
+  nw_from_wh  = NA_real_
+)
+
+for (seed in seq_len(n_seeds_cross)) {
+  set.seed(seed)
+  w0 = rnorm(k_pca)
+
+  w_wh = w0
+  for (i in seq_len(2000)) w_wh = fastica_r1update_tlc(Z9, w_wh)
+
+  w_nw = w0
+  for (i in seq_len(2000)) w_nw = update_nw(nw9, w_nw, lambda = 1)
+
+  d9 = sv9$d[1:k_pca]
+  w_wh_from_nw = d9 * w_nw / sqrt(n)
+  for (i in seq_len(2000)) w_wh_from_nw = fastica_r1update_tlc(Z9, w_wh_from_nw)
+
+  w_nw_from_wh = sqrt(n) * w_wh / d9
+  for (i in seq_len(2000)) w_nw_from_wh = update_nw(nw9, w_nw_from_wh, lambda = 1)
+
+  mc_wh = function(w) max(abs(cor(L, as.vector(t(Z9)    %*% w))))
+  mc_nw = function(w) max(abs(cor(L, as.vector(t(nw9$Z) %*% w))))
+
+  results_cross9[seed, "wh_maxcor"]  = mc_wh(w_wh)
+  results_cross9[seed, "nw_maxcor"]  = mc_nw(w_nw)
+  results_cross9[seed, "wh_from_nw"] = mc_wh(w_wh_from_nw)
+  results_cross9[seed, "nw_from_wh"] = mc_nw(w_nw_from_wh)
+}
+
+cat("Whitened from random start:          mean max|cor| =",
+    round(mean(results_cross9$wh_maxcor),  3), "\n")
+cat("Nonwhitened from random start:       mean max|cor| =",
+    round(mean(results_cross9$nw_maxcor),  3), "\n")
+cat("Whitened init'd from NW solution:    mean max|cor| =",
+    round(mean(results_cross9$wh_from_nw), 3), "\n")
+cat("Nonwhitened init'd from WH solution: mean max|cor| =",
+    round(mean(results_cross9$nw_from_wh), 3), "\n")
+```
+
+## Test 5: 9 overlapping groups, deflation (20 PCs)
 
 Multi-component extraction via deflation.  After finding weight $w_1$, the
 next search is restricted to vectors satisfying $w \perp_{D^2} w_1$, i.e.
@@ -392,16 +632,6 @@ fastica_deflation_wh = function(X, k, update_fn, obj_fn, n_iter = 200,
   }
   W
 }
-
-set.seed(1)
-n = 100; p = 1000; K = 9
-L  = matrix(0, nrow = n, ncol = K)
-for (i in 1:K) L[sample(n, 20), i] = 1
-FF = matrix(rnorm(p * K), nrow = p, ncol = K)
-sigma = 0.1
-X9  = t(L %*% t(FF) + matrix(rnorm(n * p, 0, sigma), nrow = n))
-Z9  = prewhiten(X9, k_pca)
-nw9 = preprocess_nonwhitened(X9, k_pca)
 
 W9_wh_lc  = fastica_deflation_wh(Z9,  K, fastica_r1update,     compute_objective,     n_starts = 10)
 W9_wh_tlc = fastica_deflation_wh(Z9,  K, fastica_r1update_tlc, compute_objective_tlc, n_starts = 10, lambda = 1)
