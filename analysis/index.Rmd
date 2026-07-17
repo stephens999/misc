@@ -102,6 +102,7 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 * [Single unit fastICA with intercept, to help find asymmetric binary groups](fastica_centered_02.html)
 * [FastICA with tilted log-cosh contrast for skewed/sparse binary sources](fastica_skew.html)
 * [FastICA for non-whitened data: exact equivariance and initialization bias](fastica_nonwhitened.html)
+* [Preconditioned FastICA: homotopy method and TLC contrast](fastica_precondition.html)
 
 * [Motivated by ICA, I try a flash+low-rank approach](flash_pca.html)
 * [Motivated by ICA, I try an EB approach to find subspaces](EB_subspace.html)
