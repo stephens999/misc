@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Matthew Stephens" />
+
+<meta name="date" content="2026-07-17" />
+
+<title>Preconditioned FastICA</title>
+
+<script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">misc</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/stephens999/misc">source</a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Preconditioned FastICA</h1>
+<h4 class="author">Matthew Stephens</h4>
+<h4 class="date">2026-07-17</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2026-07-17
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong> <code>misc/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version 1.7.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown is untracked by Git. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed1code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(1)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed1code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(1)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreef33b4cb9e9ada2dbda39fad9a0ee38f42e4704dbtargetblankf33b4cba"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/f33b4cb9e9ada2dbda39fad9a0ee38f42e4704db" target="_blank">f33b4cb</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreef33b4cb9e9ada2dbda39fad9a0ee38f42e4704dbtargetblankf33b4cba" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/f33b4cb9e9ada2dbda39fad9a0ee38f42e4704db" target="_blank">f33b4cb</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    .claude/
+    Ignored:    GSE87571/
+    Ignored:    analysis/.RData
+    Ignored:    analysis/.Rhistory
+    Ignored:    analysis/ALStruct_cache/
+    Ignored:    data/.Rhistory
+    Ignored:    data/methylation-data-for-matthew.rds
+    Ignored:    data/pbmc/
+    Ignored:    data/pbmc_purified.RData
+
+Untracked files:
+    Untracked:  .dropbox
+    Untracked:  GSE41037/
+    Untracked:  Icon
+    Untracked:  analysis/GHstan.Rmd
+    Untracked:  analysis/GTEX-cogaps.Rmd
+    Untracked:  analysis/PACS.Rmd
+    Untracked:  analysis/Rplot.png
+    Untracked:  analysis/SPCAvRP.rmd
+    Untracked:  analysis/abf_comparisons.Rmd
+    Untracked:  analysis/admm_02.Rmd
+    Untracked:  analysis/admm_03.Rmd
+    Untracked:  analysis/bispca.Rmd
+    Untracked:  analysis/cache/
+    Untracked:  analysis/cholesky.Rmd
+    Untracked:  analysis/compare-transformed-models.Rmd
+    Untracked:  analysis/cormotif.Rmd
+    Untracked:  analysis/cp_ash.Rmd
+    Untracked:  analysis/eQTL.perm.rand.pdf
+    Untracked:  analysis/eb_power2.Rmd
+    Untracked:  analysis/eb_prepilot.Rmd
+    Untracked:  analysis/eb_var.Rmd
+    Untracked:  analysis/ebpmf1.Rmd
+    Untracked:  analysis/ebpmf_sla_text.Rmd
+    Untracked:  analysis/ebspca_sims.Rmd
+    Untracked:  analysis/explore_psvd.Rmd
+    Untracked:  analysis/fa_check_identify.Rmd
+    Untracked:  analysis/fa_iterative.Rmd
+    Untracked:  analysis/fastica_heated.Rmd
+    Untracked:  analysis/fastica_precondition.Rmd
+    Untracked:  analysis/fastica_unwhitened.Rmd
+    Untracked:  analysis/flash_cov_overlapping_groups_init.Rmd
+    Untracked:  analysis/flash_test_tree.Rmd
+    Untracked:  analysis/flashier_newgroups.Rmd
+    Untracked:  analysis/flashier_nmf_triples.Rmd
+    Untracked:  analysis/flashier_pbmc.Rmd
+    Untracked:  analysis/flashier_snn_shifted_prior.Rmd
+    Untracked:  analysis/greedy_ebpmf_exploration_00.Rmd
+    Untracked:  analysis/ieQTL.perm.rand.pdf
+    Untracked:  analysis/lasso_em_03.Rmd
+    Untracked:  analysis/m6amash.Rmd
+    Untracked:  analysis/mash_bhat_z.Rmd
+    Untracked:  analysis/mash_ieqtl_permutations.Rmd
+    Untracked:  analysis/matrix_beta.Rmd
+    Untracked:  analysis/meth_flash_01.Rmd
+    Untracked:  analysis/methylation_example.Rmd
+    Untracked:  analysis/mixsqp.Rmd
+    Untracked:  analysis/mr.ash_lasso_init.Rmd
+    Untracked:  analysis/mr.mash.test.Rmd
+    Untracked:  analysis/mr_ash_modular.Rmd
+    Untracked:  analysis/mr_ash_parameterization.Rmd
+    Untracked:  analysis/mr_ash_ridge.Rmd
+    Untracked:  analysis/mv_gaussian_message_passing.Rmd
+    Untracked:  analysis/nejm.Rmd
+    Untracked:  analysis/nmf_bg.Rmd
+    Untracked:  analysis/nonneg_underapprox.Rmd
+    Untracked:  analysis/normal_conditional_on_r2.Rmd
+    Untracked:  analysis/normalize.Rmd
+    Untracked:  analysis/pbmc.Rmd
+    Untracked:  analysis/pca_binary_weighted.Rmd
+    Untracked:  analysis/pca_l1.Rmd
+    Untracked:  analysis/poisson_nmf_approx.Rmd
+    Untracked:  analysis/poisson_shrink.Rmd
+    Untracked:  analysis/poisson_transform.Rmd
+    Untracked:  analysis/qrnotes.txt
+    Untracked:  analysis/ridge_iterative_02.Rmd
+    Untracked:  analysis/ridge_iterative_splitting.Rmd
+    Untracked:  analysis/samps/
+    Untracked:  analysis/sc_bimodal.Rmd
+    Untracked:  analysis/shrinkage_comparisons_changepoints.Rmd
+    Untracked:  analysis/susie_cov.Rmd
+    Untracked:  analysis/susie_en.Rmd
+    Untracked:  analysis/susie_z_investigate.Rmd
+    Untracked:  analysis/svd-timing.Rmd
+    Untracked:  analysis/temp.RDS
+    Untracked:  analysis/temp.Rmd
+    Untracked:  analysis/test-figure/
+    Untracked:  analysis/test.Rmd
+    Untracked:  analysis/test.Rpres
+    Untracked:  analysis/test.md
+    Untracked:  analysis/test_qr.R
+    Untracked:  analysis/test_sparse.Rmd
+    Untracked:  analysis/tree_dist_top_eigenvector.Rmd
+    Untracked:  analysis/z.txt
+    Untracked:  code/coordinate_descent_symNMF.R
+    Untracked:  code/multivariate_testfuncs.R
+    Untracked:  code/rqb.hacked.R
+    Untracked:  data/4matthew/
+    Untracked:  data/4matthew2/
+    Untracked:  data/E-MTAB-2805.processed.1/
+    Untracked:  data/ENSG00000156738.Sim_Y2.RDS
+    Untracked:  data/GDS5363_full.soft.gz
+    Untracked:  data/GSE41265_allGenesTPM.txt
+    Untracked:  data/Muscle_Skeletal.ACTN3.pm1Mb.RDS
+    Untracked:  data/P.rds
+    Untracked:  data/Thyroid.FMO2.pm1Mb.RDS
+    Untracked:  data/bmass.HaemgenRBC2016.MAF01.Vs2.MergedDataSources.200kRanSubset.ChrBPMAFMarkerZScores.vs1.txt.gz
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.PreviousSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/eb_prepilot/
+    Untracked:  data/finemap_data/fmo2.sim/b.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/data
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.ld
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.z
+    Untracked:  data/finemap_data/fmo2.sim/pos.txt
+    Untracked:  data/logm.csv
+    Untracked:  data/m.cd.RDS
+    Untracked:  data/m.cdu.old.RDS
+    Untracked:  data/m.new.cd.RDS
+    Untracked:  data/m.old.cd.RDS
+    Untracked:  data/mainbib.bib.old
+    Untracked:  data/mat.csv
+    Untracked:  data/mat.txt
+    Untracked:  data/mat_new.csv
+    Untracked:  data/matrix_lik.rds
+    Untracked:  data/paintor_data/
+    Untracked:  data/running_data_chris.csv
+    Untracked:  data/running_data_matthew.csv
+    Untracked:  data/temp.txt
+    Untracked:  data/y.txt
+    Untracked:  data/y_f.txt
+    Untracked:  data/zscore_jointLCLs_m6AQTLs_susie_eQTLpruned.rds
+    Untracked:  data/zscore_jointLCLs_random.rds
+    Untracked:  explore_udi.R
+    Untracked:  output/fit.k10.rds
+    Untracked:  output/fit.nn.pbmc.purified.rds
+    Untracked:  output/fit.nn.rds
+    Untracked:  output/fit.nn.s.001.rds
+    Untracked:  output/fit.nn.s.01.rds
+    Untracked:  output/fit.nn.s.1.rds
+    Untracked:  output/fit.nn.s.10.rds
+    Untracked:  output/fit.snn.s.001.rds
+    Untracked:  output/fit.snn.s.01.nninit.rds
+    Untracked:  output/fit.snn.s.01.rds
+    Untracked:  output/fit.varbvs.RDS
+    Untracked:  output/fit2.nn.pbmc.purified.rds
+    Untracked:  output/glmnet.fit.RDS
+    Untracked:  output/snn07.txt
+    Untracked:  output/snn34.txt
+    Untracked:  output/test.bv.txt
+    Untracked:  output/test.gamma.txt
+    Untracked:  output/test.hyp.txt
+    Untracked:  output/test.log.txt
+    Untracked:  output/test.param.txt
+    Untracked:  output/test2.bv.txt
+    Untracked:  output/test2.gamma.txt
+    Untracked:  output/test2.hyp.txt
+    Untracked:  output/test2.log.txt
+    Untracked:  output/test2.param.txt
+    Untracked:  output/test3.bv.txt
+    Untracked:  output/test3.gamma.txt
+    Untracked:  output/test3.hyp.txt
+    Untracked:  output/test3.log.txt
+    Untracked:  output/test3.param.txt
+    Untracked:  output/test4.bv.txt
+    Untracked:  output/test4.gamma.txt
+    Untracked:  output/test4.hyp.txt
+    Untracked:  output/test4.log.txt
+    Untracked:  output/test4.param.txt
+    Untracked:  output/test5.bv.txt
+    Untracked:  output/test5.gamma.txt
+    Untracked:  output/test5.hyp.txt
+    Untracked:  output/test5.log.txt
+    Untracked:  output/test5.param.txt
+
+Unstaged changes:
+    Modified:   .gitignore
+    Modified:   analysis/eb_snmu.Rmd
+    Modified:   analysis/ebnm_binormal.Rmd
+    Modified:   analysis/ebpower.Rmd
+    Modified:   analysis/flashier_log1p.Rmd
+    Modified:   analysis/flashier_sla_text.Rmd
+    Modified:   analysis/logistic_z_scores.Rmd
+    Modified:   analysis/mr_ash_pen.Rmd
+    Modified:   analysis/nmu_em.Rmd
+    Modified:   analysis/susie_flash.Rmd
+    Modified:   analysis/tap_free_energy.Rmd
+    Modified:   misc.Rproj
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+There are no past versions. Publish this analysis with <code>wflow_publish()</code> to start tracking its development.
+</p>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>This analysis explores variance-prioritized initialization for non-whitened FastICA, extending the approach in <a href="fastica_nonwhitened.html">fastica_nonwhitened</a> and using the Tilted Log-Cosh (TLC) contrast from <a href="fastica_skew.html">fastica_skew</a>.</p>
+<p>In non-whitened FastICA we work with <span class="math inline">\(Z = DV&#39;\)</span> (<span class="math inline">\(k \times n\)</span>) and the constraint <span class="math inline">\(w&#39;D^2 w = n\)</span>. The Newton fixed-point update is <span class="math display">\[w \leftarrow nD^{-2}E[z\,g(w&#39;z)] - E[g&#39;(w&#39;z)]\,w, \qquad
+  w \leftarrow w\sqrt{n}/\sqrt{w&#39;D^2 w}.\]</span> A random <span class="math inline">\(w\)</span> in the non-whitened parameterisation already implicitly biases convergence toward high-variance PCs. The goal here is to make that bias stronger, to further improve the success rate from random starts.</p>
+<p>We try two approaches and explain why the first fails.</p>
+</div>
+<div id="approach-1-step-space-preconditioning-fails" class="section level2">
+<h2>Approach 1: Step-space preconditioning (fails)</h2>
+<div id="idea" class="section level3">
+<h3>Idea</h3>
+<p>Scale the Newton <em>displacement</em> <span class="math inline">\(\Delta w = w_{target} - w\)</span> by a time-decaying diagonal matrix <span class="math inline">\(P_t\)</span> before applying it: <span class="math display">\[P_{base} = \frac{D^2}{\max d_i^2}, \quad
+  \alpha_t = e^{-t/\tau}, \quad
+  P_t = \alpha_t P_{base} + (1-\alpha_t)I,\]</span> <span class="math display">\[w_{new} = \text{normalize}(w + P_t\,\Delta w).\]</span></p>
+</div>
+<div id="implementation" class="section level3">
+<h3>Implementation</h3>
+<pre class="r"><code># ---- shared helpers ----
+
+preprocess_nonwhitened = function(X, n.comp) {
+  X  = X - rowMeans(X)
+  sv = svd(X, nu = 0, nv = n.comp)
+  d  = sv$d[1:n.comp]
+  Z  = diag(d, nrow = length(d)) %*% t(sv$v)
+  D2 = diag(d^2, nrow = length(d))
+  list(Z = Z, D2 = D2, d = d)
+}
+
+normalize_nw = function(w, D2, n) {
+  w * sqrt(n) / sqrt(as.numeric(t(w) %*% D2 %*% w))
+}
+
+newton_target_nw = function(Z, D2, w, lambda = 0) {
+  d2   = diag(D2)
+  proj = as.vector(t(Z) %*% w)
+  G    = tanh(proj) + 2 * lambda * abs(proj)
+  G2   = 1 - tanh(proj)^2 + 2 * lambda * sign(proj)
+  as.vector(Z %*% G) / d2 - mean(G2) * w
+}
+
+fastica_r1update_nw = function(Z, D2, w, lambda = 0) {
+  n = ncol(Z)
+  w = normalize_nw(w, D2, n)
+  normalize_nw(newton_target_nw(Z, D2, w, lambda), D2, n)
+}
+
+fastica_step_precond = function(Z, D2, w_init = NULL, tau = 10, lambda = 0,
+                                tol = 1e-6, t_max = 500) {
+  n     = ncol(Z); d2 = diag(D2)
+  Pbase = d2 / max(d2)
+  w = if (is.null(w_init)) rnorm(nrow(Z)) else w_init
+  w = normalize_nw(w, D2, n)
+  for (t in seq_len(t_max)) {
+    w_target = newton_target_nw(Z, D2, w, lambda)
+    Pt       = exp(-t / tau) * Pbase + (1 - exp(-t / tau))
+    w_new    = normalize_nw(w + Pt * (w_target - w), D2, n)
+    sim = abs(as.numeric(t(w_new) %*% D2 %*% w)) / n
+    w   = w_new
+    if ((1 - sim) &lt; tol) break
+  }
+  w
+}
+
+k_pca    = 20
+tau_vals = c(1, 5, 10, 20, 50)</code></pre>
+</div>
+<div id="data-1-true-source-20-pcs-rademacher" class="section level3">
+<h3>Data: 1 true source, 20 PCs (Rademacher)</h3>
+<pre class="r"><code>set.seed(10)
+n = 200; p = 1000
+A     = matrix(rnorm(p), nrow = p)
+S_rad = matrix(sample(c(-1, 1), n, replace = TRUE), nrow = 1)
+X_rad = A %*% S_rad + matrix(rnorm(p * n, 0, 0.1), nrow = p)
+nw_rad = preprocess_nonwhitened(X_rad, k_pca)
+
+plot(nw_rad$d, type = &quot;b&quot;, pch = 19, cex = 0.7,
+     xlab = &quot;PC index&quot;, ylab = &quot;singular value&quot;,
+     main = &quot;Singular values (1 true source, k=20)&quot;)
+abline(v = 1.5, lty = 2, col = &quot;red&quot;)
+legend(&quot;topright&quot;, &quot;true k&quot;, lty = 2, col = &quot;red&quot;, bty = &quot;n&quot;)</code></pre>
+<p><img src="figure/fastica_precondition.Rmd/unnamed-chunk-2-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="why-it-fails-single-seed-trajectory-τ1-vs-τ4" class="section level3">
+<h3>Why it fails: single-seed trajectory (τ=1 vs τ=4)</h3>
+<pre class="r"><code>trace_step_precond = function(Z, D2, s, w_init, tau, lambda = 0, n_iter = 100) {
+  n = ncol(Z); d2 = diag(D2); k = nrow(Z)
+  Pbase = d2 / max(d2)
+  w = normalize_nw(w_init, D2, n)
+  cors = numeric(n_iter); pc_wt = matrix(0, n_iter, k)
+  for (t in seq_len(n_iter)) {
+    w_target = newton_target_nw(Z, D2, w, lambda)
+    Pt       = exp(-t / tau) * Pbase + (1 - exp(-t / tau))
+    w        = normalize_nw(w + Pt * (w_target - w), D2, n)
+    cors[t]  = abs(cor(as.vector(s), as.vector(t(Z) %*% w)))
+    pc_wt[t,] = as.vector(w)^2 * d2 / sum(as.vector(w)^2 * d2)
+  }
+  list(cors = cors, pc_wt = pc_wt)
+}
+
+trace_nw = function(Z, D2, s, w_init, lambda = 0, n_iter = 100) {
+  n = ncol(Z); d2 = diag(D2); k = nrow(Z)
+  w = normalize_nw(w_init, D2, n)
+  cors = numeric(n_iter); pc_wt = matrix(0, n_iter, k)
+  for (t in seq_len(n_iter)) {
+    w = fastica_r1update_nw(Z, D2, w, lambda)
+    cors[t]   = abs(cor(as.vector(s), as.vector(t(Z) %*% w)))
+    pc_wt[t,] = as.vector(w)^2 * d2 / sum(as.vector(w)^2 * d2)
+  }
+  list(cors = cors, pc_wt = pc_wt)
+}
+
+set.seed(1); w0 = rnorm(k_pca)
+tr_nw = trace_nw(nw_rad$Z, nw_rad$D2, S_rad, w0)
+tr_s1 = trace_step_precond(nw_rad$Z, nw_rad$D2, S_rad, w0, tau = 1)
+tr_s4 = trace_step_precond(nw_rad$Z, nw_rad$D2, S_rad, w0, tau = 4)</code></pre>
+<pre class="r"><code>plot(tr_nw$cors, type = &quot;l&quot;, col = &quot;steelblue&quot;, lwd = 2, ylim = c(0, 1),
+     xlab = &quot;iteration&quot;, ylab = &quot;|cor(w&#39;z, s)|&quot;,
+     main = &quot;Step-space preconditioning: correlation trajectory (seed 1)&quot;)
+lines(tr_s1$cors, col = &quot;forestgreen&quot;, lwd = 2)
+lines(tr_s4$cors, col = &quot;tomato&quot;,      lwd = 2)
+abline(h = 0.9, lty = 2, col = &quot;grey60&quot;)
+legend(&quot;bottomright&quot;,
+       c(&quot;standard NW&quot;, expression(tau==1), expression(tau==4)),
+       col = c(&quot;steelblue&quot;, &quot;forestgreen&quot;, &quot;tomato&quot;), lwd = 2, bty = &quot;n&quot;)</code></pre>
+<p><img src="figure/fastica_precondition.Rmd/unnamed-chunk-4-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot_pc_traj = function(pc_wt, cors, title, top = 5) {
+  cols = c(&quot;tomato&quot;, &quot;steelblue&quot;, &quot;forestgreen&quot;, &quot;darkorange&quot;, &quot;purple&quot;)
+  n_iter = nrow(pc_wt)
+  plot(NULL, xlim = c(1, n_iter), ylim = c(0, 1),
+       xlab = &quot;iteration&quot;, ylab = &quot;D2-weighted loading fraction&quot;, main = title)
+  for (j in 1:top) lines(pc_wt[, j], col = cols[j], lwd = 1.5)
+  par(new = TRUE)
+  plot(cors, type = &quot;l&quot;, lty = 2, col = &quot;black&quot;, lwd = 2,
+       xlim = c(1, n_iter), ylim = c(0, 1), axes = FALSE, xlab = &quot;&quot;, ylab = &quot;&quot;)
+  legend(&quot;topright&quot;, c(paste0(&quot;PC&quot;, 1:top), &quot;|cor|&quot;),
+         col = c(cols[1:top], &quot;black&quot;), lty = c(rep(1, top), 2),
+         lwd = c(rep(1.5, top), 2), bty = &quot;n&quot;, cex = 0.8)
+}
+
+par(mfrow = c(3, 1))
+plot_pc_traj(tr_nw$pc_wt, tr_nw$cors, &quot;Standard NW&quot;)
+plot_pc_traj(tr_s1$pc_wt, tr_s1$cors, expression(&quot;Step-precond &quot; * tau == 1))
+plot_pc_traj(tr_s4$pc_wt, tr_s4$cors, expression(&quot;Step-precond &quot; * tau == 4))</code></pre>
+<p><img src="figure/fastica_precondition.Rmd/unnamed-chunk-5-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>par(mfrow = c(1, 1))</code></pre>
+</div>
+<div id="why-this-happens" class="section level3">
+<h3>Why this happens</h3>
+<p>The step-space preconditioner with <span class="math inline">\(P_{t,i} \approx 0\)</span> for noise PCs effectively <strong>freezes</strong> those components: <span class="math inline">\(w_{new,i} \approx w_i + 0 \cdot \Delta w_i = w_i\)</span>. Only the PC 1 component receives a full Newton step.</p>
+<p>The trouble is that <span class="math inline">\(w_{target}\)</span> is computed from <span class="math inline">\(t(Z) w\)</span>, which depends on <em>all</em> components of <span class="math inline">\(w\)</span>, including the frozen noise PCs. At every iteration the PC 1 Newton update is evaluated against stale, never-updated noise-PC coordinates. This creates a persistent mismatch between the assumed and true projection, causing the iterate to orbit rather than converge. With <span class="math inline">\(\tau = 1\)</span> the preconditioner decays before this mismatch builds up; with <span class="math inline">\(\tau = 4\)</span> it persists long enough to derail the iteration.</p>
+</div>
+</div>
+<div id="approach-2-homotopy-continuation-method" class="section level2">
+<h2>Approach 2: Homotopy (continuation) method</h2>
+<div id="idea-1" class="section level3">
+<h3>Idea</h3>
+<p>Instead of distorting the step direction, temporarily distort <em>the target</em> and let it morph back to the true Newton target. Define <span class="math display">\[S_t = \alpha_t \frac{\text{diag}(D^2)}{\max d_i^2} + (1-\alpha_t)\mathbf{1},
+  \quad \alpha_t = e^{-t/\tau},\]</span> and replace the Newton target with a biased version before normalizing: <span class="math display">\[w_{new} = \text{normalize}(S_t \circ w_{target}).\]</span></p>
+<p><strong>Early iterations</strong>: minor-PC coordinates of <span class="math inline">\(w_{target}\)</span> are shrunk, so the iterate is pulled toward high-variance PCs.</p>
+<p><strong>Late iterations</strong> (<span class="math inline">\(\alpha_t \to 0\)</span>): <span class="math inline">\(S_t \to \mathbf{1}\)</span>, and we normalize the unmodified Newton target — identical to standard FastICA.</p>
+<p>Crucially, <span class="math inline">\(w_{target}\)</span> is always computed from the current <span class="math inline">\(w\)</span> with no component frozen. The full Newton coupling is preserved at every step.</p>
+</div>
+<div id="implementation-1" class="section level3">
+<h3>Implementation</h3>
+<pre class="r"><code>fastica_homotopy_nw = function(Z, D2, w_init = NULL, tau = 5, lambda = 0,
+                               tol = 1e-6, t_max = 500) {
+  n     = ncol(Z)
+  d2    = diag(D2)
+  Sbase = d2 / max(d2)
+  w = if (is.null(w_init)) rnorm(nrow(Z)) else w_init
+  w = normalize_nw(w, D2, n)
+  for (t in seq_len(t_max)) {
+    w_target = newton_target_nw(Z, D2, w, lambda)
+    S_t      = exp(-t / tau) * Sbase + (1 - exp(-t / tau))
+    w_new    = normalize_nw(w_target * S_t, D2, n)
+    sim = abs(as.numeric(t(w_new) %*% D2 %*% w)) / n
+    w   = w_new
+    if ((1 - sim) &lt; tol) break
+  }
+  w
+}
+
+run_seeds_homotopy = function(nw, S_true, tau = 5, lambda = 0, n_seeds = 100,
+                              tol = 1e-6, t_max = 500) {
+  maxcor = numeric(n_seeds)
+  for (seed in seq_len(n_seeds)) {
+    set.seed(seed)
+    w = fastica_homotopy_nw(nw$Z, nw$D2,
+                             w_init  = rnorm(nrow(nw$Z)),
+                             tau     = tau,
+                             lambda  = lambda,
+                             tol     = tol,
+                             t_max   = t_max)
+    proj         = as.vector(t(nw$Z) %*% w)
+    maxcor[seed] = max(abs(cor(t(S_true), proj)))
+  }
+  maxcor
+}
+
+run_seeds_nw = function(nw, S_true, lambda = 0, n_seeds = 100, n_iter = 500) {
+  maxcor = numeric(n_seeds)
+  for (seed in seq_len(n_seeds)) {
+    set.seed(seed)
+    w = rnorm(nrow(nw$Z))
+    for (i in seq_len(n_iter)) w = fastica_r1update_nw(nw$Z, nw$D2, w, lambda)
+    proj         = as.vector(t(nw$Z) %*% w)
+    maxcor[seed] = max(abs(cor(t(S_true), proj)))
+  }
+  maxcor
+}</code></pre>
+</div>
+<div id="single-seed-trajectory" class="section level3">
+<h3>Single-seed trajectory</h3>
+<pre class="r"><code>trace_homotopy = function(Z, D2, s, w_init, tau, lambda = 0, n_iter = 100) {
+  n = ncol(Z); d2 = diag(D2); k = nrow(Z)
+  Sbase = d2 / max(d2)
+  w = normalize_nw(w_init, D2, n)
+  cors = numeric(n_iter); pc_wt = matrix(0, n_iter, k)
+  for (t in seq_len(n_iter)) {
+    w_target = newton_target_nw(Z, D2, w, lambda)
+    S_t      = exp(-t / tau) * Sbase + (1 - exp(-t / tau))
+    w        = normalize_nw(w_target * S_t, D2, n)
+    cors[t]  = abs(cor(as.vector(s), as.vector(t(Z) %*% w)))
+    pc_wt[t,] = as.vector(w)^2 * d2 / sum(as.vector(w)^2 * d2)
+  }
+  list(cors = cors, pc_wt = pc_wt)
+}
+
+set.seed(1); w0 = rnorm(k_pca)
+tr_h5  = trace_homotopy(nw_rad$Z, nw_rad$D2, S_rad, w0, tau = 5)
+tr_h10 = trace_homotopy(nw_rad$Z, nw_rad$D2, S_rad, w0, tau = 10)</code></pre>
+<pre class="r"><code>plot(tr_nw$cors,  type = &quot;l&quot;, col = &quot;steelblue&quot;, lwd = 2, ylim = c(0, 1),
+     xlab = &quot;iteration&quot;, ylab = &quot;|cor(w&#39;z, s)|&quot;,
+     main = &quot;Homotopy: correlation trajectory (seed 1)&quot;)
+lines(tr_h5$cors,  col = &quot;forestgreen&quot;, lwd = 2)
+lines(tr_h10$cors, col = &quot;tomato&quot;,      lwd = 2)
+abline(h = 0.9, lty = 2, col = &quot;grey60&quot;)
+legend(&quot;bottomright&quot;,
+       c(&quot;standard NW&quot;, expression(tau==5), expression(tau==10)),
+       col = c(&quot;steelblue&quot;, &quot;forestgreen&quot;, &quot;tomato&quot;), lwd = 2, bty = &quot;n&quot;)</code></pre>
+<p><img src="figure/fastica_precondition.Rmd/unnamed-chunk-8-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>par(mfrow = c(2, 1))
+plot_pc_traj(tr_h5$pc_wt,  tr_h5$cors,  expression(&quot;Homotopy &quot; * tau == 5))
+plot_pc_traj(tr_h10$pc_wt, tr_h10$cors, expression(&quot;Homotopy &quot; * tau == 10))</code></pre>
+<p><img src="figure/fastica_precondition.Rmd/unnamed-chunk-9-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>par(mfrow = c(1, 1))</code></pre>
+</div>
+</div>
+<div id="test-1-1-true-source-20-pcs-rademacher" class="section level2">
+<h2>Test 1: 1 true source, 20 PCs (Rademacher)</h2>
+<p>Four methods: standard NW and homotopy, each with log-cosh (λ=0) and TLC (λ=1). As shown above, TLC has the wrong objective for the symmetric Rademacher source and is expected to fail here; it is included to demonstrate this.</p>
+<pre class="r"><code>mc1 = list(
+  nw_lc  = run_seeds_nw(nw_rad,       S_rad, lambda = 0),
+  nw_tlc = run_seeds_nw(nw_rad,       S_rad, lambda = 1),
+  ho_lc  = run_seeds_homotopy(nw_rad, S_rad, tau = 5, lambda = 0),
+  ho_tlc = run_seeds_homotopy(nw_rad, S_rad, tau = 5, lambda = 1)
+)
+
+methods1 = c(&quot;NW log-cosh&quot;, &quot;NW TLC&quot;, &quot;Homotopy log-cosh&quot;, &quot;Homotopy TLC&quot;)
+for (i in seq_along(mc1))
+  cat(sprintf(&quot;%-20s  mean=%.3f  frac&gt;0.9=%.2f\n&quot;,
+      methods1[i], mean(mc1[[i]]), mean(mc1[[i]] &gt; 0.9)))</code></pre>
+<pre><code>NW log-cosh           mean=0.984  frac&gt;0.9=0.98
+NW TLC                mean=0.200  frac&gt;0.9=0.00
+Homotopy log-cosh     mean=1.000  frac&gt;0.9=1.00
+Homotopy TLC          mean=0.268  frac&gt;0.9=0.01</code></pre>
+<pre class="r"><code>par(mfrow = c(2, 2))
+for (i in seq_along(mc1))
+  hist(mc1[[i]], breaks = seq(0, 1, by = 0.05),
+       main = methods1[i], xlab = &quot;max |cor|&quot;)</code></pre>
+<p><img src="figure/fastica_precondition.Rmd/unnamed-chunk-10-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>par(mfrow = c(1, 1))</code></pre>
+<div id="why-does-tlc-fail-on-the-rademacher-source" class="section level3">
+<h3>Why does TLC fail on the Rademacher source?</h3>
+<p>The Rademacher source is symmetric (<span class="math inline">\(P(s=+1) = P(s=-1) = 0.5\)</span>). The TLC objective is <span class="math inline">\(G(z) = \log\cosh(z) + \lambda z|z|\)</span>, where the extra term <span class="math inline">\(z|z|\)</span> rewards <em>skewness</em>. For a perfectly symmetric source <span class="math inline">\(E[s|s|] = E[s] = 0\)</span>, so TLC adds zero contrast at the true source direction. In a finite sample, however, noise PCs can appear skewed by chance. TLC then treats those spuriously skewed noise directions as better optima than the symmetric true source — this is an <em>objective landscape</em> problem, not a convergence failure.</p>
+<p>We verify this directly: compute both objectives at the LC solution, TLC solution, and the pure PC1 direction, and check whether TLC’s converged solution genuinely has a higher TLC score than PC1.</p>
+<pre class="r"><code>obj_lc  = function(Z, D2, w) {
+  w = normalize_nw(w, D2, ncol(Z))
+  mean(log(cosh(as.vector(t(Z) %*% w))))
+}
+obj_tlc = function(Z, D2, w, lambda = 1) {
+  w = normalize_nw(w, D2, ncol(Z))
+  p = as.vector(t(Z) %*% w)
+  mean(log(cosh(p)) + lambda * abs(p) * p)
+}
+
+k   = nrow(nw_rad$Z)
+n   = ncol(nw_rad$Z)
+d2v = diag(nw_rad$D2)
+
+set.seed(1); w0 = rnorm(k_pca)
+w_lc  = w0; for (i in 1:500) w_lc  = fastica_r1update_nw(nw_rad$Z, nw_rad$D2, w_lc,  lambda = 0)
+w_tlc = w0; for (i in 1:500) w_tlc = fastica_r1update_nw(nw_rad$Z, nw_rad$D2, w_tlc, lambda = 1)
+
+e1      = rep(0, k_pca); e1[1] = 1
+e1_norm = e1 * sqrt(n / d2v[1])   # PC1 direction, normalised to w&#39;D2 w = n
+
+cat(&quot;--- Log-cosh objective ---\n&quot;)</code></pre>
+<pre><code>--- Log-cosh objective ---</code></pre>
+<pre class="r"><code>cat(&quot;  LC solution:       &quot;, round(obj_lc(nw_rad$Z, nw_rad$D2, w_lc),    5), &quot;\n&quot;)</code></pre>
+<pre><code>  LC solution:        0.43335 </code></pre>
+<pre class="r"><code>cat(&quot;  TLC solution:      &quot;, round(obj_lc(nw_rad$Z, nw_rad$D2, w_tlc),   5), &quot;\n&quot;)</code></pre>
+<pre><code>  TLC solution:       0.35892 </code></pre>
+<pre class="r"><code>cat(&quot;  PC1 (true source): &quot;, round(obj_lc(nw_rad$Z, nw_rad$D2, e1_norm), 5), &quot;\n&quot;)</code></pre>
+<pre><code>  PC1 (true source):  0.43335 </code></pre>
+<pre class="r"><code>cat(&quot;\n--- TLC objective (lambda=1) ---\n&quot;)</code></pre>
+<pre><code>
+--- TLC objective (lambda=1) ---</code></pre>
+<pre class="r"><code>cat(&quot;  LC solution:       &quot;, round(obj_tlc(nw_rad$Z, nw_rad$D2, w_lc),    5), &quot;\n&quot;)</code></pre>
+<pre><code>  LC solution:        0.38335 </code></pre>
+<pre class="r"><code>cat(&quot;  TLC solution:      &quot;, round(obj_tlc(nw_rad$Z, nw_rad$D2, w_tlc),   5), &quot;\n&quot;)</code></pre>
+<pre><code>  TLC solution:       0.67427 </code></pre>
+<pre class="r"><code>cat(&quot;  PC1 (true source): &quot;, round(obj_tlc(nw_rad$Z, nw_rad$D2, e1_norm), 5), &quot;\n&quot;)</code></pre>
+<pre><code>  PC1 (true source):  0.48335 </code></pre>
+<pre class="r"><code>cat(&quot;\n--- Correlation with true source ---\n&quot;)</code></pre>
+<pre><code>
+--- Correlation with true source ---</code></pre>
+<pre class="r"><code>cat(&quot;  LC solution:  &quot;, round(abs(cor(as.vector(S_rad), as.vector(t(nw_rad$Z) %*% w_lc))),    3), &quot;\n&quot;)</code></pre>
+<pre><code>  LC solution:   1 </code></pre>
+<pre class="r"><code>cat(&quot;  TLC solution: &quot;, round(abs(cor(as.vector(S_rad), as.vector(t(nw_rad$Z) %*% w_tlc))),   3), &quot;\n&quot;)</code></pre>
+<pre><code>  TLC solution:  0.201 </code></pre>
+<pre class="r"><code>cat(&quot;  PC1:          &quot;, round(abs(cor(as.vector(S_rad), as.vector(t(nw_rad$Z) %*% e1_norm))), 3), &quot;\n&quot;)</code></pre>
+<pre><code>  PC1:           1 </code></pre>
+<p>The TLC solution has a <em>higher</em> TLC objective than PC1, confirming this is a landscape problem: TLC has found a genuine (but wrong) optimum at a dense, apparently-skewed noise direction. The log-cosh objective is higher at PC1 than at the TLC solution, so log-cosh correctly identifies the true source. TLC should only be used for skewed/sparse sources.</p>
+</div>
+<div id="τ-sensitivity-for-homotopy-log-cosh" class="section level3">
+<h3>τ sensitivity for homotopy (log-cosh)</h3>
+<pre class="r"><code>mc1_tau = lapply(tau_vals, function(tau)
+  run_seeds_homotopy(nw_rad, S_rad, tau = tau, lambda = 0))
+
+cat(&quot;frac &gt; 0.9 by tau (log-cosh):\n&quot;)</code></pre>
+<pre><code>frac &gt; 0.9 by tau (log-cosh):</code></pre>
+<pre class="r"><code>for (i in seq_along(tau_vals))
+  cat(&quot; tau =&quot;, tau_vals[i], &quot;:&quot;, round(mean(mc1_tau[[i]] &gt; 0.9), 3), &quot;\n&quot;)</code></pre>
+<pre><code> tau = 1 : 0.98 
+ tau = 5 : 1 
+ tau = 10 : 1 
+ tau = 20 : 1 
+ tau = 50 : 1 </code></pre>
+</div>
+</div>
+<div id="test-2-9-overlapping-groups-20-pcs" class="section level2">
+<h2>Test 2: 9 overlapping groups, 20 PCs</h2>
+<p>Standard log-cosh fails here; TLC is needed (see <a href="fastica_skew.html">fastica_skew</a>). We compare all four methods.</p>
+<pre class="r"><code>set.seed(1)
+n = 100; p = 1000; K = 9
+L  = matrix(0, nrow = n, ncol = K)
+for (i in 1:K) L[sample(n, 20), i] = 1
+FF = matrix(rnorm(p * K), nrow = p)
+X9 = t(L %*% t(FF) + matrix(rnorm(n * p, 0, 0.1), nrow = n))
+nw9 = preprocess_nonwhitened(X9, k_pca)
+
+mc9 = list(
+  nw_lc  = run_seeds_nw(nw9,       t(L), lambda = 0),
+  nw_tlc = run_seeds_nw(nw9,       t(L), lambda = 1),
+  ho_lc  = run_seeds_homotopy(nw9, t(L), tau = 5, lambda = 0),
+  ho_tlc = run_seeds_homotopy(nw9, t(L), tau = 5, lambda = 1)
+)
+
+methods9 = methods1
+for (i in seq_along(mc9))
+  cat(sprintf(&quot;%-20s  mean=%.3f  frac&gt;0.9=%.2f\n&quot;,
+      methods9[i], mean(mc9[[i]]), mean(mc9[[i]] &gt; 0.9)))</code></pre>
+<pre><code>NW log-cosh           mean=0.412  frac&gt;0.9=0.00
+NW TLC                mean=1.000  frac&gt;0.9=1.00
+Homotopy log-cosh     mean=0.443  frac&gt;0.9=0.00
+Homotopy TLC          mean=1.000  frac&gt;0.9=1.00</code></pre>
+<pre class="r"><code>par(mfrow = c(2, 2))
+for (i in seq_along(mc9))
+  hist(mc9[[i]], breaks = seq(0, 1, by = 0.05),
+       main = methods9[i], xlab = &quot;max |cor|&quot;)</code></pre>
+<p><img src="figure/fastica_precondition.Rmd/unnamed-chunk-13-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>par(mfrow = c(1, 1))</code></pre>
+<div id="τ-sensitivity-for-homotopy-tlc-on-9-source-problem" class="section level3">
+<h3>τ sensitivity for homotopy TLC on 9-source problem</h3>
+<pre class="r"><code>mc9_tau = lapply(tau_vals, function(tau)
+  run_seeds_homotopy(nw9, t(L), tau = tau, lambda = 1))
+
+cat(&quot;frac &gt; 0.9 by tau (TLC):\n&quot;)</code></pre>
+<pre><code>frac &gt; 0.9 by tau (TLC):</code></pre>
+<pre class="r"><code>for (i in seq_along(tau_vals))
+  cat(&quot; tau =&quot;, tau_vals[i], &quot;:&quot;, round(mean(mc9_tau[[i]] &gt; 0.9), 3), &quot;\n&quot;)</code></pre>
+<pre><code> tau = 1 : 1 
+ tau = 5 : 1 
+ tau = 10 : 1 
+ tau = 20 : 1 
+ tau = 50 : 1 </code></pre>
+</div>
+</div>
+<div id="summary" class="section level2">
+<h2>Summary</h2>
+<p><strong>Step-space preconditioning</strong> (Approach 1) fails for <span class="math inline">\(\tau \geq 4\)</span>. When <span class="math inline">\(P_{t,i} \approx 0\)</span> for noise PCs, those components are effectively frozen while only PC 1 is updated. But <span class="math inline">\(w_{target}\)</span> depends on <span class="math inline">\(Z&#39;w\)</span> — the full projection using all components — so the PC 1 Newton step is computed against stale noise-PC values at every iteration. This persistent mismatch causes oscillation rather than convergence.</p>
+<p><strong>Homotopy method</strong> (Approach 2) avoids this by computing <span class="math inline">\(w_{target}\)</span> from the full current <span class="math inline">\(w\)</span>, then shrinking minor-PC coordinates of that target before normalizing. No component is ever frozen; the full Newton coupling is preserved. As <span class="math inline">\(\alpha_t \to 0\)</span> the bias vanishes and we recover standard Newton with quadratic convergence.</p>
+<p><strong>TLC contrast</strong> (<span class="math inline">\(\lambda = 1\)</span>) is needed for skewed/sparse sources (e.g. the 9-source overlapping group problem with p=0.2), where standard log-cosh falls below the Gaussian baseline and fails. TLC should <em>not</em> be used for symmetric sources (e.g. Rademacher p=0.5): the <span class="math inline">\(z|z|\)</span> term adds zero contrast at the true source but can reward finite-sample skewness in noise directions, producing a genuinely higher TLC objective at a wrong (noise) direction than at the true source.</p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.4.2 (2024-10-31)
+Platform: aarch64-apple-darwin20
+Running under: macOS 26.5.2
+
+Matrix products: default
+BLAS:   /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libBLAS.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.0
+
+locale:
+[1] C
+
+time zone: America/Detroit
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+ [1] vctrs_0.7.2     cli_3.6.5       knitr_1.51      rlang_1.1.7    
+ [5] xfun_0.56       stringi_1.8.7   otel_0.2.0      promises_1.5.0 
+ [9] jsonlite_2.0.0  workflowr_1.7.2 glue_1.8.0      rprojroot_2.1.1
+[13] git2r_0.36.2    htmltools_0.5.9 httpuv_1.6.16   sass_0.4.10    
+[17] rmarkdown_2.30  evaluate_1.0.5  jquerylib_0.1.4 tibble_3.3.1   
+[21] fastmap_1.2.0   yaml_2.3.12     lifecycle_1.0.5 stringr_1.6.0  
+[25] compiler_4.4.2  fs_1.6.6        Rcpp_1.1.1      pkgconfig_2.0.3
+[29] later_1.4.6     digest_0.6.39   R6_2.6.1        pillar_1.11.1  
+[33] magrittr_2.0.4  bslib_0.10.0    tools_4.4.2     cachem_1.1.0   </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
