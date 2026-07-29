@@ -131,18 +131,32 @@ Standard log-cosh fastICA for comparison:
 ```{r}
 fastica_r1update = function(X, w) {
   w = w / sqrt(sum(w^2))
-  P = t(X) %*% w
+  P  = t(X) %*% w
   G  = tanh(P); G2 = 1 - tanh(P)^2
   w  = X %*% G - mean(G2) * ncol(X) * w
   w / sqrt(sum(w^2))
 }
 
-run_seeds_lc = function(Y, S_true, n_seeds = 100, n_iter = 200) {
+fastica_r1update_trace = function(X, w, S_diag) {
+  w = w / sqrt(sum(w^2))
+  P  = t(X) %*% w
+  G  = tanh(P); G2 = 1 - tanh(P)^2
+  h  = sum(G2 * S_diag) / nrow(X)   # trace Hessian: Σ G2_i S_ii / k
+  w  = as.vector(X %*% G) / ncol(X) - h * w
+  w / sqrt(sum(w^2))
+}
+
+run_seeds_lc = function(Y, S_true, hess = "fastICA", n_seeds = 100, n_iter = 200) {
   maxcor = numeric(n_seeds)
+  S_diag = colSums(Y^2) / ncol(Y)
   for (seed in seq_len(n_seeds)) {
     set.seed(seed)
     w = rnorm(nrow(Y))
-    for (i in seq_len(n_iter)) w = fastica_r1update(Y, w)
+    if (hess == "trace") {
+      for (i in seq_len(n_iter)) w = fastica_r1update_trace(Y, w, S_diag)
+    } else {
+      for (i in seq_len(n_iter)) w = fastica_r1update(Y, w)
+    }
     maxcor[seed] = max(abs(cor(t(S_true), t(Y) %*% w)))
   }
   maxcor
@@ -257,7 +271,8 @@ S9 = t(L)
 ```
 
 ```{r}
-mc9_lc      = run_seeds_lc(Z9,       S9, n_seeds = 100)
+mc9_lc      = run_seeds_lc(Z9,       S9, hess = "fastICA", n_seeds = 100)
+mc9_lc_tr   = run_seeds_lc(Z9,       S9, hess = "trace",   n_seeds = 100)
 mc9_M       = run_seeds_asym(Z9,      S9, "M",      hess = "fastICA", n_seeds = 100)
 mc9_gr      = run_seeds_asym(Z9,      S9, "golden", hess = "fastICA", n_seeds = 100)
 mc9_gr_tr   = run_seeds_asym(Z9,      S9, "golden", hess = "trace",   n_seeds = 100)
@@ -265,8 +280,10 @@ mc9_grw     = run_seeds_asym_warm(Z9, S9, "golden", hess = "fastICA", n_seeds = 
 mc9_grw_tr  = run_seeds_asym_warm(Z9, S9, "golden", hess = "trace",   n_seeds = 100)
 
 cat("9-groups (p_true ~ 0.2, k = 9, n_seeds = 100):\n")
-cat(sprintf("  log-cosh                      mean = %.3f   frac > 0.9 = %.2f\n",
+cat(sprintf("  log-cosh (fastICA)            mean = %.3f   frac > 0.9 = %.2f\n",
     mean(mc9_lc), mean(mc9_lc > 0.9)))
+cat(sprintf("  log-cosh (trace)              mean = %.3f   frac > 0.9 = %.2f\n",
+    mean(mc9_lc_tr), mean(mc9_lc_tr > 0.9)))
 cat(sprintf("  asym M-est (random, fastICA)  mean = %.3f   frac > 0.9 = %.2f   mean_p = %.3f\n",
     mean(mc9_M$maxcor),      mean(mc9_M$maxcor      > 0.9), mean(mc9_M$p)))
 cat(sprintf("  asym golden (random, fastICA) mean = %.3f   frac > 0.9 = %.2f   mean_p = %.3f\n",
@@ -340,15 +357,18 @@ S_sym = matrix(sample(c(-1, 1), K * n, replace = TRUE), nrow = K)
 X_sym = t(S_sym) %*% t(FF) + matrix(rnorm(n * p_dim, 0, 0.1), nrow = n)
 Z_sym = prewhiten(t(X_sym), K)
 
-mc_s_lc      = run_seeds_lc(Z_sym,       S_sym, n_seeds = 100)
+mc_s_lc      = run_seeds_lc(Z_sym,       S_sym, hess = "fastICA", n_seeds = 100)
+mc_s_lc_tr   = run_seeds_lc(Z_sym,       S_sym, hess = "trace",   n_seeds = 100)
 mc_s_gr      = run_seeds_asym(Z_sym,      S_sym, "golden", hess = "fastICA", n_seeds = 100)
 mc_s_gr_tr   = run_seeds_asym(Z_sym,      S_sym, "golden", hess = "trace",   n_seeds = 100)
 mc_s_grw     = run_seeds_asym_warm(Z_sym, S_sym, "golden", hess = "fastICA", n_seeds = 100)
 mc_s_grw_tr  = run_seeds_asym_warm(Z_sym, S_sym, "golden", hess = "trace",   n_seeds = 100)
 
 cat("Symmetric Rademacher (p_true = 0.5, k = 9):\n")
-cat(sprintf("  log-cosh                      mean = %.3f   frac > 0.9 = %.2f\n",
+cat(sprintf("  log-cosh (fastICA)            mean = %.3f   frac > 0.9 = %.2f\n",
     mean(mc_s_lc), mean(mc_s_lc > 0.9)))
+cat(sprintf("  log-cosh (trace)              mean = %.3f   frac > 0.9 = %.2f\n",
+    mean(mc_s_lc_tr), mean(mc_s_lc_tr > 0.9)))
 cat(sprintf("  asym golden (random, fastICA) mean = %.3f   frac > 0.9 = %.2f   mean_p = %.3f\n",
     mean(mc_s_gr$maxcor),     mean(mc_s_gr$maxcor     > 0.9), mean(mc_s_gr$p)))
 cat(sprintf("  asym golden (random, trace)   mean = %.3f   frac > 0.9 = %.2f   mean_p = %.3f\n",
@@ -398,15 +418,18 @@ Z_k20_01 = prewhiten(X_k20_01, k20)
 ### $p = 0.5$, $k = 20$
 
 ```{r}
-mc_k20_05_lc    = run_seeds_lc(Z_k20_05,       S_k20_05, n_seeds = 100)
-mc_k20_05_gr    = run_seeds_asym(Z_k20_05,      S_k20_05, "golden", hess = "fastICA", n_seeds = 100)
-mc_k20_05_gr_tr = run_seeds_asym(Z_k20_05,      S_k20_05, "golden", hess = "trace",   n_seeds = 100)
-mc_k20_05_grw   = run_seeds_asym_warm(Z_k20_05, S_k20_05, "golden", hess = "fastICA", n_seeds = 100)
-mc_k20_05_grw_tr= run_seeds_asym_warm(Z_k20_05, S_k20_05, "golden", hess = "trace",   n_seeds = 100)
+mc_k20_05_lc     = run_seeds_lc(Z_k20_05,       S_k20_05, hess = "fastICA", n_seeds = 100)
+mc_k20_05_lc_tr  = run_seeds_lc(Z_k20_05,       S_k20_05, hess = "trace",   n_seeds = 100)
+mc_k20_05_gr     = run_seeds_asym(Z_k20_05,      S_k20_05, "golden", hess = "fastICA", n_seeds = 100)
+mc_k20_05_gr_tr  = run_seeds_asym(Z_k20_05,      S_k20_05, "golden", hess = "trace",   n_seeds = 100)
+mc_k20_05_grw    = run_seeds_asym_warm(Z_k20_05, S_k20_05, "golden", hess = "fastICA", n_seeds = 100)
+mc_k20_05_grw_tr = run_seeds_asym_warm(Z_k20_05, S_k20_05, "golden", hess = "trace",   n_seeds = 100)
 
 cat("Single source, k=20 whitening, p=0.5 (n_seeds=100):\n")
-cat(sprintf("  log-cosh                      mean = %.3f   frac > 0.9 = %.2f\n",
+cat(sprintf("  log-cosh (fastICA)            mean = %.3f   frac > 0.9 = %.2f\n",
     mean(mc_k20_05_lc), mean(mc_k20_05_lc > 0.9)))
+cat(sprintf("  log-cosh (trace)              mean = %.3f   frac > 0.9 = %.2f\n",
+    mean(mc_k20_05_lc_tr), mean(mc_k20_05_lc_tr > 0.9)))
 cat(sprintf("  asym golden (random, fastICA) mean = %.3f   frac > 0.9 = %.2f   mean_p = %.3f\n",
     mean(mc_k20_05_gr$maxcor),     mean(mc_k20_05_gr$maxcor     > 0.9), mean(mc_k20_05_gr$p)))
 cat(sprintf("  asym golden (random, trace)   mean = %.3f   frac > 0.9 = %.2f   mean_p = %.3f\n",
@@ -427,15 +450,18 @@ when it is symmetric.
 ### $p = 0.1$, $k = 20$
 
 ```{r}
-mc_k20_01_lc    = run_seeds_lc(Z_k20_01,       S_k20_01, n_seeds = 100)
-mc_k20_01_gr    = run_seeds_asym(Z_k20_01,      S_k20_01, "golden", hess = "fastICA", n_seeds = 100)
-mc_k20_01_gr_tr = run_seeds_asym(Z_k20_01,      S_k20_01, "golden", hess = "trace",   n_seeds = 100)
-mc_k20_01_grw   = run_seeds_asym_warm(Z_k20_01, S_k20_01, "golden", hess = "fastICA", n_seeds = 100)
-mc_k20_01_grw_tr= run_seeds_asym_warm(Z_k20_01, S_k20_01, "golden", hess = "trace",   n_seeds = 100)
+mc_k20_01_lc     = run_seeds_lc(Z_k20_01,       S_k20_01, hess = "fastICA", n_seeds = 100)
+mc_k20_01_lc_tr  = run_seeds_lc(Z_k20_01,       S_k20_01, hess = "trace",   n_seeds = 100)
+mc_k20_01_gr     = run_seeds_asym(Z_k20_01,      S_k20_01, "golden", hess = "fastICA", n_seeds = 100)
+mc_k20_01_gr_tr  = run_seeds_asym(Z_k20_01,      S_k20_01, "golden", hess = "trace",   n_seeds = 100)
+mc_k20_01_grw    = run_seeds_asym_warm(Z_k20_01, S_k20_01, "golden", hess = "fastICA", n_seeds = 100)
+mc_k20_01_grw_tr = run_seeds_asym_warm(Z_k20_01, S_k20_01, "golden", hess = "trace",   n_seeds = 100)
 
 cat("Single source, k=20 whitening, p=0.1 (n_seeds=100):\n")
-cat(sprintf("  log-cosh                      mean = %.3f   frac > 0.9 = %.2f\n",
+cat(sprintf("  log-cosh (fastICA)            mean = %.3f   frac > 0.9 = %.2f\n",
     mean(mc_k20_01_lc), mean(mc_k20_01_lc > 0.9)))
+cat(sprintf("  log-cosh (trace)              mean = %.3f   frac > 0.9 = %.2f\n",
+    mean(mc_k20_01_lc_tr), mean(mc_k20_01_lc_tr > 0.9)))
 cat(sprintf("  asym golden (random, fastICA) mean = %.3f   frac > 0.9 = %.2f   mean_p = %.3f\n",
     mean(mc_k20_01_gr$maxcor),     mean(mc_k20_01_gr$maxcor     > 0.9), mean(mc_k20_01_gr$p)))
 cat(sprintf("  asym golden (random, trace)   mean = %.3f   frac > 0.9 = %.2f   mean_p = %.3f\n",
@@ -509,12 +535,14 @@ optimization of $p$.  Two Hessian approximations are compared: **fastICA**
 (isotropic, $\bar{M'(x)}\,\mathbf{I}$) and **trace** (weighted by
 $S_{ii} = \|Y_{:i}\|^2/n$). Key findings from 100 random seeds each:
 
-| Setting | log-cosh | golden random fastICA | golden random trace | golden warm fastICA | golden warm trace |
-|---------|----------|-----------------------|---------------------|---------------------|-------------------|
-| Symmetric ($p=0.5$, $k=9$) | **0.99** | 0.77 | 0.74 | **0.99** | **0.99** |
-| 9 groups ($p\approx 0.2$, $k=9$) | 0.00 | **0.95** | 0.93 | 0.65 | 0.66 |
-| Single source ($p=0.5$, $k=20$, $n=200$) | 0.06 | 0.03 | 0.04 | 0.06 | 0.06 |
-| Single source ($p=0.1$, $k=20$, $n=200$) | **0.83** | 0.71 | 0.61 | **0.85** | **0.85** |
+Fraction of seeds achieving max $|\text{cor}| > 0.9$ (100 seeds):
+
+| Setting | lc-fastICA | lc-trace | asym random fastICA | asym random trace | asym warm fastICA | asym warm trace |
+|---------|------------|----------|---------------------|-------------------|-------------------|-----------------|
+| Sym ($p=0.5$, $k=9$) | 0.99 | **1.00** | 0.77 | 0.74 | 0.99 | 0.99 |
+| 9 groups ($p\approx 0.2$, $k=9$) | 0.00 | 0.00 | **0.95** | 0.93 | 0.65 | 0.66 |
+| 1 source ($p=0.5$, $k=20$, $n=200$) | 0.06 | **0.19** | 0.03 | 0.04 | 0.06 | 0.06 |
+| 1 source ($p=0.1$, $k=20$, $n=200$) | **0.83** | 0.19 | 0.71 | 0.61 | **0.85** | **0.85** |
 
 - **Log-cosh fails completely** for the 9-groups case because sparse sources
   have $E[\log\cosh] < $ Gaussian baseline, causing the algorithm to prefer
@@ -529,13 +557,14 @@ $S_{ii} = \|Y_{:i}\|^2/n$). Key findings from 100 random seeds each:
   - *Asymmetric sources*: log-cosh converges to a wrong direction (noise PC),
     and the asymmetric method then inherits that bad start.  A random start
     performs better because it can reach the sparse source from a neutral position.
-- **Trace vs fastICA Hessian**: nearly identical at $k = 9$, but the trace
-  Hessian degrades substantially at $k = 20$ with sparse sources (71% vs 94%
-  on random starts for $p = 0.1$).  The culprit is the $n/k$ amplification in
-  $c_{\text{trace}} = \overline{M'} + (n/k)\,\text{Cov}(M', S)$: with $n/k = 25$
-  and a strong negative covariance (sparse active samples have small $M'$ but
-  large $S_{ii}$), the correction undershoots, destabilising Newton steps.
-  Warm-starting largely recovers the gap.  The fastICA (isotropic) Hessian is
-  more robust.
+- **Trace Hessian: helps symmetric, hurts sparse**.  For symmetric sources
+  ($p = 0.5$) the trace correction consistently helps (100% vs 99% at $k=9$;
+  19% vs 6% at $k=20$).  But for sparse sources ($p = 0.1$, $k=20$) it collapses
+  from 83% to 19%.  The mechanism is $n/k$ amplification:
+  $c_{\text{trace}} = \overline{M'} + (n/k)\,\text{Cov}(M', S)$.
+  For symmetric sources $\text{Cov}(M', S) \approx 0$, so trace ≈ fastICA
+  but better reflects local geometry; for sparse sources the strong
+  negative covariance (active samples: small $M'$, large $S_{ii}$) is
+  amplified by $n/k = 10$, shrinking the correction and destabilising Newton steps.
 - **Asymmetry recovery** ($k=1$ whitening): $\hat p = \min(p, 1-p)$ correctly
   tracks the true sparse fraction over the range $[0.05, 0.5]$.

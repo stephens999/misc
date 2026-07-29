@@ -464,16 +464,16 @@ This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a> analysi
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree5df95fa1c968d3ddd3773a0f4e14db84d016da5etargetblank5df95faa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/5df95fa1c968d3ddd3773a0f4e14db84d016da5e" target="_blank">5df95fa</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree2f935c7879447a5c8944c6c4d487f300bbfcefcetargetblank2f935c7a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/2f935c7879447a5c8944c6c4d487f300bbfcefce" target="_blank">2f935c7</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree5df95fa1c968d3ddd3773a0f4e14db84d016da5etargetblank5df95faa" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree2f935c7879447a5c8944c6c4d487f300bbfcefcetargetblank2f935c7a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/5df95fa1c968d3ddd3773a0f4e14db84d016da5e" target="_blank">5df95fa</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/2f935c7879447a5c8944c6c4d487f300bbfcefce" target="_blank">2f935c7</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -723,6 +723,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/2f935c7879447a5c8944c6c4d487f300bbfcefce/analysis/fastICA_asymmetric.Rmd" target="_blank">2f935c7</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-07-29
+</td>
+<td>
+Match k=20 p=0.5 simulation exactly to ebproj_newton (set.seed(10), n=200, p=1000)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/2f935c7879447a5c8944c6c4d487f300bbfcefce/docs/fastICA_asymmetric.html" target="_blank">2f935c7</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-07-29
+</td>
+<td>
+Match k=20 p=0.5 simulation exactly to ebproj_newton (set.seed(10), n=200, p=1000)
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -989,18 +1023,32 @@ Add EB fastICA with asymmetric prior
 <p>Standard log-cosh fastICA for comparison:</p>
 <pre class="r"><code>fastica_r1update = function(X, w) {
   w = w / sqrt(sum(w^2))
-  P = t(X) %*% w
+  P  = t(X) %*% w
   G  = tanh(P); G2 = 1 - tanh(P)^2
   w  = X %*% G - mean(G2) * ncol(X) * w
   w / sqrt(sum(w^2))
 }
 
-run_seeds_lc = function(Y, S_true, n_seeds = 100, n_iter = 200) {
+fastica_r1update_trace = function(X, w, S_diag) {
+  w = w / sqrt(sum(w^2))
+  P  = t(X) %*% w
+  G  = tanh(P); G2 = 1 - tanh(P)^2
+  h  = sum(G2 * S_diag) / nrow(X)   # trace Hessian: Σ G2_i S_ii / k
+  w  = as.vector(X %*% G) / ncol(X) - h * w
+  w / sqrt(sum(w^2))
+}
+
+run_seeds_lc = function(Y, S_true, hess = &quot;fastICA&quot;, n_seeds = 100, n_iter = 200) {
   maxcor = numeric(n_seeds)
+  S_diag = colSums(Y^2) / ncol(Y)
   for (seed in seq_len(n_seeds)) {
     set.seed(seed)
     w = rnorm(nrow(Y))
-    for (i in seq_len(n_iter)) w = fastica_r1update(Y, w)
+    if (hess == &quot;trace&quot;) {
+      for (i in seq_len(n_iter)) w = fastica_r1update_trace(Y, w, S_diag)
+    } else {
+      for (i in seq_len(n_iter)) w = fastica_r1update(Y, w)
+    }
     maxcor[seed] = max(abs(cor(t(S_true), t(Y) %*% w)))
   }
   maxcor
@@ -1215,7 +1263,8 @@ FF = matrix(rnorm(p_dim * K), nrow = p_dim)
 X9 = t(L %*% t(FF) + matrix(rnorm(n * p_dim, 0, 0.1), nrow = n))
 Z9 = prewhiten(X9, K)
 S9 = t(L)</code></pre>
-<pre class="r"><code>mc9_lc      = run_seeds_lc(Z9,       S9, n_seeds = 100)
+<pre class="r"><code>mc9_lc      = run_seeds_lc(Z9,       S9, hess = &quot;fastICA&quot;, n_seeds = 100)
+mc9_lc_tr   = run_seeds_lc(Z9,       S9, hess = &quot;trace&quot;,   n_seeds = 100)
 mc9_M       = run_seeds_asym(Z9,      S9, &quot;M&quot;,      hess = &quot;fastICA&quot;, n_seeds = 100)
 mc9_gr      = run_seeds_asym(Z9,      S9, &quot;golden&quot;, hess = &quot;fastICA&quot;, n_seeds = 100)
 mc9_gr_tr   = run_seeds_asym(Z9,      S9, &quot;golden&quot;, hess = &quot;trace&quot;,   n_seeds = 100)
@@ -1224,9 +1273,12 @@ mc9_grw_tr  = run_seeds_asym_warm(Z9, S9, &quot;golden&quot;, hess = &quot;trace
 
 cat(&quot;9-groups (p_true ~ 0.2, k = 9, n_seeds = 100):\n&quot;)</code></pre>
 <pre><code>9-groups (p_true ~ 0.2, k = 9, n_seeds = 100):</code></pre>
-<pre class="r"><code>cat(sprintf(&quot;  log-cosh                      mean = %.3f   frac &gt; 0.9 = %.2f\n&quot;,
+<pre class="r"><code>cat(sprintf(&quot;  log-cosh (fastICA)            mean = %.3f   frac &gt; 0.9 = %.2f\n&quot;,
     mean(mc9_lc), mean(mc9_lc &gt; 0.9)))</code></pre>
-<pre><code>  log-cosh                      mean = 0.590   frac &gt; 0.9 = 0.00</code></pre>
+<pre><code>  log-cosh (fastICA)            mean = 0.590   frac &gt; 0.9 = 0.00</code></pre>
+<pre class="r"><code>cat(sprintf(&quot;  log-cosh (trace)              mean = %.3f   frac &gt; 0.9 = %.2f\n&quot;,
+    mean(mc9_lc_tr), mean(mc9_lc_tr &gt; 0.9)))</code></pre>
+<pre><code>  log-cosh (trace)              mean = 0.588   frac &gt; 0.9 = 0.00</code></pre>
 <pre class="r"><code>cat(sprintf(&quot;  asym M-est (random, fastICA)  mean = %.3f   frac &gt; 0.9 = %.2f   mean_p = %.3f\n&quot;,
     mean(mc9_M$maxcor),      mean(mc9_M$maxcor      &gt; 0.9), mean(mc9_M$p)))</code></pre>
 <pre><code>  asym M-est (random, fastICA)  mean = 0.877   frac &gt; 0.9 = 0.68   mean_p = 0.162</code></pre>
@@ -1377,7 +1429,8 @@ S_sym = matrix(sample(c(-1, 1), K * n, replace = TRUE), nrow = K)
 X_sym = t(S_sym) %*% t(FF) + matrix(rnorm(n * p_dim, 0, 0.1), nrow = n)
 Z_sym = prewhiten(t(X_sym), K)
 
-mc_s_lc      = run_seeds_lc(Z_sym,       S_sym, n_seeds = 100)
+mc_s_lc      = run_seeds_lc(Z_sym,       S_sym, hess = &quot;fastICA&quot;, n_seeds = 100)
+mc_s_lc_tr   = run_seeds_lc(Z_sym,       S_sym, hess = &quot;trace&quot;,   n_seeds = 100)
 mc_s_gr      = run_seeds_asym(Z_sym,      S_sym, &quot;golden&quot;, hess = &quot;fastICA&quot;, n_seeds = 100)
 mc_s_gr_tr   = run_seeds_asym(Z_sym,      S_sym, &quot;golden&quot;, hess = &quot;trace&quot;,   n_seeds = 100)
 mc_s_grw     = run_seeds_asym_warm(Z_sym, S_sym, &quot;golden&quot;, hess = &quot;fastICA&quot;, n_seeds = 100)
@@ -1385,9 +1438,12 @@ mc_s_grw_tr  = run_seeds_asym_warm(Z_sym, S_sym, &quot;golden&quot;, hess = &quo
 
 cat(&quot;Symmetric Rademacher (p_true = 0.5, k = 9):\n&quot;)</code></pre>
 <pre><code>Symmetric Rademacher (p_true = 0.5, k = 9):</code></pre>
-<pre class="r"><code>cat(sprintf(&quot;  log-cosh                      mean = %.3f   frac &gt; 0.9 = %.2f\n&quot;,
+<pre class="r"><code>cat(sprintf(&quot;  log-cosh (fastICA)            mean = %.3f   frac &gt; 0.9 = %.2f\n&quot;,
     mean(mc_s_lc), mean(mc_s_lc &gt; 0.9)))</code></pre>
-<pre><code>  log-cosh                      mean = 0.995   frac &gt; 0.9 = 0.99</code></pre>
+<pre><code>  log-cosh (fastICA)            mean = 0.995   frac &gt; 0.9 = 0.99</code></pre>
+<pre class="r"><code>cat(sprintf(&quot;  log-cosh (trace)              mean = %.3f   frac &gt; 0.9 = %.2f\n&quot;,
+    mean(mc_s_lc_tr), mean(mc_s_lc_tr &gt; 0.9)))</code></pre>
+<pre><code>  log-cosh (trace)              mean = 1.000   frac &gt; 0.9 = 1.00</code></pre>
 <pre class="r"><code>cat(sprintf(&quot;  asym golden (random, fastICA) mean = %.3f   frac &gt; 0.9 = %.2f   mean_p = %.3f\n&quot;,
     mean(mc_s_gr$maxcor),     mean(mc_s_gr$maxcor     &gt; 0.9), mean(mc_s_gr$p)))</code></pre>
 <pre><code>  asym golden (random, fastICA) mean = 0.888   frac &gt; 0.9 = 0.77   mean_p = 0.377</code></pre>
@@ -1422,17 +1478,21 @@ X_k20_01 = A_k20 %*% S_k20_01 + matrix(rnorm(p_k20 * n_k20, 0, 0.1), nrow = p_k2
 Z_k20_01 = prewhiten(X_k20_01, k20)</code></pre>
 <div id="p-0.5-k-20" class="section level3">
 <h3><span class="math inline">\(p = 0.5\)</span>, <span class="math inline">\(k = 20\)</span></h3>
-<pre class="r"><code>mc_k20_05_lc    = run_seeds_lc(Z_k20_05,       S_k20_05, n_seeds = 100)
-mc_k20_05_gr    = run_seeds_asym(Z_k20_05,      S_k20_05, &quot;golden&quot;, hess = &quot;fastICA&quot;, n_seeds = 100)
-mc_k20_05_gr_tr = run_seeds_asym(Z_k20_05,      S_k20_05, &quot;golden&quot;, hess = &quot;trace&quot;,   n_seeds = 100)
-mc_k20_05_grw   = run_seeds_asym_warm(Z_k20_05, S_k20_05, &quot;golden&quot;, hess = &quot;fastICA&quot;, n_seeds = 100)
-mc_k20_05_grw_tr= run_seeds_asym_warm(Z_k20_05, S_k20_05, &quot;golden&quot;, hess = &quot;trace&quot;,   n_seeds = 100)
+<pre class="r"><code>mc_k20_05_lc     = run_seeds_lc(Z_k20_05,       S_k20_05, hess = &quot;fastICA&quot;, n_seeds = 100)
+mc_k20_05_lc_tr  = run_seeds_lc(Z_k20_05,       S_k20_05, hess = &quot;trace&quot;,   n_seeds = 100)
+mc_k20_05_gr     = run_seeds_asym(Z_k20_05,      S_k20_05, &quot;golden&quot;, hess = &quot;fastICA&quot;, n_seeds = 100)
+mc_k20_05_gr_tr  = run_seeds_asym(Z_k20_05,      S_k20_05, &quot;golden&quot;, hess = &quot;trace&quot;,   n_seeds = 100)
+mc_k20_05_grw    = run_seeds_asym_warm(Z_k20_05, S_k20_05, &quot;golden&quot;, hess = &quot;fastICA&quot;, n_seeds = 100)
+mc_k20_05_grw_tr = run_seeds_asym_warm(Z_k20_05, S_k20_05, &quot;golden&quot;, hess = &quot;trace&quot;,   n_seeds = 100)
 
 cat(&quot;Single source, k=20 whitening, p=0.5 (n_seeds=100):\n&quot;)</code></pre>
 <pre><code>Single source, k=20 whitening, p=0.5 (n_seeds=100):</code></pre>
-<pre class="r"><code>cat(sprintf(&quot;  log-cosh                      mean = %.3f   frac &gt; 0.9 = %.2f\n&quot;,
+<pre class="r"><code>cat(sprintf(&quot;  log-cosh (fastICA)            mean = %.3f   frac &gt; 0.9 = %.2f\n&quot;,
     mean(mc_k20_05_lc), mean(mc_k20_05_lc &gt; 0.9)))</code></pre>
-<pre><code>  log-cosh                      mean = 0.178   frac &gt; 0.9 = 0.06</code></pre>
+<pre><code>  log-cosh (fastICA)            mean = 0.178   frac &gt; 0.9 = 0.06</code></pre>
+<pre class="r"><code>cat(sprintf(&quot;  log-cosh (trace)              mean = %.3f   frac &gt; 0.9 = %.2f\n&quot;,
+    mean(mc_k20_05_lc_tr), mean(mc_k20_05_lc_tr &gt; 0.9)))</code></pre>
+<pre><code>  log-cosh (trace)              mean = 0.321   frac &gt; 0.9 = 0.19</code></pre>
 <pre class="r"><code>cat(sprintf(&quot;  asym golden (random, fastICA) mean = %.3f   frac &gt; 0.9 = %.2f   mean_p = %.3f\n&quot;,
     mean(mc_k20_05_gr$maxcor),     mean(mc_k20_05_gr$maxcor     &gt; 0.9), mean(mc_k20_05_gr$p)))</code></pre>
 <pre><code>  asym golden (random, fastICA) mean = 0.201   frac &gt; 0.9 = 0.03   mean_p = 0.076</code></pre>
@@ -1449,17 +1509,21 @@ cat(&quot;Single source, k=20 whitening, p=0.5 (n_seeds=100):\n&quot;)</code></p
 </div>
 <div id="p-0.1-k-20" class="section level3">
 <h3><span class="math inline">\(p = 0.1\)</span>, <span class="math inline">\(k = 20\)</span></h3>
-<pre class="r"><code>mc_k20_01_lc    = run_seeds_lc(Z_k20_01,       S_k20_01, n_seeds = 100)
-mc_k20_01_gr    = run_seeds_asym(Z_k20_01,      S_k20_01, &quot;golden&quot;, hess = &quot;fastICA&quot;, n_seeds = 100)
-mc_k20_01_gr_tr = run_seeds_asym(Z_k20_01,      S_k20_01, &quot;golden&quot;, hess = &quot;trace&quot;,   n_seeds = 100)
-mc_k20_01_grw   = run_seeds_asym_warm(Z_k20_01, S_k20_01, &quot;golden&quot;, hess = &quot;fastICA&quot;, n_seeds = 100)
-mc_k20_01_grw_tr= run_seeds_asym_warm(Z_k20_01, S_k20_01, &quot;golden&quot;, hess = &quot;trace&quot;,   n_seeds = 100)
+<pre class="r"><code>mc_k20_01_lc     = run_seeds_lc(Z_k20_01,       S_k20_01, hess = &quot;fastICA&quot;, n_seeds = 100)
+mc_k20_01_lc_tr  = run_seeds_lc(Z_k20_01,       S_k20_01, hess = &quot;trace&quot;,   n_seeds = 100)
+mc_k20_01_gr     = run_seeds_asym(Z_k20_01,      S_k20_01, &quot;golden&quot;, hess = &quot;fastICA&quot;, n_seeds = 100)
+mc_k20_01_gr_tr  = run_seeds_asym(Z_k20_01,      S_k20_01, &quot;golden&quot;, hess = &quot;trace&quot;,   n_seeds = 100)
+mc_k20_01_grw    = run_seeds_asym_warm(Z_k20_01, S_k20_01, &quot;golden&quot;, hess = &quot;fastICA&quot;, n_seeds = 100)
+mc_k20_01_grw_tr = run_seeds_asym_warm(Z_k20_01, S_k20_01, &quot;golden&quot;, hess = &quot;trace&quot;,   n_seeds = 100)
 
 cat(&quot;Single source, k=20 whitening, p=0.1 (n_seeds=100):\n&quot;)</code></pre>
 <pre><code>Single source, k=20 whitening, p=0.1 (n_seeds=100):</code></pre>
-<pre class="r"><code>cat(sprintf(&quot;  log-cosh                      mean = %.3f   frac &gt; 0.9 = %.2f\n&quot;,
+<pre class="r"><code>cat(sprintf(&quot;  log-cosh (fastICA)            mean = %.3f   frac &gt; 0.9 = %.2f\n&quot;,
     mean(mc_k20_01_lc), mean(mc_k20_01_lc &gt; 0.9)))</code></pre>
-<pre><code>  log-cosh                      mean = 0.839   frac &gt; 0.9 = 0.83</code></pre>
+<pre><code>  log-cosh (fastICA)            mean = 0.839   frac &gt; 0.9 = 0.83</code></pre>
+<pre class="r"><code>cat(sprintf(&quot;  log-cosh (trace)              mean = %.3f   frac &gt; 0.9 = %.2f\n&quot;,
+    mean(mc_k20_01_lc_tr), mean(mc_k20_01_lc_tr &gt; 0.9)))</code></pre>
+<pre><code>  log-cosh (trace)              mean = 0.294   frac &gt; 0.9 = 0.19</code></pre>
 <pre class="r"><code>cat(sprintf(&quot;  asym golden (random, fastICA) mean = %.3f   frac &gt; 0.9 = %.2f   mean_p = %.3f\n&quot;,
     mean(mc_k20_01_gr$maxcor),     mean(mc_k20_01_gr$maxcor     &gt; 0.9), mean(mc_k20_01_gr$p)))</code></pre>
 <pre><code>  asym golden (random, fastICA) mean = 0.736   frac &gt; 0.9 = 0.71   mean_p = 0.046</code></pre>
@@ -1518,36 +1582,41 @@ legend(&quot;topleft&quot;, c(&quot;M-estimator&quot;, &quot;golden-ratio&quot;)
 <div id="summary" class="section level2">
 <h2>Summary</h2>
 <p>The asymmetric fastICA algorithm alternates between a Newton-like fixed-point update for <span class="math inline">\(w\)</span> (identical to standard fastICA at <span class="math inline">\(p = 0.5\)</span>) and 1D optimization of <span class="math inline">\(p\)</span>. Two Hessian approximations are compared: <strong>fastICA</strong> (isotropic, <span class="math inline">\(\bar{M&#39;(x)}\,\mathbf{I}\)</span>) and <strong>trace</strong> (weighted by <span class="math inline">\(S_{ii} = \|Y_{:i}\|^2/n\)</span>). Key findings from 100 random seeds each:</p>
+<p>Fraction of seeds achieving max <span class="math inline">\(|\text{cor}| &gt; 0.9\)</span> (100 seeds):</p>
 <table>
 <colgroup>
 <col width="8%" />
+<col width="11%" />
 <col width="9%" />
-<col width="22%" />
-<col width="20%" />
-<col width="20%" />
-<col width="18%" />
+<col width="19%" />
+<col width="17%" />
+<col width="17%" />
+<col width="15%" />
 </colgroup>
 <thead>
 <tr class="header">
 <th>Setting</th>
-<th>log-cosh</th>
-<th>golden random fastICA</th>
-<th>golden random trace</th>
-<th>golden warm fastICA</th>
-<th>golden warm trace</th>
+<th>lc-fastICA</th>
+<th>lc-trace</th>
+<th>asym random fastICA</th>
+<th>asym random trace</th>
+<th>asym warm fastICA</th>
+<th>asym warm trace</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Symmetric (<span class="math inline">\(p=0.5\)</span>, <span class="math inline">\(k=9\)</span>)</td>
-<td><strong>0.99</strong></td>
+<td>Sym (<span class="math inline">\(p=0.5\)</span>, <span class="math inline">\(k=9\)</span>)</td>
+<td>0.99</td>
+<td><strong>1.00</strong></td>
 <td>0.77</td>
 <td>0.74</td>
-<td><strong>0.99</strong></td>
-<td><strong>0.99</strong></td>
+<td>0.99</td>
+<td>0.99</td>
 </tr>
 <tr class="even">
 <td>9 groups (<span class="math inline">\(p\approx 0.2\)</span>, <span class="math inline">\(k=9\)</span>)</td>
+<td>0.00</td>
 <td>0.00</td>
 <td><strong>0.95</strong></td>
 <td>0.93</td>
@@ -1555,16 +1624,18 @@ legend(&quot;topleft&quot;, c(&quot;M-estimator&quot;, &quot;golden-ratio&quot;)
 <td>0.66</td>
 </tr>
 <tr class="odd">
-<td>Single source (<span class="math inline">\(p=0.5\)</span>, <span class="math inline">\(k=20\)</span>, <span class="math inline">\(n=200\)</span>)</td>
+<td>1 source (<span class="math inline">\(p=0.5\)</span>, <span class="math inline">\(k=20\)</span>, <span class="math inline">\(n=200\)</span>)</td>
 <td>0.06</td>
+<td><strong>0.19</strong></td>
 <td>0.03</td>
 <td>0.04</td>
 <td>0.06</td>
 <td>0.06</td>
 </tr>
 <tr class="even">
-<td>Single source (<span class="math inline">\(p=0.1\)</span>, <span class="math inline">\(k=20\)</span>, <span class="math inline">\(n=200\)</span>)</td>
+<td>1 source (<span class="math inline">\(p=0.1\)</span>, <span class="math inline">\(k=20\)</span>, <span class="math inline">\(n=200\)</span>)</td>
 <td><strong>0.83</strong></td>
+<td>0.19</td>
 <td>0.71</td>
 <td>0.61</td>
 <td><strong>0.85</strong></td>
@@ -1580,7 +1651,7 @@ legend(&quot;topleft&quot;, c(&quot;M-estimator&quot;, &quot;golden-ratio&quot;)
 <li><em>Symmetric sources</em>: a random start lets <span class="math inline">\(p\)</span> drift from 0.5 before <span class="math inline">\(w\)</span> has converged, degrading performance. Warm-starting from log-cosh avoids this and fully recovers high success rates.</li>
 <li><em>Asymmetric sources</em>: log-cosh converges to a wrong direction (noise PC), and the asymmetric method then inherits that bad start. A random start performs better because it can reach the sparse source from a neutral position.</li>
 </ul></li>
-<li><strong>Trace vs fastICA Hessian</strong>: nearly identical at <span class="math inline">\(k = 9\)</span>, but the trace Hessian degrades substantially at <span class="math inline">\(k = 20\)</span> with sparse sources (71% vs 94% on random starts for <span class="math inline">\(p = 0.1\)</span>). The culprit is the <span class="math inline">\(n/k\)</span> amplification in <span class="math inline">\(c_{\text{trace}} = \overline{M&#39;} + (n/k)\,\text{Cov}(M&#39;, S)\)</span>: with <span class="math inline">\(n/k = 25\)</span> and a strong negative covariance (sparse active samples have small <span class="math inline">\(M&#39;\)</span> but large <span class="math inline">\(S_{ii}\)</span>), the correction undershoots, destabilising Newton steps. Warm-starting largely recovers the gap. The fastICA (isotropic) Hessian is more robust.</li>
+<li><strong>Trace Hessian: helps symmetric, hurts sparse</strong>. For symmetric sources (<span class="math inline">\(p = 0.5\)</span>) the trace correction consistently helps (100% vs 99% at <span class="math inline">\(k=9\)</span>; 19% vs 6% at <span class="math inline">\(k=20\)</span>). But for sparse sources (<span class="math inline">\(p = 0.1\)</span>, <span class="math inline">\(k=20\)</span>) it collapses from 83% to 19%. The mechanism is <span class="math inline">\(n/k\)</span> amplification: <span class="math inline">\(c_{\text{trace}} = \overline{M&#39;} + (n/k)\,\text{Cov}(M&#39;, S)\)</span>. For symmetric sources <span class="math inline">\(\text{Cov}(M&#39;, S) \approx 0\)</span>, so trace ≈ fastICA but better reflects local geometry; for sparse sources the strong negative covariance (active samples: small <span class="math inline">\(M&#39;\)</span>, large <span class="math inline">\(S_{ii}\)</span>) is amplified by <span class="math inline">\(n/k = 10\)</span>, shrinking the correction and destabilising Newton steps.</li>
 <li><strong>Asymmetry recovery</strong> (<span class="math inline">\(k=1\)</span> whitening): <span class="math inline">\(\hat p = \min(p, 1-p)\)</span> correctly tracks the true sparse fraction over the range <span class="math inline">\([0.05, 0.5]\)</span>.</li>
 </ul>
 <br>
