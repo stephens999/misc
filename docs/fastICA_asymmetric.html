@@ -464,16 +464,16 @@ This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a> analysi
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree7686e791fea74e9742c25ace863e04b3406b96d7targetblank7686e79a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/7686e791fea74e9742c25ace863e04b3406b96d7" target="_blank">7686e79</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree5df95fa1c968d3ddd3773a0f4e14db84d016da5etargetblank5df95faa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/5df95fa1c968d3ddd3773a0f4e14db84d016da5e" target="_blank">5df95fa</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree7686e791fea74e9742c25ace863e04b3406b96d7targetblank7686e79a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree5df95fa1c968d3ddd3773a0f4e14db84d016da5etargetblank5df95faa" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/7686e791fea74e9742c25ace863e04b3406b96d7" target="_blank">7686e79</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/5df95fa1c968d3ddd3773a0f4e14db84d016da5e" target="_blank">5df95fa</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -723,6 +723,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/5df95fa1c968d3ddd3773a0f4e14db84d016da5e/analysis/fastICA_asymmetric.Rmd" target="_blank">5df95fa</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-07-29
+</td>
+<td>
+Add single-source k=20 tests (p=0.5 and p=0.1)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/5df95fa1c968d3ddd3773a0f4e14db84d016da5e/docs/fastICA_asymmetric.html" target="_blank">5df95fa</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-07-29
+</td>
+<td>
+Add single-source k=20 tests (p=0.5 and p=0.1)
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -1371,20 +1405,20 @@ cat(&quot;Symmetric Rademacher (p_true = 0.5, k = 9):\n&quot;)</code></pre>
 <h2>Single source, over-complete whitening (<span class="math inline">\(k = 20\)</span>)</h2>
 <p>In all tests so far the whitening dimension <span class="math inline">\(k\)</span> matched the number of true sources. Here we use <span class="math inline">\(k = 20\)</span> whitened components to represent a <strong>single</strong> source — the “over-complete” regime from <a href="ebproj_newton.html">ebproj_newton</a>.</p>
 <p>With <span class="math inline">\(k = 20\)</span> the true source direction occupies only one of the 20 whitened dimensions. The samples where the source is “on” have larger <span class="math inline">\(S_{ii} = \|Y_{:i}\|^2/n\)</span> than “off” samples (their projection onto the leading singular vector is large), while those same “on” samples have near-zero <span class="math inline">\(M&#39;(x_i)\)</span> (the posterior is saturated). The <strong>trace</strong> Hessian therefore down-weights “on” samples relative to “off” samples, which may give a different curvature estimate than the <strong>fastICA</strong> (isotropic) version.</p>
-<pre class="r"><code>set.seed(3)
-n_k20 = 500; p_k20 = 1000; k20 = 20
-
-a_k20 = rnorm(p_k20)
-
-# p = 0.5 (symmetric Rademacher)
+<p>The <span class="math inline">\(p = 0.5\)</span> simulation matches <a href="ebproj_newton.html">ebproj_newton</a> exactly (<code>set.seed(10)</code>, <span class="math inline">\(n = 200\)</span>, <span class="math inline">\(p = 1000\)</span>, single mixing vector, Rademacher source, <span class="math inline">\(k = 20\)</span> whitened components). The <span class="math inline">\(p = 0.1\)</span> simulation reuses the same mixing vector and dimensions with a sparse binary source.</p>
+<pre class="r"><code># Exactly as in ebproj_newton Test 1
+set.seed(10)
+n_k20 = 200; p_k20 = 1000; k20 = 20
+A_k20    = matrix(rnorm(p_k20), nrow = p_k20)
 S_k20_05 = matrix(sample(c(-1, 1), n_k20, replace = TRUE), nrow = 1)
-X_k20_05 = a_k20 %*% S_k20_05 + matrix(rnorm(p_k20 * n_k20, 0, 0.1), nrow = p_k20)
+X_k20_05 = A_k20 %*% S_k20_05 + matrix(rnorm(p_k20 * n_k20, 0, 0.1), nrow = p_k20)
 Z_k20_05 = prewhiten(X_k20_05, k20)
 
-# p = 0.1 (sparse binary, standardised to zero mean / unit variance)
+# Same mixing vector, sparse binary source (p = 0.1)
+set.seed(11)
 S_k20_01_raw = matrix(as.numeric(runif(n_k20) &lt; 0.1), nrow = 1)
 S_k20_01     = (S_k20_01_raw - 0.1) / sqrt(0.1 * 0.9)
-X_k20_01 = a_k20 %*% S_k20_01 + matrix(rnorm(p_k20 * n_k20, 0, 0.1), nrow = p_k20)
+X_k20_01 = A_k20 %*% S_k20_01 + matrix(rnorm(p_k20 * n_k20, 0, 0.1), nrow = p_k20)
 Z_k20_01 = prewhiten(X_k20_01, k20)</code></pre>
 <div id="p-0.5-k-20" class="section level3">
 <h3><span class="math inline">\(p = 0.5\)</span>, <span class="math inline">\(k = 20\)</span></h3>
@@ -1398,20 +1432,20 @@ cat(&quot;Single source, k=20 whitening, p=0.5 (n_seeds=100):\n&quot;)</code></p
 <pre><code>Single source, k=20 whitening, p=0.5 (n_seeds=100):</code></pre>
 <pre class="r"><code>cat(sprintf(&quot;  log-cosh                      mean = %.3f   frac &gt; 0.9 = %.2f\n&quot;,
     mean(mc_k20_05_lc), mean(mc_k20_05_lc &gt; 0.9)))</code></pre>
-<pre><code>  log-cosh                      mean = 0.555   frac &gt; 0.9 = 0.49</code></pre>
+<pre><code>  log-cosh                      mean = 0.178   frac &gt; 0.9 = 0.06</code></pre>
 <pre class="r"><code>cat(sprintf(&quot;  asym golden (random, fastICA) mean = %.3f   frac &gt; 0.9 = %.2f   mean_p = %.3f\n&quot;,
     mean(mc_k20_05_gr$maxcor),     mean(mc_k20_05_gr$maxcor     &gt; 0.9), mean(mc_k20_05_gr$p)))</code></pre>
-<pre><code>  asym golden (random, fastICA) mean = 0.427   frac &gt; 0.9 = 0.35   mean_p = 0.244</code></pre>
+<pre><code>  asym golden (random, fastICA) mean = 0.201   frac &gt; 0.9 = 0.03   mean_p = 0.076</code></pre>
 <pre class="r"><code>cat(sprintf(&quot;  asym golden (random, trace)   mean = %.3f   frac &gt; 0.9 = %.2f   mean_p = %.3f\n&quot;,
     mean(mc_k20_05_gr_tr$maxcor),  mean(mc_k20_05_gr_tr$maxcor  &gt; 0.9), mean(mc_k20_05_gr_tr$p)))</code></pre>
-<pre><code>  asym golden (random, trace)   mean = 0.307   frac &gt; 0.9 = 0.21   mean_p = 0.190</code></pre>
+<pre><code>  asym golden (random, trace)   mean = 0.224   frac &gt; 0.9 = 0.04   mean_p = 0.085</code></pre>
 <pre class="r"><code>cat(sprintf(&quot;  asym golden (warm, fastICA)   mean = %.3f   frac &gt; 0.9 = %.2f   mean_p = %.3f\n&quot;,
     mean(mc_k20_05_grw$maxcor),    mean(mc_k20_05_grw$maxcor    &gt; 0.9), mean(mc_k20_05_grw$p)))</code></pre>
-<pre><code>  asym golden (warm, fastICA)   mean = 0.562   frac &gt; 0.9 = 0.52   mean_p = 0.288</code></pre>
+<pre><code>  asym golden (warm, fastICA)   mean = 0.169   frac &gt; 0.9 = 0.06   mean_p = 0.075</code></pre>
 <pre class="r"><code>cat(sprintf(&quot;  asym golden (warm, trace)     mean = %.3f   frac &gt; 0.9 = %.2f   mean_p = %.3f\n&quot;,
     mean(mc_k20_05_grw_tr$maxcor), mean(mc_k20_05_grw_tr$maxcor &gt; 0.9), mean(mc_k20_05_grw_tr$p)))</code></pre>
-<pre><code>  asym golden (warm, trace)     mean = 0.534   frac &gt; 0.9 = 0.49   mean_p = 0.280</code></pre>
-<p>All methods struggle relative to the <span class="math inline">\(k = 9\)</span> case. With <span class="math inline">\(k = 20\)</span> and only one source, a random <span class="math inline">\(w\)</span> starts nearly orthogonal to the source direction and must navigate a 20-dimensional landscape. Log-cosh is competitive here because at <span class="math inline">\(p = 0.5\)</span> the asymmetric optimizer tends to drift <span class="math inline">\(\hat p\)</span> away from 0.5 before <span class="math inline">\(w\)</span> has converged (mean <span class="math inline">\(\hat p \approx 0.25\)</span>–<span class="math inline">\(0.29\)</span>), introducing bias. Warm-starting from log-cosh largely cures this.</p>
+<pre><code>  asym golden (warm, trace)     mean = 0.170   frac &gt; 0.9 = 0.06   mean_p = 0.074</code></pre>
+<p>All methods fail on this problem: with <span class="math inline">\(n = 200\)</span> and <span class="math inline">\(k = 20\)</span> whitened components, the signal-to-noise ratio in any single direction is low and a random <span class="math inline">\(w\)</span> starts nearly orthogonal to the true source. The asymmetric optimizer also drifts <span class="math inline">\(\hat p\)</span> far from 0.5 (mean <span class="math inline">\(\hat p \approx 0.07\)</span>–<span class="math inline">\(0.09\)</span>) before <span class="math inline">\(w\)</span> has converged, so it misidentifies the source as highly sparse even when it is symmetric.</p>
 </div>
 <div id="p-0.1-k-20" class="section level3">
 <h3><span class="math inline">\(p = 0.1\)</span>, <span class="math inline">\(k = 20\)</span></h3>
@@ -1425,20 +1459,21 @@ cat(&quot;Single source, k=20 whitening, p=0.1 (n_seeds=100):\n&quot;)</code></p
 <pre><code>Single source, k=20 whitening, p=0.1 (n_seeds=100):</code></pre>
 <pre class="r"><code>cat(sprintf(&quot;  log-cosh                      mean = %.3f   frac &gt; 0.9 = %.2f\n&quot;,
     mean(mc_k20_01_lc), mean(mc_k20_01_lc &gt; 0.9)))</code></pre>
-<pre><code>  log-cosh                      mean = 0.855   frac &gt; 0.9 = 0.84</code></pre>
+<pre><code>  log-cosh                      mean = 0.839   frac &gt; 0.9 = 0.83</code></pre>
 <pre class="r"><code>cat(sprintf(&quot;  asym golden (random, fastICA) mean = %.3f   frac &gt; 0.9 = %.2f   mean_p = %.3f\n&quot;,
     mean(mc_k20_01_gr$maxcor),     mean(mc_k20_01_gr$maxcor     &gt; 0.9), mean(mc_k20_01_gr$p)))</code></pre>
-<pre><code>  asym golden (random, fastICA) mean = 0.945   frac &gt; 0.9 = 0.94   mean_p = 0.052</code></pre>
+<pre><code>  asym golden (random, fastICA) mean = 0.736   frac &gt; 0.9 = 0.71   mean_p = 0.046</code></pre>
 <pre class="r"><code>cat(sprintf(&quot;  asym golden (random, trace)   mean = %.3f   frac &gt; 0.9 = %.2f   mean_p = %.3f\n&quot;,
     mean(mc_k20_01_gr_tr$maxcor),  mean(mc_k20_01_gr_tr$maxcor  &gt; 0.9), mean(mc_k20_01_gr_tr$p)))</code></pre>
-<pre><code>  asym golden (random, trace)   mean = 0.737   frac &gt; 0.9 = 0.71   mean_p = 0.082</code></pre>
+<pre><code>  asym golden (random, trace)   mean = 0.648   frac &gt; 0.9 = 0.61   mean_p = 0.057</code></pre>
 <pre class="r"><code>cat(sprintf(&quot;  asym golden (warm, fastICA)   mean = %.3f   frac &gt; 0.9 = %.2f   mean_p = %.3f\n&quot;,
     mean(mc_k20_01_grw$maxcor),    mean(mc_k20_01_grw$maxcor    &gt; 0.9), mean(mc_k20_01_grw$p)))</code></pre>
-<pre><code>  asym golden (warm, fastICA)   mean = 0.935   frac &gt; 0.9 = 0.93   mean_p = 0.055</code></pre>
+<pre><code>  asym golden (warm, fastICA)   mean = 0.865   frac &gt; 0.9 = 0.85   mean_p = 0.045</code></pre>
 <pre class="r"><code>cat(sprintf(&quot;  asym golden (warm, trace)     mean = %.3f   frac &gt; 0.9 = %.2f   mean_p = %.3f\n&quot;,
     mean(mc_k20_01_grw_tr$maxcor), mean(mc_k20_01_grw_tr$maxcor &gt; 0.9), mean(mc_k20_01_grw_tr$p)))</code></pre>
-<pre><code>  asym golden (warm, trace)     mean = 0.918   frac &gt; 0.9 = 0.91   mean_p = 0.056</code></pre>
-<p>The fastICA Hessian outperforms the trace Hessian on random starts for this sparse case. The gap arises because the trace correction is <span class="math display">\[c_{\text{trace}} = \overline{M&#39;(x)} + \frac{n}{k}\,\mathrm{Cov}(M&#39;(x_i),\, S_{ii})\]</span> The “on” samples (<span class="math inline">\(p = 0.1\)</span>, fraction 10%) have small <span class="math inline">\(M&#39;(x_i) \approx 0\)</span> (posterior saturated) but large <span class="math inline">\(S_{ii}\)</span> (they lie far from the origin along the source direction), so <span class="math inline">\(\mathrm{Cov}(M&#39;, S) &lt; 0\)</span>. With <span class="math inline">\(n/k = 500/20 = 25\)</span> this negative covariance is amplified 25-fold, making <span class="math inline">\(c_{\text{trace}}\)</span> substantially smaller than <span class="math inline">\(\overline{M&#39;(x)}\)</span> and destabilising convergence from random starts. Warm-starting from log-cosh recovers most of the gap (91% vs 93%) by initialising near the true direction, where the covariance term is better behaved.</p>
+<pre><code>  asym golden (warm, trace)     mean = 0.865   frac &gt; 0.9 = 0.85   mean_p = 0.045</code></pre>
+<p>Log-cosh is the best method here on random starts (83%), while the asymmetric fastICA Hessian trails (71%) and trace Hessian is worst (61%). Warm-starting from log-cosh lifts both asymmetric variants to 85%, matching log-cosh.</p>
+<p>The trace Hessian gap arises because <span class="math display">\[c_{\text{trace}} = \overline{M&#39;(x)} + \frac{n}{k}\,\mathrm{Cov}(M&#39;(x_i),\, S_{ii})\]</span> The “on” samples (<span class="math inline">\(p = 0.1\)</span>, <span class="math inline">\(\approx 20\)</span> out of <span class="math inline">\(n=200\)</span>) have small <span class="math inline">\(M&#39;(x_i) \approx 0\)</span> (posterior saturated) but large <span class="math inline">\(S_{ii}\)</span> (they lie far from the origin along the source direction), giving <span class="math inline">\(\text{Cov}(M&#39;, S) &lt; 0\)</span>. With <span class="math inline">\(n/k = 200/20 = 10\)</span> this is amplified 10-fold, making <span class="math inline">\(c_{\text{trace}}\)</span> substantially smaller than <span class="math inline">\(\overline{M&#39;(x)}\)</span> and destabilising Newton steps from random starts. Warm-starting largely fixes this.</p>
 </div>
 </div>
 <div id="asymmetry-parameter-recovery-k-1" class="section level2">
@@ -1520,20 +1555,20 @@ legend(&quot;topleft&quot;, c(&quot;M-estimator&quot;, &quot;golden-ratio&quot;)
 <td>0.66</td>
 </tr>
 <tr class="odd">
-<td>Single source (<span class="math inline">\(p=0.5\)</span>, <span class="math inline">\(k=20\)</span>)</td>
-<td><strong>0.49</strong></td>
-<td>0.35</td>
-<td>0.21</td>
-<td>0.52</td>
-<td>0.49</td>
+<td>Single source (<span class="math inline">\(p=0.5\)</span>, <span class="math inline">\(k=20\)</span>, <span class="math inline">\(n=200\)</span>)</td>
+<td>0.06</td>
+<td>0.03</td>
+<td>0.04</td>
+<td>0.06</td>
+<td>0.06</td>
 </tr>
 <tr class="even">
-<td>Single source (<span class="math inline">\(p=0.1\)</span>, <span class="math inline">\(k=20\)</span>)</td>
-<td>0.84</td>
-<td><strong>0.94</strong></td>
+<td>Single source (<span class="math inline">\(p=0.1\)</span>, <span class="math inline">\(k=20\)</span>, <span class="math inline">\(n=200\)</span>)</td>
+<td><strong>0.83</strong></td>
 <td>0.71</td>
-<td>0.93</td>
-<td>0.91</td>
+<td>0.61</td>
+<td><strong>0.85</strong></td>
+<td><strong>0.85</strong></td>
 </tr>
 </tbody>
 </table>

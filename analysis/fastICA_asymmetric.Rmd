@@ -373,21 +373,25 @@ $M'(x_i)$ (the posterior is saturated).  The **trace** Hessian therefore
 down-weights "on" samples relative to "off" samples, which may give a
 different curvature estimate than the **fastICA** (isotropic) version.
 
+The $p = 0.5$ simulation matches [ebproj_newton](ebproj_newton.html) exactly
+(`set.seed(10)`, $n = 200$, $p = 1000$, single mixing vector, Rademacher source,
+$k = 20$ whitened components).  The $p = 0.1$ simulation reuses the same mixing
+vector and dimensions with a sparse binary source.
+
 ```{r}
-set.seed(3)
-n_k20 = 500; p_k20 = 1000; k20 = 20
-
-a_k20 = rnorm(p_k20)
-
-# p = 0.5 (symmetric Rademacher)
+# Exactly as in ebproj_newton Test 1
+set.seed(10)
+n_k20 = 200; p_k20 = 1000; k20 = 20
+A_k20    = matrix(rnorm(p_k20), nrow = p_k20)
 S_k20_05 = matrix(sample(c(-1, 1), n_k20, replace = TRUE), nrow = 1)
-X_k20_05 = a_k20 %*% S_k20_05 + matrix(rnorm(p_k20 * n_k20, 0, 0.1), nrow = p_k20)
+X_k20_05 = A_k20 %*% S_k20_05 + matrix(rnorm(p_k20 * n_k20, 0, 0.1), nrow = p_k20)
 Z_k20_05 = prewhiten(X_k20_05, k20)
 
-# p = 0.1 (sparse binary, standardised to zero mean / unit variance)
+# Same mixing vector, sparse binary source (p = 0.1)
+set.seed(11)
 S_k20_01_raw = matrix(as.numeric(runif(n_k20) < 0.1), nrow = 1)
 S_k20_01     = (S_k20_01_raw - 0.1) / sqrt(0.1 * 0.9)
-X_k20_01 = a_k20 %*% S_k20_01 + matrix(rnorm(p_k20 * n_k20, 0, 0.1), nrow = p_k20)
+X_k20_01 = A_k20 %*% S_k20_01 + matrix(rnorm(p_k20 * n_k20, 0, 0.1), nrow = p_k20)
 Z_k20_01 = prewhiten(X_k20_01, k20)
 ```
 
@@ -413,12 +417,12 @@ cat(sprintf("  asym golden (warm, trace)     mean = %.3f   frac > 0.9 = %.2f   m
     mean(mc_k20_05_grw_tr$maxcor), mean(mc_k20_05_grw_tr$maxcor > 0.9), mean(mc_k20_05_grw_tr$p)))
 ```
 
-All methods struggle relative to the $k = 9$ case.  With $k = 20$ and only one
-source, a random $w$ starts nearly orthogonal to the source direction and must
-navigate a 20-dimensional landscape.  Log-cosh is competitive here because at
-$p = 0.5$ the asymmetric optimizer tends to drift $\hat p$ away from 0.5
-before $w$ has converged (mean $\hat p \approx 0.25$–$0.29$), introducing bias.
-Warm-starting from log-cosh largely cures this.
+All methods fail on this problem: with $n = 200$ and $k = 20$ whitened
+components, the signal-to-noise ratio in any single direction is low and a
+random $w$ starts nearly orthogonal to the true source.  The asymmetric
+optimizer also drifts $\hat p$ far from 0.5 (mean $\hat p \approx 0.07$–$0.09$)
+before $w$ has converged, so it misidentifies the source as highly sparse even
+when it is symmetric.
 
 ### $p = 0.1$, $k = 20$
 
@@ -442,16 +446,18 @@ cat(sprintf("  asym golden (warm, trace)     mean = %.3f   frac > 0.9 = %.2f   m
     mean(mc_k20_01_grw_tr$maxcor), mean(mc_k20_01_grw_tr$maxcor > 0.9), mean(mc_k20_01_grw_tr$p)))
 ```
 
-The fastICA Hessian outperforms the trace Hessian on random starts for this sparse case.
-The gap arises because the trace correction is
+Log-cosh is the best method here on random starts (83%), while the asymmetric
+fastICA Hessian trails (71%) and trace Hessian is worst (61%).  Warm-starting
+from log-cosh lifts both asymmetric variants to 85%, matching log-cosh.
+
+The trace Hessian gap arises because
 $$c_{\text{trace}} = \overline{M'(x)} + \frac{n}{k}\,\mathrm{Cov}(M'(x_i),\, S_{ii})$$
-The "on" samples ($p = 0.1$, fraction 10%) have small $M'(x_i) \approx 0$
-(posterior saturated) but large $S_{ii}$ (they lie far from the origin along the
-source direction), so $\mathrm{Cov}(M', S) < 0$.  With $n/k = 500/20 = 25$
-this negative covariance is amplified 25-fold, making $c_{\text{trace}}$
-substantially smaller than $\overline{M'(x)}$ and destabilising convergence from
-random starts.  Warm-starting from log-cosh recovers most of the gap (91% vs 93%)
-by initialising near the true direction, where the covariance term is better behaved.
+The "on" samples ($p = 0.1$, $\approx 20$ out of $n=200$) have small
+$M'(x_i) \approx 0$ (posterior saturated) but large $S_{ii}$ (they lie far from
+the origin along the source direction), giving $\text{Cov}(M', S) < 0$.  With
+$n/k = 200/20 = 10$ this is amplified 10-fold, making $c_{\text{trace}}$
+substantially smaller than $\overline{M'(x)}$ and destabilising Newton steps from
+random starts.  Warm-starting largely fixes this.
 
 ## Asymmetry parameter recovery ($k = 1$)
 
@@ -507,8 +513,8 @@ $S_{ii} = \|Y_{:i}\|^2/n$). Key findings from 100 random seeds each:
 |---------|----------|-----------------------|---------------------|---------------------|-------------------|
 | Symmetric ($p=0.5$, $k=9$) | **0.99** | 0.77 | 0.74 | **0.99** | **0.99** |
 | 9 groups ($p\approx 0.2$, $k=9$) | 0.00 | **0.95** | 0.93 | 0.65 | 0.66 |
-| Single source ($p=0.5$, $k=20$) | **0.49** | 0.35 | 0.21 | 0.52 | 0.49 |
-| Single source ($p=0.1$, $k=20$) | 0.84 | **0.94** | 0.71 | 0.93 | 0.91 |
+| Single source ($p=0.5$, $k=20$, $n=200$) | 0.06 | 0.03 | 0.04 | 0.06 | 0.06 |
+| Single source ($p=0.1$, $k=20$, $n=200$) | **0.83** | 0.71 | 0.61 | **0.85** | **0.85** |
 
 - **Log-cosh fails completely** for the 9-groups case because sparse sources
   have $E[\log\cosh] < $ Gaussian baseline, causing the algorithm to prefer
