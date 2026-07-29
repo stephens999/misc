@@ -234,8 +234,46 @@ legend("top", c("E[log cosh], binary source", "Gaussian baseline"),
 ```
 
 Standard fastICA with log-cosh **actively avoids** sources with $p < $ about
-$0.1$ or $p > 0.9$: the contrast falls below the Gaussian baseline, so the
-algorithm prefers noise directions over the true source.
+$0.25$ or $p > 0.75$: the contrast falls below the Gaussian baseline, so the
+global maximum of $E[\log\cosh]$ on the sphere is not at the true source.
+However, the true source direction can still be a **local minimum**, and the
+fixed-point iteration can converge there — especially when $p$ is small enough
+to create a deep, distinctive basin (see the $p=0.1$ nine-groups result below).
+
+### Asymmetric objective for $p_\text{true} = 0.2$
+
+Unlike log-cosh, the asymmetric objective can be evaluated at the optimal test
+$p$ matching the true source, placing it **above** the Gaussian baseline.
+
+```{r}
+set.seed(42)
+n_pop  = 100000
+c_gr   = (sqrt(5) - 1) / 2   # golden-ratio anchor
+z_02   = ifelse(runif(n_pop) < 0.2, sqrt(0.8/0.2), -sqrt(0.2/0.8))
+z_N    = rnorm(n_pop)
+
+p_grid      = seq(0.02, 0.98, by = 0.01)
+obj_asym_02 = sapply(p_grid, \(p) asym_obj_p(p, z_02, c_gr, 1))
+obj_asym_N  = sapply(p_grid, \(p) asym_obj_p(p, z_N,  c_gr, 1))
+
+plot(p_grid, obj_asym_02, type = "l", col = "steelblue", lwd = 2,
+     xlab = "test p  (optimization variable)",
+     ylab = "E[asymmetric log-likelihood]",
+     main = "Asymmetric objective: source p_true = 0.2  (golden-ratio anchor)")
+lines(p_grid, obj_asym_N, col = "grey40", lty = 2, lwd = 2)
+abline(v = 0.2, lty = 3, col = "tomato", lwd = 1.5)
+legend("topright",
+       c("source (p_true = 0.2)", "Gaussian baseline", "p = 0.2"),
+       col = c("steelblue", "grey40", "tomato"),
+       lty = c(1, 2, 3), lwd = c(2, 2, 1.5), bty = "n")
+```
+
+The asymmetric objective for the $p = 0.2$ source (blue) peaks near
+$p_\text{test} = 0.2$ and lies **above** the Gaussian baseline (grey) in that
+region — the optimizer can successfully identify the source by maximising over
+$p$.  At $p_\text{test} = 0.5$ the asymmetric objective reduces to the
+log-cosh contrast, which falls below the Gaussian baseline for this source,
+explaining why standard fastICA fails.
 
 ## Score functions for varying $p$
 
@@ -333,19 +371,44 @@ cat(sprintf("  asym golden (warm, trace)     mean = %.3f   frac > 0.9 = %.2f   m
     mean(mc9_01_grw_tr$maxcor), mean(mc9_01_grw_tr$maxcor > 0.9), mean(mc9_01_grw_tr$p)))
 ```
 
-Remarkably, log-cosh fastICA succeeds 82% of the time at $p \approx 0.1$ —
-almost matching the asymmetric method — despite theoretically having
-$E[\log\cosh(z)] < $ Gaussian baseline.  This mirrors the result for the
-single-source $k = 20$ case and so appears to be a genuine phenomenon.  The
-likely explanation is signal strength: at $p = 0.1$ the active samples take
-very large values ($y_1 = \sqrt{0.9/0.1} \approx 3$), creating a strong local
-gradient toward the true direction even when the global objective maximum is not
-there.  At $p = 0.2$ the active-sample values are smaller ($y_1 = 2$) and the
-basin of attraction shrinks to essentially zero.  The log-cosh trace Hessian
-collapses performance (16%) for the same amplified-covariance reason as before.
+Log-cosh fastICA succeeds 82% of the time at $p \approx 0.1$ despite having
+$E[\log\cosh(z)] < $ Gaussian baseline.  Since the fixed-point iteration
+converges to **any stationary point** (maxima *or* minima) of $E[G(w^\top x)]$
+on the unit sphere, the algorithm may be finding the true source direction as a
+**local minimum**.  We check this directly.
 
-The asymmetric method with warm starts achieves 100% — perfectly combining
-the good log-cosh initialisation (which works here!) with the correct prior.
+```{r}
+lc_obj_01 = numeric(100)
+for (seed in 1:100) {
+  set.seed(seed)
+  w = rnorm(nrow(Z9_01))
+  for (i in 1:200) w = fastica_r1update(Z9_01, w)
+  lc_obj_01[seed] = mean(log(cosh(as.vector(t(Z9_01) %*% w))))
+}
+succ = mc9_01_lc > 0.9
+cat(sprintf("Gaussian baseline: %.4f\n", lc_gauss))
+cat(sprintf("Successful seeds (n=%d): mean log-cosh obj = %.4f  [%s baseline]\n",
+    sum(succ),  mean(lc_obj_01[succ]),
+    ifelse(mean(lc_obj_01[succ])  < lc_gauss, "BELOW", "ABOVE")))
+cat(sprintf("Failed seeds    (n=%d): mean log-cosh obj = %.4f  [%s baseline]\n",
+    sum(!succ), mean(lc_obj_01[!succ]),
+    ifelse(mean(lc_obj_01[!succ]) < lc_gauss, "BELOW", "ABOVE")))
+```
+
+Both successful and failed seeds land **below** the Gaussian baseline,
+confirming that the fixed-point iteration finds local *minima* in all cases for
+this dataset.  With 9 very sparse sources ($p = 0.1$), every direction in the
+whitened space has $E[\log\cosh] < $ Gaussian baseline — the sparse structure
+dominates everywhere.  The true source directions are the **deepest** minima
+(objective $\approx 0.280$) because their extremely large active-sample values
+($y_1 \approx 3$) lower the log-cosh average maximally.  Failed seeds fall into
+shallower spurious minima ($\approx 0.285$).  At $p = 0.2$ ($y_1 = 2$) the true
+source minimum is shallower still, and random starts almost never find it.
+
+The log-cosh trace Hessian collapses performance (16%) via the same
+amplified-covariance mechanism.  The asymmetric method with warm starts achieves
+100%: log-cosh converges to the *correct* (minimum) direction, providing an
+excellent starting point for the asymmetric optimizer.
 
 ### Why does the golden-ratio anchor do better?
 
@@ -631,15 +694,15 @@ Fraction of seeds achieving max $|\text{cor}| > 0.9$ (100 seeds):
   - *Asymmetric sources*: log-cosh converges to a wrong direction (noise PC),
     and the asymmetric method then inherits that bad start.  A random start
     performs better because it can reach the sparse source from a neutral position.
-- **Log-cosh fastICA succeeds at $p = 0.1$ despite theory**.  Standard
-  log-cosh has $E[\log\cosh] < $ Gaussian baseline for both $p = 0.2$ and
-  $p = 0.1$, yet it achieves 82% at $p \approx 0.1$ (9 groups) and 76% at
-  $p = 0.1$ (single source, $k=20$), while failing completely at $p = 0.2$
-  in both settings.  The likely mechanism: at $p = 0.1$ the active samples
-  reach $y_1 \approx 3$, creating a strong local gradient toward the true
-  source even when the global objective maximum is not there.  At $p = 0.2$,
-  $y_1 \approx 2$ and the basin collapses.  The asymmetric method does not
-  suffer this threshold because it adapts $p$ to match the source.
+- **Log-cosh finds sparse sources as local minima**.  $E[\log\cosh]$ falls
+  below the Gaussian baseline for $p \lesssim 0.25$, so the true source is a
+  local *minimum* (not maximum) of the log-cosh contrast on the sphere.
+  The fixed-point iteration converges to stationary points of either sign; for
+  $p = 0.1$ ($y_1 \approx 3$, very large active-sample values) the minimum is
+  deep enough that random starts land in its basin 82% (9 groups) or 76%
+  (single source) of the time.  For $p = 0.2$ ($y_1 = 2$) the basin is too
+  shallow and success drops to 0%.  The asymmetric method avoids this
+  threshold entirely by adapting $p$ to match the source.
 - **Trace Hessian: helps symmetric, hurts sparse**.  For symmetric sources
   ($p = 0.5$) the trace correction consistently helps (100% vs 99% at $k=9$;
   19% vs 6% at $k=20$).  But for sparse sources it collapses log-cosh from
