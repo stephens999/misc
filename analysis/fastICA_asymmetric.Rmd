@@ -163,20 +163,21 @@ run_seeds_lc = function(Y, S_true, hess = "fastICA", n_seeds = 100, n_iter = 200
 }
 
 run_seeds_asym = function(Y, S_true, anchor, hess = "fastICA", n_seeds = 100) {
-  maxcor = numeric(n_seeds); ps = numeric(n_seeds)
+  maxcor = numeric(n_seeds); ps = numeric(n_seeds); objs = numeric(n_seeds)
   for (seed in seq_len(n_seeds)) {
     set.seed(seed)
     res = fastica_asym_r1(Y, anchor = anchor, hess = hess, w_init = rnorm(nrow(Y)))
     maxcor[seed] = max(abs(cor(t(S_true), t(Y) %*% res$w)))
-    ps[seed]     = min(res$p, 1 - res$p)   # probability of the rare state
+    ps[seed]     = min(res$p, 1 - res$p)
+    objs[seed]   = asym_obj_p(res$p, as.vector(t(Y) %*% res$w), res$c, 1)
   }
-  list(maxcor = maxcor, p = ps)
+  list(maxcor = maxcor, p = ps, obj = objs)
 }
 
 # Warm-start variant: run log-cosh to convergence, then hand off to asymmetric
 run_seeds_asym_warm = function(Y, S_true, anchor, hess = "fastICA", n_seeds = 100,
                                 n_iter_lc = 200) {
-  maxcor = numeric(n_seeds); ps = numeric(n_seeds)
+  maxcor = numeric(n_seeds); ps = numeric(n_seeds); objs = numeric(n_seeds)
   for (seed in seq_len(n_seeds)) {
     set.seed(seed)
     w = rnorm(nrow(Y))
@@ -184,8 +185,9 @@ run_seeds_asym_warm = function(Y, S_true, anchor, hess = "fastICA", n_seeds = 10
     res = fastica_asym_r1(Y, anchor = anchor, hess = hess, w_init = w)
     maxcor[seed] = max(abs(cor(t(S_true), t(Y) %*% res$w)))
     ps[seed]     = min(res$p, 1 - res$p)
+    objs[seed]   = asym_obj_p(res$p, as.vector(t(Y) %*% res$w), res$c, 1)
   }
-  list(maxcor = maxcor, p = ps)
+  list(maxcor = maxcor, p = ps, obj = objs)
 }
 ```
 
@@ -336,6 +338,22 @@ cat(sprintf("  asym golden (warm, trace)     mean = %.3f   frac > 0.9 = %.2f   m
     mean(mc9_grw_tr$maxcor), mean(mc9_grw_tr$maxcor > 0.9), mean(mc9_grw_tr$p)))
 ```
 
+The asymmetric objective is a maximum (not a minimum), so the **highest** value
+should correspond to a true source.  We can check whether this is a reliable
+selection criterion:
+
+```{r}
+ord9_gr = order(mc9_gr$obj, decreasing = TRUE)   # highest objective first
+cols9_gr = ifelse((mc9_gr$maxcor > 0.9)[ord9_gr], "steelblue", "tomato")
+plot(seq_along(mc9_gr$obj), mc9_gr$obj[ord9_gr],
+     pch = 19, cex = 0.8, col = cols9_gr,
+     xlab = "rank (1 = highest asymmetric objective)",
+     ylab = "asymmetric log-likelihood at convergence",
+     main = "9-groups p=0.2: sorted asymmetric objectives\n(blue = true source found, red = not)")
+legend("topright", c("true source (cor > 0.9)", "other"),
+       pch = 19, col = c("steelblue", "tomato"), bty = "n", cex = 0.9)
+```
+
 ### $p \approx 0.1$ (10/100 active)
 
 ```{r}
@@ -400,15 +418,47 @@ confirming that the fixed-point iteration finds local *minima* in all cases for
 this dataset.  With 9 very sparse sources ($p = 0.1$), every direction in the
 whitened space has $E[\log\cosh] < $ Gaussian baseline — the sparse structure
 dominates everywhere.  The true source directions are the **deepest** minima
-(objective $\approx 0.280$) because their extremely large active-sample values
-($y_1 \approx 3$) lower the log-cosh average maximally.  Failed seeds fall into
-shallower spurious minima ($\approx 0.285$).  At $p = 0.2$ ($y_1 = 2$) the true
-source minimum is shallower still, and random starts almost never find it.
+because their large active-sample values ($y_1 \approx 3$) lower the log-cosh
+average maximally.
 
-The log-cosh trace Hessian collapses performance (16%) via the same
-amplified-covariance mechanism.  The asymmetric method with warm starts achieves
-100%: log-cosh converges to the *correct* (minimum) direction, providing an
-excellent starting point for the asymmetric optimizer.
+The practical question is whether the **objective value alone can select true
+sources**.  If the 82 successful runs are concentrated at the bottom of the
+sorted objective, one can simply keep the $n_\text{runs}$ with the lowest
+log-cosh value:
+
+```{r}
+ord = order(lc_obj_01)           # ascending: deepest minimum first
+cols = ifelse(succ[ord], "steelblue", "tomato")
+plot(seq_along(lc_obj_01), lc_obj_01[ord],
+     pch = 19, cex = 0.8, col = cols,
+     xlab = "rank (1 = lowest log-cosh objective)",
+     ylab = "log-cosh objective at convergence",
+     main = "9-groups p=0.1: sorted log-cosh objectives\n(blue = true source found, red = not)")
+abline(h = lc_gauss, lty = 2, col = "grey50")
+legend("topleft", c("true source (cor > 0.9)", "other", "Gaussian baseline"),
+       pch = c(19, 19, NA), lty = c(NA, NA, 2),
+       col = c("steelblue", "tomato", "grey50"), bty = "n", cex = 0.9)
+```
+
+If the blue points cluster at the left (lowest objective) and red points at the
+right, using the objective as a selection criterion recovers true sources
+reliably — the "failure rate" of random starts is then irrelevant, since all we
+need is that the *best* run (by objective) is a true source.
+
+The asymmetric method maximises its objective, so we check the same for it:
+
+```{r}
+succ_gr01 = mc9_01_gr$maxcor > 0.9
+ord9_gr01 = order(mc9_01_gr$obj, decreasing = TRUE)
+cols9_gr01 = ifelse(succ_gr01[ord9_gr01], "steelblue", "tomato")
+plot(seq_along(mc9_01_gr$obj), mc9_01_gr$obj[ord9_gr01],
+     pch = 19, cex = 0.8, col = cols9_gr01,
+     xlab = "rank (1 = highest asymmetric objective)",
+     ylab = "asymmetric log-likelihood at convergence",
+     main = "9-groups p=0.1: sorted asymmetric objectives\n(blue = true source found, red = not)")
+legend("topright", c("true source (cor > 0.9)", "other"),
+       pch = 19, col = c("steelblue", "tomato"), bty = "n", cex = 0.9)
+```
 
 ### Why does the golden-ratio anchor do better?
 
