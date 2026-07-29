@@ -103,6 +103,8 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 * [FastICA with tilted log-cosh contrast for skewed/sparse binary sources](fastica_skew.html)
 * [FastICA for non-whitened data: exact equivariance and initialization bias](fastica_nonwhitened.html)
 * [Preconditioned FastICA: homotopy method and TLC contrast](fastica_precondition.html)
+* [EB FastICA with asymmetric prior: alternating optimization for sparse sources](fastICA_asymmetric.html)
+* [EBproj: quasi-Newton with binary prior and Section-5 sigma (Test 1)](ebproj_newton.html)
 
 * [Motivated by ICA, I try a flash+low-rank approach](flash_pca.html)
 * [Motivated by ICA, I try an EB approach to find subspaces](EB_subspace.html)

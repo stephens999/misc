@@ -276,7 +276,7 @@ $(document).ready(function () {
 
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
-<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
 </button>
 </p>
 <div id="workflowr-report" class="collapse">
@@ -285,7 +285,7 @@ $(document).ready(function () {
 <a data-toggle="tab" href="#summary">Summary</a>
 </li>
 <li>
-<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -294,10 +294,10 @@ $(document).ready(function () {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2026-07-17
+<strong>Last updated:</strong> 2026-07-29
 </p>
 <p>
-<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 2 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 1 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
 </p>
 <p>
 <strong>Knit directory:</strong> <code>misc/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
@@ -313,28 +313,28 @@ This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a> analysi
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
 <div class="panel-body">
-<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+<p>The R Markdown file has staged changes. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
 </div>
 </div>
 </div>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree42fc276df928a83b860584e372a699ce3438cc0ctargetblank42fc276a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/42fc276df928a83b860584e372a699ce3438cc0c" target="_blank">42fc276</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreea2769cb83439f080d56d71ca9cba9d70554f9e17targetblanka2769cba"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/a2769cb83439f080d56d71ca9cba9d70554f9e17" target="_blank">a2769cb</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree42fc276df928a83b860584e372a699ce3438cc0ctargetblank42fc276a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreea2769cb83439f080d56d71ca9cba9d70554f9e17targetblanka2769cba" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/42fc276df928a83b860584e372a699ce3438cc0c" target="_blank">42fc276</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/a2769cb83439f080d56d71ca9cba9d70554f9e17" target="_blank">a2769cb</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -349,6 +349,7 @@ Ignored files:
     Ignored:    analysis/.RData
     Ignored:    analysis/.Rhistory
     Ignored:    analysis/ALStruct_cache/
+    Ignored:    analysis/ebproj_01.html
     Ignored:    data/.Rhistory
     Ignored:    data/methylation-data-for-matthew.rds
     Ignored:    data/pbmc/
@@ -358,6 +359,7 @@ Untracked files:
     Untracked:  .dropbox
     Untracked:  GSE41037/
     Untracked:  Icon
+    Untracked:  Rplots.pdf
     Untracked:  analysis/GHstan.Rmd
     Untracked:  analysis/GTEX-cogaps.Rmd
     Untracked:  analysis/PACS.Rmd
@@ -378,6 +380,8 @@ Untracked files:
     Untracked:  analysis/eb_var.Rmd
     Untracked:  analysis/ebpmf1.Rmd
     Untracked:  analysis/ebpmf_sla_text.Rmd
+    Untracked:  analysis/ebproj_01.Rmd
+    Untracked:  analysis/ebproj_newton.Rmd
     Untracked:  analysis/ebspca_sims.Rmd
     Untracked:  analysis/explore_psvd.Rmd
     Untracked:  analysis/fa_check_identify.Rmd
@@ -532,6 +536,7 @@ Unstaged changes:
     Modified:   analysis/eb_snmu.Rmd
     Modified:   analysis/ebnm_binormal.Rmd
     Modified:   analysis/ebpower.Rmd
+    Modified:   analysis/fastICA_asymmetric.Rmd
     Modified:   analysis/flashier_log1p.Rmd
     Modified:   analysis/flashier_sla_text.Rmd
     Modified:   analysis/logistic_z_scores.Rmd
@@ -540,6 +545,10 @@ Unstaged changes:
     Modified:   analysis/susie_flash.Rmd
     Modified:   analysis/tap_free_energy.Rmd
     Modified:   misc.Rproj
+
+Staged changes:
+    New:        analysis/fastICA_asymmetric.Rmd
+    Modified:   analysis/index.Rmd
 
 </code></pre>
 <p>
@@ -578,6 +587,23 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/a2769cb83439f080d56d71ca9cba9d70554f9e17/docs/index.html" target="_blank">a2769cb</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-07-17
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -3745,6 +3771,8 @@ Start workflowr project.
 <li><p><a href="fastica_skew.html">FastICA with tilted log-cosh contrast for skewed/sparse binary sources</a></p></li>
 <li><p><a href="fastica_nonwhitened.html">FastICA for non-whitened data: exact equivariance and initialization bias</a></p></li>
 <li><p><a href="fastica_precondition.html">Preconditioned FastICA: homotopy method and TLC contrast</a></p></li>
+<li><p><a href="fastICA_asymmetric.html">EB FastICA with asymmetric prior: alternating optimization for sparse sources</a></p></li>
+<li><p><a href="ebproj_newton.html">EBproj: quasi-Newton with binary prior and Section-5 sigma (Test 1)</a></p></li>
 <li><p><a href="flash_pca.html">Motivated by ICA, I try a flash+low-rank approach</a></p></li>
 <li><p><a href="EB_subspace.html">Motivated by ICA, I try an EB approach to find subspaces</a></p></li>
 </ul>

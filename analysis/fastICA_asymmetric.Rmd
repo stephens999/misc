@@ -1,0 +1,373 @@
+---
+title: "EB FastICA with Asymmetric Prior"
+author: "Matthew Stephens (using Claude)" 
+date: "2026-07-29"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+Standard fastICA maximizes the log-cosh contrast function, which is equivalent
+to assuming a symmetric binary (Rademacher) prior on the independent components.
+For sparse or skewed sources (e.g. indicator variables where the "on" fraction
+$p \ll 0.5$), the expected log-cosh contrast falls **below** the Gaussian
+baseline, causing fastICA to actively avoid the true source direction.
+
+This analysis generalizes the framework to an **asymmetric** Rademacher prior
+parameterized by its up-probability $p$. We alternate between:
+
+1. Updating the projection direction $w$ via a Newton-like fixed-point step
+   (for fixed $p$).
+2. Updating $p$ by maximizing the marginal log-likelihood (for fixed $w$).
+
+At $p = 0.5$ the algorithm exactly reduces to standard log-cosh fastICA.
+Two scale anchors are compared:
+
+- **M-estimator** ($c = s$): robust but slightly over-inflated variance.
+- **Golden-ratio** ($c \approx 0.618\,s$): satisfies $c^2 + cs = s^2$, so the
+  assumed generative variance equals the empirical data variance.
+
+## Helpers
+
+```{r}
+prewhiten = function(X, n.comp) {
+  X = X - rowMeans(X)
+  sqrt(ncol(X)) * t(svd(X)$v[, 1:n.comp])
+}
+```
+
+## Implementation
+
+With $\sigma^2 = cs$, the score function and its derivative are:
+
+$$M(x) = \frac{y_1}{cs}\,\pi(x) + \frac{y_0}{cs}\,(1-\pi(x)), \qquad
+  M'(x) = \frac{\pi(x)(1-\pi(x))}{s^2\,p(1-p)}$$
+
+where $\pi(x) = \sigma(\Delta(x))$ is the logistic sigmoid of
+
+$$\Delta(x) = \frac{1}{\sqrt{p(1-p)}}\!\left(\frac{x}{s}
+  - \frac{c\,(1-2p)}{2s\,\sqrt{p(1-p)}}\right) + \log\frac{p}{1-p}$$
+
+and $y_1 = c\sqrt{(1-p)/p} > 0$, $y_0 = -c\sqrt{p/(1-p)} < 0$ are the prior
+support points.
+
+```{r}
+asym_score = function(x, p, c, s) {
+  y1     = c * sqrt((1-p)/p)
+  y0     = -c * sqrt(p/(1-p))
+  kappa3 = (1 - 2*p) / sqrt(p*(1-p))
+  Delta  = (x/s - c*kappa3/(2*s)) / sqrt(p*(1-p)) + log(p/(1-p))
+  pi_x   = plogis(Delta)
+  list(
+    M  = (y1/(c*s)) * pi_x + (y0/(c*s)) * (1 - pi_x),
+    Mp = pi_x * (1 - pi_x) / (s^2 * p * (1-p))
+  )
+}
+```
+
+The marginal log-likelihood in $p$ for fixed projections $x = Yw$:
+
+$$J(p) = \frac{1}{n}\sum_{i=1}^n \log\!\left(
+  p\,e^{\,x_i y_1/(cs)\,-\,y_1^2/(2cs)}
+  + (1-p)\,e^{\,x_i y_0/(cs)\,-\,y_0^2/(2cs)}\right)$$
+
+```{r}
+asym_obj_p = function(p, x, c, s) {
+  y1  = c * sqrt((1-p)/p)
+  y0  = -c * sqrt(p/(1-p))
+  a1  = x * y1/(c*s) - y1^2/(2*c*s)
+  a0  = x * y0/(c*s) - y0^2/(2*c*s)
+  lp  = log(p); l1p = log(1-p)
+  m   = pmax(lp + a1, l1p + a0)
+  mean(m + log(exp(lp + a1 - m) + exp(l1p + a0 - m)))
+}
+```
+
+The Newton-like fixed-point update for $w$ follows the standard fastICA pattern:
+$$w \leftarrow \tfrac{1}{n}Y M(x) - \overline{M'(x)}\,w, \qquad
+  w \leftarrow w / \|w\|$$
+
+```{r}
+fastica_asym_r1 = function(Y, s = 1, anchor = c("M", "golden"),
+                            tol = 1e-6, max_iter = 500, eps = 0.01,
+                            w_init = NULL) {
+  anchor = match.arg(anchor)
+  c      = if (anchor == "M") s else s * (sqrt(5)-1)/2
+  m = nrow(Y); n = ncol(Y)
+  w = if (is.null(w_init)) rnorm(m) else w_init
+  w = w / sqrt(sum(w^2))
+  p = 0.5
+  for (iter in seq_len(max_iter)) {
+    w_old = w; p_old = p
+    x  = as.vector(t(Y) %*% w)
+    sc = asym_score(x, p, c, s)
+    w  = as.vector(Y %*% sc$M) / n - mean(sc$Mp) * w
+    w  = w / sqrt(sum(w^2))
+    x   = as.vector(t(Y) %*% w)
+    opt = optimize(\(pp) asym_obj_p(pp, x, c, s), c(eps, 1-eps), maximum = TRUE)
+    p   = opt$maximum
+    if (1 - abs(sum(w * w_old)) < tol && abs(p - p_old) < tol) break
+  }
+  list(w = w, p = p, iter = iter, c = c)
+}
+```
+
+Standard log-cosh fastICA for comparison:
+
+```{r}
+fastica_r1update = function(X, w) {
+  w = w / sqrt(sum(w^2))
+  P = t(X) %*% w
+  G  = tanh(P); G2 = 1 - tanh(P)^2
+  w  = X %*% G - mean(G2) * ncol(X) * w
+  w / sqrt(sum(w^2))
+}
+
+run_seeds_lc = function(Y, S_true, n_seeds = 100, n_iter = 200) {
+  maxcor = numeric(n_seeds)
+  for (seed in seq_len(n_seeds)) {
+    set.seed(seed)
+    w = rnorm(nrow(Y))
+    for (i in seq_len(n_iter)) w = fastica_r1update(Y, w)
+    maxcor[seed] = max(abs(cor(t(S_true), t(Y) %*% w)))
+  }
+  maxcor
+}
+
+run_seeds_asym = function(Y, S_true, anchor, n_seeds = 100) {
+  maxcor = numeric(n_seeds); ps = numeric(n_seeds)
+  for (seed in seq_len(n_seeds)) {
+    set.seed(seed)
+    res = fastica_asym_r1(Y, anchor = anchor, w_init = rnorm(nrow(Y)))
+    maxcor[seed] = max(abs(cor(t(S_true), t(Y) %*% res$w)))
+    ps[seed]     = min(res$p, 1 - res$p)   # probability of the rare state
+  }
+  list(maxcor = maxcor, p = ps)
+}
+```
+
+## Sanity check: $p = 0.5$ recovers log-cosh
+
+At $p = 0.5$, $s = 1$: $\Delta(x) = 2x$, $\pi(x) = (1 + \tanh x)/2$, and
+$M(x) = \tanh(x)$ — the standard fastICA score.
+
+```{r}
+x_grid = seq(-3, 3, length.out = 300)
+sc05   = asym_score(x_grid, p = 0.5, c = 1, s = 1)
+
+plot(x_grid, sc05$M, type = "l", col = "steelblue", lwd = 2,
+     xlab = "x", ylab = "M(x)",
+     main = "Score function at p = 0.5 vs tanh(x)")
+lines(x_grid, tanh(x_grid), col = "tomato", lty = 2, lwd = 2)
+legend("topleft", c("asymmetric M(x), p = 0.5", "tanh(x)"),
+       col = c("steelblue", "tomato"), lty = c(1, 2), lwd = 2, bty = "n")
+```
+
+The curves are numerically identical.
+
+## Theoretical motivation
+
+When does log-cosh fail? For a standardised binary source $(\text{Bernoulli}(p)$,
+zero mean, unit variance), the expected log-cosh contrast is:
+
+```{r}
+expected_logcosh = function(p) {
+  z1 =  sqrt((1-p)/p); z0 = -sqrt(p/(1-p))
+  p * log(cosh(z1)) + (1-p) * log(cosh(z0))
+}
+lc_stable = function(z) abs(z) + log1p(exp(-2*abs(z))) - log(2)
+lc_gauss  = integrate(\(z) lc_stable(z) * dnorm(z), -Inf, Inf)$value
+
+pvec = seq(0.01, 0.99, by = 0.01)
+lc   = sapply(pvec, expected_logcosh)
+
+plot(pvec, lc, type = "l", col = "steelblue", lwd = 2,
+     xlab = "p  (probability of positive state)",
+     ylab = "E[log cosh(x)]",
+     main = "Log-cosh contrast vs Gaussian baseline")
+abline(h = lc_gauss, lty = 2, col = "grey40")
+legend("top", c("E[log cosh], binary source", "Gaussian baseline"),
+       col = c("steelblue", "grey40"), lty = c(1, 2), lwd = 2, bty = "n")
+```
+
+Standard fastICA with log-cosh **actively avoids** sources with $p < $ about
+$0.1$ or $p > 0.9$: the contrast falls below the Gaussian baseline, so the
+algorithm prefers noise directions over the true source.
+
+## Score functions for varying $p$
+
+As $p$ decreases below 0.5 the score shifts and steepens, penalising the
+positive tail more heavily — appropriate for sources that are rarely "on".
+
+```{r}
+pvec2 = c(0.05, 0.1, 0.2, 0.3, 0.5)
+cols  = c("purple", "tomato", "darkorange", "steelblue", "black")
+plot(NULL, xlim = c(-3, 3), ylim = c(-2.5, 2.5),
+     xlab = "x", ylab = "M(x)",
+     main = "Asymmetric score functions  (c = s = 1)")
+for (i in seq_along(pvec2))
+  lines(x_grid, asym_score(x_grid, pvec2[i], 1, 1)$M, col = cols[i], lwd = 2)
+legend("topleft", paste0("p = ", pvec2), col = cols, lwd = 2, bty = "n")
+abline(h = 0, lty = 3, col = "grey60")
+```
+
+## Main test: 9 overlapping groups ($k = 9$, $p \approx 0.2$)
+
+This is the canonical case where log-cosh fails: 9 sparse binary sources
+(each active in 20 out of 100 samples), whitened to $k = 9$.
+
+```{r}
+set.seed(1)
+n = 100; p_dim = 1000; K = 9
+L  = matrix(0, nrow = n, ncol = K)
+for (i in 1:K) L[sample(n, 20), i] = 1
+FF = matrix(rnorm(p_dim * K), nrow = p_dim)
+X9 = t(L %*% t(FF) + matrix(rnorm(n * p_dim, 0, 0.1), nrow = n))
+Z9 = prewhiten(X9, K)
+S9 = t(L)
+```
+
+```{r}
+mc9_lc = run_seeds_lc(Z9, S9, n_seeds = 100)
+mc9_M  = run_seeds_asym(Z9, S9, "M",      n_seeds = 100)
+mc9_gr = run_seeds_asym(Z9, S9, "golden", n_seeds = 100)
+
+cat("9-groups (p_true ~ 0.2, k = 9, n_seeds = 100):\n")
+cat(sprintf("  log-cosh         mean = %.3f   frac > 0.9 = %.2f\n",
+    mean(mc9_lc), mean(mc9_lc > 0.9)))
+cat(sprintf("  asym M-est       mean = %.3f   frac > 0.9 = %.2f   mean_p = %.3f\n",
+    mean(mc9_M$maxcor), mean(mc9_M$maxcor > 0.9), mean(mc9_M$p)))
+cat(sprintf("  asym golden      mean = %.3f   frac > 0.9 = %.2f   mean_p = %.3f\n",
+    mean(mc9_gr$maxcor), mean(mc9_gr$maxcor > 0.9), mean(mc9_gr$p)))
+```
+
+```{r}
+par(mfrow = c(1, 3))
+hist(mc9_lc,        breaks = seq(0,1,0.05), main = "log-cosh",       xlab = "max|cor|")
+hist(mc9_M$maxcor,  breaks = seq(0,1,0.05), main = "asym M-est",     xlab = "max|cor|")
+hist(mc9_gr$maxcor, breaks = seq(0,1,0.05), main = "asym golden",    xlab = "max|cor|")
+par(mfrow = c(1, 1))
+```
+
+Log-cosh fails completely (all max|cor| < 0.9). The asymmetric golden-ratio
+anchor nearly perfectly succeeds; the M-estimator anchor is intermediate.
+
+### Why does the golden-ratio anchor do better?
+
+The two anchors produce different score functions via the $c$-dependent bias
+term in $\Delta(x)$. The golden-ratio anchor ($c = 0.618s$) satisfies
+$c^2 + cs = s^2$, so the total assumed generative variance matches the empirical
+variance $s^2$. The M-estimator ($c = s$) over-inflates the assumed variance
+to $2s^2$, shifting the logistic midpoint and softening the asymmetry penalty.
+
+We can visualise this: at $p = 0.2$, $s = 1$, the two anchors produce
+noticeably different score functions:
+
+```{r}
+x_grid2 = seq(-4, 4, length.out = 400)
+sc_M  = asym_score(x_grid2, p = 0.2, c = 1,              s = 1)
+sc_gr = asym_score(x_grid2, p = 0.2, c = (sqrt(5)-1)/2,  s = 1)
+
+plot(x_grid2, sc_M$M,  type = "l", col = "steelblue", lwd = 2,
+     xlab = "x", ylab = "M(x)",
+     main = "Score functions at p = 0.2: M-estimator vs golden-ratio")
+lines(x_grid2, sc_gr$M, col = "tomato", lwd = 2)
+lines(x_grid2, tanh(x_grid2), col = "grey50", lty = 2, lwd = 1.5)
+legend("topleft",
+       c("M-estimator (c = s)", "golden-ratio (c = 0.618s)", "tanh  (p = 0.5)"),
+       col = c("steelblue", "tomato", "grey50"),
+       lty = c(1, 1, 2), lwd = c(2, 2, 1.5), bty = "n")
+```
+
+## Sanity check: symmetric Rademacher ($p = 0.5$, $k = 9$)
+
+Both methods should succeed here; the asymmetric algorithm should recover
+$\hat p \approx 0.5$ automatically.
+
+```{r}
+set.seed(2)
+S_sym = matrix(sample(c(-1, 1), K * n, replace = TRUE), nrow = K)
+X_sym = t(S_sym) %*% t(FF) + matrix(rnorm(n * p_dim, 0, 0.1), nrow = n)
+Z_sym = prewhiten(t(X_sym), K)
+
+mc_s_lc = run_seeds_lc(Z_sym, S_sym, n_seeds = 100)
+mc_s_gr = run_seeds_asym(Z_sym, S_sym, "golden", n_seeds = 100)
+
+cat("Symmetric Rademacher (p_true = 0.5, k = 9):\n")
+cat(sprintf("  log-cosh      mean = %.3f   frac > 0.9 = %.2f\n",
+    mean(mc_s_lc), mean(mc_s_lc > 0.9)))
+cat(sprintf("  asym golden   mean = %.3f   frac > 0.9 = %.2f   mean_p = %.3f\n",
+    mean(mc_s_gr$maxcor), mean(mc_s_gr$maxcor > 0.9), mean(mc_s_gr$p)))
+```
+
+## Asymmetry parameter recovery ($k = 1$)
+
+Using $k = 1$ whitening (which isolates each source exactly), we verify that
+the estimated $\hat p$ tracks the true sparse fraction. Because of sign
+ambiguity in the ICA direction, we report $\min(\hat p,\, 1-\hat p)$, i.e.
+the probability of the rare state.
+
+```{r}
+set.seed(99)
+n_rec = 500; p_dim_rec = 1000
+A_rec = matrix(rnorm(p_dim_rec), nrow = p_dim_rec)
+
+p_trues  = c(0.05, 0.10, 0.15, 0.20, 0.30, 0.40, 0.50)
+p_hat_M  = numeric(length(p_trues))
+p_hat_gr = numeric(length(p_trues))
+
+for (j in seq_along(p_trues)) {
+  pt = p_trues[j]
+  S  = matrix(as.numeric(runif(n_rec) < pt), nrow = 1)
+  S  = (S - pt) / sqrt(pt * (1-pt))
+  X  = A_rec %*% S + matrix(rnorm(p_dim_rec * n_rec, 0, 0.1), nrow = p_dim_rec)
+  Z  = prewhiten(X, 1)
+  set.seed(1)
+  r_M  = fastica_asym_r1(Z, anchor = "M",      w_init = rnorm(1))
+  r_gr = fastica_asym_r1(Z, anchor = "golden",  w_init = rnorm(1))
+  p_hat_M[j]  = min(r_M$p,  1 - r_M$p)
+  p_hat_gr[j] = min(r_gr$p, 1 - r_gr$p)
+}
+
+plot(p_trues, p_hat_M, pch = 19, col = "steelblue",
+     xlim = c(0, 0.52), ylim = c(0, 0.52),
+     xlab = "true p  (sparse fraction)",
+     ylab = "estimated p  (rare-state probability)",
+     main = "Asymmetry parameter recovery  (k = 1 whitening)")
+points(p_trues, p_hat_gr, pch = 17, col = "tomato")
+abline(0, 1, lty = 2, col = "grey50")
+legend("topleft", c("M-estimator", "golden-ratio"),
+       col = c("steelblue","tomato"), pch = c(19,17), bty = "n")
+```
+
+Both anchors track the true sparse fraction closely across $p \in [0.05, 0.5]$.
+
+## Summary
+
+The asymmetric fastICA algorithm alternates between a Newton-like fixed-point
+update for $w$ (identical to standard fastICA at $p = 0.5$) and 1D
+optimization of $p$. Key findings from 100 random seeds each:
+
+| Setting | log-cosh (frac $>$ 0.9) | asym M-est | asym golden |
+|---------|----------|------------|-------------|
+| Symmetric Rademacher ($p=0.5$, $k=9$) | **0.99** | — | 0.77 |
+| 9 overlapping groups ($p \approx 0.2$, $k=9$) | 0.00 | 0.68 | **0.95** |
+
+- **Log-cosh fails completely** for the 9-groups case because sparse sources
+  have $E[\log\cosh] < $ Gaussian baseline, causing the algorithm to prefer
+  noise directions.
+- **The golden-ratio anchor** ($c \approx 0.618s$) dramatically outperforms
+  the M-estimator anchor.  Its assumed generative variance matches the empirical
+  variance ($c^2 + cs = s^2$), giving a better-calibrated asymmetry penalty.
+- **Tradeoff on symmetric sources**: for symmetric Rademacher sources, the
+  asymmetric method's p-optimizer can drift from 0.5 in finite samples,
+  changing the objective landscape and reducing the success rate from 99% to
+  77%.  Log-cosh remains the preferred choice when sources are known to be
+  symmetric.
+- **Asymmetry recovery** ($k=1$ whitening): $\hat p = \min(p, 1-p)$ correctly
+  tracks the true sparse fraction over the range $[0.05, 0.5]$.
+- **Practical guidance**: use asymmetric fastICA (golden anchor) when sources
+  are expected to be sparse or skewed ($p \ll 0.5$); use standard log-cosh
+  for symmetric sources.
