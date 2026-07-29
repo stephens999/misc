@@ -148,6 +148,7 @@ fastica_r1update_trace = function(X, w, S_diag) {
 
 run_seeds_lc = function(Y, S_true, hess = "fastICA", n_seeds = 100, n_iter = 200) {
   maxcor = numeric(n_seeds)
+  objs   = numeric(n_seeds)
   S_diag = colSums(Y^2) / ncol(Y)
   for (seed in seq_len(n_seeds)) {
     set.seed(seed)
@@ -158,8 +159,9 @@ run_seeds_lc = function(Y, S_true, hess = "fastICA", n_seeds = 100, n_iter = 200
       for (i in seq_len(n_iter)) w = fastica_r1update(Y, w)
     }
     maxcor[seed] = max(abs(cor(t(S_true), t(Y) %*% w)))
+    objs[seed]   = mean(log(cosh(as.vector(t(Y) %*% w))))
   }
-  maxcor
+  structure(maxcor, obj = objs)   # vector; objs accessible via attr(., "obj")
 }
 
 run_seeds_asym = function(Y, S_true, anchor, hess = "fastICA", n_seeds = 100) {
@@ -188,6 +190,37 @@ run_seeds_asym_warm = function(Y, S_true, anchor, hess = "fastICA", n_seeds = 10
     objs[seed]   = asym_obj_p(res$p, as.vector(t(Y) %*% res$w), res$c, 1)
   }
   list(maxcor = maxcor, p = ps, obj = objs)
+}
+
+# Sort by |obj − Gaussian baseline| (most extreme first), colour by success
+plot_obj_lc = function(lc_result, title, lc_gauss) {
+  objs = attr(lc_result, "obj")
+  succ = lc_result > 0.9
+  ord  = order(abs(objs - lc_gauss), decreasing = TRUE)
+  cols = ifelse(succ[ord], "steelblue", "tomato")
+  plot(seq_along(objs), objs[ord],
+       pch = 19, cex = 0.7, col = cols,
+       xlab = "rank (1 = most extreme log-cosh)",
+       ylab = "log-cosh objective",
+       main = paste0(title, "\n(blue = found true source, red = not)"))
+  abline(h = lc_gauss, lty = 2, col = "grey50")
+  legend("topright", c("true source", "other", "Gaussian baseline"),
+         pch = c(19, 19, NA), lty = c(NA, NA, 2),
+         col = c("steelblue", "tomato", "grey50"), bty = "n", cex = 0.8)
+}
+
+plot_obj_asym = function(asym_result, title) {
+  objs = asym_result$obj
+  succ = asym_result$maxcor > 0.9
+  ord  = order(objs, decreasing = TRUE)
+  cols = ifelse(succ[ord], "steelblue", "tomato")
+  plot(seq_along(objs), objs[ord],
+       pch = 19, cex = 0.7, col = cols,
+       xlab = "rank (1 = highest asymmetric objective)",
+       ylab = "asymmetric log-likelihood",
+       main = paste0(title, "\n(blue = found true source, red = not)"))
+  legend("topright", c("true source", "other"),
+         pch = 19, col = c("steelblue", "tomato"), bty = "n", cex = 0.8)
 }
 ```
 
@@ -265,17 +298,19 @@ plot(p_grid, obj_asym_02, type = "l", col = "steelblue", lwd = 2,
 lines(p_grid, obj_asym_N, col = "grey40", lty = 2, lwd = 2)
 abline(v = 0.2, lty = 3, col = "tomato", lwd = 1.5)
 legend("topright",
-       c("source (p_true = 0.2)", "Gaussian baseline", "p = 0.2"),
+       c("source (p_true = 0.2)", "Gaussian source (varying p_test)", "p = 0.2"),
        col = c("steelblue", "grey40", "tomato"),
        lty = c(1, 2, 3), lwd = c(2, 2, 1.5), bty = "n")
 ```
 
-The asymmetric objective for the $p = 0.2$ source (blue) peaks near
-$p_\text{test} = 0.2$ and lies **above** the Gaussian baseline (grey) in that
-region — the optimizer can successfully identify the source by maximising over
-$p$.  At $p_\text{test} = 0.5$ the asymmetric objective reduces to the
-log-cosh contrast, which falls below the Gaussian baseline for this source,
-explaining why standard fastICA fails.
+The grey dashed curve shows the same asymmetric objective evaluated on a
+**Gaussian** source as $p_\text{test}$ varies — it serves as a reference, not a
+constant horizontal baseline.  The blue curve (true $p = 0.2$ source) peaks
+near $p_\text{test} = 0.2$ and lies **above** the Gaussian reference curve in
+that region — the optimizer can successfully identify the source by maximising
+over $p$.  At $p_\text{test} = 0.5$ the asymmetric objective reduces to the
+log-cosh contrast, and the blue curve dips **below** the grey reference,
+explaining why standard fastICA fails for this source.
 
 ## Score functions for varying $p$
 
@@ -338,20 +373,14 @@ cat(sprintf("  asym golden (warm, trace)     mean = %.3f   frac > 0.9 = %.2f   m
     mean(mc9_grw_tr$maxcor), mean(mc9_grw_tr$maxcor > 0.9), mean(mc9_grw_tr$p)))
 ```
 
-The asymmetric objective is a maximum (not a minimum), so the **highest** value
-should correspond to a true source.  We can check whether this is a reliable
-selection criterion:
+Sorting runs by their objective reveals whether the objective alone can select
+true sources — making the raw success rate less critical:
 
-```{r}
-ord9_gr = order(mc9_gr$obj, decreasing = TRUE)   # highest objective first
-cols9_gr = ifelse((mc9_gr$maxcor > 0.9)[ord9_gr], "steelblue", "tomato")
-plot(seq_along(mc9_gr$obj), mc9_gr$obj[ord9_gr],
-     pch = 19, cex = 0.8, col = cols9_gr,
-     xlab = "rank (1 = highest asymmetric objective)",
-     ylab = "asymmetric log-likelihood at convergence",
-     main = "9-groups p=0.2: sorted asymmetric objectives\n(blue = true source found, red = not)")
-legend("topright", c("true source (cor > 0.9)", "other"),
-       pch = 19, col = c("steelblue", "tomato"), bty = "n", cex = 0.9)
+```{r fig.width=9, fig.height=4}
+par(mfrow = c(1, 2))
+plot_obj_lc(mc9_lc,  "log-cosh, 9-groups p≈0.2",  lc_gauss)
+plot_obj_asym(mc9_gr, "asymmetric, 9-groups p≈0.2")
+par(mfrow = c(1, 1))
 ```
 
 ### $p \approx 0.1$ (10/100 active)
@@ -396,13 +425,7 @@ on the unit sphere, the algorithm may be finding the true source direction as a
 **local minimum**.  We check this directly.
 
 ```{r}
-lc_obj_01 = numeric(100)
-for (seed in 1:100) {
-  set.seed(seed)
-  w = rnorm(nrow(Z9_01))
-  for (i in 1:200) w = fastica_r1update(Z9_01, w)
-  lc_obj_01[seed] = mean(log(cosh(as.vector(t(Z9_01) %*% w))))
-}
+lc_obj_01 = attr(mc9_01_lc, "obj")   # already computed inside run_seeds_lc
 succ = mc9_01_lc > 0.9
 cat(sprintf("Gaussian baseline: %.4f\n", lc_gauss))
 cat(sprintf("Successful seeds (n=%d): mean log-cosh obj = %.4f  [%s baseline]\n",
@@ -422,42 +445,13 @@ because their large active-sample values ($y_1 \approx 3$) lower the log-cosh
 average maximally.
 
 The practical question is whether the **objective value alone can select true
-sources**.  If the 82 successful runs are concentrated at the bottom of the
-sorted objective, one can simply keep the $n_\text{runs}$ with the lowest
-log-cosh value:
+sources**, making the raw success rate less critical:
 
-```{r}
-ord = order(lc_obj_01)           # ascending: deepest minimum first
-cols = ifelse(succ[ord], "steelblue", "tomato")
-plot(seq_along(lc_obj_01), lc_obj_01[ord],
-     pch = 19, cex = 0.8, col = cols,
-     xlab = "rank (1 = lowest log-cosh objective)",
-     ylab = "log-cosh objective at convergence",
-     main = "9-groups p=0.1: sorted log-cosh objectives\n(blue = true source found, red = not)")
-abline(h = lc_gauss, lty = 2, col = "grey50")
-legend("topleft", c("true source (cor > 0.9)", "other", "Gaussian baseline"),
-       pch = c(19, 19, NA), lty = c(NA, NA, 2),
-       col = c("steelblue", "tomato", "grey50"), bty = "n", cex = 0.9)
-```
-
-If the blue points cluster at the left (lowest objective) and red points at the
-right, using the objective as a selection criterion recovers true sources
-reliably — the "failure rate" of random starts is then irrelevant, since all we
-need is that the *best* run (by objective) is a true source.
-
-The asymmetric method maximises its objective, so we check the same for it:
-
-```{r}
-succ_gr01 = mc9_01_gr$maxcor > 0.9
-ord9_gr01 = order(mc9_01_gr$obj, decreasing = TRUE)
-cols9_gr01 = ifelse(succ_gr01[ord9_gr01], "steelblue", "tomato")
-plot(seq_along(mc9_01_gr$obj), mc9_01_gr$obj[ord9_gr01],
-     pch = 19, cex = 0.8, col = cols9_gr01,
-     xlab = "rank (1 = highest asymmetric objective)",
-     ylab = "asymmetric log-likelihood at convergence",
-     main = "9-groups p=0.1: sorted asymmetric objectives\n(blue = true source found, red = not)")
-legend("topright", c("true source (cor > 0.9)", "other"),
-       pch = 19, col = c("steelblue", "tomato"), bty = "n", cex = 0.9)
+```{r fig.width=9, fig.height=4}
+par(mfrow = c(1, 2))
+plot_obj_lc(mc9_01_lc,  "log-cosh, 9-groups p≈0.1",  lc_gauss)
+plot_obj_asym(mc9_01_gr, "asymmetric, 9-groups p≈0.1")
+par(mfrow = c(1, 1))
 ```
 
 ### Why does the golden-ratio anchor do better?
@@ -528,6 +522,13 @@ cat(sprintf("  asym golden (warm, trace)     mean = %.3f   frac > 0.9 = %.2f   m
     mean(mc_s_grw_tr$maxcor), mean(mc_s_grw_tr$maxcor > 0.9), mean(mc_s_grw_tr$p)))
 ```
 
+```{r fig.width=9, fig.height=4}
+par(mfrow = c(1, 2))
+plot_obj_lc(mc_s_lc,  "log-cosh, 9-groups p=0.5",  lc_gauss)
+plot_obj_asym(mc_s_gr, "asymmetric, 9-groups p=0.5")
+par(mfrow = c(1, 1))
+```
+
 ## Single source, over-complete whitening ($k = 20$)
 
 In all tests so far the whitening dimension $k$ matched the number of true
@@ -595,6 +596,13 @@ cat(sprintf("  asym golden (warm, trace)     mean = %.3f   frac > 0.9 = %.2f   m
     mean(mc_k20_05_grw_tr$maxcor), mean(mc_k20_05_grw_tr$maxcor > 0.9), mean(mc_k20_05_grw_tr$p)))
 ```
 
+```{r fig.width=9, fig.height=4}
+par(mfrow = c(1, 2))
+plot_obj_lc(mc_k20_05_lc,  "log-cosh, 1-source k=20 p=0.5",  lc_gauss)
+plot_obj_asym(mc_k20_05_gr, "asymmetric, 1-source k=20 p=0.5")
+par(mfrow = c(1, 1))
+```
+
 All methods fail on this problem: with $n = 200$ and $k = 20$ whitened
 components, the signal-to-noise ratio in any single direction is low and a
 random $w$ starts nearly orthogonal to the true source.  The asymmetric
@@ -627,6 +635,13 @@ cat(sprintf("  asym golden (warm, trace)     mean = %.3f   frac > 0.9 = %.2f   m
     mean(mc_k20_02_grw_tr$maxcor), mean(mc_k20_02_grw_tr$maxcor > 0.9), mean(mc_k20_02_grw_tr$p)))
 ```
 
+```{r fig.width=9, fig.height=4}
+par(mfrow = c(1, 2))
+plot_obj_lc(mc_k20_02_lc,  "log-cosh, 1-source k=20 p=0.2",  lc_gauss)
+plot_obj_asym(mc_k20_02_gr, "asymmetric, 1-source k=20 p=0.2")
+par(mfrow = c(1, 1))
+```
+
 All methods struggle at $p = 0.2$ in the $k = 20$ setting.  Log-cosh achieves 0%
 even though it succeeds at $p = 0.1$.  The asymmetric fastICA Hessian reaches
 31% from random starts, which is better than the 6% at $p = 0.5$ — the larger
@@ -655,6 +670,13 @@ cat(sprintf("  asym golden (warm, fastICA)   mean = %.3f   frac > 0.9 = %.2f   m
     mean(mc_k20_01_grw$maxcor),    mean(mc_k20_01_grw$maxcor    > 0.9), mean(mc_k20_01_grw$p)))
 cat(sprintf("  asym golden (warm, trace)     mean = %.3f   frac > 0.9 = %.2f   mean_p = %.3f\n",
     mean(mc_k20_01_grw_tr$maxcor), mean(mc_k20_01_grw_tr$maxcor > 0.9), mean(mc_k20_01_grw_tr$p)))
+```
+
+```{r fig.width=9, fig.height=4}
+par(mfrow = c(1, 2))
+plot_obj_lc(mc_k20_01_lc,  "log-cosh, 1-source k=20 p=0.1",  lc_gauss)
+plot_obj_asym(mc_k20_01_gr, "asymmetric, 1-source k=20 p=0.1")
+par(mfrow = c(1, 1))
 ```
 
 Log-cosh is the best method here on random starts (83%), while the asymmetric
