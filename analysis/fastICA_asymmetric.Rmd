@@ -529,6 +529,51 @@ plot_obj_asym(mc_s_gr, "asymmetric, 9-groups p=0.5")
 par(mfrow = c(1, 1))
 ```
 
+**Are the two objectives comparable?**  At $p = 0.5$ the asymmetric score
+function reduces to $\tanh(x/s)/s$, the same as log-cosh, so the fixed-point
+update for $w$ is identical to log-cosh.  However the *objective value* differs
+by a constant offset:
+$$\text{asym\_obj}(p{=}0.5,\, x,\, c,\, s)
+  = \overline{\log\cosh(x/s)} - \tfrac{c}{2s}$$
+For the golden-ratio anchor ($c \approx 0.618$, $s = 1$) the offset is
+$-c/2 \approx -0.309$.
+
+```{r}
+succ_s   = mc_s_gr$maxcor > 0.9
+c_gr     = (sqrt(5) - 1) / 2
+lc_obj_s = attr(mc_s_lc, "obj")
+
+cat(sprintf("Successful seeds (n=%d): mean p = %.3f   mean asym_obj = %.4f\n",
+    sum(succ_s),  mean(mc_s_gr$p[succ_s]),  mean(mc_s_gr$obj[succ_s])))
+cat(sprintf("Failed seeds    (n=%d): mean p = %.3f   mean asym_obj = %.4f\n",
+    sum(!succ_s), mean(mc_s_gr$p[!succ_s]), mean(mc_s_gr$obj[!succ_s])))
+
+# Fraction of top-K runs (by asym_obj) that found a true source
+for (K_top in c(10, 20, 50)) {
+  top_K = order(mc_s_gr$obj, decreasing = TRUE)[1:K_top]
+  cat(sprintf("Fraction of top-%d asym_obj runs that are true sources: %.2f\n",
+      K_top, mean(succ_s[top_K])))
+}
+
+# Theoretical offset at p = 0.5: asym_obj = lc_obj - c/2
+cat(sprintf("\nTheoretical offset (asym at p=0.5) - lc_obj = -c/2 = %.4f\n", -c_gr/2))
+cat(sprintf("Observed offset for successful seeds: %.4f  (p ≠ 0.5, so not exact)\n",
+    mean(mc_s_gr$obj[succ_s] - lc_obj_s[succ_s])))
+```
+
+**What is happening:**
+
+- Successful seeds do *not* converge to exactly $p = 0.5$.  With finite data
+  and approximate symmetry, the optimizer finds $p \approx 0.4$–$0.5$.  At
+  exactly $p = 0.5$ the asymmetric score equals log-cosh, but the joint $(w,p)$
+  iteration drifts $p$ slightly away.
+- Failed seeds converge to $p \approx 0.15$–$0.2$ — they found a noise direction
+  that the optimizer interpreted as a sparse source.
+- The mean asymmetric objective IS higher for successful seeds, so the objective
+  has selection power, but some failed seeds (with inflated objectives from their
+  small $p$) rank among the top runs.  This makes the asymmetric objective a
+  slightly noisier selector than log-cosh for a symmetric true source.
+
 ## Single source, over-complete whitening ($k = 20$)
 
 In all tests so far the whitening dimension $k$ matched the number of true
