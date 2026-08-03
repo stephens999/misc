@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Matthew Stephens (using Claude)" />
+
+<meta name="date" content="2026-07-30" />
+
+<title>FastICA for Asymmetric Binary Sources, part 2</title>
+
+<script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">misc</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/stephens999/misc">source</a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">FastICA for Asymmetric Binary Sources, part
+2</h1>
+<h4 class="author">Matthew Stephens (using Claude)</h4>
+<h4 class="date">2026-07-30</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2026-08-03
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>misc/analysis/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.2). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed1code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(1)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed1code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(1)</code> was run prior to running the
+code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree53c8a87db714075c39a16eeaf1cc6d5928d5356etargetblank53c8a87a">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/stephens999/misc/tree/53c8a87db714075c39a16eeaf1cc6d5928d5356e" target="_blank">53c8a87</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree53c8a87db714075c39a16eeaf1cc6d5928d5356etargetblank53c8a87a"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/stephens999/misc/tree/53c8a87db714075c39a16eeaf1cc6d5928d5356e" target="_blank">53c8a87</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    .claude/
+    Ignored:    GSE87571/
+    Ignored:    analysis/.RData
+    Ignored:    analysis/.Rhistory
+    Ignored:    analysis/ALStruct_cache/
+    Ignored:    analysis/ebproj_01.html
+    Ignored:    data/.Rhistory
+    Ignored:    data/methylation-data-for-matthew.rds
+    Ignored:    data/pbmc/
+    Ignored:    data/pbmc_purified.RData
+
+Untracked files:
+    Untracked:  .dropbox
+    Untracked:  GSE41037/
+    Untracked:  Icon
+    Untracked:  Rplots.pdf
+    Untracked:  analysis/GHstan.Rmd
+    Untracked:  analysis/GTEX-cogaps.Rmd
+    Untracked:  analysis/PACS.Rmd
+    Untracked:  analysis/Rplot.png
+    Untracked:  analysis/SPCAvRP.rmd
+    Untracked:  analysis/abf_comparisons.Rmd
+    Untracked:  analysis/admm_02.Rmd
+    Untracked:  analysis/admm_03.Rmd
+    Untracked:  analysis/bispca.Rmd
+    Untracked:  analysis/cache/
+    Untracked:  analysis/cholesky.Rmd
+    Untracked:  analysis/compare-transformed-models.Rmd
+    Untracked:  analysis/cormotif.Rmd
+    Untracked:  analysis/cp_ash.Rmd
+    Untracked:  analysis/eQTL.perm.rand.pdf
+    Untracked:  analysis/eb_power2.Rmd
+    Untracked:  analysis/eb_prepilot.Rmd
+    Untracked:  analysis/eb_var.Rmd
+    Untracked:  analysis/ebpmf1.Rmd
+    Untracked:  analysis/ebpmf_sla_text.Rmd
+    Untracked:  analysis/ebproj_01.Rmd
+    Untracked:  analysis/ebproj_newton.Rmd
+    Untracked:  analysis/ebspca_sims.Rmd
+    Untracked:  analysis/explore_psvd.Rmd
+    Untracked:  analysis/fa_check_identify.Rmd
+    Untracked:  analysis/fa_iterative.Rmd
+    Untracked:  analysis/fastica_heated.Rmd
+    Untracked:  analysis/fastica_unwhitened.Rmd
+    Untracked:  analysis/flash_cov_overlapping_groups_init.Rmd
+    Untracked:  analysis/flash_test_tree.Rmd
+    Untracked:  analysis/flashier_newgroups.Rmd
+    Untracked:  analysis/flashier_nmf_triples.Rmd
+    Untracked:  analysis/flashier_pbmc.Rmd
+    Untracked:  analysis/flashier_snn_shifted_prior.Rmd
+    Untracked:  analysis/greedy_ebpmf_exploration_00.Rmd
+    Untracked:  analysis/ieQTL.perm.rand.pdf
+    Untracked:  analysis/lasso_em_03.Rmd
+    Untracked:  analysis/m6amash.Rmd
+    Untracked:  analysis/mash_bhat_z.Rmd
+    Untracked:  analysis/mash_ieqtl_permutations.Rmd
+    Untracked:  analysis/matrix_beta.Rmd
+    Untracked:  analysis/meth_flash_01.Rmd
+    Untracked:  analysis/methylation_example.Rmd
+    Untracked:  analysis/mixsqp.Rmd
+    Untracked:  analysis/mr.ash_lasso_init.Rmd
+    Untracked:  analysis/mr.mash.test.Rmd
+    Untracked:  analysis/mr_ash_modular.Rmd
+    Untracked:  analysis/mr_ash_parameterization.Rmd
+    Untracked:  analysis/mr_ash_ridge.Rmd
+    Untracked:  analysis/mv_gaussian_message_passing.Rmd
+    Untracked:  analysis/nejm.Rmd
+    Untracked:  analysis/nmf_bg.Rmd
+    Untracked:  analysis/nonneg_underapprox.Rmd
+    Untracked:  analysis/normal_conditional_on_r2.Rmd
+    Untracked:  analysis/normalize.Rmd
+    Untracked:  analysis/pbmc.Rmd
+    Untracked:  analysis/pca_binary_weighted.Rmd
+    Untracked:  analysis/pca_l1.Rmd
+    Untracked:  analysis/poisson_nmf_approx.Rmd
+    Untracked:  analysis/poisson_shrink.Rmd
+    Untracked:  analysis/poisson_transform.Rmd
+    Untracked:  analysis/qrnotes.txt
+    Untracked:  analysis/ridge_iterative_02.Rmd
+    Untracked:  analysis/ridge_iterative_splitting.Rmd
+    Untracked:  analysis/samps/
+    Untracked:  analysis/sc_bimodal.Rmd
+    Untracked:  analysis/shrinkage_comparisons_changepoints.Rmd
+    Untracked:  analysis/susie_cov.Rmd
+    Untracked:  analysis/susie_en.Rmd
+    Untracked:  analysis/susie_z_investigate.Rmd
+    Untracked:  analysis/svd-timing.Rmd
+    Untracked:  analysis/temp.RDS
+    Untracked:  analysis/temp.Rmd
+    Untracked:  analysis/test-figure/
+    Untracked:  analysis/test.Rmd
+    Untracked:  analysis/test.Rpres
+    Untracked:  analysis/test.md
+    Untracked:  analysis/test_qr.R
+    Untracked:  analysis/test_sparse.Rmd
+    Untracked:  analysis/tree_dist_top_eigenvector.Rmd
+    Untracked:  analysis/z.txt
+    Untracked:  code/coordinate_descent_symNMF.R
+    Untracked:  code/multivariate_testfuncs.R
+    Untracked:  code/rqb.hacked.R
+    Untracked:  data/4matthew/
+    Untracked:  data/4matthew2/
+    Untracked:  data/E-MTAB-2805.processed.1/
+    Untracked:  data/ENSG00000156738.Sim_Y2.RDS
+    Untracked:  data/GDS5363_full.soft.gz
+    Untracked:  data/GSE41265_allGenesTPM.txt
+    Untracked:  data/Muscle_Skeletal.ACTN3.pm1Mb.RDS
+    Untracked:  data/P.rds
+    Untracked:  data/Thyroid.FMO2.pm1Mb.RDS
+    Untracked:  data/bmass.HaemgenRBC2016.MAF01.Vs2.MergedDataSources.200kRanSubset.ChrBPMAFMarkerZScores.vs1.txt.gz
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.PreviousSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/eb_prepilot/
+    Untracked:  data/finemap_data/fmo2.sim/b.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/data
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.ld
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.z
+    Untracked:  data/finemap_data/fmo2.sim/pos.txt
+    Untracked:  data/logm.csv
+    Untracked:  data/m.cd.RDS
+    Untracked:  data/m.cdu.old.RDS
+    Untracked:  data/m.new.cd.RDS
+    Untracked:  data/m.old.cd.RDS
+    Untracked:  data/mainbib.bib.old
+    Untracked:  data/mat.csv
+    Untracked:  data/mat.txt
+    Untracked:  data/mat_new.csv
+    Untracked:  data/matrix_lik.rds
+    Untracked:  data/paintor_data/
+    Untracked:  data/running_data_chris.csv
+    Untracked:  data/running_data_matthew.csv
+    Untracked:  data/temp.txt
+    Untracked:  data/y.txt
+    Untracked:  data/y_f.txt
+    Untracked:  data/zscore_jointLCLs_m6AQTLs_susie_eQTLpruned.rds
+    Untracked:  data/zscore_jointLCLs_random.rds
+    Untracked:  explore_udi.R
+    Untracked:  output/fit.k10.rds
+    Untracked:  output/fit.nn.pbmc.purified.rds
+    Untracked:  output/fit.nn.rds
+    Untracked:  output/fit.nn.s.001.rds
+    Untracked:  output/fit.nn.s.01.rds
+    Untracked:  output/fit.nn.s.1.rds
+    Untracked:  output/fit.nn.s.10.rds
+    Untracked:  output/fit.snn.s.001.rds
+    Untracked:  output/fit.snn.s.01.nninit.rds
+    Untracked:  output/fit.snn.s.01.rds
+    Untracked:  output/fit.varbvs.RDS
+    Untracked:  output/fit2.nn.pbmc.purified.rds
+    Untracked:  output/glmnet.fit.RDS
+    Untracked:  output/snn07.txt
+    Untracked:  output/snn34.txt
+    Untracked:  output/test.bv.txt
+    Untracked:  output/test.gamma.txt
+    Untracked:  output/test.hyp.txt
+    Untracked:  output/test.log.txt
+    Untracked:  output/test.param.txt
+    Untracked:  output/test2.bv.txt
+    Untracked:  output/test2.gamma.txt
+    Untracked:  output/test2.hyp.txt
+    Untracked:  output/test2.log.txt
+    Untracked:  output/test2.param.txt
+    Untracked:  output/test3.bv.txt
+    Untracked:  output/test3.gamma.txt
+    Untracked:  output/test3.hyp.txt
+    Untracked:  output/test3.log.txt
+    Untracked:  output/test3.param.txt
+    Untracked:  output/test4.bv.txt
+    Untracked:  output/test4.gamma.txt
+    Untracked:  output/test4.hyp.txt
+    Untracked:  output/test4.log.txt
+    Untracked:  output/test4.param.txt
+    Untracked:  output/test5.bv.txt
+    Untracked:  output/test5.gamma.txt
+    Untracked:  output/test5.hyp.txt
+    Untracked:  output/test5.log.txt
+    Untracked:  output/test5.param.txt
+
+Unstaged changes:
+    Modified:   .gitignore
+    Modified:   analysis/eb_snmu.Rmd
+    Modified:   analysis/ebnm_binormal.Rmd
+    Modified:   analysis/ebpower.Rmd
+    Modified:   analysis/flashier_log1p.Rmd
+    Modified:   analysis/flashier_sla_text.Rmd
+    Modified:   analysis/logistic_z_scores.Rmd
+    Modified:   analysis/mr_ash_pen.Rmd
+    Modified:   analysis/nmu_em.Rmd
+    Modified:   analysis/susie_flash.Rmd
+    Modified:   analysis/tap_free_energy.Rmd
+    Modified:   misc.Rproj
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown (<code>analysis/fastica_asymmetric_02.Rmd</code>)
+and HTML (<code>docs/fastica_asymmetric_02.html</code>) files. If you’ve
+configured a remote Git repository (see <code>?wflow_git_remote</code>),
+click on the hyperlinks in the table below to view the files as they
+were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/53c8a87db714075c39a16eeaf1cc6d5928d5356e/analysis/fastica_asymmetric_02.Rmd" target="_blank">53c8a87</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-08-03
+</td>
+<td>
+workflowr::wflow_publish("analysis/fastICA_asymmetric_02.Rmd")
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>This is another try that I think can ultimately be ignored, as it was
+done before I fully understood the problem. Keeping it for completeness.
+Here is the prompt I started Claude with (generated in conversation with
+Gemini):</p>
+<p>I want to follow up on fastica_asymmetric with a second analysis
+(fastica_asymmetric_02.Rmd) which takes a slightly different approach,
+based on what we learned. I have a writeup for you. can you implement
+the objective function and optimization. Please make the implementation
+modular, so separate out functions to update w by a newton step and
+optimize c by some appropriate methods. here is the writeup:</p>
+<p>Generalizing FastICA for Asymmetric Binary Sources: A Generative
+Maximum Likelihood Approach</p>
+<ol style="list-style-type: decimal">
+<li><p>Introduction and Motivation The standard FastICA algorithm,
+operating on whitened data <span class="math inline">\(Y\)</span> with
+the objective to maximize the non-Gaussianity of projections <span
+class="math inline">\(x = Yw\)</span>, often relies on the <span
+class="math inline">\(\log(\cosh(x))\)</span> contrast function. This
+specific objective implicitly assumes a generative model where the
+source signal is a symmetric binary variable (Rademacher) corrupted by
+Gaussian noise, with the noise variance related to the signal standard
+deviation <span class="math inline">\(c\)</span> by <span
+class="math inline">\(\sigma^2 = c\)</span>. This report outlines an
+extension of this framework to recover asymmetric binary
+sources.</p></li>
+<li><p>Generative Model and Constraints Let the observed one-dimensional
+projection be <span class="math inline">\(x = u + e\)</span> where <span
+class="math inline">\(u\)</span> denotes the signal (source) and <span
+class="math inline">\(e\)</span> denotes the noise. Since the whitened
+data <span class="math inline">\(x\)</span> has variance 1, we assume
+that <span class="math inline">\(u, e\)</span> have variance <span
+class="math inline">\(c^2, (1-c^2)\)</span>. The Source (<span
+class="math inline">\(u\)</span>): We assume <span
+class="math inline">\(u\)</span> is an asymmetric binary source taking
+values <span class="math inline">\(y_1\)</span> with probability <span
+class="math inline">\(p\)</span> and <span
+class="math inline">\(y_0\)</span> with probability <span
+class="math inline">\(1-p\)</span> and satisfying:</p></li>
+<li><p>Zero Mean: <span class="math inline">\(\mathbb{E}[u] = (1-p)y_0 +
+p y_1 = 0\)</span></p></li>
+<li><p>Variance <span class="math inline">\(c^2\)</span>: <span
+class="math inline">\(\text{Var}(u) = c^2\)</span>, where <span
+class="math inline">\(0 &lt; c &lt; 1\)</span>.</p></li>
+</ol>
+<p>Solving this system yields: <span class="math display">\[y_1 = c
+\sqrt{\frac{1-p}{p}} \quad \text{and} \quad y_0 = -c
+\sqrt{\frac{p}{1-p}}\]</span> The Noise (<span
+class="math inline">\(e\)</span>): <span class="math display">\[e \sim
+\mathcal{N}(0, 1-c^2)\]</span> 3. Deriving the Log-Likelihood Objective
+The marginal probability of observing a projection <span
+class="math inline">\(x_i\)</span> is a Gaussian mixture: <span
+class="math display">\[p(x_i) = (1-p) \mathcal{N}(x_i \mid y_0, 1-c^2) +
+p \mathcal{N}(x_i \mid y_1, 1-c^2)\]</span> Taking the log-likelihood
+over <span class="math inline">\(n\)</span> samples, expanding the
+squared terms, and applying the strict constraints of whitened
+data—specifically that <span class="math inline">\(\sum x_i^2 =
+n\)</span> (since <span class="math inline">\(w^T w = 1\)</span>) and
+<span class="math inline">\(\sum x_i = 0\)</span> (since the data is
+centered)—allows us to drop several terms that become constants with
+respect to <span class="math inline">\(w\)</span>. The resulting average
+log-likelihood objective takes the form of a heavily shifted and scaled
+softplus function: <span class="math display">\[\mathcal{J}(w, p, c) =
+K(p, c) + \frac{1}{n} \sum_{i=1}^n \log(1 + \exp(s_i))\]</span> Where
+the internal state is <span class="math inline">\(s_i = \alpha x_i -
+\beta + \gamma\)</span>, parameterized by:</p>
+<ul>
+<li>Scale: <span class="math inline">\(\alpha =
+\frac{c}{(1-c^2)\sqrt{p(1-p)}}\)</span></li>
+<li>Shift: <span class="math inline">\(\beta =
+\frac{c^2(1-2p)}{2(1-c^2)p(1-p)}\)</span></li>
+<li>Log-odds: <span class="math inline">\(\gamma =
+\log\left(\frac{p}{1-p}\right)\)</span></li>
+<li>Variance Penalty: <span class="math inline">\(K(p, c) =
+-\frac{1}{2}\log(2\pi(1-c^2)) - \frac{1-p+c^2 p}{2(1-c^2)(1-p)} +
+\log(1-p)\)</span></li>
+</ul>
+<ol start="4" style="list-style-type: decimal">
+<li><p>Proposed Optimization Strategy Directly optimizing <span
+class="math inline">\(\mathcal{J}(w, p, c)\)</span> jointly over all
+three parameters may not be necessary (or perhaps helpful). The crucial
+(high-dimensional) part is optimizing <span
+class="math inline">\(w\)</span>, which can be done efficiently using a
+fastICA-like algorithm for fixed <span
+class="math inline">\(p,c\)</span>. The optimization landscape over
+<span class="math inline">\(w\)</span> will be relatively gentle if
+<span class="math inline">\(c\)</span> is intermediate, but become less
+so as <span class="math inline">\(c\)</span> gets close to 1 (ideally,
+as we hone in on a source). For now we propose a simple nested,
+alternating optimization strategy: Phase 1: Coarse Grid over <span
+class="math inline">\(p\)</span> We know that fastICA (<span
+class="math inline">\(p=0.5\)</span>) is already quite good at finding
+binary sources. (It is ideally honed to find balanced sources, but
+somewhat fortuitously unbalanced sources are sometimes local minima of
+the log-likelihood, and so fastICA can also find those). Based on this
+it seems getting <span class="math inline">\(p\)</span> exactly right
+may not not strictly necessary and so we will start by using a coarse
+grid (e.g., <span class="math inline">\(P = \{0.01, 0.05, 0.2,
+0.5\}\)</span>). The following phases are run independently for each
+<span class="math inline">\(p \in P\)</span>. Phase 2: Fixed-Variance
+Initialization (The “Golden” Start) To prevent early collapse toward
+<span class="math inline">\(c \to 1\)</span>, we temporarily fix the
+variance tradeoff. By enforcing the standard FastICA assumption where
+the noise variance equals the signal standard deviation (<span
+class="math inline">\(\sigma^2 = c\)</span>), and combining this with
+the total variance constraint (<span class="math inline">\(\sigma^2 = 1
+- c^2\)</span>), we get: <span class="math display">\[1 - c^2 = c
+\implies c^2 + c - 1 = 0\]</span> The positive root of this equation
+yields a value that is the reciprocal of the golden ratio: <span
+class="math display">\[c_{golden} = \frac{\sqrt{5} - 1}{2} \approx
+0.618\]</span> Fixing <span class="math inline">\(c =
+c_{golden}\)</span>, we optimize <span class="math inline">\(w\)</span>
+using a FastICA-style approximate Newton update. Let <span
+class="math inline">\(g(x_i) = \alpha \sigma(s_i)\)</span> and <span
+class="math inline">\(g&#39;(x_i) = \alpha^2 \sigma(s_i)(1 -
+\sigma(s_i))\)</span>, where <span
+class="math inline">\(\sigma(\cdot)\)</span> is the standard logistic
+sigmoid. The update step is: <span class="math display">\[w^+ =
+\frac{1}{n} Y^T g(x) - \overline{g&#39;} \cdot w\]</span><span
+class="math display">\[w \leftarrow
+\frac{w^+}{\Vert{}w^+\Vert{}}\]</span> We iterate this until <span
+class="math inline">\(w\)</span> converges within a standard tolerance.
+Phase 3: Alternating Refinement of <span
+class="math inline">\(c\)</span> and <span
+class="math inline">\(w\)</span> Once the direction <span
+class="math inline">\(w\)</span> is roughly aligned with the source, we
+relax the variance constraint and alternate:</p></li>
+<li><p>Update <span class="math inline">\(c\)</span>: Fix <span
+class="math inline">\(w\)</span> and <span
+class="math inline">\(p\)</span>. Maximize the 1D objective <span
+class="math inline">\(\mathcal{J}(c)\)</span> bounded on <span
+class="math inline">\(c \in (0, 1)\)</span> using a standard bounded
+scalar solver (e.g., Brent’s method). The objective is <span
+class="math inline">\(\mathcal{J}(c) = -\frac{1}{2}\log(1-c^2) -
+\frac{1}{2(1-p)(1-c^2)} + \frac{1}{n} \sum_{i=1}^n \text{softplus}\left(
+\alpha(c) x_i - \beta(c) + \gamma \right)\)</span>.</p></li>
+<li><p>Update <span class="math inline">\(w\)</span>: Recalculate <span
+class="math inline">\(\alpha\)</span> and <span
+class="math inline">\(\beta\)</span> with the new <span
+class="math inline">\(c\)</span>, and run a few iterations of the Newton
+update from Phase 2. Repeat these two steps until joint
+convergence.</p></li>
+</ol>
+<p>Phase 4: Final Selection Evaluate the full log-likelihood <span
+class="math inline">\(\mathcal{J}(w_p, p, c_p)\)</span> for the
+converged candidates from each probability in the grid. Ultimately we
+might select the tuple that maximizes the global objective but for now
+we will just look at how this algorithm behaves.</p>
+</div>
+<div id="claudes-introduction" class="section level2">
+<h2>Claude’s Introduction</h2>
+<p>The previous analysis (<a
+href="fastica_asymmetric.html">fastica_asymmetric</a>) showed that
+standard log-cosh fastICA fails for asymmetric binary sources, and that
+an alternating algorithm that also optimises <span
+class="math inline">\(p\)</span> substantially helps. However, that
+approach used an ad-hoc M-estimator or golden-ratio anchor for the
+variance parameter <span class="math inline">\(c\)</span> and optimised
+<span class="math inline">\(p\)</span> for fixed <span
+class="math inline">\(c\)</span>.</p>
+<p>Here we take a cleaner, fully generative approach. For a projection
+<span class="math inline">\(x = Yw\)</span> of whitened data, we
+posit:</p>
+<p><span class="math display">\[x_i = u_i + e_i, \quad u_i \sim
+\text{Bernoulli}(p)\text{ binary (zero-mean, var }c^2\text{)},
+  \quad e_i \sim \mathcal{N}(0, 1-c^2)\]</span></p>
+<p>and maximise the resulting marginal log-likelihood jointly over the
+direction <span class="math inline">\(w\)</span>, the mixing weight
+<span class="math inline">\(p\)</span>, and the variance allocation
+<span class="math inline">\(c \in (0,1)\)</span>.</p>
+<p>The key structural insight is that the full whitened data constraint
+(<span class="math inline">\(\sum x_i^2 = n\)</span>) allows several
+terms to be absorbed into constants, leaving a tractable
+<code>softplus</code>-based objective. We then optimise it with a nested
+strategy:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Coarse grid</strong> over <span class="math inline">\(p \in
+P = \{0.01, 0.05, 0.2, 0.5\}\)</span>.</li>
+<li><strong>Phase 2</strong> (per <span
+class="math inline">\(p\)</span>): fix <span class="math inline">\(c =
+c_{\text{golden}} = (\sqrt{5}-1)/2 \approx 0.618\)</span>, run Newton
+iterations to convergence.</li>
+<li><strong>Phase 3</strong> (per <span
+class="math inline">\(p\)</span>): alternate — optimise <span
+class="math inline">\(c\)</span> by Brent’s method; run a few Newton
+steps to re-align <span class="math inline">\(w\)</span>.</li>
+<li><strong>Phase 4</strong>: compare converged objectives across the
+<span class="math inline">\(p\)</span>-grid.</li>
+</ol>
+</div>
+<div id="helpers" class="section level2">
+<h2>Helpers</h2>
+<pre class="r"><code>prewhiten = function(X, n.comp) {
+  X = X - rowMeans(X)
+  sqrt(ncol(X)) * t(svd(X)$v[, 1:n.comp])
+}</code></pre>
+</div>
+<div id="objective-function" class="section level2">
+<h2>Objective function</h2>
+<p>The prior support points satisfying zero-mean and variance <span
+class="math inline">\(c^2\)</span> are</p>
+<p><span class="math display">\[y_1 = c\sqrt{\frac{1-p}{p}}, \qquad y_0
+= -c\sqrt{\frac{p}{1-p}}\]</span></p>
+<p>and the marginal likelihood is a Gaussian mixture with shared
+variance <span class="math inline">\(1-c^2\)</span>. Exploiting the
+whitened-data constraints <span class="math inline">\(\sum x_i =
+0\)</span> and <span class="math inline">\(\sum x_i^2 = n\)</span>, the
+average log-likelihood simplifies to</p>
+<p><span class="math display">\[\mathcal{J}(w, p, c) = K(p, c) +
+\frac{1}{n}\sum_{i=1}^n \text{softplus}(s_i)\]</span></p>
+<p>where <span class="math inline">\(s_i = \alpha x_i - \beta +
+\gamma\)</span> and</p>
+<p><span class="math display">\[\alpha = \frac{c}{(1-c^2)\sqrt{p(1-p)}},
+\quad
+  \beta = \frac{c^2(1-2p)}{2(1-c^2)p(1-p)}, \quad
+  \gamma = \log\!\frac{p}{1-p}\]</span></p>
+<p><span class="math display">\[K(p,c) = -\tfrac{1}{2}\log(2\pi(1-c^2))
+- \frac{1-p+c^2 p}{2(1-c^2)(1-p)} + \log(1-p)\]</span></p>
+<pre class="r"><code># Alpha, beta, gamma parameters from (p, c)
+asym2_params = function(p, c) {
+  list(
+    alpha = c / ((1 - c^2) * sqrt(p * (1-p))),
+    beta  = c^2 * (1 - 2*p) / (2 * (1 - c^2) * p * (1-p)),
+    gamma = log(p / (1-p))
+  )
+}
+
+softplus = function(z) {
+  # log(1 + exp(z)), numerically stable for large and small z
+  pmax(z, 0) + log1p(exp(-abs(z)))
+}
+
+# K(p, c): additive terms in J that depend only on (p, c), not w
+asym2_K = function(p, c) {
+  -0.5 * log(2 * pi * (1 - c^2)) -
+    (1 - p + c^2 * p) / (2 * (1 - c^2) * (1 - p)) +
+    log(1 - p)
+}
+
+# Full average log-likelihood given projections x = Y^T w
+asym2_obj = function(x, p, c) {
+  par = asym2_params(p, c)
+  s   = par$alpha * x - par$beta + par$gamma
+  asym2_K(p, c) + mean(softplus(s))
+}</code></pre>
+</div>
+<div id="newton-update-for-w" class="section level2">
+<h2>Newton update for <span class="math inline">\(w\)</span></h2>
+<p>The score <span class="math inline">\(g(x_i)\)</span> and its
+derivative entering the Newton step are</p>
+<p><span class="math display">\[g(x_i) = \alpha\,\sigma(s_i), \qquad
+  g&#39;(x_i) = \alpha^2\,\sigma(s_i)(1 - \sigma(s_i))\]</span></p>
+<p>where <span class="math inline">\(\sigma(\cdot)\)</span> is the
+logistic sigmoid. The fastICA-style Newton step is</p>
+<p><span class="math display">\[w^+ = \frac{1}{n} Y^\top g(x) -
+\overline{g&#39;(x)}\, w, \qquad
+  w \leftarrow \frac{w^+}{\|w^+\|}\]</span></p>
+<pre class="r"><code># One Newton step for w (fixed p, c); returns normalised w
+asym2_w_step = function(Y, w, p, c) {
+  x   = as.vector(t(Y) %*% w)
+  par = asym2_params(p, c)
+  s   = par$alpha * x - par$beta + par$gamma
+  sig = plogis(s)
+  g   = par$alpha * sig
+  gp  = par$alpha^2 * sig * (1 - sig)
+  n   = ncol(Y)
+  w_new = as.vector(Y %*% g) / n - mean(gp) * w
+  w_new / sqrt(sum(w_new^2))
+}
+
+# Iterate Newton steps until convergence (fixed p, c)
+asym2_w_optimize = function(Y, w, p, c, tol = 1e-6, max_iter = 500) {
+  w = w / sqrt(sum(w^2))
+  for (iter in seq_len(max_iter)) {
+    w_old = w
+    w = asym2_w_step(Y, w, p, c)
+    if (1 - abs(sum(w * w_old)) &lt; tol) break
+  }
+  w
+}</code></pre>
+</div>
+<div id="optimize-c-by-brents-method" class="section level2">
+<h2>Optimize <span class="math inline">\(c\)</span> by Brent’s
+method</h2>
+<p>For fixed <span class="math inline">\(w\)</span> and <span
+class="math inline">\(p\)</span>, the objective as a function of <span
+class="math inline">\(c\)</span> alone is</p>
+<p><span class="math display">\[\mathcal{J}(c) =
+-\tfrac{1}{2}\log(1-c^2) - \frac{1-p+c^2 p}{2(1-c^2)(1-p)}
+  + \frac{1}{n}\sum_{i=1}^n \text{softplus}\!\left(\alpha(c)\,x_i -
+\beta(c) + \gamma\right)\]</span></p>
+<p>We maximise this over <span class="math inline">\(c \in (\epsilon,
+1-\epsilon)\)</span> using R’s <code>optimize</code>.</p>
+<pre class="r"><code># Optimize c by Brent&#39;s method (fixed projections x, and p)
+asym2_c_optimize = function(x, p, eps = 1e-4) {
+  obj_c = function(c) {
+    par = asym2_params(p, c)
+    s   = par$alpha * x - par$beta + par$gamma
+    -0.5 * log(1 - c^2) -
+      (1 - p + c^2 * p) / (2 * (1 - c^2) * (1 - p)) +
+      mean(softplus(s))
+  }
+  optimize(obj_c, c(eps, 1 - eps), maximum = TRUE)$maximum
+}</code></pre>
+</div>
+<div id="full-algorithm-for-one-p" class="section level2">
+<h2>Full algorithm for one <span class="math inline">\(p\)</span></h2>
+<p>Given a fixed <span class="math inline">\(p\)</span>, run the
+three-phase strategy and return the converged <span
+class="math inline">\((w, c)\)</span> and the final objective value.</p>
+<pre class="r"><code>C_GOLDEN = (sqrt(5) - 1) / 2   # ≈ 0.618
+
+asym2_one_p = function(Y, p, w_init = NULL,
+                        tol = 1e-6, max_iter = 50,
+                        n_newton_refine = 10) {
+  m = nrow(Y)
+  w = if (is.null(w_init)) rnorm(m) else w_init
+  w = w / sqrt(sum(w^2))
+
+  # Phase 2: fix c = c_golden, optimize w to convergence
+  c = C_GOLDEN
+  w = asym2_w_optimize(Y, w, p, c)
+
+  # Phase 3: alternate c (Brent) and w (Newton)
+  for (iter in seq_len(max_iter)) {
+    w_old = w;  c_old = c
+    x = as.vector(t(Y) %*% w)
+    c = asym2_c_optimize(x, p)
+    w = asym2_w_optimize(Y, w, p, c, max_iter = n_newton_refine)
+    if (1 - abs(sum(w * w_old)) &lt; tol &amp;&amp; abs(c - c_old) &lt; tol) break
+  }
+  x = as.vector(t(Y) %*% w)
+  list(w = w, p = p, c = c, obj = asym2_obj(x, p, c), iter = iter)
+}</code></pre>
+</div>
+<div id="full-algorithm-grid-over-p" class="section level2">
+<h2>Full algorithm: grid over <span
+class="math inline">\(p\)</span></h2>
+<pre class="r"><code>P_GRID = c(0.01, 0.05, 0.2, 0.5)
+
+# Returns a list of results, one per p in p_grid.
+# w_init is shared across all p (same starting direction).
+asym2_fastica = function(Y, p_grid = P_GRID, w_init = NULL, ...) {
+  m = nrow(Y)
+  w0 = if (is.null(w_init)) { v = rnorm(m); v / sqrt(sum(v^2)) } else
+         w_init / sqrt(sum(w_init^2))
+  lapply(p_grid, \(p) asym2_one_p(Y, p, w_init = w0, ...))
+}
+
+# Convenience: run asym2_fastica and pick the result with highest obj
+asym2_fastica_best = function(Y, p_grid = P_GRID, w_init = NULL, ...) {
+  res = asym2_fastica(Y, p_grid, w_init, ...)
+  best = which.max(sapply(res, `[[`, &quot;obj&quot;))
+  res[[best]]
+}</code></pre>
+</div>
+<div id="sanity-checks" class="section level2">
+<h2>Sanity checks</h2>
+<div id="p0.5-c-c_textgolden-recovers-log-cosh-score"
+class="section level3">
+<h3><span class="math inline">\(p=0.5\)</span>, <span
+class="math inline">\(c = c_\text{golden}\)</span> recovers log-cosh
+score</h3>
+<p>The generative model with <span class="math inline">\(\sigma^2 =
+c\)</span> (noise variance equals signal SD) combined with the total
+variance constraint <span class="math inline">\(\sigma^2 = 1 -
+c^2\)</span> gives <span class="math inline">\(c =
+c_\text{golden}\)</span>. At <span class="math inline">\(p =
+0.5\)</span>, <span class="math inline">\(c = c_\text{golden}\)</span>:
+<span class="math inline">\(1 - c^2 = c\)</span>, so <span
+class="math inline">\(\alpha = c\,/\,(c\cdot\tfrac{1}{2}) = 2\)</span>,
+<span class="math inline">\(\beta = 0\)</span>, <span
+class="math inline">\(\gamma = 0\)</span>, giving <span
+class="math inline">\(s_i = 2x_i\)</span> and</p>
+<p><span class="math display">\[g(x_i) = 2\sigma(2x_i) = 1 +
+\tanh(x_i)\]</span></p>
+<p>Since the data is centred, <span
+class="math inline">\(\tfrac{1}{n}Y^\top\mathbf{1} = 0\)</span>, so the
+Newton step becomes <span class="math inline">\(w^+ \propto
+Y^\top\tanh(x) - \overline{\mathrm{sech}^2(x)}\,w\)</span>, exactly
+log-cosh fastICA.</p>
+<pre class="r"><code>x_grid = seq(-3, 3, length.out = 300)
+par05  = asym2_params(0.5, C_GOLDEN)
+g05    = par05$alpha * plogis(par05$alpha * x_grid - par05$beta + par05$gamma)
+
+plot(x_grid, g05 - 1, type = &quot;l&quot;, col = &quot;steelblue&quot;, lwd = 2,
+     xlab = &quot;x&quot;, ylab = &quot;g(x) - 1&quot;,
+     main = sprintf(&quot;Score at p=0.5, c=c_golden (%.4f): g(x)-1 vs tanh(x)&quot;, C_GOLDEN))
+lines(x_grid, tanh(x_grid), col = &quot;tomato&quot;, lty = 2, lwd = 2)
+legend(&quot;topleft&quot;, c(&quot;g(x) - 1,  p=0.5, c=c_golden&quot;, &quot;tanh(x)&quot;),
+       col = c(&quot;steelblue&quot;,&quot;tomato&quot;), lty = 1:2, lwd = 2, bty = &quot;n&quot;)</code></pre>
+<p><img src="figure/fastica_asymmetric_02.Rmd/unnamed-chunk-7-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<p>The curves are numerically identical.</p>
+</div>
+<div id="objective-at-golden-ratio-start" class="section level3">
+<h3>Objective at golden-ratio start</h3>
+<p>The golden-ratio anchor satisfies <span class="math inline">\(c^2 + c
+= 1\)</span>, i.e. <span class="math inline">\(1 - c^2 = c\)</span>, so
+<span class="math inline">\(\alpha = c/(c \cdot \sqrt{p(1-p)}) =
+1/\sqrt{p(1-p)}\)</span> and the softplus argument at <span
+class="math inline">\(p = 0.5\)</span> becomes <span
+class="math inline">\(2x_i\)</span>, consistent with the log-cosh
+link.</p>
+<pre class="r"><code>par05_gr = asym2_params(0.5, C_GOLDEN)
+cat(sprintf(&quot;alpha at p=0.5, c_golden: %.6f  (1/sqrt(p(1-p)) = %.6f)\n&quot;,
+    par05_gr$alpha, 1/sqrt(0.5*0.5)))</code></pre>
+<pre><code>alpha at p=0.5, c_golden: 2.000000  (1/sqrt(p(1-p)) = 2.000000)</code></pre>
+<pre class="r"><code>cat(sprintf(&quot;K(0.5, c_golden) = %.4f\n&quot;, asym2_K(0.5, C_GOLDEN)))</code></pre>
+<pre><code>K(0.5, c_golden) = -2.4895</code></pre>
+</div>
+</div>
+<div id="experiment-helpers" class="section level2">
+<h2>Experiment helpers</h2>
+<p>Run the method 100 times for a single fixed <span
+class="math inline">\(p\)</span>, returning the converged objective,
+<span class="math inline">\(c\)</span>, and correlation with the true
+sources for each seed.</p>
+<pre class="r"><code># 100 seeds for one fixed p; returns maxcor, c, obj per seed
+run_seeds_p = function(Y, S_true, p, n_seeds = 100) {
+  maxcor = numeric(n_seeds)
+  cs     = numeric(n_seeds)
+  objs   = numeric(n_seeds)
+  for (seed in seq_len(n_seeds)) {
+    set.seed(seed)
+    res          = asym2_one_p(Y, p)
+    maxcor[seed] = max(abs(cor(t(S_true), t(Y) %*% res$w)))
+    cs[seed]     = res$c
+    objs[seed]   = res$obj
+  }
+  list(maxcor = maxcor, c = cs, obj = objs)
+}
+
+# One panel: objectives ranked descending, coloured by success
+plot_obj_p = function(res, p, ...) {
+  succ = res$maxcor &gt; 0.9
+  ord  = order(res$obj, decreasing = TRUE)
+  cols = ifelse(succ[ord], &quot;steelblue&quot;, &quot;tomato&quot;)
+  plot(seq_along(res$obj), res$obj[ord],
+       pch = 19, cex = 0.6, col = cols,
+       xlab = &quot;rank&quot;, ylab = &quot;J(w, p, c)&quot;,
+       main = sprintf(&quot;p = %.2f  (%.0f%% found)&quot;, p, 100*mean(succ)),
+       ...)
+}
+
+# Four-panel figure: one panel per p in P_GRID
+plot_by_p = function(results_list, p_grid, title) {
+  ylims = range(sapply(results_list, \(r) range(r$obj)))
+  par(mfrow = c(1, length(p_grid)))
+  for (i in seq_along(p_grid))
+    plot_obj_p(results_list[[i]], p_grid[i], ylim = ylims)
+  mtext(title, side = 3, line = -1.5, outer = TRUE, font = 2)
+  par(mfrow = c(1, 1))
+}</code></pre>
+</div>
+<div id="data" class="section level2">
+<h2>Data</h2>
+<p>Reproduce the datasets from the first analysis.</p>
+<pre class="r"><code>set.seed(1)
+n = 100; p_dim = 1000; K = 9
+L    = matrix(0, nrow = n, ncol = K)
+for (i in 1:K) L[sample(n, 20), i] = 1
+FF   = matrix(rnorm(p_dim * K), nrow = p_dim)
+X9   = t(L %*% t(FF) + matrix(rnorm(n * p_dim, 0, 0.1), nrow = n))
+Z9   = prewhiten(X9, K)
+S9   = t(L)
+
+set.seed(2)
+L_01  = matrix(0, nrow = n, ncol = K)
+for (i in 1:K) L_01[sample(n, 10), i] = 1
+FF_01 = matrix(rnorm(p_dim * K), nrow = p_dim)
+X9_01 = t(L_01 %*% t(FF_01) + matrix(rnorm(n * p_dim, 0, 0.1), nrow = n))
+Z9_01 = prewhiten(X9_01, K)
+S9_01 = t(L_01)
+
+set.seed(10)
+n_k20 = 200; p_k20 = 1000; k20 = 20
+A_k20    = matrix(rnorm(p_k20), nrow = p_k20)
+S_k20_05 = matrix(sample(c(-1, 1), n_k20, replace = TRUE), nrow = 1)
+X_k20_05 = A_k20 %*% S_k20_05 +
+           matrix(rnorm(p_k20 * n_k20, 0, 0.1), nrow = p_k20)
+Z_k20_05 = prewhiten(X_k20_05, k20)
+
+set.seed(11)
+S_k20_02_raw = matrix(as.numeric(runif(n_k20) &lt; 0.2), nrow = 1)
+S_k20_02     = (S_k20_02_raw - 0.2) / sqrt(0.2 * 0.8)
+X_k20_02 = A_k20 %*% S_k20_02 +
+           matrix(rnorm(p_k20 * n_k20, 0, 0.1), nrow = p_k20)
+Z_k20_02 = prewhiten(X_k20_02, k20)
+
+set.seed(12)
+S_k20_01_raw = matrix(as.numeric(runif(n_k20) &lt; 0.1), nrow = 1)
+S_k20_01     = (S_k20_01_raw - 0.1) / sqrt(0.1 * 0.9)
+X_k20_01 = A_k20 %*% S_k20_01 +
+           matrix(rnorm(p_k20 * n_k20, 0, 0.1), nrow = p_k20)
+Z_k20_01 = prewhiten(X_k20_01, k20)</code></pre>
+</div>
+<div id="simple-test-9-overlapping-groups-p-approx-0.1-k-9"
+class="section level2">
+<h2>Simple test: 9 overlapping groups, <span class="math inline">\(p
+\approx 0.1\)</span>, <span class="math inline">\(k = 9\)</span></h2>
+<p>Before the multi-seed experiments we run <code>asym2_one_p</code>
+once (seed 1) for each assumed <span class="math inline">\(p\)</span> in
+the grid on the 9-groups <span class="math inline">\(p \approx
+0.1\)</span> dataset, and compare the recovered source and final
+objective side by side.</p>
+<pre class="r"><code>set.seed(1)
+w_init_ex = rnorm(K)
+res_ex = lapply(P_GRID, \(p) asym2_one_p(Z9_01, p, w_init = w_init_ex))</code></pre>
+<pre class="r"><code>par(mfrow = c(2, length(P_GRID)))
+
+# Top row: scatter of best recovered source vs its true source
+for (i in seq_along(P_GRID)) {
+  x_hat = as.vector(t(Z9_01) %*% res_ex[[i]]$w)
+  cors  = cor(t(S9_01), x_hat)
+  best  = which.max(abs(cors))
+  plot(S9_01[best, ], x_hat,
+       pch = 19, cex = 0.5, col = &quot;steelblue&quot;,
+       xlab = &quot;true source&quot;, ylab = &quot;projection&quot;,
+       main = sprintf(&quot;p=%.2f  cor=%.3f\nc=%.3f  obj=%.4f&quot;,
+                      P_GRID[i], cors[best],
+                      res_ex[[i]]$c, res_ex[[i]]$obj))
+}
+
+# Bottom row: histogram of projection values
+for (i in seq_along(P_GRID)) {
+  x_hat = as.vector(t(Z9_01) %*% res_ex[[i]]$w)
+  hist(x_hat, breaks = 30, col = &quot;steelblue&quot;, border = &quot;white&quot;,
+       main = sprintf(&quot;p=%.2f histogram&quot;, P_GRID[i]),
+       xlab = &quot;projection value&quot;)
+}</code></pre>
+<p><img src="figure/fastica_asymmetric_02.Rmd/unnamed-chunk-12-1.png" alt="" width="960" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>par(mfrow = c(1, 1))</code></pre>
+<pre class="r"><code>cat(&quot;9-groups p≈0.1, k=9, seed 1:\n&quot;)</code></pre>
+<pre><code>9-groups p≈0.1, k=9, seed 1:</code></pre>
+<pre class="r"><code>for (i in seq_along(P_GRID)) {
+  x_hat = as.vector(t(Z9_01) %*% res_ex[[i]]$w)
+  cors  = cor(t(S9_01), x_hat)
+  cat(sprintf(&quot;  assumed p=%.2f  maxcor=%.4f  c=%.4f  obj=%.4f\n&quot;,
+      P_GRID[i], max(abs(cors)), res_ex[[i]]$c, res_ex[[i]]$obj))
+}</code></pre>
+<pre><code>  assumed p=0.01  maxcor=0.7015  c=0.4204  obj=-1.3706
+  assumed p=0.05  maxcor=1.0000  c=0.9051  obj=-0.6962
+  assumed p=0.20  maxcor=0.7070  c=0.9735  obj=-0.4397
+  assumed p=0.50  maxcor=0.9999  c=0.0002  obj=-1.4189</code></pre>
+<p>To check whether <code>c</code> is being maximised (not minimised),
+we plot <span class="math inline">\(\mathcal{J}(c)\)</span> against
+<span class="math inline">\(c\)</span> for each assumed <span
+class="math inline">\(p\)</span>, using the final converged projection
+<span class="math inline">\(x = Yw\)</span> for that run. The vertical
+dashed line marks the returned optimum.</p>
+<pre class="r"><code>c_scan = seq(0.01, 0.99, by = 0.005)
+
+# objective as function of c alone, same formula as asym2_c_optimize
+obj_c_vec = function(x, p, c_vec) {
+  sapply(c_vec, \(c) {
+    par = asym2_params(p, c)
+    s   = par$alpha * x - par$beta + par$gamma
+    -0.5 * log(1 - c^2) -
+      (1 - p + c^2 * p) / (2 * (1 - c^2) * (1 - p)) +
+      mean(softplus(s))
+  })
+}
+
+par(mfrow = c(1, length(P_GRID)))
+for (i in seq_along(P_GRID)) {
+  x_hat  = as.vector(t(Z9_01) %*% res_ex[[i]]$w)
+  obj_cv = obj_c_vec(x_hat, P_GRID[i], c_scan)
+  plot(c_scan, obj_cv, type = &quot;l&quot;, col = &quot;steelblue&quot;, lwd = 2,
+       xlab = &quot;c&quot;, ylab = &quot;J(c)&quot;,
+       main = sprintf(&quot;p = %.2f  (c* = %.3f)&quot;, P_GRID[i], res_ex[[i]]$c))
+  abline(v = res_ex[[i]]$c, lty = 2, col = &quot;tomato&quot;, lwd = 1.5)
+}</code></pre>
+<p><img src="figure/fastica_asymmetric_02.Rmd/unnamed-chunk-14-1.png" alt="" width="960" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>par(mfrow = c(1, 1))</code></pre>
+</div>
+<div id="overlapping-groups-k-9-p-approx-0.2" class="section level2">
+<h2>9 overlapping groups (<span class="math inline">\(k = 9\)</span>),
+<span class="math inline">\(p \approx 0.2\)</span></h2>
+<pre class="r"><code>res9_by_p = lapply(P_GRID, \(p) run_seeds_p(Z9, S9, p))</code></pre>
+<pre class="r"><code>plot_by_p(res9_by_p, P_GRID, &quot;9-groups p≈0.2, k=9&quot;)</code></pre>
+<p><img src="figure/fastica_asymmetric_02.Rmd/unnamed-chunk-16-1.png" alt="" width="960" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>cat(&quot;9-groups p≈0.2: frac &gt; 0.9 per assumed p\n&quot;)</code></pre>
+<pre><code>9-groups p≈0.2: frac &gt; 0.9 per assumed p</code></pre>
+<pre class="r"><code>for (i in seq_along(P_GRID))
+  cat(sprintf(&quot;  p = %.2f  frac &gt; 0.9 = %.2f  mean_c = %.3f\n&quot;,
+      P_GRID[i],
+      mean(res9_by_p[[i]]$maxcor &gt; 0.9),
+      mean(res9_by_p[[i]]$c)))</code></pre>
+<pre><code>  p = 0.01  frac &gt; 0.9 = 0.00  mean_c = 0.395
+  p = 0.05  frac &gt; 0.9 = 0.00  mean_c = 0.642
+  p = 0.20  frac &gt; 0.9 = 1.00  mean_c = 1.000
+  p = 0.50  frac &gt; 0.9 = 0.00  mean_c = 0.729</code></pre>
+</div>
+<div id="overlapping-groups-k-9-p-approx-0.1" class="section level2">
+<h2>9 overlapping groups (<span class="math inline">\(k = 9\)</span>),
+<span class="math inline">\(p \approx 0.1\)</span></h2>
+<pre class="r"><code>res9_01_by_p = lapply(P_GRID, \(p) run_seeds_p(Z9_01, S9_01, p))</code></pre>
+<pre class="r"><code>plot_by_p(res9_01_by_p, P_GRID, &quot;9-groups p≈0.1, k=9&quot;)</code></pre>
+<p><img src="figure/fastica_asymmetric_02.Rmd/unnamed-chunk-19-1.png" alt="" width="960" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>cat(&quot;9-groups p≈0.1: frac &gt; 0.9 per assumed p\n&quot;)</code></pre>
+<pre><code>9-groups p≈0.1: frac &gt; 0.9 per assumed p</code></pre>
+<pre class="r"><code>for (i in seq_along(P_GRID))
+  cat(sprintf(&quot;  p = %.2f  frac &gt; 0.9 = %.2f  mean_c = %.3f\n&quot;,
+      P_GRID[i],
+      mean(res9_01_by_p[[i]]$maxcor &gt; 0.9),
+      mean(res9_01_by_p[[i]]$c)))</code></pre>
+<pre><code>  p = 0.01  frac &gt; 0.9 = 0.27  mean_c = 0.438
+  p = 0.05  frac &gt; 0.9 = 1.00  mean_c = 0.905
+  p = 0.20  frac &gt; 0.9 = 0.39  mean_c = 0.965
+  p = 0.50  frac &gt; 0.9 = 0.52  mean_c = 0.000</code></pre>
+</div>
+<div id="single-source-over-complete-whitening-k-20"
+class="section level2">
+<h2>Single source, over-complete whitening (<span
+class="math inline">\(k = 20\)</span>)</h2>
+<div id="p_texttrue-0.5" class="section level3">
+<h3><span class="math inline">\(p_\text{true} = 0.5\)</span></h3>
+<pre class="r"><code>res_k20_05_by_p = lapply(P_GRID, \(p) run_seeds_p(Z_k20_05, S_k20_05, p))</code></pre>
+<pre class="r"><code>plot_by_p(res_k20_05_by_p, P_GRID, &quot;1-source k=20 p_true=0.5&quot;)</code></pre>
+<p><img src="figure/fastica_asymmetric_02.Rmd/unnamed-chunk-22-1.png" alt="" width="960" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>cat(&quot;1-source k=20 p_true=0.5: frac &gt; 0.9 per assumed p\n&quot;)</code></pre>
+<pre><code>1-source k=20 p_true=0.5: frac &gt; 0.9 per assumed p</code></pre>
+<pre class="r"><code>for (i in seq_along(P_GRID))
+  cat(sprintf(&quot;  p = %.2f  frac &gt; 0.9 = %.2f  mean_c = %.3f\n&quot;,
+      P_GRID[i],
+      mean(res_k20_05_by_p[[i]]$maxcor &gt; 0.9),
+      mean(res_k20_05_by_p[[i]]$c)))</code></pre>
+<pre><code>  p = 0.01  frac &gt; 0.9 = 0.00  mean_c = 0.447
+  p = 0.05  frac &gt; 0.9 = 0.00  mean_c = 0.644
+  p = 0.20  frac &gt; 0.9 = 0.00  mean_c = 0.819
+  p = 0.50  frac &gt; 0.9 = 0.06  mean_c = 0.185</code></pre>
+</div>
+<div id="p_texttrue-0.2" class="section level3">
+<h3><span class="math inline">\(p_\text{true} = 0.2\)</span></h3>
+<pre class="r"><code>res_k20_02_by_p = lapply(P_GRID, \(p) run_seeds_p(Z_k20_02, S_k20_02, p))</code></pre>
+<pre class="r"><code>plot_by_p(res_k20_02_by_p, P_GRID, &quot;1-source k=20 p_true=0.2&quot;)</code></pre>
+<p><img src="figure/fastica_asymmetric_02.Rmd/unnamed-chunk-25-1.png" alt="" width="960" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>cat(&quot;1-source k=20 p_true=0.2: frac &gt; 0.9 per assumed p\n&quot;)</code></pre>
+<pre><code>1-source k=20 p_true=0.2: frac &gt; 0.9 per assumed p</code></pre>
+<pre class="r"><code>for (i in seq_along(P_GRID))
+  cat(sprintf(&quot;  p = %.2f  frac &gt; 0.9 = %.2f  mean_c = %.3f\n&quot;,
+      P_GRID[i],
+      mean(res_k20_02_by_p[[i]]$maxcor &gt; 0.9),
+      mean(res_k20_02_by_p[[i]]$c)))</code></pre>
+<pre><code>  p = 0.01  frac &gt; 0.9 = 0.00  mean_c = 0.443
+  p = 0.05  frac &gt; 0.9 = 0.00  mean_c = 0.651
+  p = 0.20  frac &gt; 0.9 = 0.66  mean_c = 0.939
+  p = 0.50  frac &gt; 0.9 = 0.00  mean_c = 0.089</code></pre>
+</div>
+<div id="p_texttrue-0.1" class="section level3">
+<h3><span class="math inline">\(p_\text{true} = 0.1\)</span></h3>
+<pre class="r"><code>res_k20_01_by_p = lapply(P_GRID, \(p) run_seeds_p(Z_k20_01, S_k20_01, p))</code></pre>
+<pre class="r"><code>plot_by_p(res_k20_01_by_p, P_GRID, &quot;1-source k=20 p_true=0.1&quot;)</code></pre>
+<p><img src="figure/fastica_asymmetric_02.Rmd/unnamed-chunk-28-1.png" alt="" width="960" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>cat(&quot;1-source k=20 p_true=0.1: frac &gt; 0.9 per assumed p\n&quot;)</code></pre>
+<pre><code>1-source k=20 p_true=0.1: frac &gt; 0.9 per assumed p</code></pre>
+<pre class="r"><code>for (i in seq_along(P_GRID))
+  cat(sprintf(&quot;  p = %.2f  frac &gt; 0.9 = %.2f  mean_c = %.3f\n&quot;,
+      P_GRID[i],
+      mean(res_k20_01_by_p[[i]]$maxcor &gt; 0.9),
+      mean(res_k20_01_by_p[[i]]$c)))</code></pre>
+<pre><code>  p = 0.01  frac &gt; 0.9 = 0.52  mean_c = 0.458
+  p = 0.05  frac &gt; 0.9 = 0.61  mean_c = 0.852
+  p = 0.20  frac &gt; 0.9 = 0.92  mean_c = 0.874
+  p = 0.50  frac &gt; 0.9 = 0.77  mean_c = 0.036</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.4.2 (2024-10-31)
+Platform: aarch64-apple-darwin20
+Running under: macOS 26.5.2
+
+Matrix products: default
+BLAS:   /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libBLAS.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.0
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+time zone: America/Chicago
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+ [1] vctrs_0.7.2       cli_3.6.5         knitr_1.51        rlang_1.1.7      
+ [5] xfun_0.56         stringi_1.8.7     otel_0.2.0        promises_1.5.0   
+ [9] jsonlite_2.0.0    workflowr_1.7.2   glue_1.8.0        rprojroot_2.1.1  
+[13] git2r_0.36.2      htmltools_0.5.9   httpuv_1.6.16     sass_0.4.10      
+[17] rmarkdown_2.30    jquerylib_0.1.4   evaluate_1.0.5    tibble_3.3.1     
+[21] fastmap_1.2.0     yaml_2.3.12       lifecycle_1.0.5   whisker_0.4.1    
+[25] stringr_1.6.0     compiler_4.4.2    fs_1.6.6          Rcpp_1.1.1       
+[29] pkgconfig_2.0.3   rstudioapi_0.18.0 later_1.4.6       digest_0.6.39    
+[33] R6_2.6.1          pillar_1.11.1     magrittr_2.0.4    bslib_0.10.0     
+[37] tools_4.4.2       cachem_1.1.0     </code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
