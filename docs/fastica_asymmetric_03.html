@@ -1,0 +1,1875 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Matthew Stephens" />
+
+<meta name="date" content="2026-08-03" />
+
+<title>fastica_asymmetric_03</title>
+
+<script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">misc</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/stephens999/misc">source</a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">fastica_asymmetric_03</h1>
+<h4 class="author">Matthew Stephens</h4>
+<h4 class="date">2026-08-03</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2026-08-05
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>misc/analysis/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.2). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed1code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(1)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed1code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(1)</code> was run prior to running the
+code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreec0dbcdf11dae3a2c26861bb60bbcf7e58c129e11targetblankc0dbcdfa">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/stephens999/misc/tree/c0dbcdf11dae3a2c26861bb60bbcf7e58c129e11" target="_blank">c0dbcdf</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreec0dbcdf11dae3a2c26861bb60bbcf7e58c129e11targetblankc0dbcdfa"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/stephens999/misc/tree/c0dbcdf11dae3a2c26861bb60bbcf7e58c129e11" target="_blank">c0dbcdf</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    .claude/
+    Ignored:    GSE87571/
+    Ignored:    analysis/.RData
+    Ignored:    analysis/.Rhistory
+    Ignored:    analysis/ALStruct_cache/
+    Ignored:    analysis/ebproj_01.html
+    Ignored:    data/.Rhistory
+    Ignored:    data/methylation-data-for-matthew.rds
+    Ignored:    data/pbmc/
+    Ignored:    data/pbmc_purified.RData
+
+Untracked files:
+    Untracked:  .dropbox
+    Untracked:  GSE41037/
+    Untracked:  Icon
+    Untracked:  Rplots.pdf
+    Untracked:  analysis/GHstan.Rmd
+    Untracked:  analysis/GTEX-cogaps.Rmd
+    Untracked:  analysis/PACS.Rmd
+    Untracked:  analysis/Rplot.png
+    Untracked:  analysis/SPCAvRP.rmd
+    Untracked:  analysis/abf_comparisons.Rmd
+    Untracked:  analysis/admm_02.Rmd
+    Untracked:  analysis/admm_03.Rmd
+    Untracked:  analysis/bispca.Rmd
+    Untracked:  analysis/cache/
+    Untracked:  analysis/cholesky.Rmd
+    Untracked:  analysis/compare-transformed-models.Rmd
+    Untracked:  analysis/cormotif.Rmd
+    Untracked:  analysis/cp_ash.Rmd
+    Untracked:  analysis/eQTL.perm.rand.pdf
+    Untracked:  analysis/eb_power2.Rmd
+    Untracked:  analysis/eb_prepilot.Rmd
+    Untracked:  analysis/eb_var.Rmd
+    Untracked:  analysis/ebpmf1.Rmd
+    Untracked:  analysis/ebpmf_sla_text.Rmd
+    Untracked:  analysis/ebproj_01.Rmd
+    Untracked:  analysis/ebproj_newton.Rmd
+    Untracked:  analysis/ebspca_sims.Rmd
+    Untracked:  analysis/explore_psvd.Rmd
+    Untracked:  analysis/fa_check_identify.Rmd
+    Untracked:  analysis/fa_iterative.Rmd
+    Untracked:  analysis/fastica_heated.Rmd
+    Untracked:  analysis/fastica_unwhitened.Rmd
+    Untracked:  analysis/flash_cov_overlapping_groups_init.Rmd
+    Untracked:  analysis/flash_test_tree.Rmd
+    Untracked:  analysis/flashier_newgroups.Rmd
+    Untracked:  analysis/flashier_nmf_triples.Rmd
+    Untracked:  analysis/flashier_pbmc.Rmd
+    Untracked:  analysis/flashier_snn_shifted_prior.Rmd
+    Untracked:  analysis/greedy_ebpmf_exploration_00.Rmd
+    Untracked:  analysis/ieQTL.perm.rand.pdf
+    Untracked:  analysis/lasso_em_03.Rmd
+    Untracked:  analysis/m6amash.Rmd
+    Untracked:  analysis/mash_bhat_z.Rmd
+    Untracked:  analysis/mash_ieqtl_permutations.Rmd
+    Untracked:  analysis/matrix_beta.Rmd
+    Untracked:  analysis/meth_flash_01.Rmd
+    Untracked:  analysis/methylation_example.Rmd
+    Untracked:  analysis/mixsqp.Rmd
+    Untracked:  analysis/mr.ash_lasso_init.Rmd
+    Untracked:  analysis/mr.mash.test.Rmd
+    Untracked:  analysis/mr_ash_modular.Rmd
+    Untracked:  analysis/mr_ash_parameterization.Rmd
+    Untracked:  analysis/mr_ash_ridge.Rmd
+    Untracked:  analysis/mv_gaussian_message_passing.Rmd
+    Untracked:  analysis/nejm.Rmd
+    Untracked:  analysis/nmf_bg.Rmd
+    Untracked:  analysis/nonneg_underapprox.Rmd
+    Untracked:  analysis/normal_conditional_on_r2.Rmd
+    Untracked:  analysis/normalize.Rmd
+    Untracked:  analysis/pbmc.Rmd
+    Untracked:  analysis/pca_binary_weighted.Rmd
+    Untracked:  analysis/pca_l1.Rmd
+    Untracked:  analysis/poisson_nmf_approx.Rmd
+    Untracked:  analysis/poisson_shrink.Rmd
+    Untracked:  analysis/poisson_transform.Rmd
+    Untracked:  analysis/qrnotes.txt
+    Untracked:  analysis/ridge_iterative_02.Rmd
+    Untracked:  analysis/ridge_iterative_splitting.Rmd
+    Untracked:  analysis/samps/
+    Untracked:  analysis/sc_bimodal.Rmd
+    Untracked:  analysis/shrinkage_comparisons_changepoints.Rmd
+    Untracked:  analysis/susie_cov.Rmd
+    Untracked:  analysis/susie_en.Rmd
+    Untracked:  analysis/susie_z_investigate.Rmd
+    Untracked:  analysis/svd-timing.Rmd
+    Untracked:  analysis/temp.RDS
+    Untracked:  analysis/temp.Rmd
+    Untracked:  analysis/test-figure/
+    Untracked:  analysis/test.Rmd
+    Untracked:  analysis/test.Rpres
+    Untracked:  analysis/test.md
+    Untracked:  analysis/test_qr.R
+    Untracked:  analysis/test_sparse.Rmd
+    Untracked:  analysis/tree_dist_top_eigenvector.Rmd
+    Untracked:  analysis/z.txt
+    Untracked:  code/coordinate_descent_symNMF.R
+    Untracked:  code/multivariate_testfuncs.R
+    Untracked:  code/rqb.hacked.R
+    Untracked:  data/4matthew/
+    Untracked:  data/4matthew2/
+    Untracked:  data/E-MTAB-2805.processed.1/
+    Untracked:  data/ENSG00000156738.Sim_Y2.RDS
+    Untracked:  data/GDS5363_full.soft.gz
+    Untracked:  data/GSE41265_allGenesTPM.txt
+    Untracked:  data/Muscle_Skeletal.ACTN3.pm1Mb.RDS
+    Untracked:  data/P.rds
+    Untracked:  data/Thyroid.FMO2.pm1Mb.RDS
+    Untracked:  data/bmass.HaemgenRBC2016.MAF01.Vs2.MergedDataSources.200kRanSubset.ChrBPMAFMarkerZScores.vs1.txt.gz
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.PreviousSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/eb_prepilot/
+    Untracked:  data/finemap_data/fmo2.sim/b.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/data
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.ld
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.z
+    Untracked:  data/finemap_data/fmo2.sim/pos.txt
+    Untracked:  data/logm.csv
+    Untracked:  data/m.cd.RDS
+    Untracked:  data/m.cdu.old.RDS
+    Untracked:  data/m.new.cd.RDS
+    Untracked:  data/m.old.cd.RDS
+    Untracked:  data/mainbib.bib.old
+    Untracked:  data/mat.csv
+    Untracked:  data/mat.txt
+    Untracked:  data/mat_new.csv
+    Untracked:  data/matrix_lik.rds
+    Untracked:  data/paintor_data/
+    Untracked:  data/running_data_chris.csv
+    Untracked:  data/running_data_matthew.csv
+    Untracked:  data/temp.txt
+    Untracked:  data/y.txt
+    Untracked:  data/y_f.txt
+    Untracked:  data/zscore_jointLCLs_m6AQTLs_susie_eQTLpruned.rds
+    Untracked:  data/zscore_jointLCLs_random.rds
+    Untracked:  explore_udi.R
+    Untracked:  output/fit.k10.rds
+    Untracked:  output/fit.nn.pbmc.purified.rds
+    Untracked:  output/fit.nn.rds
+    Untracked:  output/fit.nn.s.001.rds
+    Untracked:  output/fit.nn.s.01.rds
+    Untracked:  output/fit.nn.s.1.rds
+    Untracked:  output/fit.nn.s.10.rds
+    Untracked:  output/fit.snn.s.001.rds
+    Untracked:  output/fit.snn.s.01.nninit.rds
+    Untracked:  output/fit.snn.s.01.rds
+    Untracked:  output/fit.varbvs.RDS
+    Untracked:  output/fit2.nn.pbmc.purified.rds
+    Untracked:  output/glmnet.fit.RDS
+    Untracked:  output/snn07.txt
+    Untracked:  output/snn34.txt
+    Untracked:  output/test.bv.txt
+    Untracked:  output/test.gamma.txt
+    Untracked:  output/test.hyp.txt
+    Untracked:  output/test.log.txt
+    Untracked:  output/test.param.txt
+    Untracked:  output/test2.bv.txt
+    Untracked:  output/test2.gamma.txt
+    Untracked:  output/test2.hyp.txt
+    Untracked:  output/test2.log.txt
+    Untracked:  output/test2.param.txt
+    Untracked:  output/test3.bv.txt
+    Untracked:  output/test3.gamma.txt
+    Untracked:  output/test3.hyp.txt
+    Untracked:  output/test3.log.txt
+    Untracked:  output/test3.param.txt
+    Untracked:  output/test4.bv.txt
+    Untracked:  output/test4.gamma.txt
+    Untracked:  output/test4.hyp.txt
+    Untracked:  output/test4.log.txt
+    Untracked:  output/test4.param.txt
+    Untracked:  output/test5.bv.txt
+    Untracked:  output/test5.gamma.txt
+    Untracked:  output/test5.hyp.txt
+    Untracked:  output/test5.log.txt
+    Untracked:  output/test5.param.txt
+
+Unstaged changes:
+    Modified:   .gitignore
+    Modified:   analysis/eb_snmu.Rmd
+    Modified:   analysis/ebnm_binormal.Rmd
+    Modified:   analysis/ebpower.Rmd
+    Modified:   analysis/flashier_log1p.Rmd
+    Modified:   analysis/flashier_sla_text.Rmd
+    Modified:   analysis/logistic_z_scores.Rmd
+    Modified:   analysis/mr_ash_pen.Rmd
+    Modified:   analysis/nmu_em.Rmd
+    Modified:   analysis/susie_flash.Rmd
+    Modified:   analysis/tap_free_energy.Rmd
+    Modified:   misc.Rproj
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown (<code>analysis/fastica_asymmetric_03.Rmd</code>)
+and HTML (<code>docs/fastica_asymmetric_03.html</code>) files. If you’ve
+configured a remote Git repository (see <code>?wflow_git_remote</code>),
+click on the hyperlinks in the table below to view the files as they
+were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c0dbcdf11dae3a2c26861bb60bbcf7e58c129e11/analysis/fastica_asymmetric_03.Rmd" target="_blank">c0dbcdf</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-08-05
+</td>
+<td>
+workflowr::wflow_publish("fastica_asymmetric_03.Rmd")
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>After two “quick and dirty” attempts, I think I’m now ready to
+implement a proper version of an asymmetric version of fastica. We can
+also think of this as a Newton-based method for optimizing the Empirical
+Bayes Projection model (EBProj).</p>
+<div id="the-newton-version-of-ebcd" class="section level3">
+<h3>The Newton version of EBCD</h3>
+<p>Given a psd matrix <span class="math inline">\(S=UDU&#39;\)</span>
+and a residual variance <span class="math inline">\(\sigma^2\)</span>,
+define the objective function <span class="math inline">\(J\)</span> as:
+<span class="math display">\[J(w, g; \sigma^2, S) = \sum_{i=1}^n \log
+Z((UDw)_i, g, \sigma^2)\]</span> where <span class="math display">\[Z(x,
+g, \sigma^2) = \int g(\theta) \exp\left( \frac{2x \theta -
+\theta^2}{2\sigma^2} \right) d\theta. \]</span> The EBCD method (for
+fixed <span class="math inline">\(\sigma^2\)</span>) can be implemented
+by maximizing <span class="math inline">\(J\)</span> subject to <span
+class="math inline">\(w&#39;Dw=1\)</span> using a Newton method on <span
+class="math inline">\(w\)</span> (and, for example, EM method for <span
+class="math inline">\(g\)</span>). Given the optimal <span
+class="math inline">\(w,g\)</span>, the optimal <span
+class="math inline">\(q\)</span> is the EBNM posterior with prior <span
+class="math inline">\(g^*\)</span> and data <span
+class="math inline">\(x=UDw^*,s=\sigma\)</span>.</p>
+<p>For <span class="math inline">\(g\)</span> a binary prior with
+probabilities <span class="math inline">\(1-p,p\)</span> on <span
+class="math inline">\(y_0,y_1\)</span> we have <span
+class="math display">\[Z(x, g, \sigma^2) = (1-p)\exp\!\left(\frac{2xy_0
+- y_0^2}{2\sigma^2}\right) + p\exp\!\left(\frac{2xy_1 -
+y_1^2}{2\sigma^2}\right).\]</span></p>
+<p>Define the log unnormalized weights <span
+class="math inline">\(\ell_j(x) = \log p_j + (2xy_j -
+y_j^2)/(2\sigma^2)\)</span>, with <span
+class="math inline">\(p_0=1-p\)</span> and <span
+class="math inline">\(p_1=p\)</span>. Then the posterior probability of
+<span class="math inline">\(y_1\)</span> is <span
+class="math display">\[\pi_1(x) = \frac{e^{\ell_1(x)}}{e^{\ell_0(x)} +
+e^{\ell_1(x)}},\]</span> the posterior mean is <span
+class="math display">\[M(x;\sigma^2,g) = (1-\pi_1)y_0 + \pi_1
+y_1,\]</span> and the derivative of <span
+class="math inline">\(M\)</span> with respect to <span
+class="math inline">\(x\)</span> (used in the Newton step) is <span
+class="math display">\[M&#39;(x;\sigma^2,g) =
+\pi_1(1-\pi_1)(y_1-y_0)^2/\sigma^2.\]</span></p>
+</div>
+<div id="the-ebproj-approach" class="section level3">
+<h3>The EBProj approach</h3>
+<p>The EBProj method works on a projection matrix <span
+class="math inline">\(P\)</span> (if <span
+class="math inline">\(S\)</span> is a whitened then <span
+class="math inline">\(P=S/n\)</span> is a projection matrix). The
+objective is: <span class="math display">\[F_{\text{EBproj}}(w, g; \tau,
+P)
+= \frac{n - k - 2b}{2} \left( \log \tau - \tau + 1 \right)  + J(w,g;
+\sigma^2_\text{eff}, S = nP)\]</span> where <span
+class="math inline">\(\sigma^2_\text{eff} =\frac{n}{(n - k -
+2b)\tau}\)</span>.</p>
+<p>Optimizing the EBProj objective can iterate between optimizing <span
+class="math inline">\(J\)</span> over <span
+class="math inline">\(w,g\)</span> as above and then optimizing <span
+class="math inline">\(\tau = 1/(1-\hat\rho)\)</span> where <span
+class="math inline">\(\hat\rho = \bar{\mathbf{v}}&#39;P\bar{\mathbf{v}}
+/ U_q\)</span>, <span class="math inline">\(U_q =
+E_q[\mathbf{v}&#39;\mathbf{v}]\)</span> is the second moment, and <span
+class="math inline">\(P=S/n\)</span>.</p>
+</div>
+</div>
+<div id="implementation" class="section level2">
+<h2>Implementation</h2>
+<div id="helper-functions-for-the-binary-prior" class="section level3">
+<h3>Helper functions for the binary prior</h3>
+<pre class="r"><code># log Z(x, g, sigma2) for binary prior g = (1-p) delta_{y0} + p delta_{y1}
+log_Z_binary = function(x, y_0, y_1, p, sigma2) {
+  lp0 = log(1 - p) + (2*x*y_0 - y_0^2) / (2*sigma2)
+  lp1 = log(p)     + (2*x*y_1 - y_1^2) / (2*sigma2)
+  m   = pmax(lp0, lp1)
+  log(exp(lp0 - m) + exp(lp1 - m)) + m
+}
+
+# posterior probability of y_1
+post_prob1 = function(x, y_0, y_1, p, sigma2) {
+  lp0 = log(1 - p) + (2*x*y_0 - y_0^2) / (2*sigma2)
+  lp1 = log(p)     + (2*x*y_1 - y_1^2) / (2*sigma2)
+  m   = pmax(lp0, lp1)
+  e0  = exp(lp0 - m);  e1 = exp(lp1 - m)
+  e1 / (e0 + e1)
+}
+
+# posterior mean M(x; sigma2, g)
+post_mean_binary = function(x, y_0, y_1, p, sigma2) {
+  pi1 = post_prob1(x, y_0, y_1, p, sigma2)
+  (1 - pi1)*y_0 + pi1*y_1
+}
+
+# dM/dx = pi1*(1-pi1)*(y1-y0)^2 / sigma2
+post_mean_deriv_binary = function(x, y_0, y_1, p, sigma2) {
+  pi1 = post_prob1(x, y_0, y_1, p, sigma2)
+  pi1 * (1 - pi1) * (y_1 - y_0)^2 / sigma2
+}</code></pre>
+</div>
+<div id="initialisation" class="section level3">
+<h3>Initialisation</h3>
+<p>Define a fit object (simply a list) that contains the data <span
+class="math inline">\(U\)</span>, and the parameters to be updated
+(prior <span class="math inline">\(g\)</span>, weights <span
+class="math inline">\(w\)</span>). Subsequent update functions will take
+a fit as input and output a new fit.</p>
+<pre class="r"><code>ebproj_init = function(U, b=0, tau=1) {
+  k   = ncol(U)
+  n = nrow(U)
+  d = rep(n, k) # So that S=UDU&#39;= nUU&#39; = nP
+  w   = rnorm(k)
+  w   = w / sqrt(sum(d * w^2))   # normalise to w&#39;Dw = 1
+  fit = list(
+    U         = U,
+    d         = d,
+    b         = b,
+    w         = w,
+    c         = 1,     # scale factor; effective atoms are c*y_0, c*y_1
+    y_0       = -1,
+    y_1       = 1,
+    p         = 0.5,
+    objective = NULL,
+    tau       = tau
+  )
+  return(fit)
+}</code></pre>
+<p>This function initializes using a fastica strategy. It runs fastica
+to get <span class="math inline">\(w\)</span> (by setting <span
+class="math inline">\(\sigma^2=c\)</span>) and then initializes <span
+class="math inline">\(c\)</span> to <code>mean(x tanh(x))</code> where
+<span class="math inline">\(x=UDw\)</span> are the pseudo-data
+(pre-shrunken source values).</p>
+<pre class="r"><code>#initializes by first running fastICA (with c=sigma^2) to get w, and then 
+ebproj_init_fastica = function(U,b=0){
+  fit = ebproj_init(U,b)
+  n      = nrow(fit$U)
+  k      = ncol(fit$U)
+  nu     = n - k - 2*fit$b
+  sigma2 = n / (nu * fit$tau)
+  fit$c = sigma2
+  fit = ebproj_fit(fit,fix_g=TRUE, fix_tau= TRUE)
+  x = ebproj_calc_x(fit)
+  fit$c = mean(x * tanh(x))
+  fit$tau = n/(fit$c * nu) # so that sigma2 = fit$c
+  return(fit)
+}
+
+ebproj_calc_x = function(fit){
+  as.vector(fit$U %*% (fit$d * fit$w))
+}</code></pre>
+</div>
+<div id="objective-function" class="section level3">
+<h3>Objective function</h3>
+<pre class="r"><code>ebproj_objective = function(fit) {
+  n      = nrow(fit$U)
+  k      = ncol(fit$U)
+  nu     = n - k - 2*fit$b
+  sigma2 = n / (nu * fit$tau)
+
+  ey0 = fit$c * fit$y_0;  ey1 = fit$c * fit$y_1   # effective atoms
+  x = ebproj_calc_x(fit)
+  J   = sum(log_Z_binary(x, ey0, ey1, fit$p, sigma2))
+  obj = (nu/2) * (log(fit$tau) - fit$tau + 1) + J
+  return(obj)
+}</code></pre>
+<p>The dual objective (eq 200 of the notes) is <span
+class="math inline">\(F_{\text{EBproj}}(\mathbf{w}, g; \tau) =
+J(\mathbf{w}, g; \sigma^2_\text{eff}) + C(\tau)\)</span>. It is
+equivalent to the primal at the optimal <span
+class="math inline">\(q\)</span> but is easier to compute because it
+avoids computing <span class="math inline">\(\text{KL}(q\|g)\)</span>
+explicitly.</p>
+<p>The <strong>primal</strong> objective (eq 190/199) retains the full
+variational structure: <span class="math display">\[F_{\text{EBproj}}(q,
+g; \tau) = \frac{n - k - 2b}{2} \bigl(\log \tau - \tau(1 - \hat\rho) +
+1\bigr) - \text{KL}(q \| g)\]</span> where <span
+class="math inline">\(\hat\rho =
+\bar{\mathbf{v}}&#39;\mathbf{P}\bar{\mathbf{v}} / U_q\)</span>, <span
+class="math inline">\(\bar{\mathbf{v}} = E_q[\mathbf{v}]\)</span> is the
+posterior mean, and <span class="math inline">\(U_q =
+E_q[\mathbf{v}&#39;\mathbf{v}]\)</span> is the second moment. The <span
+class="math inline">\(\tau\)</span> update targets this objective, so
+after a <span class="math inline">\(\tau\)</span> step the primal
+increases while the dual can decrease.</p>
+<p>For the binary prior, <span class="math inline">\(\text{KL}(q\|g) =
+\sum_i \bigl[(1-\pi_{1i})\log\tfrac{1-\pi_{1i}}{1-p} +
+\pi_{1i}\log\tfrac{\pi_{1i}}{p}\bigr]\)</span> and <span
+class="math inline">\(U_q = \sum_i \bigl[(1-\pi_{1i})(cy_0)^2 +
+\pi_{1i}(cy_1)^2\bigr]\)</span>.</p>
+<pre class="r"><code>kl_binary = function(pi1, p) {
+  pi0 = 1 - pi1
+  # clamp to avoid log(0)
+  pi0 = pmax(pi0, 1e-300);  pi1 = pmax(pi1, 1e-300)
+  sum(pi0 * log(pi0 / (1 - p)) + pi1 * log(pi1 / p))
+}
+
+ebproj_primal_objective = function(fit) {
+  n      = nrow(fit$U)
+  k      = ncol(fit$U)
+  nu     = n - k - 2*fit$b
+  sigma2 = n / (nu * fit$tau)
+
+  ey0 = fit$c * fit$y_0;  ey1 = fit$c * fit$y_1
+  x    = ebproj_calc_x(fit)
+  pi1  = post_prob1(x, ey0, ey1, fit$p, sigma2)
+  vbar = post_mean_binary(x, ey0, ey1, fit$p, sigma2)
+
+  Uv   = as.vector(t(fit$U) %*% vbar)
+  Uq   = sum((1 - pi1) * ey0^2 + pi1 * ey1^2)   # E_q[v&#39;v] second moment
+  # rho_hat = vbar&#39; P vbar / U_q, with P = S/n and S = UDU&#39;
+  rho  = sum(fit$d * Uv^2) / (n * Uq)
+
+  kl   = kl_binary(pi1, fit$p)
+  obj  = (nu/2) * (log(fit$tau) - fit$tau * (1 - rho) + 1) - kl
+  return(obj)
+}</code></pre>
+</div>
+<div id="prior-parameterisation-and-update-modes"
+class="section level3">
+<h3>Prior parameterisation and update modes</h3>
+<p>The binary prior is parameterised as <span class="math inline">\((c,
+g_0)\)</span> where <span class="math inline">\(g_0 = (1-p)\delta_{y_0}
++ p\delta_{y_1}\)</span> is a <strong>base prior</strong> and <span
+class="math inline">\(c &gt; 0\)</span> is a <strong>scale
+factor</strong>. The effective prior is <span class="math display">\[g =
+(1-p)\delta_{cy_0} + p\delta_{cy_1},\]</span> so the effective atoms are
+<span class="math inline">\(cy_0\)</span> and <span
+class="math inline">\(cy_1\)</span>. This parameterisation is
+intentionally over-complete — multiplying <span
+class="math inline">\(c\)</span> by any positive constant and dividing
+<span class="math inline">\(y_0, y_1\)</span> by the same constant
+leaves <span class="math inline">\(g\)</span> unchanged — but the
+redundancy is useful because it separates “shape” from “scale”.</p>
+<p>Three update modes are provided, controlled by <code>fix_g</code> and
+<code>fix_g0</code> in <code>ebproj_fit</code>:</p>
+<table>
+<colgroup>
+<col width="30%" />
+<col width="33%" />
+<col width="36%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th><code>fix_g</code></th>
+<th><code>fix_g0</code></th>
+<th>behaviour</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>TRUE</code></td>
+<td>—</td>
+<td>freeze <span class="math inline">\(g\)</span> entirely; no prior
+update</td>
+</tr>
+<tr class="even">
+<td><code>FALSE</code></td>
+<td><code>TRUE</code></td>
+<td>fix base prior <span class="math inline">\(g_0 = (p, y_0,
+y_1)\)</span>; optimise scale <span class="math inline">\(c\)</span>
+only</td>
+</tr>
+<tr class="odd">
+<td><code>FALSE</code></td>
+<td><code>FALSE</code></td>
+<td>full EM update of <span class="math inline">\((p, y_0,
+y_1)\)</span>; set <span class="math inline">\(c = 1\)</span>
+afterwards</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Full update</strong> (<code>fix_g0 = FALSE</code>): standard
+EM, updating <span class="math inline">\(p\)</span>, <span
+class="math inline">\(y_0\)</span>, <span
+class="math inline">\(y_1\)</span> using the effective atoms as
+observations. Because the parameterisation is over-complete we reset
+<span class="math inline">\(c = 1\)</span> after each step (the scale is
+absorbed into <span class="math inline">\(y_0, y_1\)</span>).</p>
+<p><strong>Scale-only update</strong> (<code>fix_g0 = TRUE</code>):
+<span class="math inline">\(g_0\)</span> is held fixed and <span
+class="math inline">\(c\)</span> is found by exact 1-D maximisation of
+<span class="math inline">\(J(w, cg_0)\)</span> over <span
+class="math inline">\(c &gt; 0\)</span> (optimising on the log scale).
+This is useful when <span class="math inline">\(g_0\)</span> has been
+pre-specified (e.g., from a previous run or a known prior shape) and
+only the amplitude needs to be estimated.</p>
+</div>
+<div id="update-functions" class="section level3">
+<h3>Update functions</h3>
+<p>Each function takes a fit object and returns a fit object.</p>
+<p>The Newton update for <span class="math inline">\(w\)</span> (Section
+2.3 of the notes) solves the constrained problem with the approximate
+Newton step <span class="math display">\[w_{\text{new}} = (\lambda I_k -
+\tilde{H})^{-1}(w_\text{target} - \tilde{H}w)\]</span> where <span
+class="math inline">\(w_\text{target} = U^T M(x)\)</span> and <span
+class="math inline">\(\lambda = \max(w^T D w_\text{target},\, \max_j
+\tilde{H}_{jj} + \epsilon)\)</span>. Five choices of diagonal
+preconditioner <span class="math inline">\(\tilde{H}\)</span> are
+supported (default <code>"ica"</code>):</p>
+<ol style="list-style-type: decimal">
+<li><strong><code>"diag"</code></strong> (Full Diagonal): <span
+class="math inline">\(\tilde{H}_{jj} = c_j d_j\)</span> where <span
+class="math inline">\(c_j = \sum_i U_{ij}^2 M&#39;(x_i)\)</span>.</li>
+<li><strong><code>"trace"</code></strong> (Trace): <span
+class="math inline">\(\tilde{H}_{jj} = c_\text{trace}\, d_j\)</span>
+where <span class="math inline">\(c_\text{trace} = \sum_i M&#39;(x_i)
+S_{ii} / \operatorname{tr}(D)\)</span> and <span
+class="math inline">\(S_{ii} = \sum_j U_{ij}^2 d_j\)</span>.</li>
+<li><strong><code>"iso"</code></strong> (Isotropic): <span
+class="math inline">\(\tilde{H}_{jj} = c_\text{iso}\)</span> where <span
+class="math inline">\(c_\text{iso} = (1/k)\sum_i M&#39;(x_i)
+S_{ii}\)</span>.</li>
+<li><strong><code>"ica"</code></strong> (FastICA): <span
+class="math inline">\(\tilde{H}_{jj} = c_\text{ica}\)</span> where <span
+class="math inline">\(c_\text{ica} = \sum_i M&#39;(x_i)\)</span> — the
+isotropic approximation under the uniform-feature-variance assumption
+<span class="math inline">\(S_{ii} \approx k\)</span> (Lemma 2.1).</li>
+<li><strong><code>"none"</code></strong> (<span
+class="math inline">\(\tilde{H} = 0\)</span>): recovers the natural
+power / gradient step <span class="math inline">\(w_\text{new} \propto
+w_\text{target}\)</span>.</li>
+</ol>
+<pre class="r"><code>ebproj_update_w = function(fit, hessian = &quot;ica&quot;, eps = 1e-6) {
+  n      = nrow(fit$U)
+  k      = ncol(fit$U)
+  nu     = n - k - 2*fit$b
+  sigma2 = n / (nu * fit$tau)
+
+  ey0 = fit$c * fit$y_0;  ey1 = fit$c * fit$y_1
+  x = ebproj_calc_x(fit)          # UDw, length n
+  Mx       = post_mean_binary(x, ey0, ey1, fit$p, sigma2)
+  Mpx      = post_mean_deriv_binary(x, ey0, ey1, fit$p, sigma2)
+
+  w_target = as.vector(t(fit$U) %*% Mx)                    # U^T M(x), length k
+
+  # diagonal of S: S_ii = sum_j U_ij^2 d_j
+  S_diag = as.vector((fit$U^2) %*% fit$d)                  # length n
+
+  H_diag = switch(hessian,
+    diag  = { c_j = as.vector(t(fit$U^2) %*% Mpx); c_j * fit$d },
+    trace = { c_t = sum(Mpx * S_diag) / sum(fit$d); c_t * fit$d },
+    iso   = { c_i = sum(Mpx * S_diag) / k; rep(c_i, k) },
+    ica   = { c_c = sum(Mpx); rep(c_c, k) },
+    none  = rep(0, k),
+    stop(&quot;hessian must be one of: &#39;diag&#39;, &#39;trace&#39;, &#39;iso&#39;, &#39;ica&#39;, &#39;none&#39;&quot;)
+  )
+
+  # Lagrange multiplier; ensure lambda &gt; max(H_diag) for positive definiteness
+  lambda = max(sum(fit$d * fit$w * w_target), max(H_diag) + eps)
+
+  w_new  = (w_target - H_diag * fit$w) / (lambda - H_diag)
+  # normalise to w&#39;Dw = 1
+  scale  = sqrt(sum(fit$d * w_new^2))
+  fit$w  = w_new / scale
+  return(fit)
+}
+
+# Full EM update for binary prior: update (p, y_0, y_1), reset c = 1.
+# Since (c, y_0, y_1, p) ~ (1, c*y_0, c*y_1, p) the parameterisation is
+# over-complete; we absorb c into y_0, y_1 after each full update.
+ebproj_update_g = function(fit) {
+  n      = nrow(fit$U)
+  k      = ncol(fit$U)
+  nu     = n - k - 2*fit$b
+  sigma2 = n / (nu * fit$tau)
+
+  ey0 = fit$c * fit$y_0;  ey1 = fit$c * fit$y_1
+  x = ebproj_calc_x(fit)
+  
+  pi1 = post_prob1(x, ey0, ey1, fit$p, sigma2)
+  pi0 = 1 - pi1
+
+  fit$p   = mean(pi1)
+  fit$y_0 = sum(pi0 * x) / sum(pi0)   # effective atom absorbed into y_0
+  fit$y_1 = sum(pi1 * x) / sum(pi1)   # effective atom absorbed into y_1
+  fit$c   = 1                          # reset after absorbing scale
+  return(fit)
+}
+
+# Scale-only update: fix the base prior g_0 = (p, y_0, y_1) and optimise c by
+# maximising J(w, c*g_0) over c &gt; 0 via 1-D exact optimisation.
+ebproj_update_c = function(fit) {
+  n      = nrow(fit$U)
+  k      = ncol(fit$U)
+  nu     = n - k - 2*fit$b
+  sigma2 = n / (nu * fit$tau)
+
+  x = ebproj_calc_x(fit)
+  obj_c = function(log_c) {
+    cc = exp(log_c)
+    sum(log_Z_binary(x, cc * fit$y_0, cc * fit$y_1, fit$p, sigma2))
+  }
+  res   = optimize(obj_c, c(-5, 5), maximum = TRUE)
+  fit$c = exp(res$maximum)
+  return(fit)
+}
+
+# update tau using rho = vbar&#39; P vbar / U_q, tau = 1/(1-rho)
+ebproj_update_tau = function(fit) {
+  n      = nrow(fit$U)
+  k      = ncol(fit$U)
+  nu     = n - k - 2*fit$b
+  sigma2 = n / (nu * fit$tau)
+
+  ey0  = fit$c * fit$y_0;  ey1 = fit$c * fit$y_1
+  x    = ebproj_calc_x(fit)
+  pi1  = post_prob1(x, ey0, ey1, fit$p, sigma2)
+  vbar = post_mean_binary(x, ey0, ey1, fit$p, sigma2)
+
+  # P = S/n = U D U&#39;/n, so vbar&#39; P vbar = (1/n) (U&#39;vbar)&#39; D (U&#39;vbar)
+  Uv      = as.vector(t(fit$U) %*% vbar)
+  Uq      = sum((1 - pi1) * ey0^2 + pi1 * ey1^2)   # E_q[v&#39;v] second moment
+  rho     = sum(fit$d * Uv^2) / (n * Uq)
+  fit$tau = 1 / (1 - rho)
+  return(fit)
+}</code></pre>
+</div>
+<div id="main-fitting-loop" class="section level3">
+<h3>Main fitting loop</h3>
+<pre class="r"><code># Updates tau, g, w in that order (does the Newton step last. This way if w has a good initial value then the updated tau,g will be good and so the next update of w will use those good tau, g)
+# fix_g   = TRUE            : skip all prior updates (freeze g entirely)
+# fix_g   = FALSE, fix_g0 = TRUE  : update only c (fix base prior g_0)
+# fix_g   = FALSE, fix_g0 = FALSE : full update of (p, y_0, y_1), reset c = 1
+ebproj_fit = function(fit, hessian = &quot;ica&quot;,
+                      fix_w = FALSE, fix_g = FALSE, fix_g0 = FALSE, fix_tau = FALSE,
+                      max_iter = 100, tol = 1e-6, verbose = FALSE) {
+  fit$objective = ebproj_objective(fit)
+
+  for (iter in seq_len(max_iter)) {
+    if (!fix_tau) fit = ebproj_update_tau(fit)
+    
+    if (!fix_g) {
+      if (fix_g0) fit = ebproj_update_c(fit)   # only scale
+      else        fit = ebproj_update_g(fit)    # full (p, y_0, y_1) update
+    }
+    
+    if (!fix_w) fit = ebproj_update_w(fit, hessian = hessian)
+    
+    obj_new = ebproj_objective(fit)
+
+    if (verbose)
+      cat(sprintf(&quot;iter %3d  obj = %.6f  tau = %.4f  p = %.4f  y0 = %.3f  y1 = %.3f\n&quot;,
+                  iter, obj_new, fit$tau, fit$p, fit$y_0, fit$y_1))
+
+    if (!is.null(fit$objective) &amp;&amp; abs(obj_new - fit$objective) &lt; tol) {
+      fit$objective = obj_new
+      break
+    }
+    fit$objective = obj_new
+  }
+  fit$iter = iter
+  return(fit)
+}</code></pre>
+</div>
+</div>
+<div id="simple-test-1a-p0.5" class="section level2">
+<h2>Simple test 1a (p=0.5)</h2>
+<p>Generate data from a single asymmetric binary source with <span
+class="math inline">\(p = 0.5\)</span>.</p>
+<pre class="r"><code>set.seed(1)
+n = 200; p_dim = 1000; k = 10
+
+# true source: binary with p = 0.5
+p_true = 0.5
+s_raw  = as.numeric(runif(n) &lt; p_true)
+s_true = (s_raw - p_true) / sqrt(p_true * (1 - p_true))   # zero-mean, unit-var
+
+# mix into high-dimensional data
+a = rnorm(p_dim)
+a = a / sqrt(sum(a^2))
+X = outer(a, s_true) + matrix(rnorm(p_dim * n, 0, 0.1), p_dim, n)</code></pre>
+<p>The data matrix <span class="math inline">\(X\)</span> is <span
+class="math inline">\(p \times n\)</span>. To whiten <span
+class="math inline">\(X\)</span> we center it and take the first <span
+class="math inline">\(k\)</span> right singular vectors (<span
+class="math inline">\(U\)</span> is <span class="math inline">\(n \times
+k\)</span>).</p>
+<pre class="r"><code>Xcenter = X - rowMeans(X)
+sv = svd(Xcenter, nu = 0, nv = k)
+U  = sv$v              # n x k</code></pre>
+<div id="fit-fastica" class="section level3">
+<h3>Fit fastica</h3>
+<p>Now fit the model. I start by using <code>ebproj_init_fastica</code>
+to run fastica: it does this by using the <code>ebproj</code> updates,
+but setting <code>sigma2=c</code> and updating only <code>w</code>. The
+init function then sets <code>sigma2=c=mean(x tanh(x))</code>, at which
+point the solution should be stationary at both <span
+class="math inline">\(w\)</span> and <span
+class="math inline">\(c\)</span>. Here I check this by checking that the
+solution does not change when I update <span
+class="math inline">\(c\)</span> (fix tau and g0):</p>
+<pre class="r"><code>fit = ebproj_init_fastica(U,b=k/2)
+fit = ebproj_fit(fit, max_iter = 200, fix_g = TRUE, fix_tau = TRUE, verbose = TRUE)</code></pre>
+<pre><code>iter   1  obj = 3.167410  tau = 1.4684  p = 0.5000  y0 = -1.000  y1 = 1.000</code></pre>
+<pre class="r"><code>fit = ebproj_fit(fit, max_iter = 200, fix_g0 = TRUE, fix_tau = TRUE, verbose = TRUE)</code></pre>
+<pre><code>iter   1  obj = 3.167410  tau = 1.4684  p = 0.5000  y0 = -1.000  y1 = 1.000</code></pre>
+<pre class="r"><code># check recovery: x = UDw gives the n-vector of projections
+x_hat = ebproj_calc_x(fit)
+cat(sprintf(&quot;Correlation with true source: %.4f\n&quot;, abs(cor(x_hat, s_true))))</code></pre>
+<pre><code>Correlation with true source: 0.9951</code></pre>
+</div>
+<div id="run-ebproj" class="section level3">
+<h3>Run EBproj</h3>
+<p>Now we run the full EBproj updates from the fastica solution.</p>
+<pre class="r"><code>fit = ebproj_fit(fit, max_iter = 200, verbose = TRUE)</code></pre>
+<pre><code>iter   1  obj = 29.054027  tau = 2.3397  p = 0.5066  y0 = -0.926  y1 = 0.902
+iter   2  obj = 154.227376  tau = 10.5609  p = 0.5100  y0 = -1.015  y1 = 0.975
+iter   3  obj = 277.573838  tau = 101.9029  p = 0.5100  y0 = -1.015  y1 = 0.975
+iter   4  obj = 277.573838  tau = 101.9045  p = 0.5100  y0 = -1.015  y1 = 0.975</code></pre>
+<pre class="r"><code>cat(sprintf(&quot;Converged in %d iterations\n&quot;, fit$iter))</code></pre>
+<pre><code>Converged in 4 iterations</code></pre>
+<pre class="r"><code>cat(sprintf(&quot;Estimated p = %.3f (true = %.3f)\n&quot;, fit$p, p_true))</code></pre>
+<pre><code>Estimated p = 0.510 (true = 0.500)</code></pre>
+<pre class="r"><code>cat(sprintf(&quot;y_0 = %.3f, y_1 = %.3f\n&quot;, fit$y_0, fit$y_1))</code></pre>
+<pre><code>y_0 = -1.015, y_1 = 0.975</code></pre>
+<pre class="r"><code># check recovery: x = UDw gives the n-vector of projections
+x_hat = ebproj_calc_x(fit)
+cat(sprintf(&quot;Correlation with true source: %.4f\n&quot;, abs(cor(x_hat, s_true))))</code></pre>
+<pre><code>Correlation with true source: 0.9951</code></pre>
+</div>
+<div id="random-initialization" class="section level3">
+<h3>Random initialization</h3>
+<p>Here we randomly initializz and plot objective over iterations to
+check convergence. (Note this example appears to be converging to the
+null solution, where the objective is 0).</p>
+<pre class="r"><code>set.seed(2)
+fit_verbose = ebproj_init(U, b = 1)
+objs = numeric(50)
+for (iter in 1:50) {
+  fit_verbose = ebproj_update_tau(fit_verbose)
+  fit_verbose = ebproj_update_g(fit_verbose)
+  fit_verbose = ebproj_update_w(fit_verbose)
+  objs[iter]  = ebproj_objective(fit_verbose)
+}
+plot(objs, type = &quot;l&quot;, xlab = &quot;iteration&quot;, ylab = &quot;objective&quot;,
+     main = &quot;EBProj objective over iterations&quot;)</code></pre>
+<p><img src="figure/fastica_asymmetric_03.Rmd/unnamed-chunk-12-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<p>This is the same but using a gradient step instead of Newton:</p>
+<pre class="r"><code>set.seed(2)
+fit_verbose = ebproj_init(U, b = 1)
+objs = numeric(50)
+for (iter in 1:50) {
+  fit_verbose = ebproj_update_tau(fit_verbose)
+  fit_verbose = ebproj_update_g(fit_verbose)
+  fit_verbose = ebproj_update_w(fit_verbose, hessian=&quot;none&quot;)
+  objs[iter]  = ebproj_objective(fit_verbose)
+}
+plot(objs, type = &quot;l&quot;, xlab = &quot;iteration&quot;, ylab = &quot;objective&quot;,
+     main = &quot;EBProj objective over iterations&quot;)</code></pre>
+<p><img src="figure/fastica_asymmetric_03.Rmd/unnamed-chunk-13-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<p>Here I note that the tau update is not actually guaranteed to
+increase the objective (nor the primal objective). This is because the
+tau update is designed to increase O(q,g,tau) for a fixed q,g, but in
+the way I am doing things (working with w,g,tau) the q defined by
+(w,tau) changes implicitly when tau changes. This is OK: the new tau is
+optimizing O(q,g,tau) for the current implicit q
+(=q(current_w,current_tau) assumed fixed), and as long as we go on to
+update w, it will find (implicitly) the new q that optimizes O(q,g,tau)
+this new tau. But the potential for non-monotonic behavior of the
+obective (after a tau update, before w update) is something to be aware
+of. And we should probably add a warning if the function is called to
+update tau with w fixed.</p>
+<pre class="r"><code>set.seed(2)
+fit_verbose = ebproj_init(U, b = 1)
+objs = numeric(50)
+objs_primal = numeric(50)
+for (iter in 1:50) {
+  fit_verbose = ebproj_update_tau(fit_verbose)
+  objs[iter]  = ebproj_objective(fit_verbose)
+  objs_primal[iter] = ebproj_primal_objective(fit_verbose)
+}
+plot(objs, type = &quot;l&quot;, xlab = &quot;iteration&quot;, ylab = &quot;objective&quot;,
+     main = &quot;EBProj objective over iterations&quot;)</code></pre>
+<p><img src="figure/fastica_asymmetric_03.Rmd/unnamed-chunk-14-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(objs_primal, type = &quot;l&quot;, xlab = &quot;iteration&quot;, ylab = &quot;objective&quot;,
+     main = &quot;EBProj objective over iterations&quot;)</code></pre>
+<p><img src="figure/fastica_asymmetric_03.Rmd/unnamed-chunk-14-2.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="fastica-init" class="section level3">
+<h3>fastica init</h3>
+<p>This is the trace of the objective initializing with fastica</p>
+<pre class="r"><code># plot objective over iterations to check convergence
+set.seed(2)
+fit_verbose = ebproj_init_fastica(U, b = 1)
+objs = numeric(50)
+for (iter in 1:50) {
+  fit_verbose = ebproj_update_tau(fit_verbose)
+  fit_verbose = ebproj_update_g(fit_verbose)
+  fit_verbose = ebproj_update_w(fit_verbose)
+  objs[iter]  = ebproj_objective(fit_verbose)
+}
+plot(objs, type = &quot;l&quot;, xlab = &quot;iteration&quot;, ylab = &quot;objective&quot;,
+     main = &quot;EBProj objective over iterations&quot;)</code></pre>
+<p><img src="figure/fastica_asymmetric_03.Rmd/unnamed-chunk-15-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="simple-test-1b-p0.1" class="section level2">
+<h2>Simple test 1b (p=0.1)</h2>
+<p>Generate data from a single asymmetric binary source with <span
+class="math inline">\(p = 0.1\)</span>.</p>
+<pre class="r"><code>set.seed(1)
+n = 200; p_dim = 1000; k = 10
+
+# true source: binary with p = 0.1
+p_true = 0.1
+s_raw  = as.numeric(runif(n) &lt; p_true)
+s_true = (s_raw - p_true) / sqrt(p_true * (1 - p_true))   # zero-mean, unit-var
+
+# mix into high-dimensional data
+a = rnorm(p_dim)
+a = a / sqrt(sum(a^2))
+X = outer(a, s_true) + matrix(rnorm(p_dim * n, 0, 0.1), p_dim, n)</code></pre>
+<p>The data matrix <span class="math inline">\(X\)</span> is <span
+class="math inline">\(p \times n\)</span>. To whiten <span
+class="math inline">\(X\)</span> we center it and take the first <span
+class="math inline">\(k\)</span> right singular vectors (<span
+class="math inline">\(U\)</span> is <span class="math inline">\(n \times
+k\)</span>).</p>
+<pre class="r"><code>Xcenter = X - rowMeans(X)
+sv = svd(Xcenter, nu = 0, nv = k)
+U  = sv$v              # n x k</code></pre>
+<p>Now fit the model. I initialize at fastica solution (run fastica by
+setting sigma2=c and updating only w); then set <span
+class="math inline">\(sigma2=c=mean(x tanh(x))\)</span> and check that
+the solution does not change when I update c (fix tau and g0). fastica
+finds the true source in this instance, but it is actually a local
+minimum rather than local maximum of the fastica objective.</p>
+<pre class="r"><code>fit = ebproj_init_fastica(U, b = k/2)
+fit = ebproj_fit(fit, max_iter = 200, fix_g = TRUE, fix_tau = TRUE, verbose = TRUE)</code></pre>
+<pre><code>iter   1  obj = -105.333354  tau = 3.6314  p = 0.5000  y0 = -1.000  y1 = 1.000</code></pre>
+<pre class="r"><code>fit = ebproj_fit(fit, max_iter = 200, fix_g0 = TRUE, fix_tau = TRUE, verbose = TRUE)</code></pre>
+<pre><code>iter   1  obj = -105.333354  tau = 3.6314  p = 0.5000  y0 = -1.000  y1 = 1.000</code></pre>
+<pre class="r"><code># check recovery: x = UDw gives the n-vector of projections
+x_hat = ebproj_calc_x(fit)
+cat(sprintf(&quot;Correlation with true source: %.4f\n&quot;, abs(cor(x_hat, s_true))))</code></pre>
+<pre><code>Correlation with true source: 0.9921</code></pre>
+<p>Now I run from the fastica solution. It kind of converges (slowly) to
+the null solution (prior y0,y1 moving to 0). Even though the correlation
+with the true source remains high, it is not really finding a good
+solution in my opinion; what I actually wanted it to do was to realize
+that the prior should be a 0.1,0.9 binary mixture and move there. I
+think the objective should be much higher at that point.</p>
+<pre class="r"><code>fit = ebproj_fit(fit, max_iter = 200, verbose = TRUE)</code></pre>
+<pre><code>iter   1  obj = -0.969434  tau = 1.1033  p = 0.5107  y0 = -0.223  y1 = 0.214
+iter   2  obj = -0.352988  tau = 1.0321  p = 0.5069  y0 = -0.171  y1 = 0.166
+iter   3  obj = -0.236656  tau = 1.0205  p = 0.5089  y0 = -0.143  y1 = 0.138
+iter   4  obj = -0.146454  tau = 1.0143  p = 0.5078  y0 = -0.120  y1 = 0.116
+iter   5  obj = -0.112019  tau = 1.0107  p = 0.5085  y0 = -0.104  y1 = 0.101
+iter   6  obj = -0.077131  tau = 1.0080  p = 0.5080  y0 = -0.090  y1 = 0.087
+iter   7  obj = -0.061615  tau = 1.0062  p = 0.5083  y0 = -0.080  y1 = 0.077
+iter   8  obj = -0.044783  tau = 1.0048  p = 0.5081  y0 = -0.070  y1 = 0.068
+iter   9  obj = -0.036415  tau = 1.0038  p = 0.5083  y0 = -0.062  y1 = 0.060
+iter  10  obj = -0.027334  tau = 1.0030  p = 0.5082  y0 = -0.055  y1 = 0.054
+iter  11  obj = -0.022389  tau = 1.0024  p = 0.5083  y0 = -0.049  y1 = 0.048
+iter  12  obj = -0.017161  tau = 1.0019  p = 0.5082  y0 = -0.044  y1 = 0.043
+iter  13  obj = -0.014091  tau = 1.0015  p = 0.5082  y0 = -0.040  y1 = 0.038
+iter  14  obj = -0.010956  tau = 1.0012  p = 0.5082  y0 = -0.035  y1 = 0.034
+iter  15  obj = -0.008998  tau = 1.0010  p = 0.5082  y0 = -0.032  y1 = 0.031
+iter  16  obj = -0.007067  tau = 1.0008  p = 0.5082  y0 = -0.028  y1 = 0.028
+iter  17  obj = -0.005799  tau = 1.0006  p = 0.5082  y0 = -0.026  y1 = 0.025
+iter  18  obj = -0.004588  tau = 1.0005  p = 0.5082  y0 = -0.023  y1 = 0.022
+iter  19  obj = -0.003759  tau = 1.0004  p = 0.5082  y0 = -0.021  y1 = 0.020
+iter  20  obj = -0.002990  tau = 1.0003  p = 0.5082  y0 = -0.019  y1 = 0.018
+iter  21  obj = -0.002421  tau = 1.0003  p = 0.5082  y0 = -0.017  y1 = 0.016
+iter  22  obj = -0.001961  tau = 1.0002  p = 0.5082  y0 = -0.015  y1 = 0.015
+iter  23  obj = -0.001589  tau = 1.0002  p = 0.5082  y0 = -0.014  y1 = 0.013
+iter  24  obj = -0.001287  tau = 1.0001  p = 0.5082  y0 = -0.012  y1 = 0.012
+iter  25  obj = -0.001043  tau = 1.0001  p = 0.5082  y0 = -0.011  y1 = 0.011
+iter  26  obj = -0.000845  tau = 1.0001  p = 0.5082  y0 = -0.010  y1 = 0.010
+iter  27  obj = -0.000685  tau = 1.0001  p = 0.5082  y0 = -0.009  y1 = 0.009
+iter  28  obj = -0.000555  tau = 1.0001  p = 0.5082  y0 = -0.008  y1 = 0.008
+iter  29  obj = -0.000450  tau = 1.0001  p = 0.5082  y0 = -0.007  y1 = 0.007
+iter  30  obj = -0.000365  tau = 1.0000  p = 0.5082  y0 = -0.006  y1 = 0.006
+iter  31  obj = -0.000296  tau = 1.0000  p = 0.5082  y0 = -0.006  y1 = 0.006
+iter  32  obj = -0.000239  tau = 1.0000  p = 0.5082  y0 = -0.005  y1 = 0.005
+iter  33  obj = -0.000194  tau = 1.0000  p = 0.5082  y0 = -0.005  y1 = 0.005
+iter  34  obj = -0.000157  tau = 1.0000  p = 0.5082  y0 = -0.004  y1 = 0.004
+iter  35  obj = -0.000127  tau = 1.0000  p = 0.5082  y0 = -0.004  y1 = 0.004
+iter  36  obj = -0.000103  tau = 1.0000  p = 0.5082  y0 = -0.003  y1 = 0.003
+iter  37  obj = -0.000084  tau = 1.0000  p = 0.5082  y0 = -0.003  y1 = 0.003
+iter  38  obj = -0.000068  tau = 1.0000  p = 0.5082  y0 = -0.003  y1 = 0.003
+iter  39  obj = -0.000055  tau = 1.0000  p = 0.5082  y0 = -0.003  y1 = 0.002
+iter  40  obj = -0.000045  tau = 1.0000  p = 0.5082  y0 = -0.002  y1 = 0.002
+iter  41  obj = -0.000036  tau = 1.0000  p = 0.5082  y0 = -0.002  y1 = 0.002
+iter  42  obj = -0.000029  tau = 1.0000  p = 0.5082  y0 = -0.002  y1 = 0.002
+iter  43  obj = -0.000024  tau = 1.0000  p = 0.5082  y0 = -0.002  y1 = 0.002
+iter  44  obj = -0.000019  tau = 1.0000  p = 0.5082  y0 = -0.001  y1 = 0.001
+iter  45  obj = -0.000016  tau = 1.0000  p = 0.5082  y0 = -0.001  y1 = 0.001
+iter  46  obj = -0.000013  tau = 1.0000  p = 0.5082  y0 = -0.001  y1 = 0.001
+iter  47  obj = -0.000010  tau = 1.0000  p = 0.5082  y0 = -0.001  y1 = 0.001
+iter  48  obj = -0.000008  tau = 1.0000  p = 0.5082  y0 = -0.001  y1 = 0.001
+iter  49  obj = -0.000007  tau = 1.0000  p = 0.5082  y0 = -0.001  y1 = 0.001
+iter  50  obj = -0.000005  tau = 1.0000  p = 0.5082  y0 = -0.001  y1 = 0.001
+iter  51  obj = -0.000004  tau = 1.0000  p = 0.5082  y0 = -0.001  y1 = 0.001
+iter  52  obj = -0.000004  tau = 1.0000  p = 0.5082  y0 = -0.001  y1 = 0.001</code></pre>
+<pre class="r"><code>cat(sprintf(&quot;Converged in %d iterations\n&quot;, fit$iter))</code></pre>
+<pre><code>Converged in 52 iterations</code></pre>
+<pre class="r"><code>cat(sprintf(&quot;Estimated p = %.3f (true = %.3f)\n&quot;, fit$p, p_true))</code></pre>
+<pre><code>Estimated p = 0.508 (true = 0.100)</code></pre>
+<pre class="r"><code>cat(sprintf(&quot;y_0 = %.3f, y_1 = %.3f\n&quot;, fit$y_0, fit$y_1))</code></pre>
+<pre><code>y_0 = -0.001, y_1 = 0.001</code></pre>
+<pre class="r"><code># check recovery: x = UDw gives the n-vector of projections
+x_hat = ebproj_calc_x(fit)
+cat(sprintf(&quot;Correlation with true source: %.4f\n&quot;, abs(cor(x_hat, s_true))))</code></pre>
+<pre><code>Correlation with true source: 0.9921</code></pre>
+<p>What is going on is that at the fastICA solution the 50-50 prior is
+actually very bad and delicately balanced (after all the fastICA
+solution is a local minimum). So we need to give it a better
+initialization. Here I illustrate by manually initializing <span
+class="math inline">\(y_0,y_1\)</span> to the minimum and maximum of
+x_hat. It immediately converges to a much better objective value from
+this fit.</p>
+<pre class="r"><code>hist(x_hat)</code></pre>
+<p><img src="figure/fastica_asymmetric_03.Rmd/unnamed-chunk-20-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>fit$y_0 = min(x_hat)
+fit$y_1 = max(x_hat)
+fit = ebproj_fit(fit, max_iter = 200, verbose = TRUE)</code></pre>
+<pre><code>iter   1  obj = 223.774700  tau = 8.3315  p = 0.9400  y0 = -3.927  y1 = 0.251
+iter   2  obj = 329.529762  tau = 64.4451  p = 0.9400  y0 = -3.927  y1 = 0.251
+iter   3  obj = 329.529762  tau = 64.4451  p = 0.9400  y0 = -3.927  y1 = 0.251</code></pre>
+<pre class="r"><code>cat(sprintf(&quot;Converged in %d iterations\n&quot;, fit$iter))</code></pre>
+<pre><code>Converged in 3 iterations</code></pre>
+<pre class="r"><code>cat(sprintf(&quot;Estimated p = %.3f (true = %.3f)\n&quot;, fit$p, p_true))</code></pre>
+<pre><code>Estimated p = 0.940 (true = 0.100)</code></pre>
+<pre class="r"><code>cat(sprintf(&quot;y_0 = %.3f, y_1 = %.3f\n&quot;, fit$y_0, fit$y_1))</code></pre>
+<pre><code>y_0 = -3.927, y_1 = 0.251</code></pre>
+<pre class="r"><code>cat(sprintf(&quot;Correlation with true source: %.4f\n&quot;, abs(cor(x_hat, s_true))))</code></pre>
+<pre><code>Correlation with true source: 0.9921</code></pre>
+<p>Try a random start, and plot objective over iterations. Interestingly
+we see the non-monotonic behavior here, and it does not converge to the
+true source.</p>
+<pre class="r"><code>set.seed(2)
+fit_verbose = ebproj_init(U, b = 1)
+objs = numeric(50)
+for (iter in 1:50) {
+  fit_verbose = ebproj_update_tau(fit_verbose)
+  fit_verbose = ebproj_update_g(fit_verbose)
+  fit_verbose = ebproj_update_w(fit_verbose)
+  objs[iter]  = ebproj_objective(fit_verbose)
+}
+plot(objs, type = &quot;l&quot;, xlab = &quot;iteration&quot;, ylab = &quot;objective&quot;,
+     main = &quot;EBProj objective over iterations&quot;)</code></pre>
+<p><img src="figure/fastica_asymmetric_03.Rmd/unnamed-chunk-21-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>x_hat = ebproj_calc_x(fit_verbose)
+cat(sprintf(&quot;Correlation with true source: %.4f\n&quot;, abs(cor(x_hat, s_true))))</code></pre>
+<pre><code>Correlation with true source: 0.3186</code></pre>
+<pre class="r"><code>hist(x_hat)</code></pre>
+<p><img src="figure/fastica_asymmetric_03.Rmd/unnamed-chunk-21-2.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<div id="initialization-with-tau-fixed" class="section level3">
+<h3>Initialization with tau fixed</h3>
+<p>Try with tau fixed: it converges to a null-like solution:</p>
+<pre class="r"><code>set.seed(2)
+fit = ebproj_init(U, b = 1, tau = 1)
+fit = ebproj_fit(fit, max_iter = 200, fix_tau=TRUE, verbose = TRUE)</code></pre>
+<pre><code>iter   1  obj = -5.337730  tau = 1.0000  p = 0.4976  y0 = -0.605  y1 = 0.611
+iter   2  obj = -2.484994  tau = 1.0000  p = 0.4939  y0 = -0.463  y1 = 0.474
+iter   3  obj = -1.482737  tau = 1.0000  p = 0.4938  y0 = -0.383  y1 = 0.393
+iter   4  obj = -0.986078  tau = 1.0000  p = 0.4922  y0 = -0.326  y1 = 0.336
+iter   5  obj = -0.706003  tau = 1.0000  p = 0.4926  y0 = -0.285  y1 = 0.293
+iter   6  obj = -0.517495  tau = 1.0000  p = 0.4919  y0 = -0.251  y1 = 0.259
+iter   7  obj = -0.393238  tau = 1.0000  p = 0.4922  y0 = -0.224  y1 = 0.231
+iter   8  obj = -0.305179  tau = 1.0000  p = 0.4922  y0 = -0.201  y1 = 0.208
+iter   9  obj = -0.249994  tau = 1.0000  p = 0.4921  y0 = -0.182  y1 = 0.188
+iter  10  obj = -0.255133  tau = 1.0000  p = 0.4917  y0 = -0.165  y1 = 0.170
+iter  11  obj = -0.186731  tau = 1.0000  p = 0.4929  y0 = -0.144  y1 = 0.148
+iter  12  obj = -0.144692  tau = 1.0000  p = 0.4916  y0 = -0.125  y1 = 0.130
+iter  13  obj = -0.094154  tau = 1.0000  p = 0.4925  y0 = -0.110  y1 = 0.113
+iter  14  obj = -0.078185  tau = 1.0000  p = 0.4919  y0 = -0.099  y1 = 0.102
+iter  15  obj = -0.055460  tau = 1.0000  p = 0.4923  y0 = -0.089  y1 = 0.091
+iter  16  obj = -0.048184  tau = 1.0000  p = 0.4920  y0 = -0.081  y1 = 0.084
+iter  17  obj = -0.036041  tau = 1.0000  p = 0.4922  y0 = -0.074  y1 = 0.076
+iter  18  obj = -0.032020  tau = 1.0000  p = 0.4920  y0 = -0.068  y1 = 0.070
+iter  19  obj = -0.024806  tau = 1.0000  p = 0.4922  y0 = -0.062  y1 = 0.064
+iter  20  obj = -0.022291  tau = 1.0000  p = 0.4921  y0 = -0.058  y1 = 0.060
+iter  21  obj = -0.017708  tau = 1.0000  p = 0.4922  y0 = -0.053  y1 = 0.055
+iter  22  obj = -0.016003  tau = 1.0000  p = 0.4921  y0 = -0.050  y1 = 0.051
+iter  23  obj = -0.012954  tau = 1.0000  p = 0.4921  y0 = -0.046  y1 = 0.048
+iter  24  obj = -0.011736  tau = 1.0000  p = 0.4921  y0 = -0.043  y1 = 0.044
+iter  25  obj = -0.009640  tau = 1.0000  p = 0.4921  y0 = -0.040  y1 = 0.041
+iter  26  obj = -0.008739  tau = 1.0000  p = 0.4921  y0 = -0.037  y1 = 0.039
+iter  27  obj = -0.007262  tau = 1.0000  p = 0.4921  y0 = -0.035  y1 = 0.036
+iter  28  obj = -0.006580  tau = 1.0000  p = 0.4921  y0 = -0.033  y1 = 0.034
+iter  29  obj = -0.005519  tau = 1.0000  p = 0.4921  y0 = -0.031  y1 = 0.032
+iter  30  obj = -0.004995  tau = 1.0000  p = 0.4921  y0 = -0.029  y1 = 0.030
+iter  31  obj = -0.004223  tau = 1.0000  p = 0.4921  y0 = -0.027  y1 = 0.028
+iter  32  obj = -0.003816  tau = 1.0000  p = 0.4921  y0 = -0.025  y1 = 0.026
+iter  33  obj = -0.003247  tau = 1.0000  p = 0.4921  y0 = -0.024  y1 = 0.024
+iter  34  obj = -0.002930  tau = 1.0000  p = 0.4921  y0 = -0.022  y1 = 0.023
+iter  35  obj = -0.002506  tau = 1.0000  p = 0.4921  y0 = -0.021  y1 = 0.021
+iter  36  obj = -0.002257  tau = 1.0000  p = 0.4921  y0 = -0.019  y1 = 0.020
+iter  37  obj = -0.001939  tau = 1.0000  p = 0.4921  y0 = -0.018  y1 = 0.019
+iter  38  obj = -0.001742  tau = 1.0000  p = 0.4921  y0 = -0.017  y1 = 0.018
+iter  39  obj = -0.001504  tau = 1.0000  p = 0.4921  y0 = -0.016  y1 = 0.017
+iter  40  obj = -0.001328  tau = 1.0000  p = 0.4921  y0 = -0.015  y1 = 0.016
+iter  41  obj = -0.001173  tau = 1.0000  p = 0.4921  y0 = -0.014  y1 = 0.015
+iter  42  obj = -0.001035  tau = 1.0000  p = 0.4921  y0 = -0.013  y1 = 0.014
+iter  43  obj = -0.000915  tau = 1.0000  p = 0.4921  y0 = -0.013  y1 = 0.013
+iter  44  obj = -0.000808  tau = 1.0000  p = 0.4921  y0 = -0.012  y1 = 0.012
+iter  45  obj = -0.000714  tau = 1.0000  p = 0.4921  y0 = -0.011  y1 = 0.011
+iter  46  obj = -0.000631  tau = 1.0000  p = 0.4921  y0 = -0.010  y1 = 0.011
+iter  47  obj = -0.000557  tau = 1.0000  p = 0.4921  y0 = -0.010  y1 = 0.010
+iter  48  obj = -0.000493  tau = 1.0000  p = 0.4921  y0 = -0.009  y1 = 0.010
+iter  49  obj = -0.000435  tau = 1.0000  p = 0.4921  y0 = -0.009  y1 = 0.009
+iter  50  obj = -0.000385  tau = 1.0000  p = 0.4921  y0 = -0.008  y1 = 0.008
+iter  51  obj = -0.000340  tau = 1.0000  p = 0.4921  y0 = -0.008  y1 = 0.008
+iter  52  obj = -0.000301  tau = 1.0000  p = 0.4921  y0 = -0.007  y1 = 0.007
+iter  53  obj = -0.000266  tau = 1.0000  p = 0.4921  y0 = -0.007  y1 = 0.007
+iter  54  obj = -0.000235  tau = 1.0000  p = 0.4921  y0 = -0.006  y1 = 0.007
+iter  55  obj = -0.000208  tau = 1.0000  p = 0.4921  y0 = -0.006  y1 = 0.006
+iter  56  obj = -0.000184  tau = 1.0000  p = 0.4921  y0 = -0.006  y1 = 0.006
+iter  57  obj = -0.000162  tau = 1.0000  p = 0.4921  y0 = -0.005  y1 = 0.005
+iter  58  obj = -0.000143  tau = 1.0000  p = 0.4921  y0 = -0.005  y1 = 0.005
+iter  59  obj = -0.000127  tau = 1.0000  p = 0.4921  y0 = -0.005  y1 = 0.005
+iter  60  obj = -0.000112  tau = 1.0000  p = 0.4921  y0 = -0.004  y1 = 0.005
+iter  61  obj = -0.000099  tau = 1.0000  p = 0.4921  y0 = -0.004  y1 = 0.004
+iter  62  obj = -0.000088  tau = 1.0000  p = 0.4921  y0 = -0.004  y1 = 0.004
+iter  63  obj = -0.000077  tau = 1.0000  p = 0.4921  y0 = -0.004  y1 = 0.004
+iter  64  obj = -0.000068  tau = 1.0000  p = 0.4921  y0 = -0.003  y1 = 0.004
+iter  65  obj = -0.000060  tau = 1.0000  p = 0.4921  y0 = -0.003  y1 = 0.003
+iter  66  obj = -0.000053  tau = 1.0000  p = 0.4921  y0 = -0.003  y1 = 0.003
+iter  67  obj = -0.000047  tau = 1.0000  p = 0.4921  y0 = -0.003  y1 = 0.003
+iter  68  obj = -0.000042  tau = 1.0000  p = 0.4921  y0 = -0.003  y1 = 0.003
+iter  69  obj = -0.000037  tau = 1.0000  p = 0.4921  y0 = -0.003  y1 = 0.003
+iter  70  obj = -0.000033  tau = 1.0000  p = 0.4921  y0 = -0.002  y1 = 0.002
+iter  71  obj = -0.000029  tau = 1.0000  p = 0.4921  y0 = -0.002  y1 = 0.002
+iter  72  obj = -0.000025  tau = 1.0000  p = 0.4921  y0 = -0.002  y1 = 0.002
+iter  73  obj = -0.000023  tau = 1.0000  p = 0.4921  y0 = -0.002  y1 = 0.002
+iter  74  obj = -0.000020  tau = 1.0000  p = 0.4921  y0 = -0.002  y1 = 0.002
+iter  75  obj = -0.000018  tau = 1.0000  p = 0.4921  y0 = -0.002  y1 = 0.002
+iter  76  obj = -0.000016  tau = 1.0000  p = 0.4921  y0 = -0.002  y1 = 0.002
+iter  77  obj = -0.000014  tau = 1.0000  p = 0.4921  y0 = -0.002  y1 = 0.002
+iter  78  obj = -0.000012  tau = 1.0000  p = 0.4921  y0 = -0.001  y1 = 0.001
+iter  79  obj = -0.000011  tau = 1.0000  p = 0.4921  y0 = -0.001  y1 = 0.001
+iter  80  obj = -0.000009  tau = 1.0000  p = 0.4921  y0 = -0.001  y1 = 0.001
+iter  81  obj = -0.000008  tau = 1.0000  p = 0.4921  y0 = -0.001  y1 = 0.001
+iter  82  obj = -0.000007  tau = 1.0000  p = 0.4921  y0 = -0.001  y1 = 0.001</code></pre>
+<pre class="r"><code>set.seed(2)
+fit = ebproj_init(U, b = 1, tau = 1)
+fit = ebproj_fit(fit, max_iter = 200, fix_tau=TRUE, verbose = TRUE)</code></pre>
+<pre><code>iter   1  obj = -5.337730  tau = 1.0000  p = 0.4976  y0 = -0.605  y1 = 0.611
+iter   2  obj = -2.484994  tau = 1.0000  p = 0.4939  y0 = -0.463  y1 = 0.474
+iter   3  obj = -1.482737  tau = 1.0000  p = 0.4938  y0 = -0.383  y1 = 0.393
+iter   4  obj = -0.986078  tau = 1.0000  p = 0.4922  y0 = -0.326  y1 = 0.336
+iter   5  obj = -0.706003  tau = 1.0000  p = 0.4926  y0 = -0.285  y1 = 0.293
+iter   6  obj = -0.517495  tau = 1.0000  p = 0.4919  y0 = -0.251  y1 = 0.259
+iter   7  obj = -0.393238  tau = 1.0000  p = 0.4922  y0 = -0.224  y1 = 0.231
+iter   8  obj = -0.305179  tau = 1.0000  p = 0.4922  y0 = -0.201  y1 = 0.208
+iter   9  obj = -0.249994  tau = 1.0000  p = 0.4921  y0 = -0.182  y1 = 0.188
+iter  10  obj = -0.255133  tau = 1.0000  p = 0.4917  y0 = -0.165  y1 = 0.170
+iter  11  obj = -0.186731  tau = 1.0000  p = 0.4929  y0 = -0.144  y1 = 0.148
+iter  12  obj = -0.144692  tau = 1.0000  p = 0.4916  y0 = -0.125  y1 = 0.130
+iter  13  obj = -0.094154  tau = 1.0000  p = 0.4925  y0 = -0.110  y1 = 0.113
+iter  14  obj = -0.078185  tau = 1.0000  p = 0.4919  y0 = -0.099  y1 = 0.102
+iter  15  obj = -0.055460  tau = 1.0000  p = 0.4923  y0 = -0.089  y1 = 0.091
+iter  16  obj = -0.048184  tau = 1.0000  p = 0.4920  y0 = -0.081  y1 = 0.084
+iter  17  obj = -0.036041  tau = 1.0000  p = 0.4922  y0 = -0.074  y1 = 0.076
+iter  18  obj = -0.032020  tau = 1.0000  p = 0.4920  y0 = -0.068  y1 = 0.070
+iter  19  obj = -0.024806  tau = 1.0000  p = 0.4922  y0 = -0.062  y1 = 0.064
+iter  20  obj = -0.022291  tau = 1.0000  p = 0.4921  y0 = -0.058  y1 = 0.060
+iter  21  obj = -0.017708  tau = 1.0000  p = 0.4922  y0 = -0.053  y1 = 0.055
+iter  22  obj = -0.016003  tau = 1.0000  p = 0.4921  y0 = -0.050  y1 = 0.051
+iter  23  obj = -0.012954  tau = 1.0000  p = 0.4921  y0 = -0.046  y1 = 0.048
+iter  24  obj = -0.011736  tau = 1.0000  p = 0.4921  y0 = -0.043  y1 = 0.044
+iter  25  obj = -0.009640  tau = 1.0000  p = 0.4921  y0 = -0.040  y1 = 0.041
+iter  26  obj = -0.008739  tau = 1.0000  p = 0.4921  y0 = -0.037  y1 = 0.039
+iter  27  obj = -0.007262  tau = 1.0000  p = 0.4921  y0 = -0.035  y1 = 0.036
+iter  28  obj = -0.006580  tau = 1.0000  p = 0.4921  y0 = -0.033  y1 = 0.034
+iter  29  obj = -0.005519  tau = 1.0000  p = 0.4921  y0 = -0.031  y1 = 0.032
+iter  30  obj = -0.004995  tau = 1.0000  p = 0.4921  y0 = -0.029  y1 = 0.030
+iter  31  obj = -0.004223  tau = 1.0000  p = 0.4921  y0 = -0.027  y1 = 0.028
+iter  32  obj = -0.003816  tau = 1.0000  p = 0.4921  y0 = -0.025  y1 = 0.026
+iter  33  obj = -0.003247  tau = 1.0000  p = 0.4921  y0 = -0.024  y1 = 0.024
+iter  34  obj = -0.002930  tau = 1.0000  p = 0.4921  y0 = -0.022  y1 = 0.023
+iter  35  obj = -0.002506  tau = 1.0000  p = 0.4921  y0 = -0.021  y1 = 0.021
+iter  36  obj = -0.002257  tau = 1.0000  p = 0.4921  y0 = -0.019  y1 = 0.020
+iter  37  obj = -0.001939  tau = 1.0000  p = 0.4921  y0 = -0.018  y1 = 0.019
+iter  38  obj = -0.001742  tau = 1.0000  p = 0.4921  y0 = -0.017  y1 = 0.018
+iter  39  obj = -0.001504  tau = 1.0000  p = 0.4921  y0 = -0.016  y1 = 0.017
+iter  40  obj = -0.001328  tau = 1.0000  p = 0.4921  y0 = -0.015  y1 = 0.016
+iter  41  obj = -0.001173  tau = 1.0000  p = 0.4921  y0 = -0.014  y1 = 0.015
+iter  42  obj = -0.001035  tau = 1.0000  p = 0.4921  y0 = -0.013  y1 = 0.014
+iter  43  obj = -0.000915  tau = 1.0000  p = 0.4921  y0 = -0.013  y1 = 0.013
+iter  44  obj = -0.000808  tau = 1.0000  p = 0.4921  y0 = -0.012  y1 = 0.012
+iter  45  obj = -0.000714  tau = 1.0000  p = 0.4921  y0 = -0.011  y1 = 0.011
+iter  46  obj = -0.000631  tau = 1.0000  p = 0.4921  y0 = -0.010  y1 = 0.011
+iter  47  obj = -0.000557  tau = 1.0000  p = 0.4921  y0 = -0.010  y1 = 0.010
+iter  48  obj = -0.000493  tau = 1.0000  p = 0.4921  y0 = -0.009  y1 = 0.010
+iter  49  obj = -0.000435  tau = 1.0000  p = 0.4921  y0 = -0.009  y1 = 0.009
+iter  50  obj = -0.000385  tau = 1.0000  p = 0.4921  y0 = -0.008  y1 = 0.008
+iter  51  obj = -0.000340  tau = 1.0000  p = 0.4921  y0 = -0.008  y1 = 0.008
+iter  52  obj = -0.000301  tau = 1.0000  p = 0.4921  y0 = -0.007  y1 = 0.007
+iter  53  obj = -0.000266  tau = 1.0000  p = 0.4921  y0 = -0.007  y1 = 0.007
+iter  54  obj = -0.000235  tau = 1.0000  p = 0.4921  y0 = -0.006  y1 = 0.007
+iter  55  obj = -0.000208  tau = 1.0000  p = 0.4921  y0 = -0.006  y1 = 0.006
+iter  56  obj = -0.000184  tau = 1.0000  p = 0.4921  y0 = -0.006  y1 = 0.006
+iter  57  obj = -0.000162  tau = 1.0000  p = 0.4921  y0 = -0.005  y1 = 0.005
+iter  58  obj = -0.000143  tau = 1.0000  p = 0.4921  y0 = -0.005  y1 = 0.005
+iter  59  obj = -0.000127  tau = 1.0000  p = 0.4921  y0 = -0.005  y1 = 0.005
+iter  60  obj = -0.000112  tau = 1.0000  p = 0.4921  y0 = -0.004  y1 = 0.005
+iter  61  obj = -0.000099  tau = 1.0000  p = 0.4921  y0 = -0.004  y1 = 0.004
+iter  62  obj = -0.000088  tau = 1.0000  p = 0.4921  y0 = -0.004  y1 = 0.004
+iter  63  obj = -0.000077  tau = 1.0000  p = 0.4921  y0 = -0.004  y1 = 0.004
+iter  64  obj = -0.000068  tau = 1.0000  p = 0.4921  y0 = -0.003  y1 = 0.004
+iter  65  obj = -0.000060  tau = 1.0000  p = 0.4921  y0 = -0.003  y1 = 0.003
+iter  66  obj = -0.000053  tau = 1.0000  p = 0.4921  y0 = -0.003  y1 = 0.003
+iter  67  obj = -0.000047  tau = 1.0000  p = 0.4921  y0 = -0.003  y1 = 0.003
+iter  68  obj = -0.000042  tau = 1.0000  p = 0.4921  y0 = -0.003  y1 = 0.003
+iter  69  obj = -0.000037  tau = 1.0000  p = 0.4921  y0 = -0.003  y1 = 0.003
+iter  70  obj = -0.000033  tau = 1.0000  p = 0.4921  y0 = -0.002  y1 = 0.002
+iter  71  obj = -0.000029  tau = 1.0000  p = 0.4921  y0 = -0.002  y1 = 0.002
+iter  72  obj = -0.000025  tau = 1.0000  p = 0.4921  y0 = -0.002  y1 = 0.002
+iter  73  obj = -0.000023  tau = 1.0000  p = 0.4921  y0 = -0.002  y1 = 0.002
+iter  74  obj = -0.000020  tau = 1.0000  p = 0.4921  y0 = -0.002  y1 = 0.002
+iter  75  obj = -0.000018  tau = 1.0000  p = 0.4921  y0 = -0.002  y1 = 0.002
+iter  76  obj = -0.000016  tau = 1.0000  p = 0.4921  y0 = -0.002  y1 = 0.002
+iter  77  obj = -0.000014  tau = 1.0000  p = 0.4921  y0 = -0.002  y1 = 0.002
+iter  78  obj = -0.000012  tau = 1.0000  p = 0.4921  y0 = -0.001  y1 = 0.001
+iter  79  obj = -0.000011  tau = 1.0000  p = 0.4921  y0 = -0.001  y1 = 0.001
+iter  80  obj = -0.000009  tau = 1.0000  p = 0.4921  y0 = -0.001  y1 = 0.001
+iter  81  obj = -0.000008  tau = 1.0000  p = 0.4921  y0 = -0.001  y1 = 0.001
+iter  82  obj = -0.000007  tau = 1.0000  p = 0.4921  y0 = -0.001  y1 = 0.001</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.4.2 (2024-10-31)
+Platform: aarch64-apple-darwin20
+Running under: macOS 26.5.2
+
+Matrix products: default
+BLAS:   /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libBLAS.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.0
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+time zone: America/Chicago
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+ [1] vctrs_0.7.2       cli_3.6.5         knitr_1.51        rlang_1.1.7      
+ [5] xfun_0.56         stringi_1.8.7     otel_0.2.0        promises_1.5.0   
+ [9] jsonlite_2.0.0    workflowr_1.7.2   glue_1.8.0        rprojroot_2.1.1  
+[13] git2r_0.36.2      htmltools_0.5.9   httpuv_1.6.16     sass_0.4.10      
+[17] rmarkdown_2.30    jquerylib_0.1.4   evaluate_1.0.5    tibble_3.3.1     
+[21] fastmap_1.2.0     yaml_2.3.12       lifecycle_1.0.5   whisker_0.4.1    
+[25] stringr_1.6.0     compiler_4.4.2    fs_1.6.6          Rcpp_1.1.1       
+[29] pkgconfig_2.0.3   rstudioapi_0.18.0 later_1.4.6       digest_0.6.39    
+[33] R6_2.6.1          pillar_1.11.1     magrittr_2.0.4    bslib_0.10.0     
+[37] tools_4.4.2       cachem_1.1.0     </code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
