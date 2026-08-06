@@ -509,15 +509,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreed6d48cd72c2312a82b191bec1b53e6dc36dad43dtargetblankd6d48cda">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree9dd476acea921c161bdafedc8d085c489698f4f2targetblank9dd476aa">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/stephens999/misc/tree/d6d48cd72c2312a82b191bec1b53e6dc36dad43d" target="_blank">d6d48cd</a>
+<a href="https://github.com/stephens999/misc/tree/9dd476acea921c161bdafedc8d085c489698f4f2" target="_blank">9dd476a</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreed6d48cd72c2312a82b191bec1b53e6dc36dad43dtargetblankd6d48cda"
+id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree9dd476acea921c161bdafedc8d085c489698f4f2targetblank9dd476aa"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -527,7 +527,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/stephens999/misc/tree/d6d48cd72c2312a82b191bec1b53e6dc36dad43d" target="_blank">d6d48cd</a>.
+<a href="https://github.com/stephens999/misc/tree/9dd476acea921c161bdafedc8d085c489698f4f2" target="_blank">9dd476a</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -789,6 +789,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/9dd476acea921c161bdafedc8d085c489698f4f2/analysis/fastica_asymmetric_03.Rmd" target="_blank">9dd476a</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-08-06
+</td>
+<td>
+workflowr::wflow_publish("fastica_asymmetric_03.Rmd")
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/7065d310f3d2ab6da6f22b1b62e16498f77cdf7d/docs/fastica_asymmetric_03.html" target="_blank">7065d31</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-08-06
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -2189,6 +2223,43 @@ cat(sprintf(&quot;Correlation with true source: %.4f\n&quot;, abs(cor(x_hat, s_t
 <pre><code>Correlation with true source: 0.9920</code></pre>
 <pre class="r"><code>hist(x_hat)</code></pre>
 <p><img src="figure/fastica_asymmetric_03.Rmd/unnamed-chunk-23-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-23-1">
+Past versions of unnamed-chunk-23-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-23-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/7065d310f3d2ab6da6f22b1b62e16498f77cdf7d/docs/figure/fastica_asymmetric_03.Rmd/unnamed-chunk-23-1.png" target="_blank">7065d31</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-08-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Running from that soluion with the g0 update behaves similarly to how
 it behaves when initializing from fastica local minimum.</p>
 <pre class="r"><code>fit = ebproj_fit(fit, max_iter = 200, verbose = TRUE, g_update = &quot;g0&quot;)</code></pre>
@@ -2225,6 +2296,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/7065d310f3d2ab6da6f22b1b62e16498f77cdf7d/docs/figure/fastica_asymmetric_03.Rmd/unnamed-chunk-24-1.png" target="_blank">7065d31</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-08-06
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/43e16d7327889e634bb1013971bb71fa053c8db3/docs/figure/fastica_asymmetric_03.Rmd/unnamed-chunk-24-1.png" target="_blank">43e16d7</a>
 </td>
 <td>
@@ -2248,7 +2330,7 @@ well because this source has intermediate value of log cosh.</p>
 <pre class="r"><code>set.seed(1)
 n = 200; p_dim = 1000; k = 10
 
-# true source: binary with p = 0.1
+# true source: binary with p = 0.2
 p_true = 0.2
 s_raw  = as.numeric(runif(n) &lt; p_true)
 s_true = (s_raw - p_true) / sqrt(p_true * (1 - p_true))   # zero-mean, unit-var
@@ -2553,6 +2635,43 @@ cat(sprintf(&quot;Correlation with true source: %.4f\n&quot;, abs(cor(x_hat, s_t
 <pre><code>Correlation with true source: 0.2065</code></pre>
 <pre class="r"><code>hist(x_hat)</code></pre>
 <p><img src="figure/fastica_asymmetric_03.Rmd/unnamed-chunk-29-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-29-1">
+Past versions of unnamed-chunk-29-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-29-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/7065d310f3d2ab6da6f22b1b62e16498f77cdf7d/docs/figure/fastica_asymmetric_03.Rmd/unnamed-chunk-29-1.png" target="_blank">7065d31</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-08-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <div id="another-start" class="section level3">
 <h3>Another start</h3>
 <p>Interestingly, with a different random start fastica converges to the
@@ -2569,6 +2688,43 @@ cat(sprintf(&quot;Correlation with true source: %.4f\n&quot;, abs(cor(x_hat, s_t
 <pre><code>Correlation with true source: 0.9933</code></pre>
 <pre class="r"><code>hist(x_hat)</code></pre>
 <p><img src="figure/fastica_asymmetric_03.Rmd/unnamed-chunk-30-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-30-1">
+Past versions of unnamed-chunk-30-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-30-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/7065d310f3d2ab6da6f22b1b62e16498f77cdf7d/docs/figure/fastica_asymmetric_03.Rmd/unnamed-chunk-30-1.png" target="_blank">7065d31</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-08-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Now I run from the fastica solution. If we do an unconstrained update
 the objective is bad but it stays near the fastica solution (so still a
 true source!). Updating g0 only finds a better objective value.</p>
@@ -2672,6 +2828,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/7065d310f3d2ab6da6f22b1b62e16498f77cdf7d/docs/figure/fastica_asymmetric_03.Rmd/unnamed-chunk-31-1.png" target="_blank">7065d31</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-08-06
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/43e16d7327889e634bb1013971bb71fa053c8db3/docs/figure/fastica_asymmetric_03.Rmd/unnamed-chunk-31-1.png" target="_blank">43e16d7</a>
 </td>
 <td>
@@ -2691,6 +2858,43 @@ cat(sprintf(&quot;Correlation with true source: %.4f\n&quot;, abs(cor(x_hat, s_t
 <pre><code>Correlation with true source: 0.9937</code></pre>
 <pre class="r"><code>hist(x_hat)</code></pre>
 <p><img src="figure/fastica_asymmetric_03.Rmd/unnamed-chunk-31-2.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-31-2">
+Past versions of unnamed-chunk-31-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-31-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/7065d310f3d2ab6da6f22b1b62e16498f77cdf7d/docs/figure/fastica_asymmetric_03.Rmd/unnamed-chunk-31-2.png" target="_blank">7065d31</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-08-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="initialization-with-tau-fixed-1" class="section level3">
 <h3>Initialization with tau fixed</h3>
@@ -2836,6 +3040,43 @@ cat(sprintf(&quot;Correlation with true source: %.4f\n&quot;, abs(cor(x_hat, s_t
 <pre><code>Correlation with true source: 0.2144</code></pre>
 <pre class="r"><code>hist(x_hat)</code></pre>
 <p><img src="figure/fastica_asymmetric_03.Rmd/unnamed-chunk-33-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-33-1">
+Past versions of unnamed-chunk-33-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-33-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/7065d310f3d2ab6da6f22b1b62e16498f77cdf7d/docs/figure/fastica_asymmetric_03.Rmd/unnamed-chunk-33-1.png" target="_blank">7065d31</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-08-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Here we try updating only g0 and fixing c too.</p>
 <pre class="r"><code>set.seed(5)
 fit = ebproj_init(U, b = 1, c = c_golden, sigma2 = c_golden)
@@ -2880,6 +3121,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/stephens999/misc/blob/7065d310f3d2ab6da6f22b1b62e16498f77cdf7d/docs/figure/fastica_asymmetric_03.Rmd/unnamed-chunk-34-1.png" target="_blank">7065d31</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-08-06
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/stephens999/misc/blob/43e16d7327889e634bb1013971bb71fa053c8db3/docs/figure/fastica_asymmetric_03.Rmd/unnamed-chunk-34-1.png" target="_blank">43e16d7</a>
 </td>
 <td>
@@ -2893,6 +3145,407 @@ Matthew Stephens
 </table>
 </div>
 </div>
+</div>
+</div>
+<div id="test-2-single-source-p0.2" class="section level1">
+<h1>Test 2: Single source p=0.2</h1>
+<div id="test-2a-repeat-test-1c" class="section level3">
+<h3>Test 2a: repeat Test 1c</h3>
+<p>I was struck by the fact that in the test above, fastICA did
+sometimes work when p=0.2. This was different from my (slightly
+different) simulation with p=0.2 in fast_ICA_asymmetric.Rmd where
+log-cosh failed from all 100 random seeds.</p>
+<p>Here I repeat Test 1c exactly as before but with 10 different seeds.
+For each seed I run fastICA 100 times from different random starting
+points and document what proportion of the time it finds a true source.
+I do the same with EBproj</p>
+<pre class="r"><code># Runs fastica from n_starts different starting points and assesses correlation with the true source s_true for each one
+run_fastica_seeds = function(U, s_true, b, n_starts = 100) {
+  cors = numeric(n_starts)
+  for (i in seq_len(n_starts)) {
+    fit = ebproj_init_fastica(U, b = b)
+    x_hat = ebproj_calc_x(fit)
+    cors[i] = abs(cor(x_hat, s_true))
+  }
+  cors
+}
+
+run_ebproj_golden_seeds = function(U, s_true, b, n_starts = 100) {
+  c_golden = 2 / (1 + sqrt(5))
+  cors = numeric(n_starts)
+  for (i in seq_len(n_starts)) {
+    fit.init = ebproj_init(U, b = b, c = c_golden, sigma2 = c_golden)
+    fit = suppressWarnings(ebproj_fit(fit.init, fix_tau = TRUE, g_update = &quot;g0&quot;))
+    x_hat = ebproj_calc_x(fit)
+    cors[i] = abs(cor(x_hat, s_true))
+  }
+  cors
+}
+
+
+run_experiment = function(p_true, n_data_seeds = 10, n_starts = 100,
+                          cor_thresh = 0.9, master_seed = 42,
+                          n = 200, p_dim = 1000, k = 10) {
+  set.seed(master_seed)
+  data_seeds = sample.int(1e6, n_data_seeds)
+  results = vector(&quot;list&quot;, n_data_seeds)
+  for (di in seq_len(n_data_seeds)) {
+    set.seed(data_seeds[di])
+    s_raw  = as.numeric(runif(n) &lt; p_true)
+    s_true = (s_raw - p_true) / sqrt(p_true * (1 - p_true))
+    a = rnorm(p_dim); a = a / sqrt(sum(a^2))
+    X = outer(a, s_true) + matrix(rnorm(p_dim * n, 0, 0.1), p_dim, n)
+    Xcenter = X - rowMeans(X)
+    U = svd(Xcenter, nu = 0, nv = k)$v
+
+    cors_ica    = suppressWarnings(run_fastica_seeds(U, s_true, b = k/2, n_starts = n_starts))
+    cors_golden = run_ebproj_golden_seeds(U, s_true, b = k/2, n_starts = n_starts)
+    results[[di]] = list(data_seed   = data_seeds[di],
+                         frac_ica    = mean(cors_ica    &gt; cor_thresh),
+                         frac_golden = mean(cors_golden &gt; cor_thresh))
+    cat(sprintf(&quot;data seed %7d: fastica %.2f  golden %.2f\n&quot;,
+                data_seeds[di], results[[di]]$frac_ica, results[[di]]$frac_golden))
+  }
+  results
+}
+
+make_table = function(results, n_starts, cor_thresh) {
+  frac_ica    = sapply(results, `[[`, &quot;frac_ica&quot;)
+  frac_golden = sapply(results, `[[`, &quot;frac_golden&quot;)
+  tab = data.frame(
+    seed         = sapply(results, `[[`, &quot;data_seed&quot;),
+    frac_fastica = round(frac_ica, 2),
+    frac_golden  = round(frac_golden, 2)
+  )
+  tab = rbind(tab, data.frame(seed = NA,
+                               frac_fastica = round(mean(frac_ica), 2),
+                               frac_golden  = round(mean(frac_golden), 2)))
+  rownames(tab) = c(paste0(&quot;seed &quot;, seq_len(nrow(tab) - 1)), &quot;mean&quot;)
+  knitr::kable(tab, col.names = c(&quot;data seed&quot;, &quot;frac found (fastICA)&quot;, &quot;frac found (golden)&quot;),
+               caption = sprintf(&quot;Fraction of starts with |cor| &gt; %.1f (%d starts each)&quot;,
+                                 cor_thresh, n_starts))
+}</code></pre>
+<pre class="r"><code>cat(&quot;=== p = 0.5 ===\n&quot;)</code></pre>
+<pre><code>=== p = 0.5 ===</code></pre>
+<pre class="r"><code>res_05 = run_experiment(p_true = 0.5)</code></pre>
+<pre><code>data seed   61413: fastica 0.75  golden 0.37
+data seed   54425: fastica 0.56  golden 0.26
+data seed  623844: fastica 0.60  golden 0.22
+data seed   74362: fastica 0.57  golden 0.28
+data seed   46208: fastica 0.77  golden 0.20
+data seed  964632: fastica 0.73  golden 0.41
+data seed  409956: fastica 0.48  golden 0.24
+data seed  585893: fastica 0.65  golden 0.14
+data seed  859668: fastica 0.49  golden 0.24
+data seed  626546: fastica 0.55  golden 0.18</code></pre>
+<pre class="r"><code>make_table(res_05, n_starts = 100, cor_thresh = 0.9)</code></pre>
+<table>
+<caption>Fraction of starts with |cor| &gt; 0.9 (100 starts
+each)</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">data seed</th>
+<th align="right">frac found (fastICA)</th>
+<th align="right">frac found (golden)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">seed 1</td>
+<td align="right">61413</td>
+<td align="right">0.75</td>
+<td align="right">0.37</td>
+</tr>
+<tr class="even">
+<td align="left">seed 2</td>
+<td align="right">54425</td>
+<td align="right">0.56</td>
+<td align="right">0.26</td>
+</tr>
+<tr class="odd">
+<td align="left">seed 3</td>
+<td align="right">623844</td>
+<td align="right">0.60</td>
+<td align="right">0.22</td>
+</tr>
+<tr class="even">
+<td align="left">seed 4</td>
+<td align="right">74362</td>
+<td align="right">0.57</td>
+<td align="right">0.28</td>
+</tr>
+<tr class="odd">
+<td align="left">seed 5</td>
+<td align="right">46208</td>
+<td align="right">0.77</td>
+<td align="right">0.20</td>
+</tr>
+<tr class="even">
+<td align="left">seed 6</td>
+<td align="right">964632</td>
+<td align="right">0.73</td>
+<td align="right">0.41</td>
+</tr>
+<tr class="odd">
+<td align="left">seed 7</td>
+<td align="right">409956</td>
+<td align="right">0.48</td>
+<td align="right">0.24</td>
+</tr>
+<tr class="even">
+<td align="left">seed 8</td>
+<td align="right">585893</td>
+<td align="right">0.65</td>
+<td align="right">0.14</td>
+</tr>
+<tr class="odd">
+<td align="left">seed 9</td>
+<td align="right">859668</td>
+<td align="right">0.49</td>
+<td align="right">0.24</td>
+</tr>
+<tr class="even">
+<td align="left">seed 10</td>
+<td align="right">626546</td>
+<td align="right">0.55</td>
+<td align="right">0.18</td>
+</tr>
+<tr class="odd">
+<td align="left">mean</td>
+<td align="right">NA</td>
+<td align="right">0.62</td>
+<td align="right">0.25</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>cat(&quot;=== p = 0.2 ===\n&quot;)</code></pre>
+<pre><code>=== p = 0.2 ===</code></pre>
+<pre class="r"><code>res_02 = run_experiment(p_true = 0.2)</code></pre>
+<pre><code>data seed   61413: fastica 0.00  golden 0.85
+data seed   54425: fastica 0.00  golden 0.64
+data seed  623844: fastica 0.01  golden 0.84
+data seed   74362: fastica 0.00  golden 0.97
+data seed   46208: fastica 0.00  golden 0.69
+data seed  964632: fastica 0.50  golden 0.74
+data seed  409956: fastica 0.00  golden 0.57
+data seed  585893: fastica 0.33  golden 0.74
+data seed  859668: fastica 0.00  golden 0.60
+data seed  626546: fastica 0.00  golden 0.67</code></pre>
+<pre class="r"><code>make_table(res_02, n_starts = 100, cor_thresh = 0.9)</code></pre>
+<table>
+<caption>Fraction of starts with |cor| &gt; 0.9 (100 starts
+each)</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">data seed</th>
+<th align="right">frac found (fastICA)</th>
+<th align="right">frac found (golden)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">seed 1</td>
+<td align="right">61413</td>
+<td align="right">0.00</td>
+<td align="right">0.85</td>
+</tr>
+<tr class="even">
+<td align="left">seed 2</td>
+<td align="right">54425</td>
+<td align="right">0.00</td>
+<td align="right">0.64</td>
+</tr>
+<tr class="odd">
+<td align="left">seed 3</td>
+<td align="right">623844</td>
+<td align="right">0.01</td>
+<td align="right">0.84</td>
+</tr>
+<tr class="even">
+<td align="left">seed 4</td>
+<td align="right">74362</td>
+<td align="right">0.00</td>
+<td align="right">0.97</td>
+</tr>
+<tr class="odd">
+<td align="left">seed 5</td>
+<td align="right">46208</td>
+<td align="right">0.00</td>
+<td align="right">0.69</td>
+</tr>
+<tr class="even">
+<td align="left">seed 6</td>
+<td align="right">964632</td>
+<td align="right">0.50</td>
+<td align="right">0.74</td>
+</tr>
+<tr class="odd">
+<td align="left">seed 7</td>
+<td align="right">409956</td>
+<td align="right">0.00</td>
+<td align="right">0.57</td>
+</tr>
+<tr class="even">
+<td align="left">seed 8</td>
+<td align="right">585893</td>
+<td align="right">0.33</td>
+<td align="right">0.74</td>
+</tr>
+<tr class="odd">
+<td align="left">seed 9</td>
+<td align="right">859668</td>
+<td align="right">0.00</td>
+<td align="right">0.60</td>
+</tr>
+<tr class="even">
+<td align="left">seed 10</td>
+<td align="right">626546</td>
+<td align="right">0.00</td>
+<td align="right">0.67</td>
+</tr>
+<tr class="odd">
+<td align="left">mean</td>
+<td align="right">NA</td>
+<td align="right">0.08</td>
+<td align="right">0.73</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>cat(&quot;=== p = 0.1 ===\n&quot;)</code></pre>
+<pre><code>=== p = 0.1 ===</code></pre>
+<pre class="r"><code>res_01 = run_experiment(p_true = 0.1)</code></pre>
+<pre><code>data seed   61413: fastica 0.81  golden 0.87
+data seed   54425: fastica 0.71  golden 0.86
+data seed  623844: fastica 0.32  golden 0.76
+data seed   74362: fastica 0.97  golden 0.99
+data seed   46208: fastica 0.80  golden 0.76
+data seed  964632: fastica 0.93  golden 0.87
+data seed  409956: fastica 0.82  golden 0.76
+data seed  585893: fastica 0.73  golden 0.91
+data seed  859668: fastica 0.76  golden 0.80
+data seed  626546: fastica 0.84  golden 0.82</code></pre>
+<pre class="r"><code>make_table(res_01, n_starts = 100, cor_thresh = 0.9)</code></pre>
+<table>
+<caption>Fraction of starts with |cor| &gt; 0.9 (100 starts
+each)</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">data seed</th>
+<th align="right">frac found (fastICA)</th>
+<th align="right">frac found (golden)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">seed 1</td>
+<td align="right">61413</td>
+<td align="right">0.81</td>
+<td align="right">0.87</td>
+</tr>
+<tr class="even">
+<td align="left">seed 2</td>
+<td align="right">54425</td>
+<td align="right">0.71</td>
+<td align="right">0.86</td>
+</tr>
+<tr class="odd">
+<td align="left">seed 3</td>
+<td align="right">623844</td>
+<td align="right">0.32</td>
+<td align="right">0.76</td>
+</tr>
+<tr class="even">
+<td align="left">seed 4</td>
+<td align="right">74362</td>
+<td align="right">0.97</td>
+<td align="right">0.99</td>
+</tr>
+<tr class="odd">
+<td align="left">seed 5</td>
+<td align="right">46208</td>
+<td align="right">0.80</td>
+<td align="right">0.76</td>
+</tr>
+<tr class="even">
+<td align="left">seed 6</td>
+<td align="right">964632</td>
+<td align="right">0.93</td>
+<td align="right">0.87</td>
+</tr>
+<tr class="odd">
+<td align="left">seed 7</td>
+<td align="right">409956</td>
+<td align="right">0.82</td>
+<td align="right">0.76</td>
+</tr>
+<tr class="even">
+<td align="left">seed 8</td>
+<td align="right">585893</td>
+<td align="right">0.73</td>
+<td align="right">0.91</td>
+</tr>
+<tr class="odd">
+<td align="left">seed 9</td>
+<td align="right">859668</td>
+<td align="right">0.76</td>
+<td align="right">0.80</td>
+</tr>
+<tr class="even">
+<td align="left">seed 10</td>
+<td align="right">626546</td>
+<td align="right">0.84</td>
+<td align="right">0.82</td>
+</tr>
+<tr class="odd">
+<td align="left">mean</td>
+<td align="right">NA</td>
+<td align="right">0.77</td>
+<td align="right">0.84</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="set-k20" class="section level3">
+<h3>Set k=20</h3>
+<p>With a larger number of (noise) dimensions and p=0.5 the performance
+of both methods drops, and the advantage of fastICA maybe bigger. For
+p=0.2 the opposite holds. For p=0.1 both methods remain good.</p>
+<pre class="r"><code>res_05_k20 = run_experiment(p_true=0.5, k=20)</code></pre>
+<pre><code>data seed   61413: fastica 0.17  golden 0.05
+data seed   54425: fastica 0.07  golden 0.02
+data seed  623844: fastica 0.10  golden 0.03
+data seed   74362: fastica 0.08  golden 0.00
+data seed   46208: fastica 0.11  golden 0.01
+data seed  964632: fastica 0.19  golden 0.07
+data seed  409956: fastica 0.16  golden 0.02
+data seed  585893: fastica 0.06  golden 0.02
+data seed  859668: fastica 0.07  golden 0.02
+data seed  626546: fastica 0.10  golden 0.03</code></pre>
+<pre class="r"><code>res_02_k20 = run_experiment(p_true=0.2, k=20)</code></pre>
+<pre><code>data seed   61413: fastica 0.00  golden 0.51
+data seed   54425: fastica 0.00  golden 0.36
+data seed  623844: fastica 0.00  golden 0.11
+data seed   74362: fastica 0.00  golden 0.53
+data seed   46208: fastica 0.00  golden 0.28
+data seed  964632: fastica 0.00  golden 0.40
+data seed  409956: fastica 0.00  golden 0.44
+data seed  585893: fastica 0.00  golden 0.51
+data seed  859668: fastica 0.00  golden 0.41
+data seed  626546: fastica 0.00  golden 0.37</code></pre>
+<pre class="r"><code>res_01_k20 = run_experiment(p_true=0.1, k=20)</code></pre>
+<pre><code>data seed   61413: fastica 0.53  golden 0.72
+data seed   54425: fastica 0.67  golden 0.68
+data seed  623844: fastica 0.00  golden 0.48
+data seed   74362: fastica 0.65  golden 0.74
+data seed   46208: fastica 0.35  golden 0.43
+data seed  964632: fastica 0.49  golden 0.59
+data seed  409956: fastica 0.67  golden 0.87
+data seed  585893: fastica 0.65  golden 0.77
+data seed  859668: fastica 0.81  golden 0.66
+data seed  626546: fastica 0.68  golden 0.73</code></pre>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
