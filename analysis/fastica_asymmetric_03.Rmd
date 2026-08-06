@@ -620,7 +620,7 @@ Generate data from a single asymmetric binary source with $p = 0.2$. Here fastIC
 set.seed(1)
 n = 200; p_dim = 1000; k = 10
 
-# true source: binary with p = 0.1
+# true source: binary with p = 0.2
 p_true = 0.2
 s_raw  = as.numeric(runif(n) < p_true)
 s_true = (s_raw - p_true) / sqrt(p_true * (1 - p_true))   # zero-mean, unit-var
@@ -742,6 +742,116 @@ fit = ebproj_fit(fit, max_iter = 200, fix_tau=TRUE, g_update="g0", verbose = TRU
 x_hat = ebproj_calc_x(fit)
 cat(sprintf("Correlation with true source: %.4f\n", abs(cor(x_hat, s_true))))
 hist(x_hat)
+```
+
+
+
+# Test 2: Single source p=0.2
+
+### Test 2a: repeat Test 1c 
+
+I was struck by the fact that in the test above, fastICA did sometimes work when p=0.2.
+This was different from my (slightly different) simulation with p=0.2 in
+fast_ICA_asymmetric.Rmd where log-cosh failed from all 100 random seeds.
+
+Here I repeat Test 1c exactly as before but with 10 different seeds.
+For each seed I run fastICA 100 times from different random starting points and document what proportion of the time it finds a true source. I do the same with EBproj
+
+```{r}
+# Runs fastica from n_starts different starting points and assesses correlation with the true source s_true for each one
+run_fastica_seeds = function(U, s_true, b, n_starts = 100) {
+  cors = numeric(n_starts)
+  for (i in seq_len(n_starts)) {
+    fit = ebproj_init_fastica(U, b = b)
+    x_hat = ebproj_calc_x(fit)
+    cors[i] = abs(cor(x_hat, s_true))
+  }
+  cors
+}
+
+run_ebproj_golden_seeds = function(U, s_true, b, n_starts = 100) {
+  c_golden = 2 / (1 + sqrt(5))
+  cors = numeric(n_starts)
+  for (i in seq_len(n_starts)) {
+    fit.init = ebproj_init(U, b = b, c = c_golden, sigma2 = c_golden)
+    fit = suppressWarnings(ebproj_fit(fit.init, fix_tau = TRUE, g_update = "g0"))
+    x_hat = ebproj_calc_x(fit)
+    cors[i] = abs(cor(x_hat, s_true))
+  }
+  cors
+}
+
+
+run_experiment = function(p_true, n_data_seeds = 10, n_starts = 100,
+                          cor_thresh = 0.9, master_seed = 42,
+                          n = 200, p_dim = 1000, k = 10) {
+  set.seed(master_seed)
+  data_seeds = sample.int(1e6, n_data_seeds)
+  results = vector("list", n_data_seeds)
+  for (di in seq_len(n_data_seeds)) {
+    set.seed(data_seeds[di])
+    s_raw  = as.numeric(runif(n) < p_true)
+    s_true = (s_raw - p_true) / sqrt(p_true * (1 - p_true))
+    a = rnorm(p_dim); a = a / sqrt(sum(a^2))
+    X = outer(a, s_true) + matrix(rnorm(p_dim * n, 0, 0.1), p_dim, n)
+    Xcenter = X - rowMeans(X)
+    U = svd(Xcenter, nu = 0, nv = k)$v
+
+    cors_ica    = suppressWarnings(run_fastica_seeds(U, s_true, b = k/2, n_starts = n_starts))
+    cors_golden = run_ebproj_golden_seeds(U, s_true, b = k/2, n_starts = n_starts)
+    results[[di]] = list(data_seed   = data_seeds[di],
+                         frac_ica    = mean(cors_ica    > cor_thresh),
+                         frac_golden = mean(cors_golden > cor_thresh))
+    cat(sprintf("data seed %7d: fastica %.2f  golden %.2f\n",
+                data_seeds[di], results[[di]]$frac_ica, results[[di]]$frac_golden))
+  }
+  results
+}
+
+make_table = function(results, n_starts, cor_thresh) {
+  frac_ica    = sapply(results, `[[`, "frac_ica")
+  frac_golden = sapply(results, `[[`, "frac_golden")
+  tab = data.frame(
+    seed         = sapply(results, `[[`, "data_seed"),
+    frac_fastica = round(frac_ica, 2),
+    frac_golden  = round(frac_golden, 2)
+  )
+  tab = rbind(tab, data.frame(seed = NA,
+                               frac_fastica = round(mean(frac_ica), 2),
+                               frac_golden  = round(mean(frac_golden), 2)))
+  rownames(tab) = c(paste0("seed ", seq_len(nrow(tab) - 1)), "mean")
+  knitr::kable(tab, col.names = c("data seed", "frac found (fastICA)", "frac found (golden)"),
+               caption = sprintf("Fraction of starts with |cor| > %.1f (%d starts each)",
+                                 cor_thresh, n_starts))
+}
+```
+
+```{r}
+cat("=== p = 0.5 ===\n")
+res_05 = run_experiment(p_true = 0.5)
+make_table(res_05, n_starts = 100, cor_thresh = 0.9)
+```
+
+```{r}
+cat("=== p = 0.2 ===\n")
+res_02 = run_experiment(p_true = 0.2)
+make_table(res_02, n_starts = 100, cor_thresh = 0.9)
+```
+
+```{r}
+cat("=== p = 0.1 ===\n")
+res_01 = run_experiment(p_true = 0.1)
+make_table(res_01, n_starts = 100, cor_thresh = 0.9)
+```
+
+
+### Set k=20
+
+With a larger number of (noise) dimensions and p=0.5 the performance of both methods drops, and the advantage of fastICA maybe bigger. For p=0.2 the opposite holds. For p=0.1 both methods remain good.
+```{r}
+res_05_k20 = run_experiment(p_true=0.5, k=20)
+res_02_k20 = run_experiment(p_true=0.2, k=20)
+res_01_k20 = run_experiment(p_true=0.1, k=20)
 ```
 
 
