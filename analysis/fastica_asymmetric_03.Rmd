@@ -124,9 +124,9 @@ ebproj_init_fastica = function(U, b=0){
 #  fit = ebproj_init(U, b)              # default tau=1, so sigma2 = n/nu
 #  fit$c = fit$sigma2                   # set c = sigma2 = n/nu
   
-  fit = ebproj_init(U, b, sigma2=1)              # default tau=1, so sigma2 = n/nu
+  fit = ebproj_init(U, b, c=1, sigma2=1)              # default tau=1, so sigma2 = n/nu
   fit$c = fit$sigma2                   # set c = sigma2 = n/nu
-  fit = ebproj_fit(fit, g_update = "none", fix_tau = TRUE, verbose=TRUE)
+  fit = ebproj_fit(fit, g_update = "none", fix_tau = TRUE)
   x = ebproj_calc_x(fit)
   
   fit = ebproj_init(U,b,w=fit$w,c=mean(x*tanh(x)), sigma2=mean(x*tanh(x)))
@@ -202,16 +202,18 @@ Three update functions are provided, selected via the `g_update` argument of `eb
 
 | `g_update` | function called | what is updated |
 |------------|-----------------|-----------------|
-| `"g"`      | `ebproj_update_g`  | full EM: $(p, y_0, y_1)$, reset $c = 1$ |
+| `"g"`      | `ebproj_update_g`  | full EM: $(p, y_0, y_1)$, rescale $g_0$ unit variance |
 | `"c"`      | `ebproj_update_c`  | scale $c$ only; $g_0 = (p, y_0, y_1)$ fixed |
 | `"g0"`     | `ebproj_update_g0` | constrained $g_0$: optimise $p$ with $y_0, y_1$ set by mean-0, var-1 constraint; $c$ fixed |
 | `"none"`   | —               | freeze $g$ entirely |
 
-**`ebproj_update_g`** (full EM): updates $p$, $y_0$, $y_1$ jointly via their EM closed forms, then resets $c = 1$ (absorbing the scale into the atoms).
+**`ebproj_update_g`** (full EM): updates $p$, $y_0$, $y_1$ jointly via their EM closed forms, then rescales so that $\text{Var}(g_0) = 1$, storing the scale in $c$.
 
 **`ebproj_update_c`**: fixes $g_0 = (p, y_0, y_1)$ and finds $c$ by exact 1-D maximisation of $J(w, cg_0)$ over $c > 0$ on the log scale.
 
 **`ebproj_update_g0`**: fixes $c$ and optimises $p \in (0,1)$ subject to the mean-0, unit-variance constraint, via 1-D numerical maximisation.  After updating $p$ the atoms are recomputed as $y_1 = \sqrt{(1-p)/p}$, $y_0 = -\sqrt{p/(1-p)}$.
+
+Note that only the last of these constrains $g_0$ to have zero mean, so that update is a bit inconsistent with the others. For example, if you estimate $g$ freely, and then perfom `ebproj_update_g0` the solution will likely change to satisfy the constraint.
 
 ### Update functions
 
@@ -258,19 +260,24 @@ ebproj_update_w = function(fit, hessian = "ica", eps = 1e-6) {
   return(fit)
 }
 
-# Full EM update for binary prior: update (p, y_0, y_1), reset c = 1.
-# Since (c, y_0, y_1, p) ~ (1, c*y_0, c*y_1, p) the parameterisation is
-# over-complete; we absorb c into y_0, y_1 after each full update.
+# Full EM update for binary prior: update (p, y_0, y_1), then rescale so that
+# Var(g0) = 1, absorbing the scale into c.
 ebproj_update_g = function(fit) {
   ey0 = fit$c * fit$y_0;  ey1 = fit$c * fit$y_1
   x   = ebproj_calc_x(fit)
   pi1 = post_prob1(x, ey0, ey1, fit$p, fit$sigma2)
   pi0 = 1 - pi1
 
-  fit$p   = mean(pi1)
-  fit$y_0 = sum(pi0 * x) / sum(pi0)   # effective atom absorbed into y_0
-  fit$y_1 = sum(pi1 * x) / sum(pi1)   # effective atom absorbed into y_1
-  fit$c   = 1                          # reset after absorbing scale
+  fit$p  = mean(pi1)
+  y0_new = sum(pi0 * x) / sum(pi0)
+  y1_new = sum(pi1 * x) / sum(pi1)
+
+  # rescale so Var(g0) = 1; c carries the scale
+  var_g  = (1 - fit$p) * y0_new^2 + fit$p * y1_new^2 -
+           ((1 - fit$p) * y0_new + fit$p * y1_new)^2
+  fit$c   = sqrt(var_g)
+  fit$y_0 = y0_new / fit$c
+  fit$y_1 = y1_new / fit$c
   return(fit)
 }
 
@@ -336,6 +343,8 @@ ebproj_update_tau = function(fit) {
 ebproj_fit = function(fit, hessian = "ica",
                       fix_w = FALSE, g_update = "g", fix_tau = FALSE,
                       max_iter = 200, tol = 1e-6, verbose = FALSE) {
+  if (!fix_tau && fix_w)
+    warning("updating tau without updating w: the objective may not increase")
   fit$objective = ebproj_objective(fit)
 
   for (iter in seq_len(max_iter)) {
@@ -354,7 +363,7 @@ ebproj_fit = function(fit, hessian = "ica",
     obj_new = ebproj_objective(fit)
 
     if (verbose)
-      cat(sprintf("iter %3d  obj = %.6f  tau = %.4f  p = %.4f  c = %.2f y0 = %.3f  y1 = %.3f\n",
+      cat(sprintf("iter %3d  obj = %.6f  tau = %.2f  p = %.3f  c = %.4f y0 = %.2f  y1 = %.2f\n",
                   iter, obj_new, fit$tau, fit$p, fit$c, fit$y_0, fit$y_1))
 
     if (!is.null(fit$objective) && abs(obj_new - fit$objective) < tol) {
@@ -364,6 +373,9 @@ ebproj_fit = function(fit, hessian = "ica",
     fit$objective = obj_new
   }
   fit$iter = iter
+  if(iter==max_iter){
+    warning("Warning: iterations reached max_iter iterations")
+  }
   return(fit)
 }
 ```
@@ -530,7 +542,7 @@ cat(sprintf("Correlation with true source: %.4f\n", abs(cor(x_hat, s_true))))
 ```
 
 
-Now I run from the fastica solution. It kind of converges (slowly) to the null solution (prior y0,y1 moving to 0). Even though the correlation with the true source remains high,
+Now I run from the fastica solution. It kind of converges (slowly) to the null solution (c moving to 0). Even though the correlation with the true source remains high,
 it is not really finding a good solution in my opinion; what I actually wanted it to do was to realize that the prior should be a 0.1,0.9 binary mixture and move there. I think the objective should be much higher at that point. 
 ```{r}
 fit = ebproj_fit(fit, max_iter = 200, verbose = TRUE)
@@ -546,6 +558,7 @@ hist(x_hat)
 
 It turns out this is solved elegantly by using a different update of $g$ which constrains g0 to be mean 0 and unit variance, and so there is a single parameter $p$ that controls $y0,y1,p$. This helps because in order to move the prior support (y0,y1) toward the xhat values, it has no option but to change p, which is exactly the right thing to do. 
 ```{r}
+fit$c = 1
 fit = ebproj_fit(fit, max_iter = 200, verbose=TRUE, g_update="g0")
 ```
 
@@ -578,21 +591,26 @@ hist(x_hat)
 
 ### Initialization with tau fixed
 
-Try with tau fixed: it converges to a null-like solution:
+Try with tau fixed (ie sigma2 fixed) with sigma2 set to $c_golden$ (the inverse of the golden ratio, which obeys $c_\text{golden}^2 + c_\text{golden} = 1$). It finds a true source but it does so in a weird way, with objective worse than null, almost like it is finding a local minimum again.
 ```{r}
-set.seed(2)
-fit = ebproj_init(U, b = 1, tau = 1)
+set.seed(1)
+c_golden = 2/(1+sqrt(5))
+fit = ebproj_init(U, b = k/2, c = c_golden, sigma2 = c_golden)
 fit = ebproj_fit(fit, max_iter = 200, fix_tau=TRUE, verbose = TRUE)
-```
-
-Here we try updating only g0. My idea was that this stops g0 going to the null. It fixes the signal to noise ratio, which is essentially what makes fastICA converge nicely I think. However, it has the problem that it goes to null a different way by putting p near 0 or 1. It feels like we need to at least start the solution by fastICA? Maybe we need to look at an example where fastICA fails (p=0.2) to develop the right strategy...
-```{r}
-set.seed(2)
-fit = ebproj_init(U, b = 1, tau = 1)
-fit = ebproj_fit(fit, max_iter = 200, fix_tau=TRUE, g_update = "g0", verbose = TRUE)
 x_hat = ebproj_calc_x(fit)
+cat(sprintf("Correlation with true source: %.4f\n", abs(cor(x_hat, s_true))))
 hist(x_hat)
 ```
+
+Running from that soluion with the g0 update behaves similarly to how it behaves when initializing from fastica local minimum.
+```{r}
+fit = ebproj_fit(fit, max_iter = 200, verbose = TRUE, g_update = "g0")
+x_hat = ebproj_calc_x(fit)
+cat(sprintf("Correlation with true source: %.4f\n", abs(cor(x_hat, s_true))))
+hist(x_hat)
+```
+
+
 
 
 ## Simple test 1c (p=0.2)
@@ -621,22 +639,22 @@ sv = svd(Xcenter, nu = 0, nv = k)
 U  = sv$v              # n x k
 ```
 
-Now fit the model. I initialize using fastica. This time the initial fastica run does not actually converge in 200 interation so the update does change things slightly. It does not find a true source.
+Now fit the model. I initialize using fastica. This time the initial fastica run does not actually converge in 200 interation so the update does change things slightly. Here fastica does not find a true source.
 ```{r}
 set.seed(3)
-fit = ebproj_init_fastica(U, b = k/2)
-fit = ebproj_fit(fit, max_iter = 200, g_update = "none", fix_tau = TRUE, verbose = TRUE)
-fit = ebproj_fit(fit, max_iter = 200, g_update = "c", fix_tau = TRUE, verbose = TRUE)
+fit.ica = ebproj_init_fastica(U, b = k/2)
+fit.ica = ebproj_fit(fit.ica, max_iter = 200, g_update = "none", fix_tau = TRUE, verbose = TRUE)
+fit.ica = ebproj_fit(fit.ica, max_iter = 200, g_update = "c", fix_tau = TRUE, verbose = TRUE)
 # check recovery: x = UDw gives the n-vector of projections
-x_hat = ebproj_calc_x(fit)
+x_hat = ebproj_calc_x(fit.ica)
 cat(sprintf("Correlation with true source: %.4f\n", abs(cor(x_hat, s_true))))
 hist(x_hat)
 ```
 
 
-Now I run from the fastica solution (or actually the solution obtained by first running ica for 200 iterations and then updating c, as above). As before it kind of converges (slowly) to the null solution (prior y0,y1 moving to 0). However it actually finds a true source. That is, even though y0,y1 are moving toward 0, the source being found is a true source! I don't really understand what is happening here.
+Now I run from the fastica solution. It converges to something worse than the null, and does not find a true source.
 ```{r}
-fit = ebproj_fit(fit, max_iter = 200, verbose = TRUE)
+fit = ebproj_fit(fit.ica, max_iter = 200, verbose = TRUE)
 cat(sprintf("Converged in %d iterations\n", fit$iter))
 cat(sprintf("Estimated p = %.3f (true = %.3f)\n", fit$p, p_true))
 cat(sprintf("y_0 = %.3f, y_1 = %.3f\n", fit$y_0, fit$y_1))
@@ -647,26 +665,13 @@ cat(sprintf("Correlation with true source: %.4f\n", abs(cor(x_hat, s_true))))
 hist(x_hat)
 ```
 
-Interestingly, even though the above was doing a full update of g, now updating g0 alone changes the solution to a much higher objective (keeps true source). It is like the EM update used above was somehow finding a saddle point of g but the g0 update makes it explore a direction of increase?
+Now I run from the fastica solution but updating only g0. It is better than the null but not a true source.
 ```{r}
-fit = ebproj_fit(fit, max_iter = 200, verbose=TRUE, g_update="g0")
-```
+fit = ebproj_fit(fit.ica, max_iter = 200, g_update="g0",verbose = TRUE)
+cat(sprintf("Converged in %d iterations\n", fit$iter))
+cat(sprintf("Estimated p = %.3f (true = %.3f)\n", fit$p, p_true))
+cat(sprintf("y_0 = %.3f, y_1 = %.3f\n", fit$y_0, fit$y_1))
 
-Then we can switch to the general update if we want to refine even further:
-```{r}
-fit = ebproj_fit(fit, max_iter = 200, verbose=TRUE)
-```
-
-
-### Another start
-
-Something weird is happening here: the intial fastica run seems to converge but
-then updating further with fixed tau and fixed g seems to continue to update. This is not what I expected. I need to investigate further.
-```{r}
-set.seed(2)
-fit = ebproj_init_fastica(U, b = k/2)
-fit = ebproj_fit(fit, max_iter = 200, g_update = "none", fix_tau = TRUE, verbose = TRUE)
-fit = ebproj_fit(fit, max_iter = 200, g_update = "c", fix_tau = TRUE, verbose = TRUE)
 # check recovery: x = UDw gives the n-vector of projections
 x_hat = ebproj_calc_x(fit)
 cat(sprintf("Correlation with true source: %.4f\n", abs(cor(x_hat, s_true))))
@@ -674,40 +679,68 @@ hist(x_hat)
 ```
 
 
-Try a random start, and plot objective over iterations. Interestingly we see the non-monotonic behavior here, and it does not converge to the true source. 
+### Another start
+
+Interestingly, with a different random start fastica converges to the right solution (as a local minima).
 ```{r}
 set.seed(2)
-fit_verbose = ebproj_init(U, b = 1)
-objs = numeric(50)
-for (iter in 1:50) {
-  fit_verbose = ebproj_update_tau(fit_verbose)
-  fit_verbose = ebproj_update_g(fit_verbose)
-  fit_verbose = ebproj_update_w(fit_verbose)
-  objs[iter]  = ebproj_objective(fit_verbose)
-}
-plot(objs, type = "l", xlab = "iteration", ylab = "objective",
-     main = "EBProj objective over iterations")
-x_hat = ebproj_calc_x(fit_verbose)
+fit.ica = ebproj_init_fastica(U, b = k/2)
+fit.ica = ebproj_fit(fit.ica, max_iter = 200, g_update = "none", fix_tau = TRUE, verbose = TRUE)
+fit.ica = ebproj_fit(fit.ica, max_iter = 200, g_update = "c", fix_tau = TRUE, verbose = TRUE)
+# check recovery: x = UDw gives the n-vector of projections
+x_hat = ebproj_calc_x(fit.ica)
+cat(sprintf("Correlation with true source: %.4f\n", abs(cor(x_hat, s_true))))
+hist(x_hat)
+```
+
+Now I run from the fastica solution. If we do an unconstrained update the objective is bad but it stays near the fastica solution (so still a true source!). Updating g0 only finds a better objective value.
+```{r}
+fit.g = ebproj_fit(fit.ica, verbose = TRUE)
+fit.g0 = ebproj_fit(fit.ica, g_update = "g0", verbose=TRUE)
+
+# check recovery: x = UDw gives the n-vector of projections
+x_hat = ebproj_calc_x(fit.g)
+cat(sprintf("Correlation with true source: %.4f\n", abs(cor(x_hat, s_true))))
+hist(x_hat)
+
+# check recovery: x = UDw gives the n-vector of projections
+x_hat = ebproj_calc_x(fit.g0)
 cat(sprintf("Correlation with true source: %.4f\n", abs(cor(x_hat, s_true))))
 hist(x_hat)
 ```
 
 
+
 ### Initialization with tau fixed
 
-Try with tau fixed: it converges to a null-like solution:
+Try with tau fixed (ie sigma2 fixed) with sigma2 set to $c_golden$ (the inverse of the golden ratio, which obeys $c_\text{golden}^2 + c_\text{golden} = 1$). (I tried seeds 1-5. 1, 4 and 5 find the true source but 2-3 do not.)
 ```{r}
-set.seed(2)
-fit = ebproj_init(U, b = 1, tau = 1)
+set.seed(1)
+c_golden = 2/(1+sqrt(5))
+fit = ebproj_init(U, b = 1, c = c_golden, sigma2 = c_golden)
 fit = ebproj_fit(fit, max_iter = 200, fix_tau=TRUE, verbose = TRUE)
+x_hat = ebproj_calc_x(fit)
+cat(sprintf("Correlation with true source: %.4f\n", abs(cor(x_hat, s_true))))
 ```
 
-Here we try updating only g0. My idea was that this stops g0 going to the null. It fixes the signal to noise ratio, which is essentially what makes fastICA converge nicely I think. However, it has the problem that it goes to null a different way by putting p near 0 or 1. It feels like we need to at least start the solution by fastICA? Maybe we need to look at an example where fastICA fails (p=0.2) to develop the right strategy...
+
 ```{r}
 set.seed(2)
-fit = ebproj_init(U, b = 1, tau = 1)
-fit = ebproj_fit(fit, max_iter = 200, fix_tau=TRUE, g_update = "g0", verbose = TRUE)
+c_golden = 2/(1+sqrt(5))
+fit = ebproj_init(U, b = 1, c = c_golden, sigma2 = c_golden)
+fit = ebproj_fit(fit, max_iter = 200, fix_tau=TRUE, verbose = TRUE)
 x_hat = ebproj_calc_x(fit)
+cat(sprintf("Correlation with true source: %.4f\n", abs(cor(x_hat, s_true))))
+hist(x_hat)
+```
+
+Here we try updating only g0 and fixing c too.  
+```{r}
+set.seed(5)
+fit = ebproj_init(U, b = 1, c = c_golden, sigma2 = c_golden)
+fit = ebproj_fit(fit, max_iter = 200, fix_tau=TRUE, g_update="g0", verbose = TRUE)
+x_hat = ebproj_calc_x(fit)
+cat(sprintf("Correlation with true source: %.4f\n", abs(cor(x_hat, s_true))))
 hist(x_hat)
 ```
 
