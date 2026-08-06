@@ -80,18 +80,32 @@ post_mean_deriv_binary = function(x, y_0, y_1, p, sigma2) {
 Define a fit object (simply a list) that contains the data $U$, and the parameters to be updated (prior $g$, weights $w$). Subsequent update functions will take a fit as input and output a new fit.
 
 ```{r}
-ebproj_init = function(U, b=0, tau=1) {
+ebproj_init = function(U, b=0, c = 1, tau=NULL, sigma2=NULL, w=NULL) {
+  n   = nrow(U)
   k   = ncol(U)
-  n = nrow(U)
-  d = rep(n, k) # So that S=UDU'= nUU' = nP
-  w   = rnorm(k)
-  w   = w / sqrt(sum(d * w^2))   # normalise to w'Dw = 1
+  nu  = n - k - 2*b
+  if (!is.null(tau) && !is.null(sigma2))
+    stop("specify at most one of tau and sigma2")
+  if (is.null(tau) && is.null(sigma2)) tau = 1
+  if (is.null(sigma2)) sigma2 = n / (nu * tau)
+  if (is.null(tau))    tau    = n / (nu * sigma2)
+  d   = rep(n, k)   # S = UDU' = nUU' = nP
+  
+  if(is.null(w)){
+    w   = rnorm(k)
+    w   = w / sqrt(sum(d * w^2))   # normalise to w'Dw = 1
+  }
+  
   fit = list(
     U         = U,
     d         = d,
     b         = b,
+    n         = n,
+    k         = k,
+    nu        = nu,
+    sigma2    = sigma2,
     w         = w,
-    c         = 1,     # scale factor; effective atoms are c*y_0, c*y_1
+    c         = c,     # scale factor; effective atoms are c*y_0, c*y_1
     y_0       = -1,
     y_1       = 1,
     p         = 0.5,
@@ -103,20 +117,22 @@ ebproj_init = function(U, b=0, tau=1) {
 ```
 
 
-This function initializes using a fastica strategy. It runs fastica to get $w$ (by setting $\sigma^2=c$) and then initializes $c$ to `mean(x tanh(x))` where $x=UDw$ are the pseudo-data (pre-shrunken source values). 
+This function initializes using a fastica strategy. It runs fastica to get $w$ (by setting $\sigma^2=c$) and then initializes $c$ to `mean(x tanh(x))` where $x=UDw$ are the pseudo-data (pre-shrunken source values).
 ```{r}
-#initializes by first running fastICA (with c=sigma^2) to get w, and then 
-ebproj_init_fastica = function(U,b=0){
-  fit = ebproj_init(U,b)
-  n      = nrow(fit$U)
-  k      = ncol(fit$U)
-  nu     = n - k - 2*fit$b
-  sigma2 = n / (nu * fit$tau)
-  fit$c = sigma2
-  fit = ebproj_fit(fit,fix_g=TRUE, fix_tau= TRUE)
+#initializes by first running fastICA (with c=sigma^2) to get w, and then
+ebproj_init_fastica = function(U, b=0){
+#  fit = ebproj_init(U, b)              # default tau=1, so sigma2 = n/nu
+#  fit$c = fit$sigma2                   # set c = sigma2 = n/nu
+  
+  fit = ebproj_init(U, b, sigma2=1)              # default tau=1, so sigma2 = n/nu
+  fit$c = fit$sigma2                   # set c = sigma2 = n/nu
+  fit = ebproj_fit(fit, g_update = "none", fix_tau = TRUE, verbose=TRUE)
   x = ebproj_calc_x(fit)
-  fit$c = mean(x * tanh(x))
-  fit$tau = n/(fit$c * nu) # so that sigma2 = fit$c
+  
+  fit = ebproj_init(U,b,w=fit$w,c=mean(x*tanh(x)), sigma2=mean(x*tanh(x)))
+#  fit$c      = mean(x * tanh(x))
+#  fit$sigma2 = fit$c                   # so that sigma2 = c
+#  fit$tau    = fit$n / (fit$nu * fit$sigma2)
   return(fit)
 }
 
@@ -129,15 +145,10 @@ ebproj_calc_x = function(fit){
 
 ```{r}
 ebproj_objective = function(fit) {
-  n      = nrow(fit$U)
-  k      = ncol(fit$U)
-  nu     = n - k - 2*fit$b
-  sigma2 = n / (nu * fit$tau)
-
   ey0 = fit$c * fit$y_0;  ey1 = fit$c * fit$y_1   # effective atoms
-  x = ebproj_calc_x(fit)
-  J   = sum(log_Z_binary(x, ey0, ey1, fit$p, sigma2))
-  obj = (nu/2) * (log(fit$tau) - fit$tau + 1) + J
+  x   = ebproj_calc_x(fit)
+  J   = sum(log_Z_binary(x, ey0, ey1, fit$p, fit$sigma2))
+  obj = (fit$nu/2) * (log(fit$tau) - fit$tau + 1) + J
   return(obj)
 }
 ```
@@ -159,23 +170,18 @@ kl_binary = function(pi1, p) {
 }
 
 ebproj_primal_objective = function(fit) {
-  n      = nrow(fit$U)
-  k      = ncol(fit$U)
-  nu     = n - k - 2*fit$b
-  sigma2 = n / (nu * fit$tau)
-
   ey0 = fit$c * fit$y_0;  ey1 = fit$c * fit$y_1
   x    = ebproj_calc_x(fit)
-  pi1  = post_prob1(x, ey0, ey1, fit$p, sigma2)
-  vbar = post_mean_binary(x, ey0, ey1, fit$p, sigma2)
+  pi1  = post_prob1(x, ey0, ey1, fit$p, fit$sigma2)
+  vbar = post_mean_binary(x, ey0, ey1, fit$p, fit$sigma2)
 
   Uv   = as.vector(t(fit$U) %*% vbar)
   Uq   = sum((1 - pi1) * ey0^2 + pi1 * ey1^2)   # E_q[v'v] second moment
   # rho_hat = vbar' P vbar / U_q, with P = S/n and S = UDU'
-  rho  = sum(fit$d * Uv^2) / (n * Uq)
+  rho  = sum(fit$d * Uv^2) / (fit$n * Uq)
 
   kl   = kl_binary(pi1, fit$p)
-  obj  = (nu/2) * (log(fit$tau) - fit$tau * (1 - rho) + 1) - kl
+  obj  = (fit$nu/2) * (log(fit$tau) - fit$tau * (1 - rho) + 1) - kl
   return(obj)
 }
 ```
@@ -184,19 +190,28 @@ ebproj_primal_objective = function(fit) {
 
 The binary prior is parameterised as $(c, g_0)$ where $g_0 = (1-p)\delta_{y_0} + p\delta_{y_1}$ is a **base prior** and $c > 0$ is a **scale factor**.  The effective prior is
 $$g = (1-p)\delta_{cy_0} + p\delta_{cy_1},$$
-so the effective atoms are $cy_0$ and $cy_1$.  This parameterisation is intentionally over-complete — multiplying $c$ by any positive constant and dividing $y_0, y_1$ by the same constant leaves $g$ unchanged — but the redundancy is useful because it separates "shape" from "scale".
+so the effective atoms are $cy_0$ and $cy_1$.  This parameterisation is over-complete — multiplying $c$ by any positive constant and dividing $y_0, y_1$ by the same constant leaves $g$ unchanged — but the redundancy is useful because it separates "shape" from "scale".
 
-Three update modes are provided, controlled by `fix_g` and `fix_g0` in `ebproj_fit`:
+A natural constraint is to require $g_0$ to have **mean 0 and unit variance**:
+$$\mathbb{E}_{g_0}[v] = 0 \quad \text{and} \quad \text{Var}_{g_0}(v) = 1.$$
+Under these constraints $g_0$ has a single free parameter $p$, with atoms determined by
+$$y_1 = \sqrt{\frac{1-p}{p}}, \qquad y_0 = -\sqrt{\frac{p}{1-p}}.$$
+The scale $c$ then controls the overall amplitude of $g$.
 
-| `fix_g` | `fix_g0` | behaviour |
-|---------|----------|-----------|
-| `TRUE`  | —        | freeze $g$ entirely; no prior update |
-| `FALSE` | `TRUE`   | fix base prior $g_0 = (p, y_0, y_1)$; optimise scale $c$ only |
-| `FALSE` | `FALSE`  | full EM update of $(p, y_0, y_1)$; set $c = 1$ afterwards |
+Three update functions are provided, selected via the `g_update` argument of `ebproj_fit`:
 
-**Full update** (`fix_g0 = FALSE`): standard EM, updating $p$, $y_0$, $y_1$ using the effective atoms as observations.  Because the parameterisation is over-complete we reset $c = 1$ after each step (the scale is absorbed into $y_0, y_1$).
+| `g_update` | function called | what is updated |
+|------------|-----------------|-----------------|
+| `"g"`      | `ebproj_update_g`  | full EM: $(p, y_0, y_1)$, reset $c = 1$ |
+| `"c"`      | `ebproj_update_c`  | scale $c$ only; $g_0 = (p, y_0, y_1)$ fixed |
+| `"g0"`     | `ebproj_update_g0` | constrained $g_0$: optimise $p$ with $y_0, y_1$ set by mean-0, var-1 constraint; $c$ fixed |
+| `"none"`   | —               | freeze $g$ entirely |
 
-**Scale-only update** (`fix_g0 = TRUE`): $g_0$ is held fixed and $c$ is found by exact 1-D maximisation of $J(w, cg_0)$ over $c > 0$ (optimising on the log scale).  This is useful when $g_0$ has been pre-specified (e.g., from a previous run or a known prior shape) and only the amplitude needs to be estimated.
+**`ebproj_update_g`** (full EM): updates $p$, $y_0$, $y_1$ jointly via their EM closed forms, then resets $c = 1$ (absorbing the scale into the atoms).
+
+**`ebproj_update_c`**: fixes $g_0 = (p, y_0, y_1)$ and finds $c$ by exact 1-D maximisation of $J(w, cg_0)$ over $c > 0$ on the log scale.
+
+**`ebproj_update_g0`**: fixes $c$ and optimises $p \in (0,1)$ subject to the mean-0, unit-variance constraint, via 1-D numerical maximisation.  After updating $p$ the atoms are recomputed as $y_1 = \sqrt{(1-p)/p}$, $y_0 = -\sqrt{p/(1-p)}$.
 
 ### Update functions
 
@@ -214,15 +229,10 @@ where $w_\text{target} = U^T M(x)$ and $\lambda = \max(w^T D w_\text{target},\, 
 
 ```{r}
 ebproj_update_w = function(fit, hessian = "ica", eps = 1e-6) {
-  n      = nrow(fit$U)
-  k      = ncol(fit$U)
-  nu     = n - k - 2*fit$b
-  sigma2 = n / (nu * fit$tau)
-
   ey0 = fit$c * fit$y_0;  ey1 = fit$c * fit$y_1
-  x = ebproj_calc_x(fit)          # UDw, length n
-  Mx       = post_mean_binary(x, ey0, ey1, fit$p, sigma2)
-  Mpx      = post_mean_deriv_binary(x, ey0, ey1, fit$p, sigma2)
+  x        = ebproj_calc_x(fit)          # UDw, length n
+  Mx       = post_mean_binary(x, ey0, ey1, fit$p, fit$sigma2)
+  Mpx      = post_mean_deriv_binary(x, ey0, ey1, fit$p, fit$sigma2)
 
   w_target = as.vector(t(fit$U) %*% Mx)                    # U^T M(x), length k
 
@@ -232,9 +242,9 @@ ebproj_update_w = function(fit, hessian = "ica", eps = 1e-6) {
   H_diag = switch(hessian,
     diag  = { c_j = as.vector(t(fit$U^2) %*% Mpx); c_j * fit$d },
     trace = { c_t = sum(Mpx * S_diag) / sum(fit$d); c_t * fit$d },
-    iso   = { c_i = sum(Mpx * S_diag) / k; rep(c_i, k) },
-    ica   = { c_c = sum(Mpx); rep(c_c, k) },
-    none  = rep(0, k),
+    iso   = { c_i = sum(Mpx * S_diag) / fit$k; rep(c_i, fit$k) },
+    ica   = { c_c = sum(Mpx); rep(c_c, fit$k) },
+    none  = rep(0, fit$k),
     stop("hessian must be one of: 'diag', 'trace', 'iso', 'ica', 'none'")
   )
 
@@ -252,15 +262,9 @@ ebproj_update_w = function(fit, hessian = "ica", eps = 1e-6) {
 # Since (c, y_0, y_1, p) ~ (1, c*y_0, c*y_1, p) the parameterisation is
 # over-complete; we absorb c into y_0, y_1 after each full update.
 ebproj_update_g = function(fit) {
-  n      = nrow(fit$U)
-  k      = ncol(fit$U)
-  nu     = n - k - 2*fit$b
-  sigma2 = n / (nu * fit$tau)
-
   ey0 = fit$c * fit$y_0;  ey1 = fit$c * fit$y_1
-  x = ebproj_calc_x(fit)
-  
-  pi1 = post_prob1(x, ey0, ey1, fit$p, sigma2)
+  x   = ebproj_calc_x(fit)
+  pi1 = post_prob1(x, ey0, ey1, fit$p, fit$sigma2)
   pi0 = 1 - pi1
 
   fit$p   = mean(pi1)
@@ -273,38 +277,47 @@ ebproj_update_g = function(fit) {
 # Scale-only update: fix the base prior g_0 = (p, y_0, y_1) and optimise c by
 # maximising J(w, c*g_0) over c > 0 via 1-D exact optimisation.
 ebproj_update_c = function(fit) {
-  n      = nrow(fit$U)
-  k      = ncol(fit$U)
-  nu     = n - k - 2*fit$b
-  sigma2 = n / (nu * fit$tau)
-
   x = ebproj_calc_x(fit)
   obj_c = function(log_c) {
     cc = exp(log_c)
-    sum(log_Z_binary(x, cc * fit$y_0, cc * fit$y_1, fit$p, sigma2))
+    sum(log_Z_binary(x, cc * fit$y_0, cc * fit$y_1, fit$p, fit$sigma2))
   }
   res   = optimize(obj_c, c(-5, 5), maximum = TRUE)
   fit$c = exp(res$maximum)
   return(fit)
 }
 
-# update tau using rho = vbar' P vbar / U_q, tau = 1/(1-rho)
-ebproj_update_tau = function(fit) {
-  n      = nrow(fit$U)
-  k      = ncol(fit$U)
-  nu     = n - k - 2*fit$b
-  sigma2 = n / (nu * fit$tau)
+# Constrained g_0 update: fix c, optimise p with y0, y1 determined by
+# mean-0, unit-variance constraint: y1 = sqrt((1-p)/p), y0 = -sqrt(p/(1-p)).
+ebproj_update_g0 = function(fit) {
+  x = ebproj_calc_x(fit)
+  obj_p = function(logit_p) {
+    pp  = 1 / (1 + exp(-logit_p))
+    y1  =  sqrt((1 - pp) / pp)
+    y0  = -sqrt(pp / (1 - pp))
+    sum(log_Z_binary(x, fit$c * y0, fit$c * y1, pp, fit$sigma2))
+  }
+  res      = optimize(obj_p, c(-5, 5), maximum = TRUE)
+  pp       = 1 / (1 + exp(-res$maximum))
+  fit$p    = pp
+  fit$y_1  =  sqrt((1 - pp) / pp)
+  fit$y_0  = -sqrt(pp / (1 - pp))
+  return(fit)
+}
 
+# update tau using rho = vbar' P vbar / U_q, tau = 1/(1-rho); refresh sigma2
+ebproj_update_tau = function(fit) {
   ey0  = fit$c * fit$y_0;  ey1 = fit$c * fit$y_1
   x    = ebproj_calc_x(fit)
-  pi1  = post_prob1(x, ey0, ey1, fit$p, sigma2)
-  vbar = post_mean_binary(x, ey0, ey1, fit$p, sigma2)
+  pi1  = post_prob1(x, ey0, ey1, fit$p, fit$sigma2)
+  vbar = post_mean_binary(x, ey0, ey1, fit$p, fit$sigma2)
 
   # P = S/n = U D U'/n, so vbar' P vbar = (1/n) (U'vbar)' D (U'vbar)
-  Uv      = as.vector(t(fit$U) %*% vbar)
-  Uq      = sum((1 - pi1) * ey0^2 + pi1 * ey1^2)   # E_q[v'v] second moment
-  rho     = sum(fit$d * Uv^2) / (n * Uq)
-  fit$tau = 1 / (1 - rho)
+  Uv         = as.vector(t(fit$U) %*% vbar)
+  Uq         = sum((1 - pi1) * ey0^2 + pi1 * ey1^2)   # E_q[v'v] second moment
+  rho        = sum(fit$d * Uv^2) / (fit$n * Uq)
+  fit$tau    = 1 / (1 - rho)
+  fit$sigma2 = fit$n / (fit$nu * fit$tau)
   return(fit)
 }
 ```
@@ -315,30 +328,34 @@ ebproj_update_tau = function(fit) {
 
 
 ```{r}
-# Updates tau, g, w in that order (does the Newton step last. This way if w has a good initial value then the updated tau,g will be good and so the next update of w will use those good tau, g)
-# fix_g   = TRUE            : skip all prior updates (freeze g entirely)
-# fix_g   = FALSE, fix_g0 = TRUE  : update only c (fix base prior g_0)
-# fix_g   = FALSE, fix_g0 = FALSE : full update of (p, y_0, y_1), reset c = 1
+# Updates tau, g, w in that order.
+# g_update: "g"    = full EM update of (p, y_0, y_1), reset c = 1
+#           "c"    = update scale c only, fix g_0
+#           "g0"   = update p under mean-0, unit-var constraint, fix c
+#           "none" = freeze g entirely
 ebproj_fit = function(fit, hessian = "ica",
-                      fix_w = FALSE, fix_g = FALSE, fix_g0 = FALSE, fix_tau = FALSE,
-                      max_iter = 100, tol = 1e-6, verbose = FALSE) {
+                      fix_w = FALSE, g_update = "g", fix_tau = FALSE,
+                      max_iter = 200, tol = 1e-6, verbose = FALSE) {
   fit$objective = ebproj_objective(fit)
 
   for (iter in seq_len(max_iter)) {
     if (!fix_tau) fit = ebproj_update_tau(fit)
-    
-    if (!fix_g) {
-      if (fix_g0) fit = ebproj_update_c(fit)   # only scale
-      else        fit = ebproj_update_g(fit)    # full (p, y_0, y_1) update
-    }
-    
+
+    fit = switch(g_update,
+      g    = ebproj_update_g(fit),
+      c    = ebproj_update_c(fit),
+      g0   = ebproj_update_g0(fit),
+      none = fit,
+      stop("g_update must be one of: 'g', 'c', 'g0', 'none'")
+    )
+
     if (!fix_w) fit = ebproj_update_w(fit, hessian = hessian)
     
     obj_new = ebproj_objective(fit)
 
     if (verbose)
-      cat(sprintf("iter %3d  obj = %.6f  tau = %.4f  p = %.4f  y0 = %.3f  y1 = %.3f\n",
-                  iter, obj_new, fit$tau, fit$p, fit$y_0, fit$y_1))
+      cat(sprintf("iter %3d  obj = %.6f  tau = %.4f  p = %.4f  c = %.2f y0 = %.3f  y1 = %.3f\n",
+                  iter, obj_new, fit$tau, fit$p, fit$c, fit$y_0, fit$y_1))
 
     if (!is.null(fit$objective) && abs(obj_new - fit$objective) < tol) {
       fit$objective = obj_new
@@ -385,8 +402,8 @@ it does this by using the `ebproj` updates, but setting `sigma2=c` and updating 
 The init function then sets `sigma2=c=mean(x tanh(x))`, at which point the solution should be stationary at both $w$ and $c$. Here I check this by checking that the solution does not change when I update $c$ (fix tau and g0):
 ```{r}
 fit = ebproj_init_fastica(U,b=k/2)
-fit = ebproj_fit(fit, max_iter = 200, fix_g = TRUE, fix_tau = TRUE, verbose = TRUE)
-fit = ebproj_fit(fit, max_iter = 200, fix_g0 = TRUE, fix_tau = TRUE, verbose = TRUE)
+fit = ebproj_fit(fit, max_iter = 200, g_update = "none", fix_tau = TRUE, verbose = TRUE)
+fit = ebproj_fit(fit, max_iter = 200, g_update = "c", fix_tau = TRUE, verbose = TRUE)
 # check recovery: x = UDw gives the n-vector of projections
 x_hat = ebproj_calc_x(fit)
 cat(sprintf("Correlation with true source: %.4f\n", abs(cor(x_hat, s_true))))
@@ -408,7 +425,7 @@ cat(sprintf("Correlation with true source: %.4f\n", abs(cor(x_hat, s_true))))
 
 ### Random initialization
 
-Here we randomly initializz and plot objective over iterations to check convergence. (Note this example appears to be converging to the null solution, where the objective is 0).
+Here we randomly initialize and plot objective over iterations to check convergence. (Note this example appears to be converging to the null solution, where the objective is 0).
 ```{r}
 set.seed(2)
 fit_verbose = ebproj_init(U, b = 1)
@@ -505,8 +522,8 @@ Now fit the model. I initialize at fastica solution (run fastica by setting sigm
 updating only w); then set $sigma2=c=mean(x tanh(x))$ and check that the solution does not change when I update c (fix tau and g0). fastica finds the true source in this instance, but it is actually a local minimum rather than local maximum of the fastica objective. 
 ```{r}
 fit = ebproj_init_fastica(U, b = k/2)
-fit = ebproj_fit(fit, max_iter = 200, fix_g = TRUE, fix_tau = TRUE, verbose = TRUE)
-fit = ebproj_fit(fit, max_iter = 200, fix_g0 = TRUE, fix_tau = TRUE, verbose = TRUE)
+fit = ebproj_fit(fit, max_iter = 200, g_update = "none", fix_tau = TRUE, verbose = TRUE)
+fit = ebproj_fit(fit, max_iter = 200, g_update = "c", fix_tau = TRUE, verbose = TRUE)
 # check recovery: x = UDw gives the n-vector of projections
 x_hat = ebproj_calc_x(fit)
 cat(sprintf("Correlation with true source: %.4f\n", abs(cor(x_hat, s_true))))
@@ -524,18 +541,136 @@ cat(sprintf("y_0 = %.3f, y_1 = %.3f\n", fit$y_0, fit$y_1))
 # check recovery: x = UDw gives the n-vector of projections
 x_hat = ebproj_calc_x(fit)
 cat(sprintf("Correlation with true source: %.4f\n", abs(cor(x_hat, s_true))))
+hist(x_hat)
 ```
 
-What is going on is that at the fastICA solution the 50-50 prior is actually very bad and delicately balanced (after all the fastICA solution is a local minimum). So we need to give it a better initialization. Here I illustrate by manually initializing $y_0,y_1$ to the minimum and maximum of x_hat. It immediately converges to a much better objective value from this fit. 
+It turns out this is solved elegantly by using a different update of $g$ which constrains g0 to be mean 0 and unit variance, and so there is a single parameter $p$ that controls $y0,y1,p$. This helps because in order to move the prior support (y0,y1) toward the xhat values, it has no option but to change p, which is exactly the right thing to do. 
 ```{r}
+fit = ebproj_fit(fit, max_iter = 200, verbose=TRUE, g_update="g0")
+```
+
+Then we can switch to the general update if we want to refine even further:
+```{r}
+fit = ebproj_fit(fit, max_iter = 200, verbose=TRUE)
+```
+
+
+### Random start
+
+Try a random start, and plot objective over iterations. Interestingly we see the non-monotonic behavior here, and it does not converge to the true source. 
+```{r}
+set.seed(2)
+fit_verbose = ebproj_init(U, b = 1)
+objs = numeric(50)
+for (iter in 1:50) {
+  fit_verbose = ebproj_update_tau(fit_verbose)
+  fit_verbose = ebproj_update_g(fit_verbose)
+  fit_verbose = ebproj_update_w(fit_verbose)
+  objs[iter]  = ebproj_objective(fit_verbose)
+}
+plot(objs, type = "l", xlab = "iteration", ylab = "objective",
+     main = "EBProj objective over iterations")
+x_hat = ebproj_calc_x(fit_verbose)
+cat(sprintf("Correlation with true source: %.4f\n", abs(cor(x_hat, s_true))))
 hist(x_hat)
-fit$y_0 = min(x_hat)
-fit$y_1 = max(x_hat)
+```
+
+
+### Initialization with tau fixed
+
+Try with tau fixed: it converges to a null-like solution:
+```{r}
+set.seed(2)
+fit = ebproj_init(U, b = 1, tau = 1)
+fit = ebproj_fit(fit, max_iter = 200, fix_tau=TRUE, verbose = TRUE)
+```
+
+Here we try updating only g0. My idea was that this stops g0 going to the null. It fixes the signal to noise ratio, which is essentially what makes fastICA converge nicely I think. However, it has the problem that it goes to null a different way by putting p near 0 or 1. It feels like we need to at least start the solution by fastICA? Maybe we need to look at an example where fastICA fails (p=0.2) to develop the right strategy...
+```{r}
+set.seed(2)
+fit = ebproj_init(U, b = 1, tau = 1)
+fit = ebproj_fit(fit, max_iter = 200, fix_tau=TRUE, g_update = "g0", verbose = TRUE)
+x_hat = ebproj_calc_x(fit)
+hist(x_hat)
+```
+
+
+## Simple test 1c (p=0.2)
+
+Generate data from a single asymmetric binary source with $p = 0.2$. Here fastICA should work less well because this source has intermediate value of log cosh.
+```{r}
+set.seed(1)
+n = 200; p_dim = 1000; k = 10
+
+# true source: binary with p = 0.1
+p_true = 0.2
+s_raw  = as.numeric(runif(n) < p_true)
+s_true = (s_raw - p_true) / sqrt(p_true * (1 - p_true))   # zero-mean, unit-var
+
+# mix into high-dimensional data
+a = rnorm(p_dim)
+a = a / sqrt(sum(a^2))
+X = outer(a, s_true) + matrix(rnorm(p_dim * n, 0, 0.1), p_dim, n)
+```
+
+The data matrix $X$ is $p \times n$.
+To whiten $X$ we center it and take the first $k$ right singular vectors ($U$ is $n \times k$).
+```{r}
+Xcenter = X - rowMeans(X)
+sv = svd(Xcenter, nu = 0, nv = k)
+U  = sv$v              # n x k
+```
+
+Now fit the model. I initialize using fastica. This time the initial fastica run does not actually converge in 200 interation so the update does change things slightly. It does not find a true source.
+```{r}
+set.seed(3)
+fit = ebproj_init_fastica(U, b = k/2)
+fit = ebproj_fit(fit, max_iter = 200, g_update = "none", fix_tau = TRUE, verbose = TRUE)
+fit = ebproj_fit(fit, max_iter = 200, g_update = "c", fix_tau = TRUE, verbose = TRUE)
+# check recovery: x = UDw gives the n-vector of projections
+x_hat = ebproj_calc_x(fit)
+cat(sprintf("Correlation with true source: %.4f\n", abs(cor(x_hat, s_true))))
+hist(x_hat)
+```
+
+
+Now I run from the fastica solution (or actually the solution obtained by first running ica for 200 iterations and then updating c, as above). As before it kind of converges (slowly) to the null solution (prior y0,y1 moving to 0). However it actually finds a true source. That is, even though y0,y1 are moving toward 0, the source being found is a true source! I don't really understand what is happening here.
+```{r}
 fit = ebproj_fit(fit, max_iter = 200, verbose = TRUE)
 cat(sprintf("Converged in %d iterations\n", fit$iter))
 cat(sprintf("Estimated p = %.3f (true = %.3f)\n", fit$p, p_true))
 cat(sprintf("y_0 = %.3f, y_1 = %.3f\n", fit$y_0, fit$y_1))
+
+# check recovery: x = UDw gives the n-vector of projections
+x_hat = ebproj_calc_x(fit)
 cat(sprintf("Correlation with true source: %.4f\n", abs(cor(x_hat, s_true))))
+hist(x_hat)
+```
+
+Interestingly, even though the above was doing a full update of g, now updating g0 alone changes the solution to a much higher objective (keeps true source). It is like the EM update used above was somehow finding a saddle point of g but the g0 update makes it explore a direction of increase?
+```{r}
+fit = ebproj_fit(fit, max_iter = 200, verbose=TRUE, g_update="g0")
+```
+
+Then we can switch to the general update if we want to refine even further:
+```{r}
+fit = ebproj_fit(fit, max_iter = 200, verbose=TRUE)
+```
+
+
+### Another start
+
+Something weird is happening here: the intial fastica run seems to converge but
+then updating further with fixed tau and fixed g seems to continue to update. This is not what I expected. I need to investigate further.
+```{r}
+set.seed(2)
+fit = ebproj_init_fastica(U, b = k/2)
+fit = ebproj_fit(fit, max_iter = 200, g_update = "none", fix_tau = TRUE, verbose = TRUE)
+fit = ebproj_fit(fit, max_iter = 200, g_update = "c", fix_tau = TRUE, verbose = TRUE)
+# check recovery: x = UDw gives the n-vector of projections
+x_hat = ebproj_calc_x(fit)
+cat(sprintf("Correlation with true source: %.4f\n", abs(cor(x_hat, s_true))))
+hist(x_hat)
 ```
 
 
@@ -567,10 +702,13 @@ fit = ebproj_init(U, b = 1, tau = 1)
 fit = ebproj_fit(fit, max_iter = 200, fix_tau=TRUE, verbose = TRUE)
 ```
 
-
+Here we try updating only g0. My idea was that this stops g0 going to the null. It fixes the signal to noise ratio, which is essentially what makes fastICA converge nicely I think. However, it has the problem that it goes to null a different way by putting p near 0 or 1. It feels like we need to at least start the solution by fastICA? Maybe we need to look at an example where fastICA fails (p=0.2) to develop the right strategy...
 ```{r}
 set.seed(2)
 fit = ebproj_init(U, b = 1, tau = 1)
-fit = ebproj_fit(fit, max_iter = 200, fix_tau=TRUE, verbose = TRUE)
+fit = ebproj_fit(fit, max_iter = 200, fix_tau=TRUE, g_update = "g0", verbose = TRUE)
+x_hat = ebproj_calc_x(fit)
+hist(x_hat)
 ```
+
 
