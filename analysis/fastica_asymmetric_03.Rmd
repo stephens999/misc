@@ -157,7 +157,7 @@ The dual objective (eq 200 of the notes) is $F_{\text{EBproj}}(\mathbf{w}, g; \t
 
 The **primal** objective (eq 190/199) retains the full variational structure:
 $$F_{\text{EBproj}}(q, g; \tau) = \frac{n - k - 2b}{2} \bigl(\log \tau - \tau(1 - \hat\rho) + 1\bigr) - \text{KL}(q \| g)$$
-where $\hat\rho = \bar{\mathbf{v}}'\mathbf{P}\bar{\mathbf{v}} / U_q$, $\bar{\mathbf{v}} = E_q[\mathbf{v}]$ is the posterior mean, and $U_q = E_q[\mathbf{v}'\mathbf{v}]$ is the second moment.  The $\tau$ update targets this objective, so after a $\tau$ step the primal increases while the dual can decrease.
+where $\hat\rho = \bar{\mathbf{v}}'\mathbf{P}\bar{\mathbf{v}} / U_q$, $\bar{\mathbf{v}} = E_q[\mathbf{v}]$ is the posterior mean, and $U_q = E_q[\mathbf{v}'\mathbf{v}]$ is the second moment.  
 
 For the binary prior, $\text{KL}(q\|g) = \sum_i \bigl[(1-\pi_{1i})\log\tfrac{1-\pi_{1i}}{1-p} + \pi_{1i}\log\tfrac{\pi_{1i}}{p}\bigr]$ and $U_q = \sum_i \bigl[(1-\pi_{1i})(cy_0)^2 + \pi_{1i}(cy_1)^2\bigr]$.
 
@@ -746,7 +746,7 @@ hist(x_hat)
 
 
 
-# Test 2: Single source p=0.2
+## Test 2: Single source p=0.2
 
 ### Test 2a: repeat Test 1c 
 
@@ -809,18 +809,27 @@ run_experiment = function(p_true, n_data_seeds = 10, n_starts = 100,
 }
 
 make_table = function(results, n_starts, cor_thresh) {
-  frac_ica    = sapply(results, `[[`, "frac_ica")
-  frac_golden = sapply(results, `[[`, "frac_golden")
+  frac_ica         = sapply(results, `[[`, "frac_ica")
+  frac_golden      = sapply(results, `[[`, "frac_golden")
+  has_goldenplus   = !is.null(results[[1]]$frac_goldenplus)
   tab = data.frame(
     seed         = sapply(results, `[[`, "data_seed"),
     frac_fastica = round(frac_ica, 2),
     frac_golden  = round(frac_golden, 2)
   )
-  tab = rbind(tab, data.frame(seed = NA,
-                               frac_fastica = round(mean(frac_ica), 2),
-                               frac_golden  = round(mean(frac_golden), 2)))
+  mean_row = data.frame(seed = NA,
+                        frac_fastica = round(mean(frac_ica), 2),
+                        frac_golden  = round(mean(frac_golden), 2))
+  col_names = c("data seed", "frac found (fastICA)", "frac found (golden)")
+  if (has_goldenplus) {
+    frac_goldenplus      = sapply(results, `[[`, "frac_goldenplus")
+    tab$frac_goldenplus  = round(frac_goldenplus, 2)
+    mean_row$frac_goldenplus = round(mean(frac_goldenplus), 2)
+    col_names = c(col_names, "frac found (golden+)")
+  }
+  tab = rbind(tab, mean_row)
   rownames(tab) = c(paste0("seed ", seq_len(nrow(tab) - 1)), "mean")
-  knitr::kable(tab, col.names = c("data seed", "frac found (fastICA)", "frac found (golden)"),
+  knitr::kable(tab, col.names = col_names,
                caption = sprintf("Fraction of starts with |cor| > %.1f (%d starts each)",
                                  cor_thresh, n_starts))
 }
@@ -829,19 +838,19 @@ make_table = function(results, n_starts, cor_thresh) {
 ```{r}
 cat("=== p = 0.5 ===\n")
 res_05 = run_experiment(p_true = 0.5)
-make_table(res_05, n_starts = 100, cor_thresh = 0.9)
+#make_table(res_05, n_starts = 100, cor_thresh = 0.9)
 ```
 
 ```{r}
 cat("=== p = 0.2 ===\n")
 res_02 = run_experiment(p_true = 0.2)
-make_table(res_02, n_starts = 100, cor_thresh = 0.9)
+#make_table(res_02, n_starts = 100, cor_thresh = 0.9)
 ```
 
 ```{r}
 cat("=== p = 0.1 ===\n")
 res_01 = run_experiment(p_true = 0.1)
-make_table(res_01, n_starts = 100, cor_thresh = 0.9)
+#make_table(res_01, n_starts = 100, cor_thresh = 0.9)
 ```
 
 
@@ -852,6 +861,233 @@ With a larger number of (noise) dimensions and p=0.5 the performance of both met
 res_05_k20 = run_experiment(p_true=0.5, k=20)
 res_02_k20 = run_experiment(p_true=0.2, k=20)
 res_01_k20 = run_experiment(p_true=0.1, k=20)
+```
+
+## Test 3: Nine-group data
+
+Here the data come from a 9-group factor model: $K=9$ binary loading vectors (each with 20 non-zero entries among $n=100$ observations), a random $p \times K$ factor matrix $F$, and small Gaussian noise.  The true sources are the columns of $L$.
+
+For each random start we estimate a single IC and ask whether it is highly correlated (|cor| > 0.9) with **any** of the $K=9$ true sources.  We whiten to $k=20$ PCs as in Test 2.
+
+```{r}
+run_fastica_seeds_multi = function(U, L_true, b, n_starts = 100) {
+  cors = numeric(n_starts)
+  objs = numeric(n_starts)
+  for (i in seq_len(n_starts)) {
+    fit      = ebproj_init_fastica(U, b = b)
+    x_hat    = ebproj_calc_x(fit)
+    cors[i]  = max(abs(cor(x_hat, L_true)))
+    objs[i]  = ebproj_objective(fit)
+  }
+  list(cors = cors, objs = objs)
+}
+
+run_ebproj_golden_seeds_multi = function(U, L_true, b, n_starts = 100) {
+  c_golden = 2 / (1 + sqrt(5))
+  cors = numeric(n_starts)
+  objs = numeric(n_starts)
+  for (i in seq_len(n_starts)) {
+    fit.init = ebproj_init(U, b = b, c = c_golden, sigma2 = c_golden)
+    fit      = suppressWarnings(ebproj_fit(fit.init, fix_tau = TRUE, g_update = "g0"))
+    x_hat    = ebproj_calc_x(fit)
+    cors[i]  = max(abs(cor(x_hat, L_true)))
+    objs[i]  = fit$objective
+  }
+  list(cors = cors, objs = objs)
+}
+
+run_ebproj_goldenplus_seeds_multi = function(U, L_true, b, n_starts = 100) {
+  c_golden = 2 / (1 + sqrt(5))
+  cors = numeric(n_starts)
+  objs = numeric(n_starts)
+  for (i in seq_len(n_starts)) {
+    fit.init    = ebproj_init(U, b = b, c = c_golden, sigma2 = c_golden)
+    fit_golden  = suppressWarnings(ebproj_fit(fit.init, fix_tau = TRUE, g_update = "g0"))
+    fit         = ebproj_fit(fit_golden)   # full updates from golden solution
+    x_hat       = ebproj_calc_x(fit)
+    cors[i]     = max(abs(cor(x_hat, L_true)))
+    objs[i]     = fit$objective
+  }
+  list(cors = cors, objs = objs)
+}
+
+run_experiment_test3 = function(n_data_seeds = 10, n_starts = 100,
+                                cor_thresh = 0.9, master_seed = 42,
+                                n = 100, p_dim = 1000, K = 9, k = 20) {
+  set.seed(master_seed)
+  data_seeds = sample.int(1e6, n_data_seeds)
+  results = vector("list", n_data_seeds)
+  for (di in seq_len(n_data_seeds)) {
+    set.seed(data_seeds[di])
+    L  = matrix(0, nrow = n, ncol = K)
+    for (i in seq_len(K)) L[sample(n, 20), i] = 1
+    FF = matrix(rnorm(p_dim * K), nrow = p_dim)
+    X  = t(L %*% t(FF) + matrix(rnorm(n * p_dim, 0, 0.1), nrow = n))
+    Xcenter = X - rowMeans(X)
+    U = svd(Xcenter, nu = 0, nv = k)$v
+
+    out_ica        = suppressWarnings(run_fastica_seeds_multi(U, L, b = k/2, n_starts = n_starts))
+    out_golden     = run_ebproj_golden_seeds_multi(U, L, b = k/2, n_starts = n_starts)
+    out_goldenplus = run_ebproj_goldenplus_seeds_multi(U, L, b = k/2, n_starts = n_starts)
+    results[[di]] = list(data_seed         = data_seeds[di],
+                         cors_ica          = out_ica$cors,
+                         objs_ica          = out_ica$objs,
+                         cors_golden       = out_golden$cors,
+                         objs_golden       = out_golden$objs,
+                         cors_goldenplus   = out_goldenplus$cors,
+                         objs_goldenplus   = out_goldenplus$objs,
+                         frac_ica          = mean(out_ica$cors        > cor_thresh),
+                         frac_golden       = mean(out_golden$cors     > cor_thresh),
+                         frac_goldenplus   = mean(out_goldenplus$cors > cor_thresh))
+    cat(sprintf("data seed %7d: fastica %.2f  golden %.2f  golden+ %.2f\n",
+                data_seeds[di], results[[di]]$frac_ica,
+                results[[di]]$frac_golden, results[[di]]$frac_goldenplus))
+  }
+  results
+}
+
+plot_objectives_t3 = function(results, cor_thresh = 0.9,
+                              method = c("ica", "golden", "goldenplus")) {
+  method   = match.arg(method)
+  n_seeds  = length(results)
+  par(mfrow = c(2, ceiling(n_seeds / 2)), mar = c(3, 3, 2, 1))
+  for (di in seq_len(n_seeds)) {
+    cors = results[[di]][[paste0("cors_", method)]]
+    objs = results[[di]][[paste0("objs_", method)]]
+    ord  = order(objs, decreasing = TRUE)
+    cols = ifelse(cors[ord] > cor_thresh, "red", "blue")
+    plot(objs[ord], col = cols, pch = 16, cex = 0.7,
+         xlab = "rank (by objective)", ylab = "objective",
+         main = sprintf("seed %d", results[[di]]$data_seed))
+  }
+  par(mfrow = c(1, 1))
+}
+```
+
+```{r}
+res_t3 = run_experiment_test3()
+make_table(res_t3, n_starts = 100, cor_thresh = 0.9)
+```
+
+Solutions sorted by objective value; red = found a true source (|cor| > 0.9), blue = did not.
+
+```{r, fig.width=10, fig.height=5}
+plot_objectives_t3(res_t3, method = "ica")
+```
+
+```{r, fig.width=10, fig.height=5}
+plot_objectives_t3(res_t3, method = "golden")
+```
+
+```{r, fig.width=10, fig.height=5}
+plot_objectives_t3(res_t3, method = "goldenplus")
+```
+
+## Interactive exploration of Test 3
+
+The code below is intended to be run interactively in the console to explore what the best-objective solutions look like.
+
+Generate one Test 3 dataset (using the first data seed from `res_t3`):
+
+```{r}
+set.seed(res_t3[[1]]$data_seed)
+n = 100; p_dim = 1000; K = 9; k = 20
+L  = matrix(0, nrow = n, ncol = K)
+for (i in 1:K) L[sample(n, 20), i] = 1
+FF = matrix(rnorm(p_dim * K), nrow = p_dim)
+X  = t(L %*% t(FF) + matrix(rnorm(n * p_dim, 0, 0.1), nrow = n))
+U  = svd(X - rowMeans(X), nu = 0, nv = k)$v
+```
+
+Run 100 starts, recording the random seed and full fits (golden and golden+) for each:
+
+```{r}
+n_starts   = 100
+c_golden   = 2 / (1 + sqrt(5))
+cor_thresh = 0.9
+b          = k / 2
+
+start_seeds     = sample.int(1e6, n_starts)   # draw seeds up front so we can replay any
+fits_golden     = vector("list", n_starts)
+fits_goldenplus = vector("list", n_starts)
+
+for (i in seq_len(n_starts)) {
+  set.seed(start_seeds[i])
+  fit.init            = ebproj_init(U, b = b, c = c_golden, sigma2 = c_golden)
+  fits_golden[[i]]    = suppressWarnings(ebproj_fit(fit.init, fix_tau = TRUE, g_update = "g0"))
+  fits_goldenplus[[i]] = ebproj_fit(fits_golden[[i]])   # full updates from golden solution
+}
+
+objs_golden     = sapply(fits_golden,     `[[`, "objective")
+objs_goldenplus = sapply(fits_goldenplus, `[[`, "objective")
+cors_golden     = sapply(fits_golden,     function(f) max(abs(cor(ebproj_calc_x(f), L))))
+cors_goldenplus = sapply(fits_goldenplus, function(f) max(abs(cor(ebproj_calc_x(f), L))))
+
+iter_golden = sapply(fits_golden, `[[`, "iter")
+iter_goldenplus = sapply(fits_goldenplus, `[[`, "iter")
+```
+
+
+Summarise and plot both methods side by side:
+
+```{r}
+par(mfrow = c(1, 2))
+for (nm in c("golden", "goldenplus")) {
+  objs = get(paste0("objs_", nm))
+  cors = get(paste0("cors_", nm))
+  ord  = order(objs, decreasing = TRUE)
+  cols = ifelse(cors[ord] > cor_thresh, "red", "blue")
+  plot(objs[ord], col = cols, pch = 16,
+       xlab = "rank (by objective)", ylab = "objective", main = nm)
+  cat(sprintf("%s — best obj: start %d  obj=%.2f  cor=%.3f\n",
+              nm, ord[1], objs[ord[1]], cors[ord[1]]))
+  cat(sprintf("%s — best cor: start %d  obj=%.2f  cor=%.3f\n",
+              nm, which.max(cors), objs[which.max(cors)], max(cors)))
+}
+par(mfrow = c(1, 1))
+```
+
+Re-run the best-objective golden start with `verbose=TRUE` and inspect it. 
+```{r}
+best_i       = order(objs_golden, decreasing = TRUE)[1]
+set.seed(start_seeds[best_i])
+fit.init     = ebproj_init(U, b = b, c = c_golden, sigma2 = c_golden)
+fit_g        = suppressWarnings(ebproj_fit(fit.init, fix_tau = TRUE, g_update = "g0"))
+
+cat("golden: obj =", fit_g$objective, " tau =", fit_g$tau,
+    " p =", round(fit_g$p, 3), " c =", round(fit_g$c, 3), "\n")
+cat("cor with true sources:", round(cors_golden[best_i], 3), "\n")
+
+x_best = ebproj_calc_x(fit_g)
+hist(x_best)
+#plot(x_best, col = ifelse(L[,4] > 0, "red", "blue"), pch = 16, xlab = "observation index", ylab = "x", main = "best golden+ start (by objective)")
+```
+
+To inspect any start by index `i` for either method, run:
+
+```{r, eval=FALSE}
+i  = which.max(objs_golden)   # change this
+nm = "goldenplus"   # or "goldenplus"
+fits = get(paste0("fits_", nm))
+objs = get(paste0("objs_", nm))
+cors = get(paste0("cors_", nm))
+cat("start", i, " seed =", start_seeds[i], " obj =", objs[i], " cor =", cors[i], "\n")
+x_i = ebproj_calc_x(fits[[i]])
+hist(x_i)
+plot(x_i, col = ifelse(L %*% rep(1, K) > 0, "red", "blue"), pch = 16,
+     main = paste(nm, "start", i))
+```
+
+Here we look at the correlation of the sources found by golden vs golden_plus. They are highly correlated, suggesting that the main thing happening in the golden_plus fit is changing the hyperparmeters (tau) which changes the objective (potentially cosiderably).
+```{r}
+cor = rep(0,100)
+for(i in 1:100){
+  xg = ebproj_calc_x(fits_golden[[i]])
+  xgp = ebproj_calc_x(fits_goldenplus[[i]])
+  cor[i] = cor(xg,xgp)  
+}
+cor
+plot(cor,main = "Correlation of golden and golden_plus x solutions")
 ```
 
 
