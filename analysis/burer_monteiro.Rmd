@@ -1,0 +1,416 @@
+---
+title: "burer_monteiro"
+author: "Matthew Stephens"
+date: "2026-08-12"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+I want to experiment with the Burer-Monteiro approach to solving an SDP.
+
+My overall interest is finding a v to maximize v'Pv subject to v is binary (-1,1).
+The classic SDP approach is to replace this with maximize tr(PV) subject to diag(V)=1 and V is psd. Then to take a random vector r and split the points according to Vr.
+
+The BM approach avoids solving the full SDP by assuming V=YY' for some nxr matrix Y where r is small-ish. Then optimize Y by gradient-based methods. According to Gemini, the theory suggests choosing r=sqrt(n) but smaller r may work well. 
+
+In my case P=UU' for some orthogonal U, so we want to maximize tr(UU'YY') subject to diag(YY')=1 using a gradient-based method.
+
+I'll use Claude to help me write a function to do this.
+
+We compare this approach with two other approaches: i) the simple heuristic of using
+$Y$ to be the row-normalized $U$. This is effectively trying to solve the split using random projections onto the column space of $U$.ii) fastICA.  
+
+The objective is $\text{tr}(UU'YY') = \|U'Y\|_F^2$, and the constraint $\text{diag}(YY')=1$ means each row of $Y$ lies on the unit sphere. This is Riemannian optimization on the product of $n$ unit spheres. Note that the BM objective is **not** a true upper bound on the binary problem: binary solutions $v$ are feasible for BM (set $Y = v$, since $|v_i|=1$), so the global BM optimum $\geq$ binary optimum, but gradient ascent only finds local optima and can fall below the best binary solution found by rounding.
+
+
+## The BM approach
+
+This was written by Claude.
+
+The Euclidean gradient is $\nabla_Y f = 2UU'Y$. The Riemannian gradient for row $i$ subtracts the normal component: $\tilde{g}_i = g_i - (g_i \cdot y_i) y_i$. After a gradient step, we retract back to the sphere by normalizing each row.
+
+After finding $Y$, we round to a binary vector via random hyperplane rounding: draw $g \sim N(0,I_r)$ and return $v = \text{sign}(Yg)$.
+
+```{r}
+#' Burer-Monteiro approach to maximizing v'UU'v subject to v in {-1,1}^n
+#'
+#' @param U n x k orthonormal matrix (P = UU')
+#' @param r rank of the BM factorization (default: ceil(sqrt(n)))
+#' @param n_iter number of gradient ascent iterations
+#' @param step_size Riemannian gradient ascent step size
+#' @param seed random seed for initialization
+#' @return list with Y (n x r factor), obj_history, and SDP objective value
+burer_monteiro_fit <- function(U, r = NULL, n_iter = 2000, step_size = 0.05, seed = 1) {
+  n <- nrow(U)
+  k <- ncol(U)
+  if (is.null(r)) r <- max(2L, ceiling(sqrt(n)))
+
+  set.seed(seed)
+  # Initialize Y with rows on unit sphere
+  Y <- matrix(rnorm(n * r), n, r)
+  Y <- Y / sqrt(rowSums(Y^2))
+
+  obj_history <- numeric(n_iter)
+
+  for (iter in seq_len(n_iter)) {
+    # Euclidean gradient: 2 * UU' Y  (compute as U (U'Y) for efficiency)
+    UtY  <- crossprod(U, Y)      # k x r
+    grad <- 2 * (U %*% UtY)     # n x r  =  2 UU'Y
+
+    # Riemannian gradient: project out normal (row-wise)
+    dots  <- rowSums(grad * Y)   # n-vector: <grad_i, y_i>
+    rgrad <- grad - dots * Y     # n x r
+
+    # Gradient ascent + retraction (normalize rows)
+    Y <- Y + step_size * rgrad
+    Y <- Y / sqrt(rowSums(Y^2))
+
+    # Objective: tr(UU' YY') = ||U'Y||_F^2
+    UtY <- crossprod(U, Y)
+    obj_history[iter] <- sum(UtY^2)
+  }
+
+  list(Y = Y, obj_history = obj_history, sdp_obj = tail(obj_history, 1))
+}
+
+#' Round BM solution Y to binary vector via random hyperplane rounding
+#'
+#' @param Y n x r matrix from burer_monteiro_fit
+#' @param U n x k matrix (to evaluate objective)
+#' @param n_rounds number of random hyperplanes to try
+#' @param seed random seed
+#' @return list with v (best binary vector) and obj (v'UU'v)
+bm_round <- function(Y, U, n_rounds = 200, seed = 42) {
+  set.seed(seed)
+  r <- ncol(Y)
+  best_v   <- NULL
+  best_obj <- -Inf
+
+  best_x <- NULL
+  best_w <- NULL
+  for (i in seq_len(n_rounds)) {
+    w   <- rnorm(r)
+    x   <- drop(Y %*% w)
+    v   <- sign(x)
+    obj <- sum(crossprod(U, v)^2)   # ||U'v||^2 = v'Pv
+    if (obj > best_obj) {
+      best_obj <- obj
+      best_v   <- v
+      best_x   <- x
+      best_w   <- w
+    }
+  }
+  list(v = best_v, x = best_x, w=best_w, obj = best_obj)
+}
+
+#' Run fastICA n_runs times and return the binarized component with the best v'Pv objective
+fastica_best <- function(U, n_comp, n_runs = 10) {
+  best_v   <- NULL
+  best_obj <- -Inf
+  for (run in seq_len(n_runs)) {
+    fit <- fastICA::fastICA(U, n.comp = n_comp)
+    for (j in seq_len(n_comp)) {
+      v_j   <- sign(fit$S[, j])
+      obj_j <- sum(crossprod(U, v_j)^2)
+      if (obj_j > best_obj) { best_obj <- obj_j; best_v <- v_j }
+    }
+  }
+  list(v = best_v, obj = best_obj)
+}
+```
+
+## Simple test
+
+Generate a random $P = UU'$, run BM, and compare the rounded solution to a brute-force search over random binary vectors. 
+
+The first issue is to generate a random U with a planted binary (-1,1) vector.
+In initial explorations it seems that exactly how you do this can affect the results quite a lot, and this might be worth understanding better. Here I generate the first column of U as a planted vector and the remaining columns as a uniform at random among vectors orthogonal to the planted vector. 
+
+
+```{r}
+# Simulate U with n_plant planted binary vectors (need not be orthogonal to each other).
+# P = UU' projects onto the span of the planted vectors plus k-n_plant noise directions,
+# so every planted vector achieves v'Pv = n (the maximum).
+sim_U = function(n, k, seed, n_plant = 1, p = 0.5) {
+  set.seed(seed)
+
+  # 1. Generate n_plant random ±1 vectors and find an orthonormal basis for their span
+  V_raw   <- matrix(sample(c(-1, 1), n * n_plant, replace = TRUE, prob = c(1-p, p)), n, n_plant)
+  V       <- V_raw / rep(sqrt(colSums(V_raw^2)), each = n)
+  planted <- qr.Q(qr(V))                    # n x rank(V); handles collinear vectors
+
+  m_eff <- ncol(planted)
+
+  # 2. Random noise for remaining k - m_eff dimensions, projected off the planted span
+  noise      <- matrix(rnorm(n * (k - m_eff)), n, k - m_eff)
+  noise_orth <- noise - planted %*% crossprod(planted, noise)
+  U_noise    <- qr.Q(qr(noise_orth))
+
+  list(U = cbind(planted, U_noise), v_true = V_raw)
+}
+```
+
+
+
+### Small $k$ ($k=5$)
+
+First we try small k so everything should work:
+```{r}
+n <- 100
+k <- 5
+sim    <- sim_U(n, k, seed = 1)
+U      <- sim$U
+v_truth <- sim$v_true[, 1]
+
+
+# Baseline: round random projections of row-normalized U
+U_rownorm <- U / sqrt(rowSums(U^2))
+baseline  <- bm_round(U_rownorm, U, n_rounds = 5000)
+brute_best_v <- baseline$v
+brute_obj    <- baseline$obj
+
+# Burer-Monteiro
+fit <- burer_monteiro_fit(U, r = 8, n_iter = 3000, step_size = 0.05)
+rnd <- bm_round(fit$Y, U, n_rounds = 500)
+
+
+# Convergence plot
+plot(fit$obj_history, type = "l", xlab = "Iteration", ylab = "SDP objective",
+     main = "BM convergence")
+
+#fastICA
+fica     <- fastica_best(U, n_comp = k)
+v_fica   <- fica$v
+obj_fica <- fica$obj
+
+obj_truth <- sum(crossprod(U, v_truth)^2)
+
+knitr::kable(data.frame(
+  Method    = c("Planted truth", "BM rounded", "Baseline (row-norm U)", "fastICA binarized", "BM continuous (Y)"),
+  Objective = round(c(obj_truth, rnd$obj, brute_obj, obj_fica, fit$sdp_obj), 2),
+  Cor_truth = round(c(1, cor(rnd$v, v_truth), cor(brute_best_v, v_truth), abs(cor(v_fica, v_truth)), NA), 3)
+), col.names = c("Method", "Objective", "Cor. with truth"))
+```
+
+### Moderate $k$ ($k=20$)
+
+Now try larger $k = 20$. Here the BM method solves the SDP adequately (it achieves the same objective as the planted truth) but the rounded solution is almost orthogonal to the truth, and achieves only 85% of the optimal objective. In contrast, fastICA (run 10 times here) finds the optimal.
+
+```{r}
+n <- 100
+k <- 20
+sim     <- sim_U(n, k, seed = 1)
+U       <- sim$U
+v_truth <- sim$v_true[, 1]
+
+
+# Baseline: round random projections of row-normalized U
+U_rownorm <- U / sqrt(rowSums(U^2))
+baseline  <- bm_round(U_rownorm, U, n_rounds = 5000)
+brute_best_v <- baseline$v
+brute_obj    <- baseline$obj
+
+# Burer-Monteiro
+fit <- burer_monteiro_fit(U, r = 8, n_iter = 3000, step_size = 0.05)
+rnd <- bm_round(fit$Y, U, n_rounds = 500)
+
+
+# Convergence plot
+plot(fit$obj_history, type = "l", xlab = "Iteration", ylab = "SDP objective",
+     main = "BM convergence")
+
+#fastICA
+fica     <- fastica_best(U, n_comp = k)
+v_fica   <- fica$v
+obj_fica <- fica$obj
+
+obj_truth <- sum(crossprod(U, v_truth)^2)
+
+knitr::kable(data.frame(
+  Method    = c("Planted truth", "BM rounded", "Baseline (row-norm U)", "fastICA binarized", "BM continuous (Y)"),
+  Objective = round(c(obj_truth, rnd$obj, brute_obj, obj_fica, fit$sdp_obj), 2),
+  Cor_truth = round(c(1, cor(rnd$v, v_truth), cor(brute_best_v, v_truth), abs(cor(v_fica, v_truth)), NA), 3)
+), col.names = c("Method", "Objective", "Cor. with truth"))
+```
+
+
+Now try larger $n=1000, k=20$; all the methods work. (Here fastICA only needs running once)
+
+```{r}
+n <- 1000
+k= 20
+sim     <- sim_U(n, k, seed = 1)
+U       <- sim$U
+v_truth <- sim$v_true[, 1]
+
+
+# Baseline: round random projections of row-normalized U
+U_rownorm <- U / sqrt(rowSums(U^2))
+baseline  <- bm_round(U_rownorm, U, n_rounds = 5000)
+brute_best_v <- baseline$v
+brute_obj    <- baseline$obj
+
+# Burer-Monteiro
+fit <- burer_monteiro_fit(U, r = 8, n_iter = 3000, step_size = 0.05)
+rnd <- bm_round(fit$Y, U, n_rounds = 500)
+
+
+# Convergence plot
+plot(fit$obj_history, type = "l", xlab = "Iteration", ylab = "SDP objective",
+     main = "BM convergence")
+
+#fastICA
+fica     <- fastica_best(U, n_comp = k, n_runs=1)
+v_fica   <- fica$v
+obj_fica <- fica$obj
+
+obj_truth <- sum(crossprod(U, v_truth)^2)
+
+knitr::kable(data.frame(
+  Method    = c("Planted truth", "BM rounded", "Baseline (row-norm U)", "fastICA binarized", "BM continuous (Y)"),
+  Objective = round(c(obj_truth, rnd$obj, brute_obj, obj_fica, fit$sdp_obj), 2),
+  Cor_truth = round(c(1, cor(rnd$v, v_truth), cor(brute_best_v, v_truth), abs(cor(v_fica, v_truth)), NA), 3)
+), col.names = c("Method", "Objective", "Cor. with truth"))
+```
+
+
+
+### Larger $k$ ($k=60$)
+
+Now try larger $k = 60$, $n=1000$. (I pushed it to 60 to make the BM method not work)
+Here I had to increase r in the BM method to get it to find an objective that matches the known optimal. I found that the fastICA method sometimes found the truth; with this seed I had to increase the repeats to 20 to get it to find the truth.
+```{r}
+n <- 1000
+k= 60
+sim     <- sim_U(n, k, seed = 1)
+U       <- sim$U
+v_truth <- sim$v_true[, 1]
+
+
+# Baseline: round random projections of row-normalized U
+U_rownorm <- U / sqrt(rowSums(U^2))
+baseline  <- bm_round(U_rownorm, U, n_rounds = 5000)
+brute_best_v <- baseline$v
+brute_obj    <- baseline$obj
+
+# Burer-Monteiro
+fit <- burer_monteiro_fit(U, r = 30, n_iter = 3000, step_size = 0.05)
+rnd <- bm_round(fit$Y, U, n_rounds = 500)
+
+
+# Convergence plot
+plot(fit$obj_history, type = "l", xlab = "Iteration", ylab = "SDP objective",
+     main = "BM convergence")
+
+#fastICA
+fica     <- fastica_best(U, n_comp = k, n_runs=20)
+v_fica   <- fica$v
+obj_fica <- fica$obj
+
+obj_truth <- sum(crossprod(U, v_truth)^2)
+
+knitr::kable(data.frame(
+  Method    = c("Planted truth", "BM rounded", "Baseline (row-norm U)", "fastICA binarized", "BM continuous (Y)"),
+  Objective = round(c(obj_truth, rnd$obj, brute_obj, obj_fica, fit$sdp_obj), 2),
+  Cor_truth = round(c(1, cor(rnd$v, v_truth), cor(brute_best_v, v_truth), abs(cor(v_fica, v_truth)), NA), 3)
+), col.names = c("Method", "Objective", "Cor. with truth"))
+```
+
+
+Now I'll run fastICA initializing from the BM solution (which here is already 61% correlated with the truth). Interestingly, it does not move much.
+```{r}
+fastica_r1update = function(X,w){
+  w= w/sqrt(sum(w^2))
+  P = t(X) %*% w
+  G = tanh(P)
+  G2 = 1-tanh(P)^2
+  w = X %*% G - sum(G2) * w 
+  return(w)
+}
+
+w = t(U) %*% rnd$x
+for(i in 1:10000){
+  w = fastica_r1update(t(U),w) 
+}
+
+cor(U %*% w, v_truth)
+```
+
+## Multiple vectors
+
+I'm interested in the case where $U$ contains multiple different binary vectors. What I want to do is find them as local optima of some objective. I'm interested in whether the BM approach will find both vectors.
+
+Simulate U with first two columns planted:
+```{r}
+n <- 1000; k <- 60
+sim    <- sim_U(n, k, seed = 2, n_plant = 2)
+U      <- sim$U
+v_true <- sim$v_true   # n x 2 matrix of planted ±1 vectors
+```
+
+```{r}
+best_cor_planted <- function(v, v_true) max(abs(cor(v, v_true)))
+
+# Baseline
+U_rownorm    <- U / sqrt(rowSums(U^2))
+baseline     <- bm_round(U_rownorm, U, n_rounds = 5000)
+
+# Burer-Monteiro
+fit <- burer_monteiro_fit(U, r = 30, n_iter = 3000, step_size = 0.05)
+rnd <- bm_round(fit$Y, U, n_rounds = 500)
+
+# fastICA
+fica     <- fastica_best(U, n_comp = k)
+v_fica   <- fica$v
+obj_fica <- fica$obj
+
+knitr::kable(data.frame(
+  Method     = c("BM rounded", "Baseline (row-norm U)", "fastICA binarized", "BM continuous (Y)"),
+  Objective  = round(c(rnd$obj, baseline$obj, obj_fica, fit$sdp_obj), 2),
+  Best_cor   = round(c(best_cor_planted(rnd$v,       v_true),
+                       best_cor_planted(baseline$v,   v_true),
+                       best_cor_planted(v_fica,        v_true),
+                       NA), 3)
+), col.names = c("Method", "Objective", "Best cor. with planted"))
+```
+
+
+
+## Unbalanced groups
+
+Since unbalanced groups can be more difficult to find I try that case here.
+I simulate U with one planted column, with 0.8 -1 and 0.2 +1 (i.e. `p=0.2`), with $n=1000$, $k=20$. Here BM works but ICA does not, because (as we know) ICA does not work well for unbalanced groups. It seems the SPD approach still works for unbalanced groups (which makes sense since it was designed with max cut in mind, and so it would be a fatal flaw if it didn't work for unbalanced cuts)
+
+```{r}
+n <- 1000; k <- 20
+sim    <- sim_U(n, k, seed = 1, n_plant = 1, p = 0.2)
+U      <- sim$U
+v_true <- sim$v_true
+
+best_cor_planted <- function(v, v_true) max(abs(cor(v, v_true)))
+
+# Baseline
+U_rownorm <- U / sqrt(rowSums(U^2))
+baseline  <- bm_round(U_rownorm, U, n_rounds = 5000)
+
+# Burer-Monteiro
+fit <- burer_monteiro_fit(U, r = 8, n_iter = 3000, step_size = 0.05)
+rnd <- bm_round(fit$Y, U, n_rounds = 500)
+
+# fastICA
+fica     <- fastica_best(U, n_comp = k)
+v_fica   <- fica$v
+obj_fica <- fica$obj
+
+knitr::kable(data.frame(
+  Method    = c("BM rounded", "Baseline (row-norm U)", "fastICA binarized", "BM continuous (Y)"),
+  Objective = round(c(rnd$obj, baseline$obj, obj_fica, fit$sdp_obj), 2),
+  Best_cor  = round(c(best_cor_planted(rnd$v,      v_true),
+                      best_cor_planted(baseline$v,  v_true),
+                      best_cor_planted(v_fica,       v_true),
+                      NA), 3)
+), col.names = c("Method", "Objective", "Best cor. with planted"))
+```
