@@ -1,0 +1,121 @@
+---
+title: "fastica_bm_spd"
+author: "Matthew Stephens"
+date: "2026-08-14"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+In conversation with Gemini we came up with a possible approach to extend fastICA to find planted binary vectors using the Burer-Monteiro formulation of a semi-definite program. Here I wanted to try out this approach. The code below worked first time for k=20, but for k=40 it fails. I am publishing this before trying something to fix the problem for k=40.
+
+
+## Code
+
+
+```{r}
+# Set dimensions
+n <- 100
+k <- 20
+p <- 6 # Overparameterization rank (slightly larger than sqrt(k))
+
+# ---------------------------------------------------------
+# 1. Generate Toy Data (The Projection Matrix)
+# ---------------------------------------------------------
+set.seed(42)
+
+# Plant a true binary vector
+v_true <- sample(c(-1, 1), n, replace = TRUE) 
+
+# Create a random (k-1) dimensional subspace 
+X <- matrix(rnorm(n * (k - 1)), n, k - 1)
+
+# Project out v_true from X so the basis is clean
+X <- X - (v_true %*% (t(v_true) %*% X)) / n
+
+# Combine v_true and the random subspace to form the raw basis
+Basis_raw <- cbind(v_true, X)
+
+# Orthonormalize using QR decomposition to get the n x k basis U
+U <- qr.Q(qr(Basis_raw))
+
+# (The projection matrix is P = U %*% t(U), but we only need U for the math)
+
+```
+
+
+```{r}
+# ---------------------------------------------------------
+# 2. Define Objective and Gradient Functions
+# ---------------------------------------------------------
+
+loss_fn <- function(W_vec, U, k, p) {
+  W <- matrix(W_vec, k, p)
+  UW <- U %*% W
+  row_norms_sq <- rowSums(UW^2)     # Diagonal of U * W * W^T * U^T
+  residuals <- row_norms_sq - 1     # Deviation from binary constraint
+  return(sum(residuals^2))
+}
+
+grad_fn <- function(W_vec, U, k, p) {
+  W <- matrix(W_vec, k, p)
+  UW <- U %*% W
+  row_norms_sq <- rowSums(UW^2)
+  residuals <- row_norms_sq - 1
+  
+  # Vectorized gradient: 4 * U^T * diag(residuals) * (UW)
+  # In R, multiplying a vector by a matrix row-wise is done efficiently with '*'
+  grad_matrix <- 4 * t(U) %*% (residuals * UW) 
+  
+  return(as.vector(grad_matrix))
+}
+
+# ---------------------------------------------------------
+# 3. Optimize using L-BFGS
+# ---------------------------------------------------------
+
+# Initialize W randomly
+W_init <- matrix(rnorm(k * p), k, p)
+
+# Run the optimizer
+opt_res <- optim(
+  par = as.vector(W_init),
+  fn = loss_fn,
+  gr = grad_fn,
+  U = U,
+  k = k,
+  p = p,
+  method = "BFGS",
+  control = list(maxit = 1000)
+)
+```
+
+
+
+```{r}
+# ---------------------------------------------------------
+# 4. Extract Solution
+# ---------------------------------------------------------
+
+W_opt <- matrix(opt_res$par, k, p)
+
+# Because Y = W W^T collapses to rank 1, W_opt is effectively rank 1.
+# The top left singular vector of W_opt is our coefficient vector 'q'
+svd_res <- svd(W_opt)
+q_opt <- svd_res$u[, 1]
+
+# Project the coefficients back into n-dimensional space
+v_est_continuous <- U %*% q_opt
+
+# Snap to binary
+v_est <- sign(v_est_continuous)
+
+# The optimizer might find v_true or -v_true (both are valid)
+accuracy <- max(mean(v_est == v_true), mean(v_est == -v_true))
+
+cat("Optimization finished with loss:", opt_res$value, "\n")
+cat("Recovery Accuracy:", accuracy * 100, "%\n")
+```
+
