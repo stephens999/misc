@@ -54,51 +54,65 @@ preprocess = function(X, n.comp = 10) {
 ```{r compare-fns}
 max_cor_with_truth = function(v, L) max(abs(cor(v, L)))
 
-run_fastica = function(X1_aug, L, n_starts = 100, n_iter = 50, threshold = 0.95) {
+vPv_scores = function(X1_aug, V) {
+  # v'Pv = ||X1_aug v||^2 / n  for each column of V (binary +-1 vectors)
+  colSums((X1_aug %*% V)^2) / ncol(X1_aug)
+}
+
+run_fastica = function(X1_aug, L, n_starts = 100, n_iter = 50) {
   set.seed(1)
   W <- matrix(rnorm(nrow(X1_aug) * n_starts), nrow(X1_aug), n_starts)
   W <- sweep(W, 2, sqrt(colSums(W^2)), "/")
   for (i in seq_len(n_iter))
     W <- fastica_update(X1_aug, W)
   Lhat <- t(X1_aug) %*% W  # n x n_starts
-  success <- sum(apply(Lhat, 2, function(lhat) {
-    mc <- max_cor_with_truth(lhat, L)
-    !is.na(mc) && mc > threshold
-  }))
-  success / n_starts
+  V <- sign(Lhat); V[V == 0] <- 1L
+  max_cors <- apply(V, 2, max_cor_with_truth, L = L)
+  list(max_cors = max_cors, vPv = vPv_scores(X1_aug, V))
 }
 
-run_alt_proj = function(X1_aug, L, n_starts = 100, n_iter = 50, threshold = 0.95) {
+run_alt_proj = function(X1_aug, L, n_starts = 100, n_iter = 50) {
   n <- ncol(X1_aug)
   set.seed(1)
   V <- sign(matrix(rnorm(n * n_starts), n, n_starts))
   V[V == 0] <- 1L
   for (i in seq_len(n_iter))
     V <- alt_proj_update(X1_aug, V)
-  success <- sum(apply(V, 2, function(v) {
-    mc <- max_cor_with_truth(v, L)
-    !is.na(mc) && mc > threshold
-  }))
-  success / n_starts
+  max_cors <- apply(V, 2, max_cor_with_truth, L = L)
+  list(max_cors = max_cors, vPv = vPv_scores(X1_aug, V))
 }
 
 run_comparison = function(X, L, n.comp, label, n_starts = 100, n_iter = 50) {
   X1     <- preprocess(X, n.comp = n.comp)
   X1_aug <- rbind(rep(1, ncol(X1)), X1)
+  # Convert each L column to +-1 by thresholding at the column mean
+  L_bin  <- apply(L, 2, function(col) { v <- sign(col - mean(col)); v[v == 0] <- 1L; v })
+  true_vPv <- min(vPv_scores(X1_aug, L_bin))
 
   cat("Running fastICA for:", label, "\n")
-  ica_time <- system.time(ica_rate <- run_fastica(X1_aug, L, n_starts = n_starts, n_iter = n_iter))
+  ica_time <- system.time(ica <- run_fastica(X1_aug, L, n_starts = n_starts, n_iter = n_iter))
 
   cat("Running alt-proj for:", label, "\n")
-  ap_time  <- system.time(ap_rate  <- run_alt_proj(X1_aug, L, n_starts = n_starts, n_iter = n_iter))
+  ap_time  <- system.time(ap  <- run_alt_proj(X1_aug, L, n_starts = n_starts, n_iter = n_iter))
 
-  cat(sprintf("  fastICA: %.0f%% (%.0fms)  AltProj: %.0f%% (%.0fms)\n",
-              100 * ica_rate, 1000 * ica_time["elapsed"],
-              100 * ap_rate,  1000 * ap_time["elapsed"]))
-  c(fastICA = ica_rate, AltProj = ap_rate,
-    fastICA_ms = 1000 * ica_time["elapsed"], AltProj_ms = 1000 * ap_time["elapsed"])
+  ica_approx <- mean(ica$max_cors > 0.95, na.rm = TRUE)
+  ica_exact  <- mean(ica$max_cors > 0.99, na.rm = TRUE)
+  ap_approx  <- mean(ap$max_cors  > 0.95, na.rm = TRUE)
+  ap_exact   <- mean(ap$max_cors  > 0.99, na.rm = TRUE)
+  ica_beat   <- mean(ica$vPv >= true_vPv - 1e-10)
+  ap_beat    <- mean(ap$vPv  >= true_vPv - 1e-10)
+  cat(sprintf("  fastICA: approx=%.0f%% exact=%.0f%% beat=%.0f%%  AltProj: approx=%.0f%% exact=%.0f%% beat=%.0f%%\n",
+              100*ica_approx, 100*ica_exact, 100*ica_beat,
+              100*ap_approx,  100*ap_exact,  100*ap_beat))
+  c(fastICA_approx = ica_approx, fastICA_exact = ica_exact,
+    fastICA_ms = 1000 * ica_time[["elapsed"]], fastICA_beat = ica_beat,
+    AltProj_approx = ap_approx,  AltProj_exact = ap_exact,
+    AltProj_ms = 1000 * ap_time[["elapsed"]],  AltProj_beat = ap_beat,
+    true_vPv = true_vPv)
 }
 ```
+
+# Low-noise simulations (noise_sd = 0.01)
 
 ## Simulation 1: 3 overlapping groups
 
@@ -262,6 +276,55 @@ axis(1, at = seq(0, 1, length.out = 9), labels = 1:9)
 par(mfrow = c(1, 1))
 ```
 
+## Diagnosing the 3 overlapping groups case
+
+AltProj achieves a higher mean v'Pv than fastICA in this setting despite a much lower success rate, suggesting it is finding high-energy binary vectors that do not isolate single groups.
+
+```{r diag-3groups}
+K <- 3; p <- 1000; n <- 100; n_starts <- 100; n_iter <- 50
+set.seed(1)
+L3 <- matrix(-1, nrow = n, ncol = K)
+for (i in 1:K) L3[sample(1:n, 20), i] <- 1
+FF <- matrix(rnorm(p * K), nrow = p, ncol = K)
+X3 <- L3 %*% t(FF) + rnorm(n * p, 0, 0.01)
+
+X1     <- preprocess(X3, n.comp = 10)
+X1_aug <- rbind(rep(1, ncol(X1)), X1)
+
+# fastICA
+set.seed(1)
+W <- matrix(rnorm(nrow(X1_aug) * n_starts), nrow(X1_aug), n_starts)
+W <- sweep(W, 2, sqrt(colSums(W^2)), "/")
+for (i in seq_len(n_iter)) W <- fastica_update(X1_aug, W)
+Lhat_ica <- t(X1_aug) %*% W
+
+# alt_proj
+set.seed(1)
+V <- sign(matrix(rnorm(n * n_starts), n, n_starts))
+V[V == 0] <- 1L
+for (i in seq_len(n_iter)) V <- alt_proj_update(X1_aug, V)
+Lhat_ap <- V
+
+cor_ica <- abs(cor(Lhat_ica, L3))   # n_starts x 3
+cor_ap  <- abs(cor(Lhat_ap,  L3))
+```
+
+```{r diag-3groups-heatmap, fig.width=8, fig.height=5}
+par(mfrow = c(1, 2))
+
+order_ica <- order(apply(cor_ica, 1, max), decreasing = TRUE)
+image(t(cor_ica[order_ica, ]), zlim = c(0, 1), axes = FALSE,
+      main = "fastICA", xlab = "True group", ylab = "Start (sorted)")
+axis(1, at = seq(0, 1, length.out = 3), labels = 1:3)
+
+order_ap <- order(apply(cor_ap, 1, max), decreasing = TRUE)
+image(t(cor_ap[order_ap, ]), zlim = c(0, 1), axes = FALSE,
+      main = "AltProj", xlab = "True group", ylab = "Start (sorted)")
+axis(1, at = seq(0, 1, length.out = 3), labels = 1:3)
+
+par(mfrow = c(1, 1))
+```
+
 ## Summary
 
 ```{r summary-table}
@@ -274,22 +337,144 @@ results <- data.frame(
     "Bifurcating tree (n=100, 6 branches)"
   ),
   n.comp = c(10, 10, 10, 20, 10),
-  fastICA_pct = round(100 * c(res1["fastICA"], res2["fastICA"], res3["fastICA"],
-                               res4["fastICA"], res5["fastICA"])),
-  fastICA_ms  = round(c(res1["fastICA_ms.elapsed"], res2["fastICA_ms.elapsed"],
-                         res3["fastICA_ms.elapsed"], res4["fastICA_ms.elapsed"],
-                         res5["fastICA_ms.elapsed"])),
-  AltProj_pct = round(100 * c(res1["AltProj"], res2["AltProj"], res3["AltProj"],
-                               res4["AltProj"], res5["AltProj"])),
-  AltProj_ms  = round(c(res1["AltProj_ms.elapsed"], res2["AltProj_ms.elapsed"],
-                         res3["AltProj_ms.elapsed"], res4["AltProj_ms.elapsed"],
-                         res5["AltProj_ms.elapsed"]))
+  p = c("0.20", "0.20", "0.25", "0.11", "0.25-0.50"),
+  fastICA_approx = round(100 * c(res1["fastICA_approx"], res2["fastICA_approx"], res3["fastICA_approx"],
+                                  res4["fastICA_approx"], res5["fastICA_approx"])),
+  AltProj_approx = round(100 * c(res1["AltProj_approx"], res2["AltProj_approx"], res3["AltProj_approx"],
+                                  res4["AltProj_approx"], res5["AltProj_approx"])),
+  fastICA_exact  = round(100 * c(res1["fastICA_exact"],  res2["fastICA_exact"],  res3["fastICA_exact"],
+                                  res4["fastICA_exact"],  res5["fastICA_exact"])),
+  AltProj_exact  = round(100 * c(res1["AltProj_exact"],  res2["AltProj_exact"],  res3["AltProj_exact"],
+                                  res4["AltProj_exact"],  res5["AltProj_exact"])),
+  fastICA_ms     = round(c(res1["fastICA_ms"], res2["fastICA_ms"],
+                            res3["fastICA_ms"], res4["fastICA_ms"], res5["fastICA_ms"])),
+  AltProj_ms     = round(c(res1["AltProj_ms"], res2["AltProj_ms"],
+                            res3["AltProj_ms"], res4["AltProj_ms"], res5["AltProj_ms"])),
+  fastICA_beat   = round(100 * c(res1["fastICA_beat"], res2["fastICA_beat"], res3["fastICA_beat"],
+                                  res4["fastICA_beat"], res5["fastICA_beat"])),
+  AltProj_beat   = round(100 * c(res1["AltProj_beat"], res2["AltProj_beat"], res3["AltProj_beat"],
+                                  res4["AltProj_beat"], res5["AltProj_beat"])),
+  true_vPv       = round(c(res1["true_vPv"], res2["true_vPv"], res3["true_vPv"],
+                            res4["true_vPv"], res5["true_vPv"]), 4)
 )
 
 knitr::kable(results,
-  col.names = c("Simulation", "n.comp",
-                "fastICA (% success)", "fastICA (ms)",
-                "AltProj (% success)", "AltProj (ms)"),
-  caption   = "Fraction of 100 random starts recovering a solution with max correlation > 0.95 with any true group column, with wall-clock time in milliseconds."
+  col.names = c("Simulation", "n.comp", "p",
+                "ICA >0.95", "AP >0.95", "ICA >0.99", "AP >0.99",
+                "ICA (ms)", "AP (ms)", "ICA % ≥ truth v'Pv", "AP % ≥ truth v'Pv",
+                "True min v'Pv"),
+  caption   = "Per-start success rates at two correlation thresholds (>0.95 and >0.99 with any true group), wall-clock time, and fraction of starts whose binarized v'Pv meets or exceeds the minimum true group v'Pv."
+)
+```
+
+# High-noise simulations
+
+We repeat all five simulations with `noise_sd = 4` instead of 0.01, chosen so that the true v'Pv is around 90% of n.
+
+## Simulation 1: 3 overlapping groups (high noise)
+
+```{r noise-sim1}
+K <- 3; p <- 1000; n <- 100
+set.seed(1)
+L <- matrix(-1, nrow = n, ncol = K)
+for (i in 1:K) { L[sample(1:n, 20), i] <- 1 }
+FF <- matrix(rnorm(p * K), nrow = p, ncol = K)
+X  <- L %*% t(FF) + rnorm(n * p, 0, 4)
+
+nres1 <- run_comparison(X, L, n.comp = 10, label = "3 overlapping groups, high noise")
+```
+
+## Simulation 2: 9 overlapping groups (high noise)
+
+```{r noise-sim2}
+K <- 9; p <- 1000; n <- 100
+set.seed(1)
+L <- matrix(0, nrow = n, ncol = K)
+for (i in 1:K) { L[sample(1:n, 20), i] <- 1 }
+FF <- matrix(rnorm(p * K), nrow = p, ncol = K)
+X  <- L %*% t(FF) + rnorm(n * p, 0, 4)
+
+nres2 <- run_comparison(X, L, n.comp = 10, label = "9 overlapping groups, high noise")
+```
+
+## Simulation 3: 4 non-overlapping groups (high noise)
+
+```{r noise-sim3}
+n <- 100; p <- 1000
+set.seed(1)
+L <- matrix(0, nrow = n, ncol = 4)
+L[1:25,   1] <- 1; L[26:50,  2] <- 1; L[51:75,  3] <- 1; L[76:100, 4] <- 1
+FF <- matrix(rnorm(p * 4), nrow = p)
+X  <- L %*% t(FF) + rnorm(n * p, 0, 4)
+
+nres3 <- run_comparison(X, L, n.comp = 10, label = "4 non-overlapping groups, high noise")
+```
+
+## Simulation 4: 9 non-overlapping groups (high noise)
+
+```{r noise-sim4}
+n <- 225; p <- 1000
+set.seed(1)
+L <- matrix(0, nrow = n, ncol = 9)
+for (i in 1:9) { L[((i - 1) * 25 + 1):(i * 25), i] <- 1 }
+FF <- matrix(rnorm(p * 9), nrow = p)
+X  <- L %*% t(FF) + rnorm(n * p, 0, 4)
+
+nres4 <- run_comparison(X, L, n.comp = 20, label = "9 non-overlapping groups, high noise")
+```
+
+## Simulation 5: Bifurcating tree (high noise)
+
+```{r noise-sim5}
+n <- 100; p <- 1000
+set.seed(1)
+L <- matrix(0, nrow = n, ncol = 6)
+L[1:50, 1] <- 1; L[51:100, 2] <- 1
+L[1:25, 3] <- 1; L[26:50,  4] <- 1; L[51:75, 5] <- 1; L[76:100, 6] <- 1
+FF <- matrix(rnorm(p * 6), nrow = p)
+X  <- L %*% t(FF) + rnorm(n * p, 0, 4)
+
+nres5 <- run_comparison(X, L, n.comp = 10, label = "Bifurcating tree, high noise")
+```
+
+## Summary (high noise)
+
+```{r noise-summary-table}
+nresults <- data.frame(
+  Simulation = c(
+    "3 overlapping groups (n=100)",
+    "9 overlapping groups (n=100)",
+    "4 non-overlapping groups (n=100)",
+    "9 non-overlapping groups (n=225)",
+    "Bifurcating tree (n=100, 6 branches)"
+  ),
+  n.comp = c(10, 10, 10, 20, 10),
+  p = c("0.20", "0.20", "0.25", "0.11", "0.25-0.50"),
+  fastICA_approx = round(100 * c(nres1["fastICA_approx"], nres2["fastICA_approx"], nres3["fastICA_approx"],
+                                  nres4["fastICA_approx"], nres5["fastICA_approx"])),
+  AltProj_approx = round(100 * c(nres1["AltProj_approx"], nres2["AltProj_approx"], nres3["AltProj_approx"],
+                                  nres4["AltProj_approx"], nres5["AltProj_approx"])),
+  fastICA_exact  = round(100 * c(nres1["fastICA_exact"],  nres2["fastICA_exact"],  nres3["fastICA_exact"],
+                                  nres4["fastICA_exact"],  nres5["fastICA_exact"])),
+  AltProj_exact  = round(100 * c(nres1["AltProj_exact"],  nres2["AltProj_exact"],  nres3["AltProj_exact"],
+                                  nres4["AltProj_exact"],  nres5["AltProj_exact"])),
+  fastICA_ms     = round(c(nres1["fastICA_ms"], nres2["fastICA_ms"],
+                            nres3["fastICA_ms"], nres4["fastICA_ms"], nres5["fastICA_ms"])),
+  AltProj_ms     = round(c(nres1["AltProj_ms"], nres2["AltProj_ms"],
+                            nres3["AltProj_ms"], nres4["AltProj_ms"], nres5["AltProj_ms"])),
+  fastICA_beat   = round(100 * c(nres1["fastICA_beat"], nres2["fastICA_beat"], nres3["fastICA_beat"],
+                                  nres4["fastICA_beat"], nres5["fastICA_beat"])),
+  AltProj_beat   = round(100 * c(nres1["AltProj_beat"], nres2["AltProj_beat"], nres3["AltProj_beat"],
+                                  nres4["AltProj_beat"], nres5["AltProj_beat"])),
+  true_vPv       = round(c(nres1["true_vPv"], nres2["true_vPv"], nres3["true_vPv"],
+                            nres4["true_vPv"], nres5["true_vPv"]), 2)
+)
+
+knitr::kable(nresults,
+  col.names = c("Simulation", "n.comp", "p",
+                "ICA >0.95", "AP >0.95", "ICA >0.99", "AP >0.99",
+                "ICA (ms)", "AP (ms)", "ICA % ≥ truth v'Pv", "AP % ≥ truth v'Pv",
+                "True min v'Pv"),
+  caption   = "High-noise results (noise_sd = 4). True v'Pv averages around 90% of n across simulations."
 )
 ```
