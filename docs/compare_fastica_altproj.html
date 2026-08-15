@@ -465,16 +465,16 @@ This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a> analysi
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreee4ed94face306b687681b5022e175ac71403f753targetblanke4ed94fa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/e4ed94face306b687681b5022e175ac71403f753" target="_blank">e4ed94f</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree22eead53f38ee5d994758a448f245bee64692099targetblank22eead5a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/22eead53f38ee5d994758a448f245bee64692099" target="_blank">22eead5</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreee4ed94face306b687681b5022e175ac71403f753targetblanke4ed94fa" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree22eead53f38ee5d994758a448f245bee64692099targetblank22eead5a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/e4ed94face306b687681b5022e175ac71403f753" target="_blank">e4ed94f</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/22eead53f38ee5d994758a448f245bee64692099" target="_blank">22eead5</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -735,6 +735,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/22eead53f38ee5d994758a448f245bee64692099/analysis/compare_fastica_altproj.Rmd" target="_blank">22eead5</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-08-15
+</td>
+<td>
+Update comparison table: fix vPv floating point tolerance, add p
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/c43e3efe521312e363e038f29a05bc66b86f1ea3/docs/compare_fastica_altproj.html" target="_blank">c43e3ef</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-08-15
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/e4ed94face306b687681b5022e175ac71403f753/analysis/compare_fastica_altproj.Rmd" target="_blank">e4ed94f</a>
 </td>
 <td>
@@ -796,51 +830,65 @@ preprocess = function(X, n.comp = 10) {
 <h2>Comparison functions</h2>
 <pre class="r"><code>max_cor_with_truth = function(v, L) max(abs(cor(v, L)))
 
-run_fastica = function(X1_aug, L, n_starts = 100, n_iter = 50, threshold = 0.95) {
+vPv_scores = function(X1_aug, V) {
+  # v&#39;Pv = ||X1_aug v||^2 / n  for each column of V (binary +-1 vectors)
+  colSums((X1_aug %*% V)^2) / ncol(X1_aug)
+}
+
+run_fastica = function(X1_aug, L, n_starts = 100, n_iter = 50) {
   set.seed(1)
   W &lt;- matrix(rnorm(nrow(X1_aug) * n_starts), nrow(X1_aug), n_starts)
   W &lt;- sweep(W, 2, sqrt(colSums(W^2)), &quot;/&quot;)
   for (i in seq_len(n_iter))
     W &lt;- fastica_update(X1_aug, W)
   Lhat &lt;- t(X1_aug) %*% W  # n x n_starts
-  success &lt;- sum(apply(Lhat, 2, function(lhat) {
-    mc &lt;- max_cor_with_truth(lhat, L)
-    !is.na(mc) &amp;&amp; mc &gt; threshold
-  }))
-  success / n_starts
+  V &lt;- sign(Lhat); V[V == 0] &lt;- 1L
+  max_cors &lt;- apply(V, 2, max_cor_with_truth, L = L)
+  list(max_cors = max_cors, vPv = vPv_scores(X1_aug, V))
 }
 
-run_alt_proj = function(X1_aug, L, n_starts = 100, n_iter = 50, threshold = 0.95) {
+run_alt_proj = function(X1_aug, L, n_starts = 100, n_iter = 50) {
   n &lt;- ncol(X1_aug)
   set.seed(1)
   V &lt;- sign(matrix(rnorm(n * n_starts), n, n_starts))
   V[V == 0] &lt;- 1L
   for (i in seq_len(n_iter))
     V &lt;- alt_proj_update(X1_aug, V)
-  success &lt;- sum(apply(V, 2, function(v) {
-    mc &lt;- max_cor_with_truth(v, L)
-    !is.na(mc) &amp;&amp; mc &gt; threshold
-  }))
-  success / n_starts
+  max_cors &lt;- apply(V, 2, max_cor_with_truth, L = L)
+  list(max_cors = max_cors, vPv = vPv_scores(X1_aug, V))
 }
 
 run_comparison = function(X, L, n.comp, label, n_starts = 100, n_iter = 50) {
   X1     &lt;- preprocess(X, n.comp = n.comp)
   X1_aug &lt;- rbind(rep(1, ncol(X1)), X1)
+  # Convert each L column to +-1 by thresholding at the column mean
+  L_bin  &lt;- apply(L, 2, function(col) { v &lt;- sign(col - mean(col)); v[v == 0] &lt;- 1L; v })
+  true_vPv &lt;- min(vPv_scores(X1_aug, L_bin))
 
   cat(&quot;Running fastICA for:&quot;, label, &quot;\n&quot;)
-  ica_time &lt;- system.time(ica_rate &lt;- run_fastica(X1_aug, L, n_starts = n_starts, n_iter = n_iter))
+  ica_time &lt;- system.time(ica &lt;- run_fastica(X1_aug, L, n_starts = n_starts, n_iter = n_iter))
 
   cat(&quot;Running alt-proj for:&quot;, label, &quot;\n&quot;)
-  ap_time  &lt;- system.time(ap_rate  &lt;- run_alt_proj(X1_aug, L, n_starts = n_starts, n_iter = n_iter))
+  ap_time  &lt;- system.time(ap  &lt;- run_alt_proj(X1_aug, L, n_starts = n_starts, n_iter = n_iter))
 
-  cat(sprintf(&quot;  fastICA: %.0f%% (%.0fms)  AltProj: %.0f%% (%.0fms)\n&quot;,
-              100 * ica_rate, 1000 * ica_time[&quot;elapsed&quot;],
-              100 * ap_rate,  1000 * ap_time[&quot;elapsed&quot;]))
-  c(fastICA = ica_rate, AltProj = ap_rate,
-    fastICA_ms = 1000 * ica_time[&quot;elapsed&quot;], AltProj_ms = 1000 * ap_time[&quot;elapsed&quot;])
+  ica_approx &lt;- mean(ica$max_cors &gt; 0.95, na.rm = TRUE)
+  ica_exact  &lt;- mean(ica$max_cors &gt; 0.99, na.rm = TRUE)
+  ap_approx  &lt;- mean(ap$max_cors  &gt; 0.95, na.rm = TRUE)
+  ap_exact   &lt;- mean(ap$max_cors  &gt; 0.99, na.rm = TRUE)
+  ica_beat   &lt;- mean(ica$vPv &gt;= true_vPv - 1e-10)
+  ap_beat    &lt;- mean(ap$vPv  &gt;= true_vPv - 1e-10)
+  cat(sprintf(&quot;  fastICA: approx=%.0f%% exact=%.0f%% beat=%.0f%%  AltProj: approx=%.0f%% exact=%.0f%% beat=%.0f%%\n&quot;,
+              100*ica_approx, 100*ica_exact, 100*ica_beat,
+              100*ap_approx,  100*ap_exact,  100*ap_beat))
+  c(fastICA_approx = ica_approx, fastICA_exact = ica_exact,
+    fastICA_ms = 1000 * ica_time[[&quot;elapsed&quot;]], fastICA_beat = ica_beat,
+    AltProj_approx = ap_approx,  AltProj_exact = ap_exact,
+    AltProj_ms = 1000 * ap_time[[&quot;elapsed&quot;]],  AltProj_beat = ap_beat,
+    true_vPv = true_vPv)
 }</code></pre>
 </div>
+<div id="low-noise-simulations-noise_sd-0.01" class="section level1">
+<h1>Low-noise simulations (noise_sd = 0.01)</h1>
 <div id="simulation-1-3-overlapping-groups" class="section level2">
 <h2>Simulation 1: 3 overlapping groups</h2>
 <p>Three groups, 20 members each out of n=100; groups may overlap. Background is -1, group members are +1.</p>
@@ -852,14 +900,29 @@ FF &lt;- matrix(rnorm(p * K), nrow = p, ncol = K)
 X  &lt;- L %*% t(FF) + rnorm(n * p, 0, 0.01)
 
 res1 &lt;- run_comparison(X, L, n.comp = 10, label = &quot;3 overlapping groups (n=100, K=3)&quot;)</code></pre>
-<pre><code>Running fastICA for: 3 overlapping groups (n=100, K=3) 
-Running alt-proj for: 3 overlapping groups (n=100, K=3) </code></pre>
+<pre><code>Running fastICA for: 3 overlapping groups (n=100, K=3) </code></pre>
+<pre><code>Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero</code></pre>
+<pre><code>Running alt-proj for: 3 overlapping groups (n=100, K=3) </code></pre>
 <pre><code>Warning in cor(v, L): the standard deviation is zero
 Warning in cor(v, L): the standard deviation is zero
 Warning in cor(v, L): the standard deviation is zero
 Warning in cor(v, L): the standard deviation is zero
 Warning in cor(v, L): the standard deviation is zero</code></pre>
-<pre><code>  fastICA: 68% (16ms)  AltProj: 13% (10ms)</code></pre>
+<pre><code>  fastICA: approx=42% exact=42% beat=51%  AltProj: approx=14% exact=14% beat=18%</code></pre>
 </div>
 <div id="simulation-2-9-overlapping-groups" class="section level2">
 <h2>Simulation 2: 9 overlapping groups</h2>
@@ -872,9 +935,15 @@ FF &lt;- matrix(rnorm(p * K), nrow = p, ncol = K)
 X  &lt;- L %*% t(FF) + rnorm(n * p, 0, 0.01)
 
 res2 &lt;- run_comparison(X, L, n.comp = 10, label = &quot;9 overlapping groups (n=100, K=9)&quot;)</code></pre>
-<pre><code>Running fastICA for: 9 overlapping groups (n=100, K=9) 
-Running alt-proj for: 9 overlapping groups (n=100, K=9) 
-  fastICA: 84% (8ms)  AltProj: 17% (5ms)</code></pre>
+<pre><code>Running fastICA for: 9 overlapping groups (n=100, K=9) </code></pre>
+<pre><code>Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero</code></pre>
+<pre><code>Running alt-proj for: 9 overlapping groups (n=100, K=9) 
+  fastICA: approx=73% exact=73% beat=75%  AltProj: approx=17% exact=17% beat=17%</code></pre>
 </div>
 <div id="simulation-3-4-non-overlapping-groups" class="section level2">
 <h2>Simulation 3: 4 non-overlapping groups</h2>
@@ -890,12 +959,28 @@ FF &lt;- matrix(rnorm(p * 4), nrow = p)
 X  &lt;- L %*% t(FF) + rnorm(n * p, 0, 0.01)
 
 res3 &lt;- run_comparison(X, L, n.comp = 10, label = &quot;4 non-overlapping groups (n=100)&quot;)</code></pre>
-<pre><code>Running fastICA for: 4 non-overlapping groups (n=100) 
-Running alt-proj for: 4 non-overlapping groups (n=100) </code></pre>
+<pre><code>Running fastICA for: 4 non-overlapping groups (n=100) </code></pre>
+<pre><code>Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero</code></pre>
+<pre><code>Running alt-proj for: 4 non-overlapping groups (n=100) </code></pre>
 <pre><code>Warning in cor(v, L): the standard deviation is zero
 Warning in cor(v, L): the standard deviation is zero
 Warning in cor(v, L): the standard deviation is zero</code></pre>
-<pre><code>  fastICA: 41% (9ms)  AltProj: 9% (5ms)</code></pre>
+<pre><code>  fastICA: approx=49% exact=49% beat=57%  AltProj: approx=9% exact=9% beat=12%</code></pre>
 </div>
 <div id="simulation-4-9-non-overlapping-groups" class="section level2">
 <h2>Simulation 4: 9 non-overlapping groups</h2>
@@ -908,10 +993,11 @@ FF &lt;- matrix(rnorm(p * 9), nrow = p)
 X  &lt;- L %*% t(FF) + rnorm(n * p, 0, 0.01)
 
 res4 &lt;- run_comparison(X, L, n.comp = 20, label = &quot;9 non-overlapping groups (n=225)&quot;)</code></pre>
-<pre><code>Running fastICA for: 9 non-overlapping groups (n=225) 
-Running alt-proj for: 9 non-overlapping groups (n=225) </code></pre>
+<pre><code>Running fastICA for: 9 non-overlapping groups (n=225) </code></pre>
 <pre><code>Warning in cor(v, L): the standard deviation is zero</code></pre>
-<pre><code>  fastICA: 24% (16ms)  AltProj: 2% (11ms)</code></pre>
+<pre><code>Running alt-proj for: 9 non-overlapping groups (n=225) </code></pre>
+<pre><code>Warning in cor(v, L): the standard deviation is zero</code></pre>
+<pre><code>  fastICA: approx=3% exact=3% beat=4%  AltProj: approx=2% exact=2% beat=3%</code></pre>
 </div>
 <div id="simulation-5-bifurcating-tree" class="section level2">
 <h2>Simulation 5: Bifurcating tree</h2>
@@ -929,14 +1015,24 @@ FF &lt;- matrix(rnorm(p * 6), nrow = p)
 X  &lt;- L %*% t(FF) + rnorm(n * p, 0, 0.01)
 
 res5 &lt;- run_comparison(X, L, n.comp = 10, label = &quot;Bifurcating tree (n=100, 6 branches)&quot;)</code></pre>
-<pre><code>Running fastICA for: Bifurcating tree (n=100, 6 branches) 
-Running alt-proj for: Bifurcating tree (n=100, 6 branches) </code></pre>
+<pre><code>Running fastICA for: Bifurcating tree (n=100, 6 branches) </code></pre>
+<pre><code>Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero</code></pre>
+<pre><code>Running alt-proj for: Bifurcating tree (n=100, 6 branches) </code></pre>
 <pre><code>Warning in cor(v, L): the standard deviation is zero
 Warning in cor(v, L): the standard deviation is zero
 Warning in cor(v, L): the standard deviation is zero
 Warning in cor(v, L): the standard deviation is zero
 Warning in cor(v, L): the standard deviation is zero</code></pre>
-<pre><code>  fastICA: 63% (9ms)  AltProj: 11% (6ms)</code></pre>
+<pre><code>  fastICA: approx=70% exact=70% beat=73%  AltProj: approx=12% exact=12% beat=16%</code></pre>
 </div>
 <div id="diagnosing-the-9-non-overlapping-groups-case" class="section level2">
 <h2>Diagnosing the 9 non-overlapping groups case</h2>
@@ -996,6 +1092,43 @@ boxplot(obj_ica ~ n_hit,
         ylab = &quot;fastICA objective  mean(log cosh(Xw))&quot;,
         main = &quot;fastICA objective by solution type (9 non-overlapping groups)&quot;)</code></pre>
 <p><img src="figure/compare_fastica_altproj.Rmd/diag-objective-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-diag-objective-1">
+Past versions of diag-objective-1.png
+</button>
+</p>
+<div id="fig-diag-objective-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c43e3efe521312e363e038f29a05bc66b86f1ea3/docs/figure/compare_fastica_altproj.Rmd/diag-objective-1.png" target="_blank">c43e3ef</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-08-15
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Heatmap of absolute correlations for each start (rows = starts sorted by best single-group correlation, columns = true groups):</p>
 <pre class="r"><code>par(mfrow = c(1, 2))
 
@@ -1009,6 +1142,87 @@ image(t(cor_ap[order_ap, ]), zlim = c(0, 1), axes = FALSE,
       main = &quot;AltProj&quot;, xlab = &quot;True group&quot;, ylab = &quot;Start (sorted)&quot;)
 axis(1, at = seq(0, 1, length.out = 9), labels = 1:9)</code></pre>
 <p><img src="figure/compare_fastica_altproj.Rmd/diag-heatmap-1.png" alt="" width="768" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-diag-heatmap-1">
+Past versions of diag-heatmap-1.png
+</button>
+</p>
+<div id="fig-diag-heatmap-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c43e3efe521312e363e038f29a05bc66b86f1ea3/docs/figure/compare_fastica_altproj.Rmd/diag-heatmap-1.png" target="_blank">c43e3ef</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-08-15
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>par(mfrow = c(1, 1))</code></pre>
+</div>
+<div id="diagnosing-the-3-overlapping-groups-case" class="section level2">
+<h2>Diagnosing the 3 overlapping groups case</h2>
+<p>AltProj achieves a higher mean v’Pv than fastICA in this setting despite a much lower success rate, suggesting it is finding high-energy binary vectors that do not isolate single groups.</p>
+<pre class="r"><code>K &lt;- 3; p &lt;- 1000; n &lt;- 100; n_starts &lt;- 100; n_iter &lt;- 50
+set.seed(1)
+L3 &lt;- matrix(-1, nrow = n, ncol = K)
+for (i in 1:K) L3[sample(1:n, 20), i] &lt;- 1
+FF &lt;- matrix(rnorm(p * K), nrow = p, ncol = K)
+X3 &lt;- L3 %*% t(FF) + rnorm(n * p, 0, 0.01)
+
+X1     &lt;- preprocess(X3, n.comp = 10)
+X1_aug &lt;- rbind(rep(1, ncol(X1)), X1)
+
+# fastICA
+set.seed(1)
+W &lt;- matrix(rnorm(nrow(X1_aug) * n_starts), nrow(X1_aug), n_starts)
+W &lt;- sweep(W, 2, sqrt(colSums(W^2)), &quot;/&quot;)
+for (i in seq_len(n_iter)) W &lt;- fastica_update(X1_aug, W)
+Lhat_ica &lt;- t(X1_aug) %*% W
+
+# alt_proj
+set.seed(1)
+V &lt;- sign(matrix(rnorm(n * n_starts), n, n_starts))
+V[V == 0] &lt;- 1L
+for (i in seq_len(n_iter)) V &lt;- alt_proj_update(X1_aug, V)
+Lhat_ap &lt;- V
+
+cor_ica &lt;- abs(cor(Lhat_ica, L3))   # n_starts x 3
+cor_ap  &lt;- abs(cor(Lhat_ap,  L3))</code></pre>
+<pre><code>Warning in cor(Lhat_ap, L3): the standard deviation is zero</code></pre>
+<pre class="r"><code>par(mfrow = c(1, 2))
+
+order_ica &lt;- order(apply(cor_ica, 1, max), decreasing = TRUE)
+image(t(cor_ica[order_ica, ]), zlim = c(0, 1), axes = FALSE,
+      main = &quot;fastICA&quot;, xlab = &quot;True group&quot;, ylab = &quot;Start (sorted)&quot;)
+axis(1, at = seq(0, 1, length.out = 3), labels = 1:3)
+
+order_ap &lt;- order(apply(cor_ap, 1, max), decreasing = TRUE)
+image(t(cor_ap[order_ap, ]), zlim = c(0, 1), axes = FALSE,
+      main = &quot;AltProj&quot;, xlab = &quot;True group&quot;, ylab = &quot;Start (sorted)&quot;)
+axis(1, at = seq(0, 1, length.out = 3), labels = 1:3)</code></pre>
+<p><img src="figure/compare_fastica_altproj.Rmd/diag-3groups-heatmap-1.png" alt="" width="768" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>par(mfrow = c(1, 1))</code></pre>
 </div>
 <div id="summary" class="section level2">
@@ -1022,84 +1236,453 @@ axis(1, at = seq(0, 1, length.out = 9), labels = 1:9)</code></pre>
     &quot;Bifurcating tree (n=100, 6 branches)&quot;
   ),
   n.comp = c(10, 10, 10, 20, 10),
-  fastICA_pct = round(100 * c(res1[&quot;fastICA&quot;], res2[&quot;fastICA&quot;], res3[&quot;fastICA&quot;],
-                               res4[&quot;fastICA&quot;], res5[&quot;fastICA&quot;])),
-  fastICA_ms  = round(c(res1[&quot;fastICA_ms.elapsed&quot;], res2[&quot;fastICA_ms.elapsed&quot;],
-                         res3[&quot;fastICA_ms.elapsed&quot;], res4[&quot;fastICA_ms.elapsed&quot;],
-                         res5[&quot;fastICA_ms.elapsed&quot;])),
-  AltProj_pct = round(100 * c(res1[&quot;AltProj&quot;], res2[&quot;AltProj&quot;], res3[&quot;AltProj&quot;],
-                               res4[&quot;AltProj&quot;], res5[&quot;AltProj&quot;])),
-  AltProj_ms  = round(c(res1[&quot;AltProj_ms.elapsed&quot;], res2[&quot;AltProj_ms.elapsed&quot;],
-                         res3[&quot;AltProj_ms.elapsed&quot;], res4[&quot;AltProj_ms.elapsed&quot;],
-                         res5[&quot;AltProj_ms.elapsed&quot;]))
+  p = c(&quot;0.20&quot;, &quot;0.20&quot;, &quot;0.25&quot;, &quot;0.11&quot;, &quot;0.25-0.50&quot;),
+  fastICA_approx = round(100 * c(res1[&quot;fastICA_approx&quot;], res2[&quot;fastICA_approx&quot;], res3[&quot;fastICA_approx&quot;],
+                                  res4[&quot;fastICA_approx&quot;], res5[&quot;fastICA_approx&quot;])),
+  AltProj_approx = round(100 * c(res1[&quot;AltProj_approx&quot;], res2[&quot;AltProj_approx&quot;], res3[&quot;AltProj_approx&quot;],
+                                  res4[&quot;AltProj_approx&quot;], res5[&quot;AltProj_approx&quot;])),
+  fastICA_exact  = round(100 * c(res1[&quot;fastICA_exact&quot;],  res2[&quot;fastICA_exact&quot;],  res3[&quot;fastICA_exact&quot;],
+                                  res4[&quot;fastICA_exact&quot;],  res5[&quot;fastICA_exact&quot;])),
+  AltProj_exact  = round(100 * c(res1[&quot;AltProj_exact&quot;],  res2[&quot;AltProj_exact&quot;],  res3[&quot;AltProj_exact&quot;],
+                                  res4[&quot;AltProj_exact&quot;],  res5[&quot;AltProj_exact&quot;])),
+  fastICA_ms     = round(c(res1[&quot;fastICA_ms&quot;], res2[&quot;fastICA_ms&quot;],
+                            res3[&quot;fastICA_ms&quot;], res4[&quot;fastICA_ms&quot;], res5[&quot;fastICA_ms&quot;])),
+  AltProj_ms     = round(c(res1[&quot;AltProj_ms&quot;], res2[&quot;AltProj_ms&quot;],
+                            res3[&quot;AltProj_ms&quot;], res4[&quot;AltProj_ms&quot;], res5[&quot;AltProj_ms&quot;])),
+  fastICA_beat   = round(100 * c(res1[&quot;fastICA_beat&quot;], res2[&quot;fastICA_beat&quot;], res3[&quot;fastICA_beat&quot;],
+                                  res4[&quot;fastICA_beat&quot;], res5[&quot;fastICA_beat&quot;])),
+  AltProj_beat   = round(100 * c(res1[&quot;AltProj_beat&quot;], res2[&quot;AltProj_beat&quot;], res3[&quot;AltProj_beat&quot;],
+                                  res4[&quot;AltProj_beat&quot;], res5[&quot;AltProj_beat&quot;])),
+  true_vPv       = round(c(res1[&quot;true_vPv&quot;], res2[&quot;true_vPv&quot;], res3[&quot;true_vPv&quot;],
+                            res4[&quot;true_vPv&quot;], res5[&quot;true_vPv&quot;]), 4)
 )
 
 knitr::kable(results,
-  col.names = c(&quot;Simulation&quot;, &quot;n.comp&quot;,
-                &quot;fastICA (% success)&quot;, &quot;fastICA (ms)&quot;,
-                &quot;AltProj (% success)&quot;, &quot;AltProj (ms)&quot;),
-  caption   = &quot;Fraction of 100 random starts recovering a solution with max correlation &gt; 0.95 with any true group column, with wall-clock time in milliseconds.&quot;
+  col.names = c(&quot;Simulation&quot;, &quot;n.comp&quot;, &quot;p&quot;,
+                &quot;ICA &gt;0.95&quot;, &quot;AP &gt;0.95&quot;, &quot;ICA &gt;0.99&quot;, &quot;AP &gt;0.99&quot;,
+                &quot;ICA (ms)&quot;, &quot;AP (ms)&quot;, &quot;ICA % ≥ truth v&#39;Pv&quot;, &quot;AP % ≥ truth v&#39;Pv&quot;,
+                &quot;True min v&#39;Pv&quot;),
+  caption   = &quot;Per-start success rates at two correlation thresholds (&gt;0.95 and &gt;0.99 with any true group), wall-clock time, and fraction of starts whose binarized v&#39;Pv meets or exceeds the minimum true group v&#39;Pv.&quot;
 )</code></pre>
 <table>
-<caption>Fraction of 100 random starts recovering a solution with max correlation &gt; 0.95 with any true group column, with wall-clock time in milliseconds.</caption>
+<caption>Per-start success rates at two correlation thresholds (&gt;0.95 and &gt;0.99 with any true group), wall-clock time, and fraction of starts whose binarized v’Pv meets or exceeds the minimum true group v’Pv.</caption>
 <colgroup>
-<col width="33%" />
-<col width="6%" />
-<col width="18%" />
-<col width="11%" />
-<col width="18%" />
-<col width="11%" />
+<col width="21%" />
+<col width="4%" />
+<col width="5%" />
+<col width="5%" />
+<col width="5%" />
+<col width="5%" />
+<col width="5%" />
+<col width="5%" />
+<col width="4%" />
+<col width="14%" />
+<col width="14%" />
+<col width="8%" />
 </colgroup>
 <thead>
 <tr class="header">
 <th align="left">Simulation</th>
 <th align="right">n.comp</th>
-<th align="right">fastICA (% success)</th>
-<th align="right">fastICA (ms)</th>
-<th align="right">AltProj (% success)</th>
-<th align="right">AltProj (ms)</th>
+<th align="left">p</th>
+<th align="right">ICA &gt;0.95</th>
+<th align="right">AP &gt;0.95</th>
+<th align="right">ICA &gt;0.99</th>
+<th align="right">AP &gt;0.99</th>
+<th align="right">ICA (ms)</th>
+<th align="right">AP (ms)</th>
+<th align="right">ICA % &lt;U+2265&gt; truth v’Pv</th>
+<th align="right">AP % &lt;U+2265&gt; truth v’Pv</th>
+<th align="right">True min v’Pv</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td align="left">3 overlapping groups (n=100)</td>
 <td align="right">10</td>
-<td align="right">68</td>
-<td align="right">16</td>
-<td align="right">13</td>
-<td align="right">10</td>
+<td align="left">0.20</td>
+<td align="right">42</td>
+<td align="right">14</td>
+<td align="right">42</td>
+<td align="right">14</td>
+<td align="right">18</td>
+<td align="right">9</td>
+<td align="right">51</td>
+<td align="right">18</td>
+<td align="right">100.0000</td>
 </tr>
 <tr class="even">
 <td align="left">9 overlapping groups (n=100)</td>
 <td align="right">10</td>
-<td align="right">84</td>
-<td align="right">8</td>
+<td align="left">0.20</td>
+<td align="right">73</td>
 <td align="right">17</td>
+<td align="right">73</td>
+<td align="right">17</td>
+<td align="right">10</td>
 <td align="right">5</td>
+<td align="right">75</td>
+<td align="right">17</td>
+<td align="right">100.0000</td>
 </tr>
 <tr class="odd">
 <td align="left">4 non-overlapping groups (n=100)</td>
 <td align="right">10</td>
-<td align="right">41</td>
+<td align="left">0.25</td>
+<td align="right">49</td>
 <td align="right">9</td>
+<td align="right">49</td>
 <td align="right">9</td>
+<td align="right">12</td>
 <td align="right">5</td>
+<td align="right">57</td>
+<td align="right">12</td>
+<td align="right">100.0000</td>
 </tr>
 <tr class="even">
 <td align="left">9 non-overlapping groups (n=225)</td>
 <td align="right">20</td>
-<td align="right">24</td>
-<td align="right">16</td>
+<td align="left">0.11</td>
+<td align="right">3</td>
 <td align="right">2</td>
-<td align="right">11</td>
+<td align="right">3</td>
+<td align="right">2</td>
+<td align="right">16</td>
+<td align="right">9</td>
+<td align="right">4</td>
+<td align="right">3</td>
+<td align="right">224.9999</td>
 </tr>
 <tr class="odd">
 <td align="left">Bifurcating tree (n=100, 6 branches)</td>
 <td align="right">10</td>
-<td align="right">63</td>
-<td align="right">9</td>
+<td align="left">0.25-0.50</td>
+<td align="right">70</td>
+<td align="right">12</td>
+<td align="right">70</td>
+<td align="right">12</td>
+<td align="right">10</td>
+<td align="right">5</td>
+<td align="right">73</td>
+<td align="right">16</td>
+<td align="right">100.0000</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="high-noise-simulations" class="section level1">
+<h1>High-noise simulations</h1>
+<p>We repeat all five simulations with <code>noise_sd = 4</code> instead of 0.01, chosen so that the true v’Pv is around 90% of n.</p>
+<div id="simulation-1-3-overlapping-groups-high-noise" class="section level2">
+<h2>Simulation 1: 3 overlapping groups (high noise)</h2>
+<pre class="r"><code>K &lt;- 3; p &lt;- 1000; n &lt;- 100
+set.seed(1)
+L &lt;- matrix(-1, nrow = n, ncol = K)
+for (i in 1:K) { L[sample(1:n, 20), i] &lt;- 1 }
+FF &lt;- matrix(rnorm(p * K), nrow = p, ncol = K)
+X  &lt;- L %*% t(FF) + rnorm(n * p, 0, 4)
+
+nres1 &lt;- run_comparison(X, L, n.comp = 10, label = &quot;3 overlapping groups, high noise&quot;)</code></pre>
+<pre><code>Running fastICA for: 3 overlapping groups, high noise </code></pre>
+<pre><code>Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero</code></pre>
+<pre><code>Running alt-proj for: 3 overlapping groups, high noise </code></pre>
+<pre><code>Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero</code></pre>
+<pre><code>  fastICA: approx=48% exact=48% beat=57%  AltProj: approx=15% exact=15% beat=21%</code></pre>
+</div>
+<div id="simulation-2-9-overlapping-groups-high-noise" class="section level2">
+<h2>Simulation 2: 9 overlapping groups (high noise)</h2>
+<pre class="r"><code>K &lt;- 9; p &lt;- 1000; n &lt;- 100
+set.seed(1)
+L &lt;- matrix(0, nrow = n, ncol = K)
+for (i in 1:K) { L[sample(1:n, 20), i] &lt;- 1 }
+FF &lt;- matrix(rnorm(p * K), nrow = p, ncol = K)
+X  &lt;- L %*% t(FF) + rnorm(n * p, 0, 4)
+
+nres2 &lt;- run_comparison(X, L, n.comp = 10, label = &quot;9 overlapping groups, high noise&quot;)</code></pre>
+<pre><code>Running fastICA for: 9 overlapping groups, high noise </code></pre>
+<pre><code>Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero</code></pre>
+<pre><code>Running alt-proj for: 9 overlapping groups, high noise </code></pre>
+<pre><code>Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero</code></pre>
+<pre><code>  fastICA: approx=38% exact=3% beat=71%  AltProj: approx=7% exact=3% beat=15%</code></pre>
+</div>
+<div id="simulation-3-4-non-overlapping-groups-high-noise" class="section level2">
+<h2>Simulation 3: 4 non-overlapping groups (high noise)</h2>
+<pre class="r"><code>n &lt;- 100; p &lt;- 1000
+set.seed(1)
+L &lt;- matrix(0, nrow = n, ncol = 4)
+L[1:25,   1] &lt;- 1; L[26:50,  2] &lt;- 1; L[51:75,  3] &lt;- 1; L[76:100, 4] &lt;- 1
+FF &lt;- matrix(rnorm(p * 4), nrow = p)
+X  &lt;- L %*% t(FF) + rnorm(n * p, 0, 4)
+
+nres3 &lt;- run_comparison(X, L, n.comp = 10, label = &quot;4 non-overlapping groups, high noise&quot;)</code></pre>
+<pre><code>Running fastICA for: 4 non-overlapping groups, high noise </code></pre>
+<pre><code>Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero</code></pre>
+<pre><code>Running alt-proj for: 4 non-overlapping groups, high noise </code></pre>
+<pre><code>Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero</code></pre>
+<pre><code>  fastICA: approx=45% exact=38% beat=54%  AltProj: approx=6% exact=5% beat=11%</code></pre>
+</div>
+<div id="simulation-4-9-non-overlapping-groups-high-noise" class="section level2">
+<h2>Simulation 4: 9 non-overlapping groups (high noise)</h2>
+<pre class="r"><code>n &lt;- 225; p &lt;- 1000
+set.seed(1)
+L &lt;- matrix(0, nrow = n, ncol = 9)
+for (i in 1:9) { L[((i - 1) * 25 + 1):(i * 25), i] &lt;- 1 }
+FF &lt;- matrix(rnorm(p * 9), nrow = p)
+X  &lt;- L %*% t(FF) + rnorm(n * p, 0, 4)
+
+nres4 &lt;- run_comparison(X, L, n.comp = 20, label = &quot;9 non-overlapping groups, high noise&quot;)</code></pre>
+<pre><code>Running fastICA for: 9 non-overlapping groups, high noise </code></pre>
+<pre><code>Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero</code></pre>
+<pre><code>Running alt-proj for: 9 non-overlapping groups, high noise </code></pre>
+<pre><code>Warning in cor(v, L): the standard deviation is zero</code></pre>
+<pre><code>  fastICA: approx=7% exact=7% beat=9%  AltProj: approx=2% exact=2% beat=3%</code></pre>
+</div>
+<div id="simulation-5-bifurcating-tree-high-noise" class="section level2">
+<h2>Simulation 5: Bifurcating tree (high noise)</h2>
+<pre class="r"><code>n &lt;- 100; p &lt;- 1000
+set.seed(1)
+L &lt;- matrix(0, nrow = n, ncol = 6)
+L[1:50, 1] &lt;- 1; L[51:100, 2] &lt;- 1
+L[1:25, 3] &lt;- 1; L[26:50,  4] &lt;- 1; L[51:75, 5] &lt;- 1; L[76:100, 6] &lt;- 1
+FF &lt;- matrix(rnorm(p * 6), nrow = p)
+X  &lt;- L %*% t(FF) + rnorm(n * p, 0, 4)
+
+nres5 &lt;- run_comparison(X, L, n.comp = 10, label = &quot;Bifurcating tree, high noise&quot;)</code></pre>
+<pre><code>Running fastICA for: Bifurcating tree, high noise </code></pre>
+<pre><code>Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero</code></pre>
+<pre><code>Running alt-proj for: Bifurcating tree, high noise </code></pre>
+<pre><code>Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero
+Warning in cor(v, L): the standard deviation is zero</code></pre>
+<pre><code>  fastICA: approx=52% exact=52% beat=60%  AltProj: approx=7% exact=7% beat=11%</code></pre>
+</div>
+<div id="summary-high-noise" class="section level2">
+<h2>Summary (high noise)</h2>
+<pre class="r"><code>nresults &lt;- data.frame(
+  Simulation = c(
+    &quot;3 overlapping groups (n=100)&quot;,
+    &quot;9 overlapping groups (n=100)&quot;,
+    &quot;4 non-overlapping groups (n=100)&quot;,
+    &quot;9 non-overlapping groups (n=225)&quot;,
+    &quot;Bifurcating tree (n=100, 6 branches)&quot;
+  ),
+  n.comp = c(10, 10, 10, 20, 10),
+  p = c(&quot;0.20&quot;, &quot;0.20&quot;, &quot;0.25&quot;, &quot;0.11&quot;, &quot;0.25-0.50&quot;),
+  fastICA_approx = round(100 * c(nres1[&quot;fastICA_approx&quot;], nres2[&quot;fastICA_approx&quot;], nres3[&quot;fastICA_approx&quot;],
+                                  nres4[&quot;fastICA_approx&quot;], nres5[&quot;fastICA_approx&quot;])),
+  AltProj_approx = round(100 * c(nres1[&quot;AltProj_approx&quot;], nres2[&quot;AltProj_approx&quot;], nres3[&quot;AltProj_approx&quot;],
+                                  nres4[&quot;AltProj_approx&quot;], nres5[&quot;AltProj_approx&quot;])),
+  fastICA_exact  = round(100 * c(nres1[&quot;fastICA_exact&quot;],  nres2[&quot;fastICA_exact&quot;],  nres3[&quot;fastICA_exact&quot;],
+                                  nres4[&quot;fastICA_exact&quot;],  nres5[&quot;fastICA_exact&quot;])),
+  AltProj_exact  = round(100 * c(nres1[&quot;AltProj_exact&quot;],  nres2[&quot;AltProj_exact&quot;],  nres3[&quot;AltProj_exact&quot;],
+                                  nres4[&quot;AltProj_exact&quot;],  nres5[&quot;AltProj_exact&quot;])),
+  fastICA_ms     = round(c(nres1[&quot;fastICA_ms&quot;], nres2[&quot;fastICA_ms&quot;],
+                            nres3[&quot;fastICA_ms&quot;], nres4[&quot;fastICA_ms&quot;], nres5[&quot;fastICA_ms&quot;])),
+  AltProj_ms     = round(c(nres1[&quot;AltProj_ms&quot;], nres2[&quot;AltProj_ms&quot;],
+                            nres3[&quot;AltProj_ms&quot;], nres4[&quot;AltProj_ms&quot;], nres5[&quot;AltProj_ms&quot;])),
+  fastICA_beat   = round(100 * c(nres1[&quot;fastICA_beat&quot;], nres2[&quot;fastICA_beat&quot;], nres3[&quot;fastICA_beat&quot;],
+                                  nres4[&quot;fastICA_beat&quot;], nres5[&quot;fastICA_beat&quot;])),
+  AltProj_beat   = round(100 * c(nres1[&quot;AltProj_beat&quot;], nres2[&quot;AltProj_beat&quot;], nres3[&quot;AltProj_beat&quot;],
+                                  nres4[&quot;AltProj_beat&quot;], nres5[&quot;AltProj_beat&quot;])),
+  true_vPv       = round(c(nres1[&quot;true_vPv&quot;], nres2[&quot;true_vPv&quot;], nres3[&quot;true_vPv&quot;],
+                            nres4[&quot;true_vPv&quot;], nres5[&quot;true_vPv&quot;]), 2)
+)
+
+knitr::kable(nresults,
+  col.names = c(&quot;Simulation&quot;, &quot;n.comp&quot;, &quot;p&quot;,
+                &quot;ICA &gt;0.95&quot;, &quot;AP &gt;0.95&quot;, &quot;ICA &gt;0.99&quot;, &quot;AP &gt;0.99&quot;,
+                &quot;ICA (ms)&quot;, &quot;AP (ms)&quot;, &quot;ICA % ≥ truth v&#39;Pv&quot;, &quot;AP % ≥ truth v&#39;Pv&quot;,
+                &quot;True min v&#39;Pv&quot;),
+  caption   = &quot;High-noise results (noise_sd = 4). True v&#39;Pv averages around 90% of n across simulations.&quot;
+)</code></pre>
+<table>
+<caption>High-noise results (noise_sd = 4). True v’Pv averages around 90% of n across simulations.</caption>
+<colgroup>
+<col width="21%" />
+<col width="4%" />
+<col width="5%" />
+<col width="5%" />
+<col width="5%" />
+<col width="5%" />
+<col width="5%" />
+<col width="5%" />
+<col width="4%" />
+<col width="14%" />
+<col width="14%" />
+<col width="8%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Simulation</th>
+<th align="right">n.comp</th>
+<th align="left">p</th>
+<th align="right">ICA &gt;0.95</th>
+<th align="right">AP &gt;0.95</th>
+<th align="right">ICA &gt;0.99</th>
+<th align="right">AP &gt;0.99</th>
+<th align="right">ICA (ms)</th>
+<th align="right">AP (ms)</th>
+<th align="right">ICA % &lt;U+2265&gt; truth v’Pv</th>
+<th align="right">AP % &lt;U+2265&gt; truth v’Pv</th>
+<th align="right">True min v’Pv</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">3 overlapping groups (n=100)</td>
+<td align="right">10</td>
+<td align="left">0.20</td>
+<td align="right">48</td>
+<td align="right">15</td>
+<td align="right">48</td>
+<td align="right">15</td>
 <td align="right">11</td>
 <td align="right">6</td>
+<td align="right">57</td>
+<td align="right">21</td>
+<td align="right">98.05</td>
+</tr>
+<tr class="even">
+<td align="left">9 overlapping groups (n=100)</td>
+<td align="right">10</td>
+<td align="left">0.20</td>
+<td align="right">38</td>
+<td align="right">7</td>
+<td align="right">3</td>
+<td align="right">3</td>
+<td align="right">11</td>
+<td align="right">6</td>
+<td align="right">71</td>
+<td align="right">15</td>
+<td align="right">85.69</td>
+</tr>
+<tr class="odd">
+<td align="left">4 non-overlapping groups (n=100)</td>
+<td align="right">10</td>
+<td align="left">0.25</td>
+<td align="right">45</td>
+<td align="right">6</td>
+<td align="right">38</td>
+<td align="right">5</td>
+<td align="right">11</td>
+<td align="right">6</td>
+<td align="right">54</td>
+<td align="right">11</td>
+<td align="right">93.37</td>
+</tr>
+<tr class="even">
+<td align="left">9 non-overlapping groups (n=225)</td>
+<td align="right">20</td>
+<td align="left">0.11</td>
+<td align="right">7</td>
+<td align="right">2</td>
+<td align="right">7</td>
+<td align="right">2</td>
+<td align="right">17</td>
+<td align="right">10</td>
+<td align="right">9</td>
+<td align="right">3</td>
+<td align="right">208.78</td>
+</tr>
+<tr class="odd">
+<td align="left">Bifurcating tree (n=100, 6 branches)</td>
+<td align="right">10</td>
+<td align="left">0.25-0.50</td>
+<td align="right">52</td>
+<td align="right">7</td>
+<td align="right">52</td>
+<td align="right">7</td>
+<td align="right">11</td>
+<td align="right">6</td>
+<td align="right">60</td>
+<td align="right">11</td>
+<td align="right">94.11</td>
 </tr>
 </tbody>
 </table>
@@ -1139,6 +1722,7 @@ loaded via a namespace (and not attached):
 [29] pkgconfig_2.0.3 later_1.4.6     digest_0.6.39   R6_2.6.1       
 [33] pillar_1.11.1   magrittr_2.0.4  bslib_0.10.0    tools_4.4.2    
 [37] cachem_1.1.0   </code></pre>
+</div>
 </div>
 </div>
 
