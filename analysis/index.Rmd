@@ -97,6 +97,7 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 # SDP / Burer-Monteiro
 
 * [Burer-Monteiro approach to binary quadratic optimization](burer_monteiro.html)
+* [Comparing fastICA and alternating projection for binary group recovery](compare_fastica_altproj.html)
 
 # ICA
 
