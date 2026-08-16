@@ -17,7 +17,7 @@ We compare two approaches for finding binary group structure in whitened data:
 
 Both methods receive the same preprocessed data: centered and whitened `X1` with a row of 1s prepended to form `X1_aug`.  For the alternating projection, `U = t(X1_aug) / sqrt(n)`, which has orthonormal columns because `X1_aug %*% t(X1_aug) = n * I` (whitening plus centering makes the intercept row orthogonal to all whitened rows).
 
-For each simulation setting (taken from `fastica_centered_02.Rmd`) we run each method from **100 random starting points** and report the fraction of starts that produce a solution correlating >0.95 with at least one true group column.
+For each simulation setting (taken from `fastica_centered_02.Rmd`) we run each method from **100 random starting points** and report the fraction of starts that produce a solution correlating >0.99 with at least one true group column.
 
 ## Helper functions
 
@@ -59,6 +59,15 @@ vPv_scores = function(X1_aug, V) {
   colSums((X1_aug %*% V)^2) / ncol(X1_aug)
 }
 
+# Gradient-only step: omits the Hessian correction, so each step is gradient
+# ascent on the log-cosh objective rather than a Newton step.
+fastica_gradient_update = function(X, W) {
+  P <- t(X) %*% W
+  G <- tanh(P)
+  W <- X %*% G   # gradient only — no colSums(G2) * W term
+  sweep(W, 2, sqrt(colSums(W^2)), "/")
+}
+
 run_fastica = function(X1_aug, L, n_starts = 100, n_iter = 50) {
   set.seed(1)
   W <- matrix(rnorm(nrow(X1_aug) * n_starts), nrow(X1_aug), n_starts)
@@ -66,9 +75,34 @@ run_fastica = function(X1_aug, L, n_starts = 100, n_iter = 50) {
   for (i in seq_len(n_iter))
     W <- fastica_update(X1_aug, W)
   Lhat <- t(X1_aug) %*% W  # n x n_starts
-  V <- sign(Lhat); V[V == 0] <- 1L
-  max_cors <- apply(V, 2, max_cor_with_truth, L = L)
-  list(max_cors = max_cors, vPv = vPv_scores(X1_aug, V))
+  # Centre each column before binarising: handles asymmetric (0/1) group encoding.
+  # Also flag near-degenerate columns (tiny sd) before centering amplifies noise.
+  near_const <- apply(Lhat, 2, sd) < 1e-3
+  V <- sign(sweep(Lhat, 2, colMeans(Lhat))); V[V == 0] <- 1L
+  degenerate        <- near_const | apply(V, 2, function(v) all(v == v[1]))
+  max_cors          <- apply(V, 2, max_cor_with_truth, L = L)
+  max_cors[degenerate] <- 0  # degenerate starts count as failures
+  list(max_cors = max_cors, vPv = vPv_scores(X1_aug, V),
+       prop_degenerate = mean(degenerate))
+}
+
+# Hybrid: n_grad gradient steps (ascent) then Newton steps for convergence.
+run_fastica_hybrid = function(X1_aug, L, n_starts = 100, n_iter = 50, n_grad = 5) {
+  set.seed(1)
+  W <- matrix(rnorm(nrow(X1_aug) * n_starts), nrow(X1_aug), n_starts)
+  W <- sweep(W, 2, sqrt(colSums(W^2)), "/")
+  for (i in seq_len(n_grad))
+    W <- fastica_gradient_update(X1_aug, W)
+  for (i in seq_len(n_iter - n_grad))
+    W <- fastica_update(X1_aug, W)
+  Lhat <- t(X1_aug) %*% W
+  near_const <- apply(Lhat, 2, sd) < 1e-3
+  V <- sign(sweep(Lhat, 2, colMeans(Lhat))); V[V == 0] <- 1L
+  degenerate        <- near_const | apply(V, 2, function(v) all(v == v[1]))
+  max_cors          <- apply(V, 2, max_cor_with_truth, L = L)
+  max_cors[degenerate] <- 0
+  list(max_cors = max_cors, vPv = vPv_scores(X1_aug, V),
+       prop_degenerate = mean(degenerate))
 }
 
 run_alt_proj = function(X1_aug, L, n_starts = 100, n_iter = 50) {
@@ -78,8 +112,11 @@ run_alt_proj = function(X1_aug, L, n_starts = 100, n_iter = 50) {
   V[V == 0] <- 1L
   for (i in seq_len(n_iter))
     V <- alt_proj_update(X1_aug, V)
-  max_cors <- apply(V, 2, max_cor_with_truth, L = L)
-  list(max_cors = max_cors, vPv = vPv_scores(X1_aug, V))
+  degenerate        <- apply(V, 2, function(v) all(v == v[1]))
+  max_cors          <- apply(V, 2, max_cor_with_truth, L = L)
+  max_cors[degenerate] <- 0
+  list(max_cors = max_cors, vPv = vPv_scores(X1_aug, V),
+       prop_degenerate = mean(degenerate))
 }
 
 run_comparison = function(X, L, n.comp, label, n_starts = 100, n_iter = 50) {
@@ -92,22 +129,34 @@ run_comparison = function(X, L, n.comp, label, n_starts = 100, n_iter = 50) {
   cat("Running fastICA for:", label, "\n")
   ica_time <- system.time(ica <- run_fastica(X1_aug, L, n_starts = n_starts, n_iter = n_iter))
 
+  cat("Running fastICA-hybrid for:", label, "\n")
+  hyb_time <- system.time(hyb <- run_fastica_hybrid(X1_aug, L, n_starts = n_starts, n_iter = n_iter))
+
   cat("Running alt-proj for:", label, "\n")
   ap_time  <- system.time(ap  <- run_alt_proj(X1_aug, L, n_starts = n_starts, n_iter = n_iter))
 
-  ica_approx <- mean(ica$max_cors > 0.95, na.rm = TRUE)
-  ica_exact  <- mean(ica$max_cors > 0.99, na.rm = TRUE)
-  ap_approx  <- mean(ap$max_cors  > 0.95, na.rm = TRUE)
-  ap_exact   <- mean(ap$max_cors  > 0.99, na.rm = TRUE)
+  ica_approx <- mean(ica$max_cors > 0.95)
+  ica_exact  <- mean(ica$max_cors > 0.99)
+  hyb_approx <- mean(hyb$max_cors > 0.95)
+  hyb_exact  <- mean(hyb$max_cors > 0.99)
+  ap_approx  <- mean(ap$max_cors  > 0.95)
+  ap_exact   <- mean(ap$max_cors  > 0.99)
   ica_beat   <- mean(ica$vPv >= true_vPv - 1e-10)
+  hyb_beat   <- mean(hyb$vPv >= true_vPv - 1e-10)
   ap_beat    <- mean(ap$vPv  >= true_vPv - 1e-10)
-  cat(sprintf("  fastICA: approx=%.0f%% exact=%.0f%% beat=%.0f%%  AltProj: approx=%.0f%% exact=%.0f%% beat=%.0f%%\n",
-              100*ica_approx, 100*ica_exact, 100*ica_beat,
-              100*ap_approx,  100*ap_exact,  100*ap_beat))
+  cat(sprintf("  ICA: approx=%.0f%% exact=%.0f%% degen=%.0f%%  Hybrid: approx=%.0f%% exact=%.0f%% degen=%.0f%%  AP: approx=%.0f%% exact=%.0f%% degen=%.0f%%\n",
+              100*ica_approx, 100*ica_exact, 100*ica$prop_degenerate,
+              100*hyb_approx, 100*hyb_exact, 100*hyb$prop_degenerate,
+              100*ap_approx,  100*ap_exact,  100*ap$prop_degenerate))
   c(fastICA_approx = ica_approx, fastICA_exact = ica_exact,
     fastICA_ms = 1000 * ica_time[["elapsed"]], fastICA_beat = ica_beat,
+    fastICA_degen = ica$prop_degenerate,
+    Hybrid_approx = hyb_approx,   Hybrid_exact = hyb_exact,
+    Hybrid_ms = 1000 * hyb_time[["elapsed"]], Hybrid_beat = hyb_beat,
+    Hybrid_degen = hyb$prop_degenerate,
     AltProj_approx = ap_approx,  AltProj_exact = ap_exact,
     AltProj_ms = 1000 * ap_time[["elapsed"]],  AltProj_beat = ap_beat,
+    AltProj_degen = ap$prop_degenerate,
     true_vPv = true_vPv)
 }
 ```
@@ -325,6 +374,21 @@ axis(1, at = seq(0, 1, length.out = 3), labels = 1:3)
 par(mfrow = c(1, 1))
 ```
 
+## Simulation 6: 25 non-overlapping groups
+
+Twenty-five equal non-overlapping groups of 20 (n=500). Using n.comp=25.
+
+```{r sim6-25nonoverlap}
+n <- 500; p <- 1000
+set.seed(1)
+L <- matrix(0, nrow = n, ncol = 25)
+for (i in 1:25) { L[((i - 1) * 20 + 1):(i * 20), i] <- 1 }
+FF <- matrix(rnorm(p * 25), nrow = p)
+X  <- L %*% t(FF) + rnorm(n * p, 0, 0.01)
+
+res6 <- run_comparison(X, L, n.comp = 25, label = "25 non-overlapping groups (n=500)")
+```
+
 ## Summary
 
 ```{r summary-table}
@@ -334,38 +398,54 @@ results <- data.frame(
     "9 overlapping groups (n=100)",
     "4 non-overlapping groups (n=100)",
     "9 non-overlapping groups (n=225)",
-    "Bifurcating tree (n=100, 6 branches)"
+    "Bifurcating tree (n=100, 6 branches)",
+    "25 non-overlapping groups (n=500)"
   ),
-  n.comp = c(10, 10, 10, 20, 10),
-  p = c("0.20", "0.20", "0.25", "0.11", "0.25-0.50"),
-  fastICA_approx = round(100 * c(res1["fastICA_approx"], res2["fastICA_approx"], res3["fastICA_approx"],
-                                  res4["fastICA_approx"], res5["fastICA_approx"])),
-  AltProj_approx = round(100 * c(res1["AltProj_approx"], res2["AltProj_approx"], res3["AltProj_approx"],
-                                  res4["AltProj_approx"], res5["AltProj_approx"])),
+  n.comp = c(10, 10, 10, 20, 10, 25),
+  p = c("0.20", "0.20", "0.25", "0.11", "0.25-0.50", "0.04"),
   fastICA_exact  = round(100 * c(res1["fastICA_exact"],  res2["fastICA_exact"],  res3["fastICA_exact"],
-                                  res4["fastICA_exact"],  res5["fastICA_exact"])),
+                                  res4["fastICA_exact"],  res5["fastICA_exact"],  res6["fastICA_exact"])),
+  Hybrid_exact   = round(100 * c(res1["Hybrid_exact"],   res2["Hybrid_exact"],   res3["Hybrid_exact"],
+                                  res4["Hybrid_exact"],   res5["Hybrid_exact"],   res6["Hybrid_exact"])),
   AltProj_exact  = round(100 * c(res1["AltProj_exact"],  res2["AltProj_exact"],  res3["AltProj_exact"],
-                                  res4["AltProj_exact"],  res5["AltProj_exact"])),
+                                  res4["AltProj_exact"],  res5["AltProj_exact"],  res6["AltProj_exact"])),
+  fastICA_degen  = round(100 * c(res1["fastICA_degen"],  res2["fastICA_degen"],  res3["fastICA_degen"],
+                                  res4["fastICA_degen"],  res5["fastICA_degen"],  res6["fastICA_degen"])),
+  Hybrid_degen   = round(100 * c(res1["Hybrid_degen"],   res2["Hybrid_degen"],   res3["Hybrid_degen"],
+                                  res4["Hybrid_degen"],   res5["Hybrid_degen"],   res6["Hybrid_degen"])),
+  AltProj_degen  = round(100 * c(res1["AltProj_degen"],  res2["AltProj_degen"],  res3["AltProj_degen"],
+                                  res4["AltProj_degen"],  res5["AltProj_degen"],  res6["AltProj_degen"])),
   fastICA_ms     = round(c(res1["fastICA_ms"], res2["fastICA_ms"],
-                            res3["fastICA_ms"], res4["fastICA_ms"], res5["fastICA_ms"])),
+                            res3["fastICA_ms"], res4["fastICA_ms"], res5["fastICA_ms"], res6["fastICA_ms"])),
+  Hybrid_ms      = round(c(res1["Hybrid_ms"],  res2["Hybrid_ms"],
+                            res3["Hybrid_ms"],  res4["Hybrid_ms"],  res5["Hybrid_ms"],  res6["Hybrid_ms"])),
   AltProj_ms     = round(c(res1["AltProj_ms"], res2["AltProj_ms"],
-                            res3["AltProj_ms"], res4["AltProj_ms"], res5["AltProj_ms"])),
+                            res3["AltProj_ms"], res4["AltProj_ms"], res5["AltProj_ms"], res6["AltProj_ms"])),
   fastICA_beat   = round(100 * c(res1["fastICA_beat"], res2["fastICA_beat"], res3["fastICA_beat"],
-                                  res4["fastICA_beat"], res5["fastICA_beat"])),
+                                  res4["fastICA_beat"], res5["fastICA_beat"], res6["fastICA_beat"])),
+  Hybrid_beat    = round(100 * c(res1["Hybrid_beat"],  res2["Hybrid_beat"],  res3["Hybrid_beat"],
+                                  res4["Hybrid_beat"],  res5["Hybrid_beat"],  res6["Hybrid_beat"])),
   AltProj_beat   = round(100 * c(res1["AltProj_beat"], res2["AltProj_beat"], res3["AltProj_beat"],
-                                  res4["AltProj_beat"], res5["AltProj_beat"])),
+                                  res4["AltProj_beat"], res5["AltProj_beat"], res6["AltProj_beat"])),
   true_vPv       = round(c(res1["true_vPv"], res2["true_vPv"], res3["true_vPv"],
-                            res4["true_vPv"], res5["true_vPv"]), 4)
+                            res4["true_vPv"], res5["true_vPv"], res6["true_vPv"]), 4)
 )
 
 knitr::kable(results,
   col.names = c("Simulation", "n.comp", "p",
-                "ICA >0.95", "AP >0.95", "ICA >0.99", "AP >0.99",
-                "ICA (ms)", "AP (ms)", "ICA % ≥ truth v'Pv", "AP % ≥ truth v'Pv",
+                "ICA >0.99", "Hyb >0.99", "AP >0.99",
+                "ICA degen%", "Hyb degen%", "AP degen%",
+                "ICA (ms)", "Hyb (ms)", "AP (ms)",
+                "ICA % ≥ v'Pv", "Hyb % ≥ v'Pv", "AP % ≥ v'Pv",
                 "True min v'Pv"),
-  caption   = "Per-start success rates at two correlation thresholds (>0.95 and >0.99 with any true group), wall-clock time, and fraction of starts whose binarized v'Pv meets or exceeds the minimum true group v'Pv."
+  caption   = "Per-start success rates for fastICA (Newton), Hybrid (5 gradient + 45 Newton steps), and AltProj, at two correlation thresholds; percentage of degenerate solutions; wall-clock time; and fraction of starts whose binarized v'Pv meets or exceeds the minimum true group v'Pv."
 )
 ```
+
+The Hybrid method performs noticeably worse than standard fastICA on non-overlapping group simulations (sims 3, 4, 6).
+The likely reason is that a binary vector indicating a single non-overlapping group is a *minimum* of the log-cosh contrast function: because the group members are all identical in whitened space, the projection has a highly sub-Gaussian (near-Bernoulli) distribution, which log-cosh penalises rather than rewards.
+The initial gradient-ascent steps therefore push the weight vector *away* from these solutions before Newton steps take over, leaving fewer starting points in the basin of attraction of the correct solution.
+The standard fastICA Newton steps, by contrast, can converge to both maxima and minima of the contrast, and apparently reach the non-overlapping group solutions more reliably from random initialisation.
 
 # High-noise simulations
 
@@ -437,6 +517,19 @@ X  <- L %*% t(FF) + rnorm(n * p, 0, 4)
 nres5 <- run_comparison(X, L, n.comp = 10, label = "Bifurcating tree, high noise")
 ```
 
+## Simulation 6: 25 non-overlapping groups (high noise)
+
+```{r noise-sim6}
+n <- 500; p <- 1000
+set.seed(1)
+L <- matrix(0, nrow = n, ncol = 25)
+for (i in 1:25) { L[((i - 1) * 20 + 1):(i * 20), i] <- 1 }
+FF <- matrix(rnorm(p * 25), nrow = p)
+X  <- L %*% t(FF) + rnorm(n * p, 0, 4)
+
+nres6 <- run_comparison(X, L, n.comp = 25, label = "25 non-overlapping groups, high noise")
+```
+
 ## Summary (high noise)
 
 ```{r noise-summary-table}
@@ -446,35 +539,46 @@ nresults <- data.frame(
     "9 overlapping groups (n=100)",
     "4 non-overlapping groups (n=100)",
     "9 non-overlapping groups (n=225)",
-    "Bifurcating tree (n=100, 6 branches)"
+    "Bifurcating tree (n=100, 6 branches)",
+    "25 non-overlapping groups (n=500)"
   ),
-  n.comp = c(10, 10, 10, 20, 10),
-  p = c("0.20", "0.20", "0.25", "0.11", "0.25-0.50"),
-  fastICA_approx = round(100 * c(nres1["fastICA_approx"], nres2["fastICA_approx"], nres3["fastICA_approx"],
-                                  nres4["fastICA_approx"], nres5["fastICA_approx"])),
-  AltProj_approx = round(100 * c(nres1["AltProj_approx"], nres2["AltProj_approx"], nres3["AltProj_approx"],
-                                  nres4["AltProj_approx"], nres5["AltProj_approx"])),
+  n.comp = c(10, 10, 10, 20, 10, 25),
+  p = c("0.20", "0.20", "0.25", "0.11", "0.25-0.50", "0.04"),
   fastICA_exact  = round(100 * c(nres1["fastICA_exact"],  nres2["fastICA_exact"],  nres3["fastICA_exact"],
-                                  nres4["fastICA_exact"],  nres5["fastICA_exact"])),
+                                  nres4["fastICA_exact"],  nres5["fastICA_exact"],  nres6["fastICA_exact"])),
+  Hybrid_exact   = round(100 * c(nres1["Hybrid_exact"],   nres2["Hybrid_exact"],   nres3["Hybrid_exact"],
+                                  nres4["Hybrid_exact"],   nres5["Hybrid_exact"],   nres6["Hybrid_exact"])),
   AltProj_exact  = round(100 * c(nres1["AltProj_exact"],  nres2["AltProj_exact"],  nres3["AltProj_exact"],
-                                  nres4["AltProj_exact"],  nres5["AltProj_exact"])),
+                                  nres4["AltProj_exact"],  nres5["AltProj_exact"],  nres6["AltProj_exact"])),
+  fastICA_degen  = round(100 * c(nres1["fastICA_degen"],  nres2["fastICA_degen"],  nres3["fastICA_degen"],
+                                  nres4["fastICA_degen"],  nres5["fastICA_degen"],  nres6["fastICA_degen"])),
+  Hybrid_degen   = round(100 * c(nres1["Hybrid_degen"],   nres2["Hybrid_degen"],   nres3["Hybrid_degen"],
+                                  nres4["Hybrid_degen"],   nres5["Hybrid_degen"],   nres6["Hybrid_degen"])),
+  AltProj_degen  = round(100 * c(nres1["AltProj_degen"],  nres2["AltProj_degen"],  nres3["AltProj_degen"],
+                                  nres4["AltProj_degen"],  nres5["AltProj_degen"],  nres6["AltProj_degen"])),
   fastICA_ms     = round(c(nres1["fastICA_ms"], nres2["fastICA_ms"],
-                            nres3["fastICA_ms"], nres4["fastICA_ms"], nres5["fastICA_ms"])),
+                            nres3["fastICA_ms"], nres4["fastICA_ms"], nres5["fastICA_ms"], nres6["fastICA_ms"])),
+  Hybrid_ms      = round(c(nres1["Hybrid_ms"],  nres2["Hybrid_ms"],
+                            nres3["Hybrid_ms"],  nres4["Hybrid_ms"],  nres5["Hybrid_ms"],  nres6["Hybrid_ms"])),
   AltProj_ms     = round(c(nres1["AltProj_ms"], nres2["AltProj_ms"],
-                            nres3["AltProj_ms"], nres4["AltProj_ms"], nres5["AltProj_ms"])),
+                            nres3["AltProj_ms"], nres4["AltProj_ms"], nres5["AltProj_ms"], nres6["AltProj_ms"])),
   fastICA_beat   = round(100 * c(nres1["fastICA_beat"], nres2["fastICA_beat"], nres3["fastICA_beat"],
-                                  nres4["fastICA_beat"], nres5["fastICA_beat"])),
+                                  nres4["fastICA_beat"], nres5["fastICA_beat"], nres6["fastICA_beat"])),
+  Hybrid_beat    = round(100 * c(nres1["Hybrid_beat"],  nres2["Hybrid_beat"],  nres3["Hybrid_beat"],
+                                  nres4["Hybrid_beat"],  nres5["Hybrid_beat"],  nres6["Hybrid_beat"])),
   AltProj_beat   = round(100 * c(nres1["AltProj_beat"], nres2["AltProj_beat"], nres3["AltProj_beat"],
-                                  nres4["AltProj_beat"], nres5["AltProj_beat"])),
+                                  nres4["AltProj_beat"], nres5["AltProj_beat"], nres6["AltProj_beat"])),
   true_vPv       = round(c(nres1["true_vPv"], nres2["true_vPv"], nres3["true_vPv"],
-                            nres4["true_vPv"], nres5["true_vPv"]), 2)
+                            nres4["true_vPv"], nres5["true_vPv"], nres6["true_vPv"]), 2)
 )
 
 knitr::kable(nresults,
   col.names = c("Simulation", "n.comp", "p",
-                "ICA >0.95", "AP >0.95", "ICA >0.99", "AP >0.99",
-                "ICA (ms)", "AP (ms)", "ICA % ≥ truth v'Pv", "AP % ≥ truth v'Pv",
+                "ICA >0.99", "Hyb >0.99", "AP >0.99",
+                "ICA degen%", "Hyb degen%", "AP degen%",
+                "ICA (ms)", "Hyb (ms)", "AP (ms)",
+                "ICA % ≥ v'Pv", "Hyb % ≥ v'Pv", "AP % ≥ v'Pv",
                 "True min v'Pv"),
-  caption   = "High-noise results (noise_sd = 4). True v'Pv averages around 90% of n across simulations."
+  caption   = "High-noise results (noise_sd = 4). Hybrid = 5 gradient + 45 Newton steps."
 )
 ```
