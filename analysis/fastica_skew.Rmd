@@ -1,6 +1,6 @@
 ---
 title: "FastICA with Tilted Log-Cosh"
-author: "Matthew Stephens"
+author: "Matthew Stephens, with use of Gemini/Claude"
 date: "2026-07-07"
 output: workflowr::wflow_html
 editor_options:
@@ -9,10 +9,12 @@ editor_options:
 
 ## Introduction
 
-This implements and tests the "Tilted Log-Cosh" (TLC) contrast function for FastICA,
-motivated by the paper `skew_fastICA.pdf`. The standard log-cosh contrast fails to detect
+This implements and tests two asymmetric constrast functions for fastICA: the
+"Tilted Log-Cosh" (TLC) contrast function and one based on $G(z) = \log(\Phi(\alpha z))$ where $\Phi$ is the Cumulative Distribution Function (CDF) of the standard normal distribution, and $\alpha$ is a fixed scalar (e.g., $\alpha = 2$). Both functions came up in conversations with Gemini.
+
+The motivation for this is that the standard log-cosh contrast fails to detect
 highly skewed (sparse) binary sources because its expectation falls *below* the Gaussian
-baseline as $p \to 0$ or $p \to 1$. The tilted version adds a $\lambda z|z|$ term:
+baseline as $p \to 0$ or $p \to 1$. The tilted log-cosh version adds a $\lambda z|z|$ term:
 
 $$G(z) = \log(\cosh(z)) + \lambda z|z|$$
 
@@ -55,6 +57,26 @@ compute_objective_tlc = function(X, w, lambda = 1) {
   mean(log(cosh(P)) + lambda * abs(P) * P)
 }
 
+# Log-Phi contrast: G(z) = log(Phi(alpha*z)), designed to be maximised.
+# g(z)  = alpha * phi(alpha*z) / Phi(alpha*z)
+# g'(z) = alpha^2 * (-alpha*z * h - h^2)   where h = phi(alpha*z)/Phi(alpha*z)
+# h is computed in log-scale for numerical stability when alpha*z << 0.
+fastica_r1update_logphi = function(X, w, alpha = 2) {
+  w = w / sqrt(sum(w^2))
+  P = as.vector(t(X) %*% w)
+  u = alpha * P
+  h = exp(dnorm(u, log = TRUE) - pnorm(u, log.p = TRUE))
+  G  = alpha * h
+  G2 = alpha^2 * (-u * h - h^2)
+  w = X %*% G - mean(G2) * ncol(X) * w
+  w / sqrt(sum(w^2))
+}
+
+compute_objective_logphi = function(X, w, alpha = 2) {
+  P = as.vector(t(X) %*% w)
+  mean(pnorm(alpha * P, log.p = TRUE))
+}
+
 prewhiten = function(X, n.comp) {
   X = X - rowMeans(X)
   sqrt(ncol(X)) * t(svd(X)$v[, 1:n.comp])
@@ -89,24 +111,40 @@ expected_tlc = function(p, lambda = 1) {
   expected_logcosh(p) + lambda * (2 * p - 1)
 }
 
+expected_logphi = function(p, alpha = 2) {
+  z_neg = -sqrt((1 - p) / p)
+  z_pos =  sqrt(p / (1 - p))
+  p * pnorm(alpha * z_neg, log.p = TRUE) + (1 - p) * pnorm(alpha * z_pos, log.p = TRUE)
+}
+
 log_cosh_stable = function(z) abs(z) + log1p(exp(-2 * abs(z))) - log(2)
-gaussian_baseline = integrate(function(z) log_cosh_stable(z) * dnorm(z), -Inf, Inf)$value
+gaussian_baseline    = integrate(function(z) log_cosh_stable(z) * dnorm(z), -Inf, Inf)$value
+gaussian_baseline_lp = integrate(function(z) pnorm(2 * z, log.p = TRUE) * dnorm(z), -Inf, Inf)$value
 
-pvec = seq(0.01, 0.99, by = 0.01)
-lc  = sapply(pvec, expected_logcosh)
-tlc = sapply(pvec, expected_tlc)
+pvec  = seq(0.01, 0.99, by = 0.01)
+lc    = sapply(pvec, expected_logcosh)
+tlc   = sapply(pvec, expected_tlc)
+logphi = sapply(pvec, expected_logphi)
 
+par(mfrow = c(1, 2))
 plot(pvec, lc, type = "l", col = "blue", ylim = range(c(lc, tlc)),
      xlab = "p (prob of -1)", ylab = "E[G(z)]",
-     main = "Log-cosh vs Tilted Log-Cosh for binary source")
+     main = "Log-cosh vs TLC")
 lines(pvec, tlc, col = "red")
 abline(h = gaussian_baseline, lty = 2, col = "gray")
-legend("bottomleft", c("log-cosh", "tilted log-cosh (λ=1)", "Gaussian baseline"),
+legend("bottomleft", c("log-cosh", "TLC (λ=1)", "Gaussian baseline"),
        col = c("blue","red","gray"), lty = c(1,1,2))
+
+plot(pvec, logphi, type = "l", col = "purple",
+     xlab = "p (prob of -1)", ylab = "E[G(z)]",
+     main = "Log-Phi (α=2)")
+abline(h = gaussian_baseline_lp, lty = 2, col = "gray")
+legend("bottomleft", c("log-Phi (α=2)", "Gaussian baseline"),
+       col = c("purple","gray"), lty = c(1,2))
+par(mfrow = c(1, 1))
 ```
 
-Standard log-cosh falls below the Gaussian baseline for skewed sources. The tilted version
-increases monotonically toward the sparse extreme.
+Standard log-cosh falls below the Gaussian baseline for skewed sources. The tilted version increases monotonically toward the sparse extreme. Log-Phi exceeds the Gaussian baseline only for highly skewed sources (small $p$, i.e., mostly positive projections), so it is suited to one-sided sparse sources.
 
 ## Test 1: Symmetric binary source (k=1, p=0.5)
 
@@ -124,13 +162,16 @@ sigma = 0.1
 X_rad = A %*% S_rad + matrix(rnorm(p * n, 0, sigma), nrow = p)
 Z_rad = sqrt(n) * t(svd(X_rad)$v[, 1:k, drop = FALSE])
 
-res_lc_rad  = run_seeds(Z_rad, S_rad, fastica_r1update,     compute_objective,     n_seeds = 50)
-res_tlc_rad = run_seeds(Z_rad, S_rad, fastica_r1update_tlc, compute_objective_tlc, n_seeds = 50)
+res_lc_rad     = run_seeds(Z_rad, S_rad, fastica_r1update,        compute_objective,        n_seeds = 50)
+res_tlc_rad    = run_seeds(Z_rad, S_rad, fastica_r1update_tlc,    compute_objective_tlc,    n_seeds = 50)
+res_logphi_rad = run_seeds(Z_rad, S_rad, fastica_r1update_logphi, compute_objective_logphi, n_seeds = 50)
 
-cat("log-cosh  : mean max|cor| =", round(mean(res_lc_rad$maxcor),  3),
-    " fraction > 0.9:", mean(res_lc_rad$maxcor  > 0.9), "\n")
-cat("tilted lc : mean max|cor| =", round(mean(res_tlc_rad$maxcor), 3),
-    " fraction > 0.9:", mean(res_tlc_rad$maxcor > 0.9), "\n")
+cat("log-cosh  : mean max|cor| =", round(mean(res_lc_rad$maxcor),     3),
+    " fraction > 0.9:", mean(res_lc_rad$maxcor     > 0.9), "\n")
+cat("tilted lc : mean max|cor| =", round(mean(res_tlc_rad$maxcor),    3),
+    " fraction > 0.9:", mean(res_tlc_rad$maxcor    > 0.9), "\n")
+cat("log-Phi   : mean max|cor| =", round(mean(res_logphi_rad$maxcor), 3),
+    " fraction > 0.9:", mean(res_logphi_rad$maxcor > 0.9), "\n")
 ```
 
 ## Test 2: Non-overlapping groups (k=4, p=0.25 per source)
@@ -155,12 +196,14 @@ sigma = 0.1
 X  = A %*% S + matrix(rnorm(p * n, 0, sigma), nrow = p)
 Z  = prewhiten(X, k)
 
-res_lc  = run_seeds(Z, S, fastica_r1update,     compute_objective)
-res_tlc = run_seeds(Z, S, fastica_r1update_tlc, compute_objective_tlc)
+res_lc     = run_seeds(Z, S, fastica_r1update,        compute_objective)
+res_tlc    = run_seeds(Z, S, fastica_r1update_tlc,    compute_objective_tlc)
+res_logphi = run_seeds(Z, S, fastica_r1update_logphi, compute_objective_logphi)
 
-par(mfrow = c(1, 2))
-hist(res_lc$maxcor,  breaks = seq(0, 1, by = 0.05), main = "log-cosh: max |cor| with true S",  xlab = "")
-hist(res_tlc$maxcor, breaks = seq(0, 1, by = 0.05), main = "tilted log-cosh: max |cor| with true S", xlab = "")
+par(mfrow = c(1, 3))
+hist(res_lc$maxcor,     breaks = seq(0, 1, by = 0.05), main = "log-cosh",     xlab = "max |cor| with true S")
+hist(res_tlc$maxcor,    breaks = seq(0, 1, by = 0.05), main = "tilted lc",    xlab = "max |cor| with true S")
+hist(res_logphi$maxcor, breaks = seq(0, 1, by = 0.05), main = "log-Phi (α=2)", xlab = "max |cor| with true S")
 par(mfrow = c(1, 1))
 ```
 
@@ -211,19 +254,24 @@ sigma = 0.1
 X_sp = A %*% S_sparse + matrix(rnorm(p * n, 0, sigma), nrow = p)
 Z_sp = prewhiten(X_sp, k)
 
-res_lc_sp  = run_seeds(Z_sp, S_sparse, fastica_r1update,     compute_objective,     n_seeds = 100)
-res_tlc_sp = run_seeds(Z_sp, S_sparse, fastica_r1update_tlc, compute_objective_tlc, n_seeds = 100)
+res_lc_sp     = run_seeds(Z_sp, S_sparse, fastica_r1update,        compute_objective,        n_seeds = 100)
+res_tlc_sp    = run_seeds(Z_sp, S_sparse, fastica_r1update_tlc,    compute_objective_tlc,    n_seeds = 100)
+res_logphi_sp = run_seeds(Z_sp, S_sparse, fastica_r1update_logphi, compute_objective_logphi, n_seeds = 100)
 
-cat("log-cosh:    mean max|cor| =", round(mean(res_lc_sp$maxcor),  3),
-    " fraction > 0.9:", mean(res_lc_sp$maxcor  > 0.9), "\n")
-cat("tilted lc:   mean max|cor| =", round(mean(res_tlc_sp$maxcor), 3),
-    " fraction > 0.9:", mean(res_tlc_sp$maxcor > 0.9), "\n")
+cat("log-cosh:    mean max|cor| =", round(mean(res_lc_sp$maxcor),     3),
+    " fraction > 0.9:", mean(res_lc_sp$maxcor     > 0.9), "\n")
+cat("tilted lc:   mean max|cor| =", round(mean(res_tlc_sp$maxcor),    3),
+    " fraction > 0.9:", mean(res_tlc_sp$maxcor    > 0.9), "\n")
+cat("log-Phi:     mean max|cor| =", round(mean(res_logphi_sp$maxcor), 3),
+    " fraction > 0.9:", mean(res_logphi_sp$maxcor > 0.9), "\n")
 
-par(mfrow = c(1, 2))
-hist(res_lc_sp$maxcor,  breaks = seq(0, 1, by = 0.05),
-     main = "log-cosh: sparse binary source",    xlab = "max |cor| with true S")
-hist(res_tlc_sp$maxcor, breaks = seq(0, 1, by = 0.05),
-     main = "tilted log-cosh: sparse binary source", xlab = "max |cor| with true S")
+par(mfrow = c(1, 3))
+hist(res_lc_sp$maxcor,     breaks = seq(0, 1, by = 0.05),
+     main = "log-cosh",     xlab = "max |cor| with true S")
+hist(res_tlc_sp$maxcor,    breaks = seq(0, 1, by = 0.05),
+     main = "tilted lc",    xlab = "max |cor| with true S")
+hist(res_logphi_sp$maxcor, breaks = seq(0, 1, by = 0.05),
+     main = "log-Phi (α=2)", xlab = "max |cor| with true S")
 par(mfrow = c(1, 1))
 ```
 
@@ -265,17 +313,22 @@ fastica_deflation = function(X, k, update_fn, obj_fn, n_iter = 200, n_starts = 5
 }
 
 # Extract 4 components on the sparse simulation
-W_lc  = fastica_deflation(Z_sp, k, fastica_r1update,     compute_objective)
-W_tlc = fastica_deflation(Z_sp, k, fastica_r1update_tlc, compute_objective_tlc)
+W_lc     = fastica_deflation(Z_sp, k, fastica_r1update,        compute_objective)
+W_tlc    = fastica_deflation(Z_sp, k, fastica_r1update_tlc,    compute_objective_tlc)
+W_logphi = fastica_deflation(Z_sp, k, fastica_r1update_logphi, compute_objective_logphi)
 
-cor_lc  = cor(t(S_sparse), t(Z_sp) %*% W_lc)
-cor_tlc = cor(t(S_sparse), t(Z_sp) %*% W_tlc)
+cor_lc     = cor(t(S_sparse), t(Z_sp) %*% W_lc)
+cor_tlc    = cor(t(S_sparse), t(Z_sp) %*% W_tlc)
+cor_logphi = cor(t(S_sparse), t(Z_sp) %*% W_logphi)
 
 cat("log-cosh deflation — max |cor| per true source:\n")
-print(round(apply(abs(cor_lc),  1, max), 3))
+print(round(apply(abs(cor_lc),     1, max), 3))
 
 cat("tilted log-cosh deflation — max |cor| per true source:\n")
-print(round(apply(abs(cor_tlc), 1, max), 3))
+print(round(apply(abs(cor_tlc),    1, max), 3))
+
+cat("log-Phi deflation — max |cor| per true source:\n")
+print(round(apply(abs(cor_logphi), 1, max), 3))
 ```
 
 ## Test 4: 9 overlapping groups, 20 members each, n=100
@@ -296,35 +349,42 @@ sigma = 0.1
 X9 = t(L %*% t(FF) + matrix(rnorm(n * p, 0, sigma), nrow = n))  # p x n
 Z9 = prewhiten(X9, K)
 
-W9_lc  = fastica_deflation(Z9, K, fastica_r1update,     compute_objective,     n_starts = 10)
-W9_tlc = fastica_deflation(Z9, K, fastica_r1update_tlc, compute_objective_tlc, n_starts = 10)
+W9_lc     = fastica_deflation(Z9, K, fastica_r1update,        compute_objective,        n_starts = 10)
+W9_tlc    = fastica_deflation(Z9, K, fastica_r1update_tlc,    compute_objective_tlc,    n_starts = 10)
+W9_logphi = fastica_deflation(Z9, K, fastica_r1update_logphi, compute_objective_logphi, n_starts = 10)
 
-cor9_lc  = cor(L, t(Z9) %*% W9_lc)
-cor9_tlc = cor(L, t(Z9) %*% W9_tlc)
+cor9_lc     = cor(L, t(Z9) %*% W9_lc)
+cor9_tlc    = cor(L, t(Z9) %*% W9_tlc)
+cor9_logphi = cor(L, t(Z9) %*% W9_logphi)
 
 cat("log-cosh — max |cor| per true source:\n")
-print(round(apply(abs(cor9_lc),  2, max), 3))
+print(round(apply(abs(cor9_lc),     2, max), 3))
 
 cat("tilted log-cosh — max |cor| per true source:\n")
-print(round(apply(abs(cor9_tlc), 2, max), 3))
+print(round(apply(abs(cor9_tlc),    2, max), 3))
+
+cat("log-Phi — max |cor| per true source:\n")
+print(round(apply(abs(cor9_logphi), 2, max), 3))
 ```
 
 Extracted sources (rows = components, columns = samples):
 
 ```{r fig.height=6}
-proj9_lc  = t(Z9) %*% W9_lc
-proj9_tlc = t(Z9) %*% W9_tlc
+proj9_lc     = t(Z9) %*% W9_lc
+proj9_tlc    = t(Z9) %*% W9_tlc
+proj9_logphi = t(Z9) %*% W9_logphi
 
-par(mfrow = c(K, 2), mar = c(1, 2, 1.5, 0.5))
+par(mfrow = c(K, 3), mar = c(1, 2, 1.5, 0.5))
 for (i in 1:K) {
-  plot(proj9_lc[, i],  main = paste0("log-cosh comp ", i),     ylab = "", xlab = "", cex.main = 0.8)
-  plot(proj9_tlc[, i], main = paste0("tilted lc comp ", i), ylab = "", xlab = "", cex.main = 0.8)
+  plot(proj9_lc[, i],     main = paste0("log-cosh comp ", i),  ylab = "", xlab = "", cex.main = 0.8)
+  plot(proj9_tlc[, i],    main = paste0("tilted lc comp ", i), ylab = "", xlab = "", cex.main = 0.8)
+  plot(proj9_logphi[, i], main = paste0("log-Phi comp ", i),   ylab = "", xlab = "", cex.main = 0.8)
 }
 par(mfrow = c(1, 1))
 ```
 
 ## Summary
 
-The tilted log-cosh contrast G(z) = log(cosh(z)) + λz|z| addresses the fundamental
-failure of standard log-cosh for sparse binary sources. The odd term z|z| has expectation
-2p−1, so sparse sources (p→1) score highly rather than falling below the Gaussian baseline.
+The tilted log-cosh contrast G(z) = log(cosh(z)) + λz|z| addresses the fundamental failure of standard log-cosh for sparse binary sources. The odd term z|z| has expectation 2p−1, so sparse sources (p→1) score highly rather than falling below the Gaussian baseline.
+
+The log-Phi contrast G(z) = log(Φ(αz)) is a one-sided function that rewards large positive projections. It exceeds the Gaussian baseline only when the source is highly skewed toward positive values (small p in the "prob of -1" convention), making it complementary to TLC for detecting asymmetric sparse sources.
