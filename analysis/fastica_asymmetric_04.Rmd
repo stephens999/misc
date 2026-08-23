@@ -9,19 +9,23 @@ editor_options:
 
 ## Introduction
 
-This file implements simplified single-update versions of the asymmetric fastICA
-Newton and gradient steps from `fastica_asymmetric_03.Rmd`.
+This file takes a closer look at the objective function of the asymmetric fastICA
+approach from `fastica_asymmetric_03.Rmd` based on asymmetric binary priors, and implements a simple Newton optimizer that performs many starts in parallel to optimize the weights $w$ for a fixed prior.
 
 The prior $g_0$ is binary with probabilities $(1-p, p)$ and atoms $(y_0, y_1)$
 chosen so that $g_0$ has mean 0 and variance 1:
 $$y_1 = \sqrt{\frac{1-p}{p}}, \qquad y_0 = -\sqrt{\frac{p}{1-p}}.$$
-The effective atoms are $cy_0$ and $cy_1$.  The default scale is $c = c_\text{golden} = 2/(1+\sqrt{5})$
-and the default residual variance is $\sigma^2 = c$.
+The prior $g$ is then $g_0$ scaled by a factor $c$, so the effective atoms are $cy_0$ and $cy_1$.  The default scale is $c = c_\text{golden} = 2/(1+\sqrt{5})$ and the default residual variance is $\sigma^2 = c$. The condition $\sigma^2 = c$ ensures that the method is equivalent to fastICA (logcosh) when $p=0.5$. The choice $c=c_\text{golden}$ ensures that prior variance plus residual variance is 1 ($c^2 + c=1$).
 
-When $p = 0.5$ and $c = \sigma^2$ both functions reduce to standard fastICA
+
+When $p = 0.5$ and $c = \sigma^2$ the objective and updates reduce to standard fastICA
 (with $g(t) = \log\cosh$): the posterior mean becomes $c\tanh(x)$ and the
 posterior derivative becomes $c(1-\tanh^2(x))$, and the c factors have no effect under
 the final $\ell_2$ normalisation.
+
+My idea is that maybe we can get away with running this for just a few values of $p$,
+rather than optimizing over $p$ explicitly. Indeed, fastICA itself is already quite good at finding both balanced binary sources (near $p=0.5$) and sparse binary sources. But it finds the former as maxima over the objective and the latter as minima, which does not make it easy to compete a sparse binary source against a balanced binary source. This is potentially important because fastICA has a tendency to combine sparse binary sources 
+into a single balanced binary source; if we had an objective function in which genuine sparse binary sources score better than combinations then this would be helpful to avoid this. When $p$ is smaller (eg 0.1) then maybe the objective function can find both balanced and sparse sources as local maxima, with the sparse sources getting scored higher than combinations of sources? We will see... 
 
 
 ## Objective Function
@@ -30,18 +34,20 @@ The per-observation contribution to the objective is
 $$\log Z(x;\, p, c, \sigma^2) = \log\!\left[(1-p)\exp\!\left(\frac{2x\,cy_0 - (cy_0)^2}{2\sigma^2}\right) + p\exp\!\left(\frac{2x\,cy_1 - (cy_1)^2}{2\sigma^2}\right)\right]$$
 with $y_1 = \sqrt{(1-p)/p}$, $y_0 = -\sqrt{p/(1-p)}$, and the full objective is $J(w) = \sum_i \log Z(x_i)$.
 
-A natural question is: what is the best expected value of $\log Z(x)$ achievable by a binary source with parameter $p_\text{source}$, when we include an intercept (allow the source mean $\mu$ to be non-zero)?  We constrain the second moment to 1, so the source has mean $\mu$ and variance $1 - \mu^2$, giving atoms
-$$a_0 = \mu - p_s\,d, \quad a_1 = \mu + (1-p_s)\,d, \quad d = \sqrt{\frac{1-\mu^2}{p_s(1-p_s)}}.$$
-We then maximize over $\mu \in (-1, 1)$:
-$$\max_\mu\, E_{p_s,\mu}[\log Z(x)] = \max_\mu\left[(1-p_s)\log Z(a_0) + p_s\log Z(a_1)\right].$$
-The Gaussian baseline is similarly $\max_\mu\, E_{N(\mu,\,1-\mu^2)}[\log Z(x)]$.
+Applying the identity $\log(e^a + e^b) = \tfrac{a+b}{2} + \log 2 + \log\cosh\!\bigl(\tfrac{b-a}{2}\bigr)$ gives a clean decomposition:
+$$\log Z(x;\,p,c,\sigma^2) = \gamma x + \delta + \log 2 + \log\cosh(\alpha x + \beta)$$
+where
+$$\alpha = \frac{c}{2\sigma^2\sqrt{p(1-p)}}, \quad
+  \beta  = \frac{1}{2}\log\frac{p}{1-p} - \frac{c^2(1-2p)}{4\sigma^2 p(1-p)}, \quad
+  \gamma = (1-2p)\,\alpha.$$
+So the objective is **log cosh of a shifted-and-scaled $x$, plus a linear term**.  At $p=0.5$: $\alpha = c/\sigma^2$, $\beta = \gamma = 0$, recovering $\log\cosh(\alpha x) + \text{const}$ (standard fastICA, up to a constant).  
 
-We plot this as a function of $p_\text{source}$ for several values of $p$ used in the objective (solid lines), with the Gaussian baseline shown as a dashed horizontal line for each $p_\text{objective}$.
+The linear term (which enters for $p \neq 0.5$) might suggest that the expected objective function increases with the mean of the source (in cases where we allow a non-zero mean). However, this is not the case because it is balanced by the log cosh term (see plots later below).
 
 ```{r}
 c_val   <- 2 / (1 + sqrt(5))
 s2_val  <- c_val
-p_objs  <- c(0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5)
+p_objs  <- c(0.5,0.4,0.33,0.25,0.1,0.05,0.01)
 cols    <- palette.colors(length(p_objs), palette = "Okabe-Ito")
 
 log_Z_vec <- function(x, p, c, s2) {
@@ -53,6 +59,37 @@ log_Z_vec <- function(x, p, c, s2) {
   log(exp(lp0 - m) + exp(lp1 - m)) + m
 }
 
+x_grid   <- seq(-5, 5, length.out = 500)
+logZ_mat <- sapply(p_objs, function(p) log_Z_vec(x_grid, p, c_val, s2_val))
+matplot(x_grid, logZ_mat, type = "l", lty = 1, col = cols, lwd = 2,
+        xlab = "x", ylab = "log Z(x)",
+        main = "log Z(x) by p_objective")
+legend("top", legend = paste0("p_obj = ", p_objs), col = cols, lty = 1, lwd = 2)
+```
+
+### Expected objective by source type
+
+Since we have default values for $c,\sigma^2$ we will write the objective function $Z$ for a given $p=p_\text{obj}$ as $Z(x; p_\text{obj})$.
+
+A natural question is: what is the expected value of $\log Z(x; p_\text{obj})$ for a binary source with weights $p_\text{source},1-p_\text{source}$ (or $p_\text{s},1-p_\text{s}$ for brevity). In many of our experiments we allow the source to have non-zero mean, $\mu$, so we consider binary sources that are parameterized by $p_\text{s}, \mu$. 
+Since we constrain the second moment to 1, the  variance is $1 - \mu^2$, and these constraints determine the locations of the atoms, which are at
+$$a_0 = \mu - p_s\,d, \quad a_1 = \mu + (1-p_s)\,d, \quad d = \sqrt{\frac{1-\mu^2}{p_s(1-p_s)}}.$$
+
+### Expected value curves for fixed $p_\text{obj}$
+
+We now examine the expected value of $\log Z(x;p_\text{obj})$ for different $p_\text{obj}$ in a range from 0.5 to 0.05. For a binary source with mean $\mu$ and weight $p_\text{source}$ we can easily compute the expectation from the atoms above. We plot 
+ $E[\log Z]$ as a function of $\mu$ for several values of $p_\text{source}$.
+A curve that peaks above its Gaussian baseline is a source detectable by this objective; how far the peak sits from $\mu = 0$ shows how much the intercept is contributing. The behavior if we fix $\mu=0$ is also apparent from these plots.
+
+For $p_o=0.5$ (fastICA), at $\mu=0$, the sparse binary sources are below the Gaussian baseline whereas the balanced binary sources are above the Gaussian baseline. While the sparse binary source curves do go above the baseline near $\mu=-1$, this is a rather restricted part of the space that we would probably have to deliberately search (eg by initializing the intercept near that location) to find it? (I'm not sure about this; might be worth thinking more about.) The maxima are all the same height showing that this objective function does not prefer sparse sources to balanced sources, which accords with intuition since $p_o=0.5$. 
+
+In contrast, for $p_o=0.25$, almost all the sources (except the vary rarest ones) are above the Gaussian baseline at $\mu=0$ and even more so if you allow $\mu$ to be estimated away from 0.  Obviously for finding truly sparse sources it would pay to use a smaller $p_o$, but this plot suggests that $p_o=0.25$ might be a good general purpose choice. 
+
+By the time you go down to $p_o=0.01$ the ability to find more common sources, even 0.1, might be quite restricted. 
+
+Based on these curves I am inclined to go with running the method for a range of $p$ such as $p=0.25,0.05,0.01$.
+
+```{r}
 # Expected log Z for a binary source with mean mu, second moment 1
 # (so variance = 1 - mu^2); atoms are mu +/- scaled y0/y1.
 E_logZ_binary_shifted <- function(p_source, mu, p_obj, c, s2) {
@@ -63,10 +100,46 @@ E_logZ_binary_shifted <- function(p_source, mu, p_obj, c, s2) {
        p_source  * log_Z_vec(a1, p_obj, c, s2)
 }
 
-# Max over mu in (-1, 1) of the expected log Z for a binary source.
-# Uses a grid search (not optimize()) because the objective can be non-unimodal
-# in mu: the degenerate solution near the boundary competes with interior maxima
-# and golden-section search would get trapped in local optima.
+
+p_srcs_plot   <- c(0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5)
+cols_src      <- palette.colors(length(p_srcs_plot), palette = "Okabe-Ito")
+mu_grid_fine  <- seq(-0.99, 0.99, length.out = 201)
+
+for(p_obj_focus in p_objs){
+  E_vs_mu <- sapply(p_srcs_plot, function(ps)
+    sapply(mu_grid_fine, function(mu)
+      E_logZ_binary_shifted(ps, mu, p_obj_focus, c_val, s2_val)))
+
+  E_gauss_vs_mu <- sapply(mu_grid_fine, function(mu)
+    integrate(function(x) log_Z_vec(x, p_obj_focus, c_val, s2_val) *
+                dnorm(x, mu, sqrt(1 - mu^2)), -8, 8)$value)
+
+  matplot(mu_grid_fine, E_vs_mu, type = "l", lty = 1, col = cols_src, lwd = 2,
+        xlab = expression(mu), ylab = "E[log Z(x)]",
+        main = sprintf("E[log Z] vs intercept  (p_obj = %.2f)", p_obj_focus))
+  lines(mu_grid_fine, E_gauss_vs_mu, lty = 2, col = "grey30", lwd = 2)
+  abline(v = 0, lty = 3, col = "grey60")
+  legend("bottomleft",
+       legend = c(paste0("p_src = ", p_srcs_plot), "Gaussian"),
+       col = c(cols_src, "grey30"), lty = c(rep(1, length(p_srcs_plot)), 2),
+       lwd = 2, cex = 0.8)
+}
+```
+
+
+## Maximizing over mu
+
+We can also show all curves on the same plot, either by fixing $\mu=0$ or by taking the max of each curve over $\mu \in (-1, 1)$:
+$$\max_\mu\, E_{p_s,\mu}[\log Z(x)] = \max_\mu\left[(1-p_s)\log Z(a_0) + p_s\log Z(a_1)\right].$$
+The Gaussian baseline is similarly $\max_\mu\, E_{N(\mu,\,1-\mu^2)}[\log Z(x)]$.
+The utility of showing the max is maybe limited because for many curves the max is at the degenerate solution (ie the intercept). Possibly it would be more useful to look at the location of the non-generate max? Anyway, I show this for now, but focus discussion on the plot for $\mu=0$ (left below).
+
+We see for $\mu=0$ that the curve for $p_o=0.25$ is above the Gaussian baseline for a range of $p_s$ in about 0.2 and above. And the curve for $p_o=0.05$ is above the baseline for many rare sources (maybe not for $p_s$ very close to 0 though). This suggests that even fixing $\mu=0$ and running the method for $p_o=0.25,0.05$ might be able to find a wide range of binary sources. 
+
+
+```{r}
+
+# Max over mu in (-1, 1) via grid search (objective can be non-unimodal).
 E_logZ_binary_maxmu <- function(p_source, p_obj, c, s2, n_grid = 201) {
   mu_grid <- seq(-1 + 1e-4, 1 - 1e-4, length.out = n_grid)
   max(sapply(mu_grid, function(mu)
@@ -80,13 +153,6 @@ E_logZ_gauss_maxmu <- function(p_obj, c, s2, n_grid = 201) {
     integrate(function(x) log_Z_vec(x, p_obj, c, s2) * dnorm(x, mu, sqrt(1 - mu^2)),
               -8, 8)$value))
 }
-
-x_grid    <- seq(-5, 5, length.out = 500)
-logZ_mat  <- sapply(p_objs, function(p) log_Z_vec(x_grid, p, c_val, s2_val))
-matplot(x_grid, logZ_mat, type = "l", lty = 1, col = cols, lwd = 2,
-        xlab = "x", ylab = "log Z(x)",
-        main = "log Z(x) by p_objective")
-legend("top", legend = paste0("p_obj = ", p_objs), col = cols, lty = 1, lwd = 2)
 
 p_sources <- seq(0.01, 0.99, by = 0.01)
 
@@ -122,47 +188,6 @@ for (i in seq_along(p_objs))
 
 par(mfrow = c(1, 1))
 ```
-
-### Effect of the intercept for a fixed $p_\text{obj}$
-
-To see directly whether the intercept helps find sources with $p_\text{source} \ne p_\text{obj}$, we fix $p_\text{obj}$ and plot $E[\log Z]$ as a function of $\mu$ for several values of $p_\text{source}$.  A curve that peaks above its Gaussian baseline is a source detectable by this objective; how far the peak sits from $\mu = 0$ shows how much the intercept is contributing.
-
-Here are plots for p=0.5 to 0.05. We see that p=0.5 (fastICA) the sparse binary sources are below the Gaussian baseline at mu=0 whereas the balanced binary sources are above the Gaussian baseline. While the sparse binary source curves go above the baseline near mu=-1, this is a rather restricted part of the space that we would probably have to deliberately search (eg by initializing the intercept near that location) to find it. 
-
-In contrast, for p=0.25, almost all the sources (except the vary rarest ones) are above the Gaussian baseline at mu=0 and even more so if you allow mu to be estimated away from 0. 
-Obviously for finding truly sparse sources it would pay to use a smaller p. 
-
-However, by the time you go down to $p=0.01$ the ability to find more common sources, even 0.1, might be quite restricted. 
-
-Based on these curves I am inclined to go with running the method for a range of $p$ such as $p=0.25,0.05,0.01$.
-
-
-```{r}
-p_srcs_plot   <- c(0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5)
-cols_src      <- palette.colors(length(p_srcs_plot), palette = "Okabe-Ito")
-mu_grid_fine  <- seq(-0.99, 0.99, length.out = 201)
-
-for(p_obj_focus in c(0.5,0.4,0.33,0.25,0.1,0.05,0.01)){
-  E_vs_mu <- sapply(p_srcs_plot, function(ps)
-    sapply(mu_grid_fine, function(mu)
-      E_logZ_binary_shifted(ps, mu, p_obj_focus, c_val, s2_val)))
-
-  E_gauss_vs_mu <- sapply(mu_grid_fine, function(mu)
-    integrate(function(x) log_Z_vec(x, p_obj_focus, c_val, s2_val) *
-                dnorm(x, mu, sqrt(1 - mu^2)), -8, 8)$value)
-
-  matplot(mu_grid_fine, E_vs_mu, type = "l", lty = 1, col = cols_src, lwd = 2,
-        xlab = expression(mu), ylab = "E[log Z(x)]",
-        main = sprintf("E[log Z] vs intercept  (p_obj = %.2f)", p_obj_focus))
-  lines(mu_grid_fine, E_gauss_vs_mu, lty = 2, col = "grey30", lwd = 2)
-  abline(v = 0, lty = 3, col = "grey60")
-  legend("bottomleft",
-       legend = c(paste0("p_src = ", p_srcs_plot), "Gaussian"),
-       col = c(cols_src, "grey30"), lty = c(rep(1, length(p_srcs_plot)), 2),
-       lwd = 2, cex = 0.8)
-}
-```
-
 
 ## Update functions
 
@@ -244,8 +269,9 @@ fastica_update = function(U, W) {
 
 ```
 
-## Simulation
+## Simulation: 9 groups with p=0.2
 
+Here I simulate 9 groups at random. 
 ```{r}
 ### $p \approx 0.2$ (20/100 active)
 set.seed(1)
@@ -256,9 +282,12 @@ FF = matrix(rnorm(p_dim * K), nrow = p_dim)
 Y = L %*% t(FF) + matrix(rnorm(n * p_dim, 0, 0.1), nrow = n)
 ```
 
-I use U_aug (U augmented with an intercept) because it works well for fastICA and maybe should not hurt the binary version? We will see.
 
-First I run ICA:
+### Run ICA ($p_o=0.5$)
+
+I run ICA with an intercept ($U_aug$ includes an intercept term.) I do it using both
+a simple fastICA code and the binary code with $p=0.5$ just to check they give the same answer (and they do; note that the binary objective function is sum(log(cosh))+nc/2 so the axis is different but results are equivalent).
+
 ```{r}
 n.comp = 9
 Y     <- scale(Y, scale = FALSE)  # center columns; also densifies for SVD
@@ -273,22 +302,21 @@ W <- sweep(W, 2, sqrt(colSums(W^2)), "/")
 for (i in seq_len(n_iter))
   W <- fastica_update(U_aug, W)
   #W <- binary_newton_update(U_aug, W)
-
 Lhat <- t(U_aug) %*% W  # n x n_starts
 plot(colMeans(log(cosh(Lhat))))
-```
 
-Now I run the binary update. Since p=0.5 it should give the same results. Note that the binary objective function is sum(log(cosh))+nc/2 so the axis is different but results are equivalent. 
-```{r}
 set.seed(1)
 W <- matrix(rnorm(nrow(U_aug) * n_starts), nrow(U_aug), n_starts)
 W <- sweep(W, 2, sqrt(colSums(W^2)), "/")
 for (i in seq_len(n_iter))
   W <- binary_newton_update(U_aug, W)
 plot(binary_objective(U_aug,W))
+
 ```
 
-Now I try optimizing with p=0.1. As one might hope, the maxima look like true sources. 
+### Run with $p_o=0.1$
+
+Now I try optimizing with $p_o=0.1$. As one might hope, the maxima look like true sources. 
 The minima look like the intercept (although numerically there is some tiny variation since the correlation is computable, and interestingly they all have the same correlation for reasons I don't understand). Also, every one of the nine sources is found by some start.
 ```{r}
 set.seed(1)
@@ -311,7 +339,9 @@ plot(bestcor, binary_objective(U_aug,W,p=p))
 apply(abs(cor(Lhat,L)),2,max)
 ```
 
-Now I try optimizing with p=0.25. Something unexpected (to me) happened: the maxima are now sometimes true sources, but sometimes the intercept. If you go back to the plot for p=0.25 you can see the degenerate solution happens to have an expected value just around the same as the maximum for a binary 0.2 source (actually slightly higher). So maybe I need to pay some attention to this and choose slightly different p than I suggested above. (This said, it does still find the true sources; but we would maybe prefer the maximum not to occur at a degenerate solution? These are easily removed though so does it matter much?) 
+### Run with $p_o=0.25$
+
+Now I try $p_o=0.25$. Something unexpected (to me) happened: the maxima are now sometimes true sources, but sometimes the intercept. If you go back to the plots of objective function for $p_o=0.25$ you can see the degenerate solution happens to have an expected value just around the same as the maximum for $p_s=0.2$ (actually slightly higher). So maybe I need to pay some attention to this and choose slightly different $p_o$ than I suggested above. (This said, it does still find the true sources; but we would maybe prefer the maximum not to occur at a degenerate solution? These are easily removed though so does it matter much?) 
 
 ```{r}
 set.seed(1)
