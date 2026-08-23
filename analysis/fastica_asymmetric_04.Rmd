@@ -1,0 +1,335 @@
+---
+title: "fastica_asymmetric_04"
+author: "Matthew Stephens"
+date: "2026-08-22"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+This file implements simplified single-update versions of the asymmetric fastICA
+Newton and gradient steps from `fastica_asymmetric_03.Rmd`.
+
+The prior $g_0$ is binary with probabilities $(1-p, p)$ and atoms $(y_0, y_1)$
+chosen so that $g_0$ has mean 0 and variance 1:
+$$y_1 = \sqrt{\frac{1-p}{p}}, \qquad y_0 = -\sqrt{\frac{p}{1-p}}.$$
+The effective atoms are $cy_0$ and $cy_1$.  The default scale is $c = c_\text{golden} = 2/(1+\sqrt{5})$
+and the default residual variance is $\sigma^2 = c$.
+
+When $p = 0.5$ and $c = \sigma^2$ both functions reduce to standard fastICA
+(with $g(t) = \log\cosh$): the posterior mean becomes $c\tanh(x)$ and the
+posterior derivative becomes $c(1-\tanh^2(x))$, and the c factors have no effect under
+the final $\ell_2$ normalisation.
+
+
+## Objective Function
+
+The per-observation contribution to the objective is
+$$\log Z(x;\, p, c, \sigma^2) = \log\!\left[(1-p)\exp\!\left(\frac{2x\,cy_0 - (cy_0)^2}{2\sigma^2}\right) + p\exp\!\left(\frac{2x\,cy_1 - (cy_1)^2}{2\sigma^2}\right)\right]$$
+with $y_1 = \sqrt{(1-p)/p}$, $y_0 = -\sqrt{p/(1-p)}$, and the full objective is $J(w) = \sum_i \log Z(x_i)$.
+
+A natural question is: what is the best expected value of $\log Z(x)$ achievable by a binary source with parameter $p_\text{source}$, when we include an intercept (allow the source mean $\mu$ to be non-zero)?  We constrain the second moment to 1, so the source has mean $\mu$ and variance $1 - \mu^2$, giving atoms
+$$a_0 = \mu - p_s\,d, \quad a_1 = \mu + (1-p_s)\,d, \quad d = \sqrt{\frac{1-\mu^2}{p_s(1-p_s)}}.$$
+We then maximize over $\mu \in (-1, 1)$:
+$$\max_\mu\, E_{p_s,\mu}[\log Z(x)] = \max_\mu\left[(1-p_s)\log Z(a_0) + p_s\log Z(a_1)\right].$$
+The Gaussian baseline is similarly $\max_\mu\, E_{N(\mu,\,1-\mu^2)}[\log Z(x)]$.
+
+We plot this as a function of $p_\text{source}$ for several values of $p$ used in the objective (solid lines), with the Gaussian baseline shown as a dashed horizontal line for each $p_\text{objective}$.
+
+```{r}
+c_val   <- 2 / (1 + sqrt(5))
+s2_val  <- c_val
+p_objs  <- c(0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5)
+cols    <- palette.colors(length(p_objs), palette = "Okabe-Ito")
+
+log_Z_vec <- function(x, p, c, s2) {
+  y1  <- sqrt((1 - p) / p);  y0 <- -sqrt(p / (1 - p))
+  ey0 <- c * y0;  ey1 <- c * y1
+  lp0 <- log(1 - p) + (2*x*ey0 - ey0^2) / (2*s2)
+  lp1 <- log(p)     + (2*x*ey1 - ey1^2) / (2*s2)
+  m   <- pmax(lp0, lp1)
+  log(exp(lp0 - m) + exp(lp1 - m)) + m
+}
+
+# Expected log Z for a binary source with mean mu, second moment 1
+# (so variance = 1 - mu^2); atoms are mu +/- scaled y0/y1.
+E_logZ_binary_shifted <- function(p_source, mu, p_obj, c, s2) {
+  d  <- sqrt((1 - mu^2) / (p_source * (1 - p_source)))
+  a0 <- mu - p_source       * d
+  a1 <- mu + (1 - p_source) * d
+  (1 - p_source) * log_Z_vec(a0, p_obj, c, s2) +
+       p_source  * log_Z_vec(a1, p_obj, c, s2)
+}
+
+# Max over mu in (-1, 1) of the expected log Z for a binary source.
+# Uses a grid search (not optimize()) because the objective can be non-unimodal
+# in mu: the degenerate solution near the boundary competes with interior maxima
+# and golden-section search would get trapped in local optima.
+E_logZ_binary_maxmu <- function(p_source, p_obj, c, s2, n_grid = 201) {
+  mu_grid <- seq(-1 + 1e-4, 1 - 1e-4, length.out = n_grid)
+  max(sapply(mu_grid, function(mu)
+    E_logZ_binary_shifted(p_source, mu, p_obj, c, s2)))
+}
+
+# Max over mu of E[log Z] for a Gaussian with mean mu, second moment 1.
+E_logZ_gauss_maxmu <- function(p_obj, c, s2, n_grid = 201) {
+  mu_grid <- seq(-1 + 1e-4, 1 - 1e-4, length.out = n_grid)
+  max(sapply(mu_grid, function(mu)
+    integrate(function(x) log_Z_vec(x, p_obj, c, s2) * dnorm(x, mu, sqrt(1 - mu^2)),
+              -8, 8)$value))
+}
+
+x_grid    <- seq(-5, 5, length.out = 500)
+logZ_mat  <- sapply(p_objs, function(p) log_Z_vec(x_grid, p, c_val, s2_val))
+matplot(x_grid, logZ_mat, type = "l", lty = 1, col = cols, lwd = 2,
+        xlab = "x", ylab = "log Z(x)",
+        main = "log Z(x) by p_objective")
+legend("top", legend = paste0("p_obj = ", p_objs), col = cols, lty = 1, lwd = 2)
+
+p_sources <- seq(0.01, 0.99, by = 0.01)
+
+# mu = 0 (zero-mean source)
+E_mat_mu0 <- sapply(p_objs, function(po)
+  sapply(p_sources, function(ps) E_logZ_binary_shifted(ps, 0, po, c_val, s2_val)))
+
+E_gauss_mu0 <- sapply(p_objs, function(po)
+  integrate(function(x) log_Z_vec(x, po, c_val, s2_val) * dnorm(x), -8, 8)$value)
+
+# max over mu
+E_mat_maxmu <- sapply(p_objs, function(po)
+  sapply(p_sources, function(ps) E_logZ_binary_maxmu(ps, po, c_val, s2_val)))
+
+E_gauss_maxmu <- sapply(p_objs, E_logZ_gauss_maxmu, c = c_val, s2 = s2_val)
+
+par(mfrow = c(1, 2))
+matplot(p_sources, E_mat_mu0, type = "l", lty = 1, col = cols, lwd = 2,
+        xlab = expression(p[source]), ylab = expression(E[source]*"[log Z(x)]"),
+        main = expression(mu == 0))
+for (i in seq_along(p_objs))
+  abline(h = E_gauss_mu0[i], col = cols[i], lty = 2, lwd = 1.5)
+legend("topright",
+       legend = c(paste0("p_obj = ", p_objs), "Gaussian (dashed)"),
+       col = c(cols, "grey50"), lty = c(rep(1, length(p_objs)), 2), lwd = 2,
+       cex = 0.8)
+
+matplot(p_sources, E_mat_maxmu, type = "l", lty = 1, col = cols, lwd = 2,
+        xlab = expression(p[source]), ylab = "",
+        main = expression(max[mu]))
+for (i in seq_along(p_objs))
+  abline(h = E_gauss_maxmu[i], col = cols[i], lty = 2, lwd = 1.5)
+
+par(mfrow = c(1, 1))
+```
+
+### Effect of the intercept for a fixed $p_\text{obj}$
+
+To see directly whether the intercept helps find sources with $p_\text{source} \ne p_\text{obj}$, we fix $p_\text{obj}$ and plot $E[\log Z]$ as a function of $\mu$ for several values of $p_\text{source}$.  A curve that peaks above its Gaussian baseline is a source detectable by this objective; how far the peak sits from $\mu = 0$ shows how much the intercept is contributing.
+
+Here are plots for p=0.5 to 0.05. We see that p=0.5 (fastICA) the sparse binary sources are below the Gaussian baseline at mu=0 whereas the balanced binary sources are above the Gaussian baseline. While the sparse binary source curves go above the baseline near mu=-1, this is a rather restricted part of the space that we would probably have to deliberately search (eg by initializing the intercept near that location) to find it. 
+
+In contrast, for p=0.25, almost all the sources (except the vary rarest ones) are above the Gaussian baseline at mu=0 and even more so if you allow mu to be estimated away from 0. 
+Obviously for finding truly sparse sources it would pay to use a smaller p. 
+
+However, by the time you go down to $p=0.01$ the ability to find more common sources, even 0.1, might be quite restricted. 
+
+Based on these curves I am inclined to go with running the method for a range of $p$ such as $p=0.25,0.05,0.01$.
+
+
+```{r}
+p_srcs_plot   <- c(0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5)
+cols_src      <- palette.colors(length(p_srcs_plot), palette = "Okabe-Ito")
+mu_grid_fine  <- seq(-0.99, 0.99, length.out = 201)
+
+for(p_obj_focus in c(0.5,0.4,0.33,0.25,0.1,0.05,0.01)){
+  E_vs_mu <- sapply(p_srcs_plot, function(ps)
+    sapply(mu_grid_fine, function(mu)
+      E_logZ_binary_shifted(ps, mu, p_obj_focus, c_val, s2_val)))
+
+  E_gauss_vs_mu <- sapply(mu_grid_fine, function(mu)
+    integrate(function(x) log_Z_vec(x, p_obj_focus, c_val, s2_val) *
+                dnorm(x, mu, sqrt(1 - mu^2)), -8, 8)$value)
+
+  matplot(mu_grid_fine, E_vs_mu, type = "l", lty = 1, col = cols_src, lwd = 2,
+        xlab = expression(mu), ylab = "E[log Z(x)]",
+        main = sprintf("E[log Z] vs intercept  (p_obj = %.2f)", p_obj_focus))
+  lines(mu_grid_fine, E_gauss_vs_mu, lty = 2, col = "grey30", lwd = 2)
+  abline(v = 0, lty = 3, col = "grey60")
+  legend("bottomleft",
+       legend = c(paste0("p_src = ", p_srcs_plot), "Gaussian"),
+       col = c(cols_src, "grey30"), lty = c(rep(1, length(p_srcs_plot)), 2),
+       lwd = 2, cex = 0.8)
+}
+```
+
+
+## Update functions
+
+```{r}
+# Newton update (ica-hessian approximation).
+# U is (n.comp) x n (whitened data).
+# W is (n.comp) x n_starts (one weight vector per column).
+# P = t(U) %*% W is n x n_starts (source estimates).
+# When p = 0.5 and c = s2 this is identical to standard fastica_update.
+binary_newton_update <- function(U, W, p = 0.5, c = 2 / (1 + sqrt(5)), s2 = c) {
+  y1  <- sqrt((1 - p) / p)
+  y0  <- -sqrt(p / (1 - p))
+  ey0 <- c * y0
+  ey1 <- c * y1
+
+  P   <- t(U) %*% W                              # n x n_starts
+
+  lp0 <- log(1 - p) + (2*P*ey0 - ey0^2) / (2*s2)
+  lp1 <- log(p)     + (2*P*ey1 - ey1^2) / (2*s2)
+  m   <- pmax(lp0, lp1)
+  e0  <- exp(lp0 - m);  e1 <- exp(lp1 - m)
+  pi1 <- e1 / (e0 + e1)                          # n x n_starts
+
+  Mx  <- (1 - pi1) * ey0 + pi1 * ey1             # posterior mean
+  Mpx <- pi1 * (1 - pi1) * (ey1 - ey0)^2 / s2   # dM/dx
+
+  W <- U %*% Mx - sweep(W, 2, colSums(Mpx), "*")
+  sweep(W, 2, sqrt(colSums(W^2)) + 1e-15, "/")
+}
+
+# Gradient update (no Hessian correction; equivalent to hessian = "none" in ebproj).
+binary_gradient_update <- function(U, W, p = 0.5, c = 2 / (1 + sqrt(5)), s2 = c) {
+  y1  <- sqrt((1 - p) / p)
+  y0  <- -sqrt(p / (1 - p))
+  ey0 <- c * y0
+  ey1 <- c * y1
+
+  P   <- t(U) %*% W                              # n x n_starts
+
+  lp0 <- log(1 - p) + (2*P*ey0 - ey0^2) / (2*s2)
+  lp1 <- log(p)     + (2*P*ey1 - ey1^2) / (2*s2)
+  m   <- pmax(lp0, lp1)
+  e0  <- exp(lp0 - m);  e1 <- exp(lp1 - m)
+  pi1 <- e1 / (e0 + e1)                          # n x n_starts
+
+  Mx  <- (1 - pi1) * ey0 + pi1 * ey1             # posterior mean
+
+  W <- U %*% Mx
+  sweep(W, 2, sqrt(colSums(W^2)) + 1e-15, "/")
+}
+
+# Objective J(W) = sum_i log Z(x_i, g, s2), returned as a vector of length n_starts.
+binary_objective <- function(U, W, p = 0.5, c = 2 / (1 + sqrt(5)), s2 = c) {
+  y1  <- sqrt((1 - p) / p)
+  y0  <- -sqrt(p / (1 - p))
+  ey0 <- c * y0
+  ey1 <- c * y1
+
+  P   <- t(U) %*% W                              # n x n_starts
+
+  lp0 <- log(1 - p) + (2*P*ey0 - ey0^2) / (2*s2)
+  lp1 <- log(p)     + (2*P*ey1 - ey1^2) / (2*s2)
+  m   <- pmax(lp0, lp1)
+  colSums(log(exp(lp0 - m) + exp(lp1 - m)) + m)  # length n_starts
+}
+
+# matrix version of r1 fastica
+# U is (n.comp+1) x n (whitened data plus intercept).  
+# W is (n.comp+1) x n_starts (one weight vector per column).
+# P = t(U) %*% W is n x n_starts (source estimates).
+fastica_update = function(U, W) {
+  P  <- t(U) %*% W          # n x n_starts: source estimates
+  G  <- tanh(P)
+  G2 <- 1 - G^2
+  W  <- U %*% G - sweep(W, 2, colSums(G2), "*")
+  # Add epsilon (1e-15) to prevent 0/0
+  sweep(W, 2, sqrt(colSums(W^2)) + 1e-15, "/")
+}
+
+```
+
+## Simulation
+
+```{r}
+### $p \approx 0.2$ (20/100 active)
+set.seed(1)
+n = 100; p_dim = 1000; K = 9
+L  = matrix(0, nrow = n, ncol = K)
+for (i in 1:K) L[sample(n, 20), i] = 1
+FF = matrix(rnorm(p_dim * K), nrow = p_dim)
+Y = L %*% t(FF) + matrix(rnorm(n * p_dim, 0, 0.1), nrow = n)
+```
+
+I use U_aug (U augmented with an intercept) because it works well for fastICA and maybe should not hurt the binary version? We will see.
+
+First I run ICA:
+```{r}
+n.comp = 9
+Y     <- scale(Y, scale = FALSE)  # center columns; also densifies for SVD
+U     <- sqrt(nrow(Y)) * t(svd(Y)$u[, 1:n.comp])
+U_aug <- rbind(rep(1, ncol(U)), U)
+
+n_starts = 1000
+n_iter = 50  
+set.seed(1)
+W <- matrix(rnorm(nrow(U_aug) * n_starts), nrow(U_aug), n_starts)
+W <- sweep(W, 2, sqrt(colSums(W^2)), "/")
+for (i in seq_len(n_iter))
+  W <- fastica_update(U_aug, W)
+  #W <- binary_newton_update(U_aug, W)
+
+Lhat <- t(U_aug) %*% W  # n x n_starts
+plot(colMeans(log(cosh(Lhat))))
+```
+
+Now I run the binary update. Since p=0.5 it should give the same results. Note that the binary objective function is sum(log(cosh))+nc/2 so the axis is different but results are equivalent. 
+```{r}
+set.seed(1)
+W <- matrix(rnorm(nrow(U_aug) * n_starts), nrow(U_aug), n_starts)
+W <- sweep(W, 2, sqrt(colSums(W^2)), "/")
+for (i in seq_len(n_iter))
+  W <- binary_newton_update(U_aug, W)
+plot(binary_objective(U_aug,W))
+```
+
+Now I try optimizing with p=0.1. As one might hope, the maxima look like true sources. 
+The minima look like the intercept (although numerically there is some tiny variation since the correlation is computable, and interestingly they all have the same correlation for reasons I don't understand). Also, every one of the nine sources is found by some start.
+```{r}
+set.seed(1)
+p = 0.1
+W <- matrix(rnorm(nrow(U_aug) * n_starts), nrow(U_aug), n_starts)
+W <- sweep(W, 2, sqrt(colSums(W^2)), "/")
+for (i in seq_len(n_iter))
+  W <- binary_newton_update(U_aug, W, p=p)
+plot(binary_objective(U_aug,W,p=p))
+
+Lhat <- t(U_aug) %*% W  # n x n_starts
+id_max = which.max(binary_objective(U_aug,W,p=p))
+plot(Lhat[,id_max])
+id_min = which.min(binary_objective(U_aug,W,p=p))
+plot(Lhat[,id_min])
+
+bestcor = apply(abs(cor(Lhat,L)),1,max)
+plot(bestcor, binary_objective(U_aug,W,p=p))
+
+apply(abs(cor(Lhat,L)),2,max)
+```
+
+Now I try optimizing with p=0.25. Something unexpected (to me) happened: the maxima are now sometimes true sources, but sometimes the intercept. If you go back to the plot for p=0.25 you can see the degenerate solution happens to have an expected value just around the same as the maximum for a binary 0.2 source (actually slightly higher). So maybe I need to pay some attention to this and choose slightly different p than I suggested above. (This said, it does still find the true sources; but we would maybe prefer the maximum not to occur at a degenerate solution? These are easily removed though so does it matter much?) 
+
+```{r}
+set.seed(1)
+p = 0.25
+W <- matrix(rnorm(nrow(U_aug) * n_starts), nrow(U_aug), n_starts)
+W <- sweep(W, 2, sqrt(colSums(W^2)), "/")
+for (i in seq_len(n_iter))
+  W <- binary_newton_update(U_aug, W, p=p)
+plot(binary_objective(U_aug,W,p=p))
+plot(binary_objective(U_aug,W,p=p), ylim=c(20.05,20.15), main = "degenerate solution is just slightly higher")
+
+Lhat <- t(U_aug) %*% W  # n x n_starts
+id_max = which.max(binary_objective(U_aug,W,p=p))
+plot(Lhat[,id_max])
+
+bestcor = apply(abs(cor(Lhat,L)),1,max)
+plot(bestcor,col=1+(binary_objective(U_aug,W,p=p)>20.105), main="red=degenerate solution")
+
+apply(abs(cor(Lhat,L)),2,max)
+```
+
