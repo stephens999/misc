@@ -294,7 +294,7 @@ $(document).ready(function () {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2026-08-15
+<strong>Last updated:</strong> 2026-09-17
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 2 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -325,16 +325,16 @@ This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a> analysi
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreee4ed94face306b687681b5022e175ac71403f753targetblanke4ed94fa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/e4ed94face306b687681b5022e175ac71403f753" target="_blank">e4ed94f</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreef3aa24ff17ea80da6d6aae7cb7ac1b619cf4bbaatargetblankf3aa24fa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/f3aa24ff17ea80da6d6aae7cb7ac1b619cf4bbaa" target="_blank">f3aa24f</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreee4ed94face306b687681b5022e175ac71403f753targetblanke4ed94fa" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreef3aa24ff17ea80da6d6aae7cb7ac1b619cf4bbaatargetblankf3aa24fa" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/e4ed94face306b687681b5022e175ac71403f753" target="_blank">e4ed94f</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/f3aa24ff17ea80da6d6aae7cb7ac1b619cf4bbaa" target="_blank">f3aa24f</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -356,6 +356,8 @@ Ignored files:
     Ignored:    data/methylation-data-for-matthew.rds
     Ignored:    data/pbmc/
     Ignored:    data/pbmc_purified.RData
+    Ignored:    data/tgp_data_matrix.rds
+    Ignored:    data/tgp_meta.rds
 
 Untracked files:
     Untracked:  .dropbox
@@ -366,6 +368,7 @@ Untracked files:
     Untracked:  analysis/GTEX-cogaps.Rmd
     Untracked:  analysis/PACS.Rmd
     Untracked:  analysis/Rplot.png
+    Untracked:  analysis/Rplots.pdf
     Untracked:  analysis/SPCAvRP.rmd
     Untracked:  analysis/abf_comparisons.Rmd
     Untracked:  analysis/admm_02.Rmd
@@ -389,6 +392,7 @@ Untracked files:
     Untracked:  analysis/explore_psvd.Rmd
     Untracked:  analysis/fa_check_identify.Rmd
     Untracked:  analysis/fa_iterative.Rmd
+    Untracked:  analysis/fastica_1kg_unwhitened.Rmd
     Untracked:  analysis/fastica_heated.Rmd
     Untracked:  analysis/fastica_unwhitened.Rmd
     Untracked:  analysis/flash_cov_overlapping_groups_init.Rmd
@@ -589,6 +593,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/f3aa24ff17ea80da6d6aae7cb7ac1b619cf4bbaa/analysis/index.Rmd" target="_blank">f3aa24f</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-17
+</td>
+<td>
+Add fastICA x|x| analysis of 1000 Genomes data
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/c43e3efe521312e363e038f29a05bc66b86f1ea3/docs/index.html" target="_blank">c43e3ef</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-08-15
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -3867,6 +3905,8 @@ Start workflowr project.
 <li><p><a href="fastica_precondition.html">Preconditioned FastICA: homotopy method and TLC contrast</a></p></li>
 <li><p><a href="fastICA_asymmetric.html">EB FastICA with asymmetric prior: alternating optimization for sparse sources</a></p></li>
 <li><p><a href="ebproj_newton.html">EBproj: quasi-Newton with binary prior and Section-5 sigma (Test 1)</a></p></li>
+<li><p><a href="fastica_1kg.html">fastICA with x|x| contrast on 1000 Genomes data</a></p></li>
+<li><p><a href="fastica_1kg_unwhitened.html">Unwhitened fastICA (x|x| contrast) on 1000 Genomes data</a></p></li>
 <li><p><a href="flash_pca.html">Motivated by ICA, I try a flash+low-rank approach</a></p></li>
 <li><p><a href="EB_subspace.html">Motivated by ICA, I try an EB approach to find subspaces</a></p></li>
 </ul>
