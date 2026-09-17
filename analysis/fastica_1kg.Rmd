@@ -1,0 +1,1537 @@
+---
+title: "fastICA with x|x| contrast on 1000 Genomes data"
+author: "Matthew Stephens"
+date: "2026-09-16"
+output:
+  workflowr::wflow_html:
+    toc: true
+    toc_float: true
+    toc_depth: 2
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
+
+## Introduction
+
+This applies the asymmetric-contrast fastICA of
+[`pancreas_celseq2_ica_02`](https://stephenslab.github.io/single-cell-jamboree/pancreas_celseq2_ica_02.html)
+to the 1000 Genomes Project (TGP) phase 3 genotype data, using the $G(x) = x|x|$
+contrast (the tilting term of TLC without the log-cosh) with polar
+orthogonalization.
+
+The point of this contrast is that it favours *one-sided* sources: directions in
+which most loadings sit near zero and a minority are large and positive. 
+
+```{r load}
+library(ggplot2)
+library(cowplot)
+
+meta <- readRDS("../data/tgp_meta.rds")
+fit  <- readRDS("../output/tgp_fastica.rds")
+
+pop_order <- c("LWK","ESN","YRI","MSL","GWD","ACB","ASW",     # AFR
+               "CLM","MXL","PUR","PEL",                       # AMR
+               "TSI","IBS","GBR","CEU","FIN",                 # EUR
+               "PJL","GIH","ITU","STU","BEB",                 # SAS
+               "CDX","KHV","CHS","CHB","JPT")                 # EAS
+meta$pop <- factor(as.character(meta$pop), levels = pop_order)
+stopifnot(!any(is.na(meta$pop)))
+
+sp_palette <- c(AFR = "#E69F00", AMR = "#D55E00", EUR = "#7570B3",
+                SAS = "#1B9E77", EAS = "#0072B2")
+
+skew_obj <- function(L) colMeans(L * abs(L))
+```
+
+## Data
+
+The data are in `data/tgp_data_matrix.rds` which was provided by Annie Xie: 
+a $2504 \times 185116$ matrix of
+counts of the derived allele, for 2504 individuals from 26 populations. This
+starts from the ADMIXTURE dataset of the flagship paper (MAF $< 0.05$ variants
+already removed and the genome LD-thinned); SNPs without ancestral-allele
+information were then dropped, taking 193634 SNPs down to 185116, and the matrix
+re-coded to derived-allele counts.
+
+We centre the columns (SNPs) and do nothing else --- no division by
+$\sqrt{2p(1-p)}$.
+
+One challenge is size: as doubles the matrix is 3.7 Gb, so forming a centred
+copy and calling `svd()` on it is awkward. Instead
+[`code/fit_tgp_fastica.R`](https://github.com/stephenslab/misc/blob/master/code/fit_tgp_fastica.R)
+gets the left singular vectors from the centred Gram matrix, which is only
+$2504 \times 2504$:
+$$
+CC' = YY' - a1' - 1a' + (\mu'\mu)11', \qquad a = Y\mu, \quad \mu = \text{colMeans}(Y),
+$$
+and eigendecomposes that. (I'm not sure this is necessary - that was Claude's choice.) The same file also runs fastICA (parallel version) on the data and saves the results; it whitens to $K=20,30$ dimensions and uses 5 different seeds for each $K$ (see below).
+
+## Eigenvalue scree plot
+
+fastICA is run in the whitened row space of the top `n.comp` PCs. Here we look at the top eigenvalues.
+
+```{r scree, fig.width=6, fig.height=3.2}
+d <- fit$d
+ggplot(data.frame(k = 1:40, d = d[1:40]), aes(k, d)) +
+  geom_point(size = 1.2) +
+  geom_vline(xintercept = fit$K, linetype = "dashed", colour = "dodgerblue") +
+  labs(x = "component", y = "singular value") +
+  theme_cowplot(font_size = 10)
+round(d[1:25])
+```
+
+The eigenvalues plateau around $K=12$.  We fit at $K = 20$ and $K = 30$,
+both well into the plateau. There are 26 different sampling populations here, so this is the range in
+which there are enough components to give each population its own factor if that is desired..
+
+## Convergence
+
+200 iterations from each of five random starts (`seed = 1:5`) at each $K$. The
+objective is not concave, so the starts do not all reach the same place; we
+keep the one with the highest total objective, and the trace plotted below is
+that one.
+
+```{r starts}
+# Total objective reached by each start, and which one we keep.
+round(sapply(fit$fits, function(f) f$start_obj), 3)
+sapply(fit$fits, function(f) f$seed)
+```
+
+At $K = 20$ the five starts are within 0.04 of each other and give the same
+factors. At $K = 30$ they are not: seed 1 ends 0.13 below the best and loses a
+factor that the other four find, which is taken up in the last section below.
+
+```{r traces, fig.width=6, fig.height=3}
+tr <- do.call(rbind, lapply(names(fit$fits), function(kn) {
+  data.frame(iter = seq_along(fit$fits[[kn]]$trace),
+             obj  = fit$fits[[kn]]$trace,
+             K    = factor(kn, levels = names(fit$fits)))
+}))
+ggplot(tr, aes(iter, obj, colour = K)) +
+  geom_line(linewidth = 0.5) +
+  labs(x = "iteration", y = "sum of column objectives") +
+  theme_cowplot(font_size = 10)
+
+# Change in objective over the last 50 iterations.
+round(sapply(fit$fits, function(f) f$trace[200] - f$trace[150]), 8)
+```
+
+The objective is flat to machine precision well before iteration 150 in every
+case.
+
+## Plotting functions
+
+```{r plot-fns}
+# Factors ordered so they roughly follow the population order above: each
+# factor gets the average population rank of the individuals it loads on,
+# weighted by pmax(L,0)^2 so that only the large positive loadings count.
+ordered_L <- function(kn) {
+  L     <- fit$fits[[kn]]$L
+  w     <- pmax(L, 0)^2
+  score <- colSums(w * as.integer(meta$pop)) / colSums(w)
+  L     <- L[, order(score), drop = FALSE]
+  colnames(L) <- sprintf("f%02d", seq_len(ncol(L)))
+  L
+}
+
+# Loadings of all 2504 individuals, x-axis grouped by population.
+plot_loadings <- function(L, ncol = 3) {
+  ord <- order(meta$pop)
+  nf  <- ncol(L)
+  df  <- data.frame(
+    idx     = rep(seq_len(nrow(L)), nf),
+    loading = as.vector(L[ord, ]),
+    sp      = rep(meta$super_pop[ord], nf),
+    factor  = factor(rep(colnames(L), each = nrow(L)), levels = colnames(L))
+  )
+  brk <- tapply(seq_along(ord), meta$pop[ord], mean)
+  ggplot(df, aes(idx, loading, colour = sp)) +
+    geom_hline(yintercept = 0, linewidth = 0.2, colour = "grey50") +
+    geom_point(size = 0.3, alpha = 0.7) +
+    facet_wrap(~ factor, ncol = ncol, scales = "free_y") +
+    scale_x_continuous(breaks = brk, labels = names(brk)) +
+    scale_colour_manual(values = sp_palette) +
+    labs(x = NULL, y = "loading", colour = "super-population") +
+    theme_cowplot(font_size = 9) +
+    theme(axis.text.x     = element_text(angle = 90, vjust = 0.5, size = 5),
+          legend.position = "bottom") +
+    guides(colour = guide_legend(override.aes = list(size = 3, alpha = 1),
+                                 nrow = 1))
+}
+
+# Population-mean loadings as a heatmap; rows in super-population order.
+plot_pop_heatmap <- function(L) {
+  M  <- apply(L, 2, function(x) tapply(x, meta$pop, mean))
+  df <- data.frame(
+    pop    = factor(rep(rownames(M), ncol(M)), levels = rev(pop_order)),
+    factor = factor(rep(colnames(M), each = nrow(M)), levels = colnames(M)),
+    value  = as.vector(M)
+  )
+  lim <- max(abs(df$value))
+  ggplot(df, aes(factor, pop, fill = value)) +
+    geom_tile() +
+    scale_fill_gradient2(low = "#2166AC", mid = "white", high = "#B2182B",
+                         limits = c(-lim, lim)) +
+    labs(x = NULL, y = NULL, fill = "mean\nloading") +
+    theme_cowplot(font_size = 9) +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+}
+```
+
+```{r pop-label-fn}
+# Populations carrying most of a factor: those whose mean loading is within a
+# factor of `frac` of the largest.
+pop_label <- function(x, frac = 0.3) {
+  v <- tapply(x, meta$pop, mean)
+  v <- sort(v[v > 0], decreasing = TRUE)
+  paste(names(v)[v >= frac * v[1]], collapse = "/")
+}
+
+# Add those populations to the column names, for plot panel labels. The fNN
+# names are kept as a prefix since the text refers to factors by them. `n` is
+# the number of individuals loading above 2, which separates the
+# population-level factors from the very sparse ones.
+with_pop_labels <- function(L) {
+  colnames(L) <- make.unique(sprintf("%s %s  n=%d", colnames(L),
+                                     apply(L, 2, pop_label), colSums(L > 2)))
+  L
+}
+```
+
+```{r top-inds-fn}
+# The individuals with the largest loading on each factor, as a sanity check on
+# what the very one-sided factors are actually picking out.
+top_inds <- function(L, n = 6) {
+  t(apply(L, 2, function(x) {
+    i <- order(x, decreasing = TRUE)[1:n]
+    sprintf("%s/%s(%.0f)", meta$sample[i], meta$pop[i], x[i])
+  }))
+}
+
+# Summaries used to tell population factors from individual-level ones.
+fac_summary <- function(L) {
+  round(rbind(
+    obj            = skew_obj(L),
+    skewness       = apply(L, 2, function(x) mean(x^3) / mean(x^2)^1.5),
+    `max loading`  = apply(L, 2, max),
+    `n loading >2` = colSums(L > 2)
+  ), 2)
+}
+```
+
+## 1000 rank-1 runs
+
+Before looking at the rank-$r$ (symmetric) fits, it is worth asking what the
+$x|x|$ objective looks like on its own, without the orthogonality constraint.
+Following the approach in
+[`pancreas_celseq2_ica`](https://stephenslab.github.io/single-cell-jamboree/pancreas_celseq2_ica.html),
+we run 1000 independent rank-1 fastICA runs in parallel --- one column of `W`
+per run, each normalized to unit length after every update, with no
+orthogonalization between them --- from random starts, whitening to 30
+components. Whatever the runs converge to are the local maxima of the
+objective, and the number of runs landing in each is a rough measure of the
+size of its basin of attraction.
+
+```{r r1-run}
+n   <- nrow(meta)
+U30 <- sqrt(n) * t(fit$U_c[, 1:30])   # whitened row space, 30 x n
+
+# Rank-1 update, applied to all starts at once: W is 30 x n_starts and each
+# column is normalized separately, so the columns never interact.
+r1_update <- function(U, W) {
+  P  <- t(U) %*% W
+  G  <- 2 * abs(P)
+  G2 <- 2 * sign(P)
+  W  <- U %*% G - sweep(W, 2, colSums(G2), "*")
+  sweep(W, 2, sqrt(colSums(W^2)) + 1e-15, "/")
+}
+
+set.seed(1)
+W <- matrix(rnorm(30 * 1000), 30, 1000)
+W <- sweep(W, 2, sqrt(colSums(W^2)), "/")
+for (i in 1:500) {
+  W_old <- W
+  W     <- r1_update(U30, W)
+}
+# Largest change in any column over the final iteration: all runs have converged.
+signif(max(1 - abs(colSums(W * W_old))), 3)
+
+L_r1 <- t(U30) %*% W
+```
+
+### Clustering the results
+
+Runs that found the same maximum give the same loading vector, so we cluster
+the 1000 results by correlation distance with complete linkage, which
+guarantees that no two members of a cluster are less correlated than the
+threshold. We use *signed* correlation rather than $|$correlation$|$: $x|x|$ is
+not sign-symmetric, so $w$ and $-w$ are genuinely different solutions and
+should not be merged.
+
+```{r r1-cluster}
+hc <- hclust(as.dist(1 - cor(L_r1)), method = "complete")
+
+# The clustering is not sensitive to where we cut.
+sapply(c(0.90, 0.95, 0.99), function(tau) length(unique(cutree(hc, h = 1 - tau))))
+
+cl   <- cutree(hc, h = 0.05)
+size <- sort(table(cl), decreasing = TRUE)
+keep <- match(as.integer(names(size)), cl)   # one representative per cluster
+L_c  <- L_r1[, keep, drop = FALSE]
+colnames(L_c) <- sprintf("n=%d obj=%.2f", as.integer(size), skew_obj(L_c))
+as.integer(size)
+```
+
+So the 1000 runs found only `r length(keep)` distinct maxima, and the answer is
+the same whether we cut at a correlation of 0.90 or 0.99 --- these are well
+separated, not a continuum.
+
+```{r r1-plot, fig.width=9, fig.height=10}
+plot_loadings(L_c, ncol = 4)
+```
+
+### Basin size is not objective
+
+The panels are labelled with the number of runs that found each maximum and
+with its objective. The two are only weakly related --- a correlation of 0.39,
+on 14 points --- so basin size is not a stand-in for how good the solution is:
+
+```{r r1-basins}
+round(rbind(size = as.integer(size), obj = skew_obj(L_c)), 3)
+cor(as.integer(size), skew_obj(L_c))
+```
+
+The largest basin by a wide margin, with 307 of the 1000 runs, is the GIH trio
+--- a factor that loads on three individuals --- and its objective (0.77) is
+only middling. The highest objective (0.86) belongs to LWK, which 99 runs
+found. At the other end, the ESN/YRI and CHB/CHS maxima were each found by two
+runs and one run respectively, and would have been missed entirely by a
+handful of starts.
+
+
+### What the rank-1 runs do not find
+
+Every one of these maxima (or at least 13 out of 14) corresponds to a factor of the symmetric $K = 30$
+fit: 13 of the 14 correlate above 0.9 with a factor in $K=30$. But of course the converse is false since $K=30$ identifies 30 components.
+
+```{r r1-vs-rankr}
+L30_pre <- ordered_L("k30")
+R       <- cor(L_c, L30_pre)
+
+# For each rank-1 cluster, its best match among the K = 30 factors.
+data.frame(size  = as.integer(size),
+           match = colnames(L30_pre)[apply(R, 1, which.max)],
+           cor   = round(apply(R, 1, max), 2))
+
+# How many K = 30 factors have no rank-1 counterpart?
+sum(apply(R, 2, max) < 0.9)
+```
+
+`r sum(apply(cor(L_c, ordered_L("k30")), 2, max) < 0.9)` of the 30 symmetric
+factors have no counterpart among the 14, including major population factors
+--- MSL, CLM, MXL, PUR, TSI, GBR/CEU, STU/BEB/ITU --- and every one of the
+relative-pair factors.
+
+It is tempting to conclude from this that those factors are not local maxima of
+the unconstrained objective, and that they exist only because orthogonality to
+the other $K-1$ components rules out sliding towards one of the 14. That
+conclusion would be too quick: 1000 random starts tell us about basins of
+attraction, not about which maxima exist. So we should test it directly.
+
+### Are the rank-$r$ factors local maxima?
+
+Each column of the rank-$r$ solution is a unit vector $w$ in the whitened
+space, so we can ask the question exactly. Write $s = U'w$; on the unit sphere
+the objective, its Riemannian gradient and its Riemannian Hessian are
+
+$$
+\phi(w) = \tfrac{1}{n}\sum_i s_i|s_i|, \qquad
+\nabla = P\,\tfrac{2}{n}U|s|, \qquad
+H = P\left(\tfrac{2}{n}U\,\text{diag}(\text{sign}(s))\,U'\right)P - (w'\nabla_{\!e})P,
+$$
+
+with $P = I - ww'$ the projection onto the tangent space. A local maximum has
+$\|\nabla\| = 0$ and all tangent eigenvalues of $H$ at most 0.
+
+```{r localmax-fns}
+U30t  <- t(U30)
+phi   <- function(w) { s <- as.vector(U30t %*% w); mean(s * abs(s)) }
+egrad <- function(w) (2 / n) * (U30 %*% abs(as.vector(U30t %*% w)))
+rgrad <- function(w) { g <- egrad(w); as.vector(g - sum(w * g) * w) }
+rhess <- function(w) {
+  P <- diag(nrow(U30)) - tcrossprod(w)
+  P %*% ((2 / n) * (U30 %*% (sign(as.vector(U30t %*% w)) * U30t))) %*% P -
+    sum(w * egrad(w)) * P
+}
+# Largest tangent-space eigenvalue (the radial direction is dropped).
+max_tangent_eig <- function(w) {
+  H <- rhess(w)
+  sort(eigen((H + t(H)) / 2, symmetric = TRUE)$values, decreasing = TRUE)[2]
+}
+```
+
+The 14 rank-1 maxima pass, as they must:
+
+```{r localmax-check14}
+W_c <- W[, keep, drop = FALSE]
+round(rbind(`grad norm` = apply(W_c, 2, function(w) sqrt(sum(rgrad(w)^2))),
+            `max eigen` = apply(W_c, 2, max_tangent_eig)), 6)
+```
+
+Now the same test at the 30 symmetric factors, together with what the rank-1
+iteration does when started from each of them:
+
+```{r localmax-check30}
+# W for the K = 30 factors, in the document's ordering: L = sqrt(n) U_c W.
+W30 <- t(fit$U_c[, 1:30]) %*% L30_pre / sqrt(n)
+
+W_from30 <- W30
+for (i in 1:500) W_from30 <- r1_update(U30, W_from30)
+L_from30 <- t(U30) %*% W_from30
+
+tab <- data.frame(
+  factor    = colnames(L30_pre),
+  `grad norm` = round(apply(W30, 2, function(w) sqrt(sum(rgrad(w)^2))), 2),
+  `max eigen` = round(apply(W30, 2, max_tangent_eig), 2),
+  `cor with start after r1` = round(diag(cor(L30_pre, L_from30)), 2),
+  check.names = FALSE, row.names = NULL)
+tab
+```
+
+So the strict answer is that **none** of the 30 is a local maximum: the
+gradient norm is 0.14--0.54 at every one of them, against 0 at the 14. The
+orthogonality constraint is active everywhere, not just at the 17 factors the
+random starts missed.
+
+But that is not the interesting distinction. The useful question is whether
+each factor sits *near* a genuine maximum, and the last column answers it:
+`r sum(tab[["cor with start after r1"]] > 0.9)` of the 30 do not change appreciably under the
+rank-1 iteration (correlation above 0.9 with where they started) and are
+therefore small perturbations of an unconstrained maximum. The other 14 slide
+away, most of them to something unrelated (nine end below a correlation of 0.1
+with their starting point!).
+
+### Three maxima the random starts missed
+
+The 30 starting points converge to 17 distinct maxima, three of which are not
+among the 14 found from random starts:
+
+```{r new-maxima}
+all_max <- cbind(L_c, L_from30)
+cl2     <- cutree(hclust(as.dist(1 - cor(all_max)), method = "complete"), h = 0.05)
+from_random <- unique(cl2[seq_len(ncol(L_c))])
+from_rankr  <- unique(cl2[-seq_len(ncol(L_c))])
+c(random = length(from_random), rankr = length(from_rankr),
+  new = length(setdiff(from_rankr, from_random)))
+
+new_j <- sapply(setdiff(from_rankr, from_random),
+                function(k) which(cl2 == k)[1] - ncol(L_c))
+data.frame(reached_from = colnames(L30_pre)[new_j],
+           obj = round(apply(W_from30[, new_j, drop = FALSE], 2, phi), 3),
+           top_pops = apply(L_from30[, new_j, drop = FALSE], 2, function(x) {
+             v <- sort(tapply(x, meta$pop, mean), decreasing = TRUE)
+             paste(sprintf("%s(%.1f)", names(v)[1:3], v[1:3]), collapse = " ")
+           }), row.names = NULL)
+```
+
+These are PUR, TSI and GBR/CEU --- three of the factors I listed above as
+having "no rank-1 counterpart". They are local maxima of the
+unconstrained objective, with gradient norm 0 and no ascent direction; their
+basins are simply small enough that 1000 random starts never landed in one. So
+the objective has at least 17 maxima, not 14, and the count from random starts
+is a lower bound.
+
+There remain several factors --- MSL, CLM, MXL,
+STU/BEB/ITU and all the relative-pair factors --- that disappear when the orthogonality constraint is lifted. Most of them slide away 
+to something completely different (f05, f07, f09 and f21 all collapse
+onto the GIH trio). For those, orthogonality is helping to genuinely generate the
+factor rather than just perturbing one the objective would find on its own. 
+It remains to be answered "how real are these optima", the ones that are only present under an orthogonality constraint?
+
+
+### All 17 maxima
+
+The 30 rank-1 runs started from the $K = 30$ factors converge to 17 distinct
+points, so it is worth looking at all of them together. Each panel is labelled
+with the populations most represented in that factor --- every population whose
+mean loading is at least 30% of the largest --- together with the objective and
+the number of individuals loading above 2, which separates the
+population-level factors from the very sparse ones.
+
+```{r all17, fig.width=9, fig.height=12}
+cl17    <- cutree(hclust(as.dist(1 - cor(L_from30)), method = "complete"), h = 0.05)
+rep_j   <- match(unique(cl17), cl17)                       # one per cluster
+n_start <- as.integer(table(cl17)[as.character(cl17[rep_j])])
+
+L17 <- L_from30[, rep_j, drop = FALSE]
+w   <- pmax(L17, 0)^2
+o   <- order(colSums(w * as.integer(meta$pop)) / colSums(w))   # population order
+L17 <- L17[, o, drop = FALSE]
+n_start <- n_start[o]
+
+colnames(L17) <- make.unique(sprintf("%s  obj=%.2f  n=%d",
+                                     apply(L17, 2, pop_label),
+                                     skew_obj(L17),
+                                     colSums(L17 > 2)))
+ncol(L17)
+plot_loadings(L17, ncol = 4)
+```
+
+Twelve of the 17 are population factors and five are sparser,
+individual-level kind (the panels with `n` in single figures, one with $n=17$ is borderline): a GIH trio, an
+ASW pair, an STU pair, and the ITU and STU subgroups. Note that GIH appears
+twice --- once as the trio, with a maximum loading of 30, and once as a 
+population factor.
+
+
+## K = 20
+
+Population-mean loadings, then the loadings of all individuals. Factors are
+ordered so that they roughly follow the population order, AFR to EAS.
+
+```{r skew-k20-heat, fig.width=8, fig.height=4.5}
+L20 <- ordered_L("k20")
+plot_pop_heatmap(L20)
+```
+
+```{r skew-k20, fig.width=9, fig.height=13}
+plot_loadings(with_pop_labels(L20), ncol = 4)
+```
+
+With 20 components and 26 populations, 16 of the factors are a single
+population or a tight pair, and in the new order they read across the panel as
+LWK (f01); ESN/YRI with ACB/ASW intermediate (f02); GWD (f03); MSL (f04);
+CLM (f05); MXL (f06); PUR (f07); PEL (f08); TSI (f09); GBR/CEU (f10);
+FIN (f11); GIH (f14); STU/ITU/BEB (f17); CDX/KHV (f18); CHB/CHS (f19); and
+JPT (f20). Admixture sometimes appears as
+intermediate loadings, but some admixed populations are assigned their own factor.
+
+```{r skew-k20-summary}
+fac_summary(L20)
+```
+
+The four gaps in that list --- f12, f13, f15, f16 --- are not population
+factors. They have skewness 6--16 and max loadings of 9--26, against 2--5 and
+5--12 for the population factors, and fewer than 40 individuals loading above
+2. They pick out subgroups of individuals:
+
+```{r skew-k20-top}
+top_inds(L20)
+```
+
+f16 is four STU individuals (HG03733, HG03899, HG03955, HG03898) with loadings
+of 12--26, and f12 an ITU/STU pair plus a few ASW; both look like relatedness
+rather than population structure. f13 and f15 are larger subgroups, of 37 PJL
+and 17 ITU individuals respectively --- f15 is the ITU cluster taken up in the
+last section.
+
+## K = 30
+
+```{r skew-k30-heat, fig.width=10, fig.height=4.5}
+L30 <- ordered_L("k30")
+plot_pop_heatmap(L30)
+```
+
+Splitting the factors by whether the rank-1 runs recover them, using the test
+from above: a factor counts as recovered if, when we lift the orthogonality
+constraint and run rank-1 from it, we come back to the same place (correlation
+above 0.9). Equivalently, these are the factors that sit at one of the 17
+unconstrained maxima.
+
+```{r k30-split}
+recovered <- tab[["cor with start after r1"]][match(colnames(L30), tab$factor)] > 0.9
+table(recovered)
+```
+
+Recovered by the rank-1 runs:
+
+```{r skew-k30-recovered, fig.width=9, fig.height=13}
+plot_loadings(with_pop_labels(L30[, recovered, drop = FALSE]), ncol = 4)
+```
+
+Not recovered --- these exist only under the orthogonality constraint:
+
+```{r skew-k30-other, fig.width=9, fig.height=12}
+plot_loadings(with_pop_labels(L30[, !recovered, drop = FALSE]), ncol = 4)
+```
+
+The split is not simply "population factors versus sparse ones". The recovered
+group holds most of the population factors (LWK, GWD, MSL, PUR, PEL, TSI/IBS,
+GBR/CEU, FIN, PJL, GIH, CDX/KHV, CHB/CHS, JPT) *and* the ITU, STU and GIH-trio
+subgroups. The unrecovered group mixes the relative-pair factors with several
+ordinary-looking population factors --- CLM, MXL, and the STU/BEB/ITU
+composite. Note also that three of the recovered factors (PUR, TSI/IBS,
+GBR/CEU) sit at maxima that the 1000 random starts never reached; they are
+recovered only when rank-1 is started at the rank-$r$ factor itself.
+
+```{r skew-k30-summary}
+fac_summary(L30)
+```
+
+Every population factor from $K = 20$ survives, and the extra components are
+almost all individual-level: eleven factors have skewness above 6, nine of them
+with max loadings of 12--30 on a handful of people.
+
+```{r skew-k30-top}
+top_inds(L30)
+```
+
+f05 (NA20317, NA20318), f06 (NA20359, NA20362), f07 (NA20321, NA20320) and f10
+(NA20334, NA20355) are each a pair of ASW individuals, f09 an ACB pair
+(HG02429, HG02479), f21 an STU pair, f24 the ITU/STU pair from $K = 20$, f27
+the STU quartet, and f22 a GIH trio (NA20900, NA20891, NA20882). Pairs like
+these are most plausibly close relatives. f17 has an objective of 0.07 against
+0.84 for the largest, and is the only factor that looks like it is fitting
+nothing in particular.
+
+So increasing $K$ from 20 to 30 does not refine the population decomposition;
+it spends the extra components on relatedness and on individual outliers, which
+is what a contrast that rewards extreme one-sidedness should be expected to do
+once the population-level sources are used up.
+
+## An ITU subgroup, and a local optimum
+
+There is a cluster of 16 ITU individuals that gets its own factor at both $K$
+--- f15 at $K = 20$, f25 at $K = 30$, with loadings of 12--13 --- and it is
+exactly the same 16 people in each:
+
+```{r itu-subgroup}
+itu20 <- which(L20[, "f15"] > 8)
+itu30 <- which(L30[, "f25"] > 8)
+identical(sort(meta$sample[itu20]), sort(meta$sample[itu30]))
+data.frame(sample = meta$sample[itu20], pop = meta$pop[itu20],
+           k20 = round(L20[itu20, "f15"], 1),
+           k30 = round(L30[itu30, "f25"], 1), row.names = NULL)
+```
+
+That is the stable answer. But it is worth recording how we got here, because
+the first $K = 30$ fit we ran --- a single start, `seed = 1` --- did not look
+like this at all. There the ITU factor was absent, and instead these same 16
+individuals appeared as a clump at intermediate loadings on all four of the
+*African* factors:
+
+```{r itu-seed1}
+L30_s1 <- fit$fits$k30$all_L[[1]]                 # the seed-1 solution
+w      <- pmax(L30_s1, 0)^2
+L30_s1 <- L30_s1[, order(colSums(w * as.integer(meta$pop)) / colSums(w))]
+colnames(L30_s1) <- sprintf("f%02d", seq_len(ncol(L30_s1)))
+
+round(L30_s1[itu20, 1:4], 1)                      # the 16, on the four AFR factors
+round(max(apply(L30_s1[itu20, ], 1, max)), 1)     # their largest loading anywhere
+```
+
+Plotting those four factors against each other shows it clearly: the 16 are a
+single tight clump sitting off the origin in every pane, not four unrelated
+sets of individuals.
+
+```{r itu-pairs, fig.width=8, fig.height=5.5}
+pairs <- t(combn(sprintf("f%02d", 1:4), 2))
+df <- do.call(rbind, lapply(seq_len(nrow(pairs)), function(i) {
+  data.frame(x    = L30_s1[, pairs[i, 1]],
+             y    = L30_s1[, pairs[i, 2]],
+             grp  = ifelse(seq_len(nrow(L30_s1)) %in% itu20,
+                           "ITU subgroup", "other"),
+             pane = paste(pairs[i, 1], "vs", pairs[i, 2]))
+}))
+df <- df[order(df$grp == "ITU subgroup"), ]   # draw the clump on top
+ggplot(df, aes(x, y, colour = grp, size = grp)) +
+  geom_point(alpha = 0.7) +
+  facet_wrap(~ pane, nrow = 2, scales = "free") +
+  scale_colour_manual(values = c("ITU subgroup" = "#D55E00", other = "grey70")) +
+  scale_size_manual(values = c("ITU subgroup" = 1.1, other = 0.35)) +
+  labs(x = NULL, y = NULL, colour = NULL) +
+  guides(size = "none") +
+  theme_cowplot(font_size = 9) +
+  theme(legend.position = "bottom")
+```
+
+The natural reading of that plot is that the subgroup shares something with the
+African populations, and that at larger $K$ the orthogonality constraint is
+better served by spreading it over the African directions than by keeping a
+separate one. That reading is wrong. What actually happened is simply that
+`seed = 1` converged to an inferior local optimum: it is the worst of the five
+starts by total objective, and the only one that loses the factor.
+
+```{r itu-across-starts}
+# For each start: total objective, and the largest mean loading over the 16.
+round(rbind(
+  `total objective` = fit$fits$k30$start_obj,
+  `ITU mean loading` = sapply(fit$fits$k30$all_L,
+                              function(L) max(colMeans(L[itu20, , drop = FALSE])))
+), 2)
+```
+
+Seeds 2--5 all recover the ITU factor at a mean loading of about 10, and all
+four beat seed 1. Warm-starting $K = 30$ from the $K = 20$ solution also
+recovers it. So the factor is not in competition with the African ones at all;
+the spreading is an artifact of one bad basin, and the gap in objective (0.13
+out of 18) is small enough that it would be easy to miss from the numbers
+alone.
+
+The practical lesson is that the trace being flat to machine precision says
+nothing about whether the solution is good --- seed 1 converges just as
+cleanly as the others. Multiple starts are cheap here (about 20 seconds for
+all ten fits) and are the only thing that caught this.
+
+## Removing the individuals in the sparse factors
+
+Everything above says that the awkward features of this landscape --- the
+enormous basin of the GIH trio, the maxima that random starts cannot reach, the
+rank-$r$ factors that dissolve when freed --- are tied to a small number of
+individuals who dominate very sparse factors. So it is worth asking what is
+left once they are gone.
+
+We take the original results, pool the 30 $K = 30$ factors with the 17
+unconstrained maxima reached from them, call a factor *very sparse* if fewer
+than 20 individuals load above 2, and drop every individual with a loading
+above 5 on any such factor. (Both thresholds are insensitive: 20--25 and 5--8
+give the same set.) This is done in `code/fit_tgp_fastica.R`, which then redoes
+the centred SVD and the $K = 30$ rank-$r$ fit on what remains.
+
+```{r no-sparse-dropped}
+ns <- fit$no_sparse
+c(sparse_factors = ns$n_sparse_cols, dropped = length(ns$dropped),
+  remaining = nrow(ns$U_c))
+table(droplevels(meta$pop[match(ns$dropped, meta$sample)]))
+```
+
+So 40 individuals go: the ITU subgroup (18), the ASW pairs (10), the STU
+quartet and pair (6), the GIH trio plus NA20864 (4), and the ACB pair (2). Note
+that the broader PJL subgroup survives --- 33 individuals load above 2 on it,
+so it is not "very sparse" by this criterion.
+
+### How many maxima are left?
+
+Both searches again: 1000 random rank-1 starts, and rank-1 started at each of
+the new $K = 30$ factors.
+
+```{r no-sparse-search}
+search_both <- function(U_w, U_c, L_rankr) {
+  nk <- ncol(U_w)
+  set.seed(1)
+  W <- matrix(rnorm(30 * 1000), 30, 1000)
+  W <- sweep(W, 2, sqrt(colSums(W^2)), "/")
+  for (i in 1:500) W <- r1_update(U_w, W)
+
+  W_k <- t(U_c[, 1:30]) %*% L_rankr / sqrt(nk)
+  for (i in 1:500) W_k <- r1_update(U_w, W_k)
+
+  L  <- cbind(t(U_w) %*% W, t(U_w) %*% W_k)
+  cl <- cutree(hclust(as.dist(1 - cor(L)), method = "complete"), h = 0.05)
+  list(L = L, cl = cl,
+       random = unique(cl[1:1000]), rankr = unique(cl[-(1:1000)]))
+}
+
+n_ns   <- nrow(ns$U_c)
+U_ns   <- sqrt(n_ns) * t(ns$U_c[, 1:30])
+pop_ns <- meta$pop[match(rownames(ns$U_c), meta$sample)]
+
+s_ns <- search_both(U_ns, ns$U_c, ns$fit$L)
+c(random = length(s_ns$random), rankr = length(s_ns$rankr),
+  union = length(unique(s_ns$cl)))
+```
+
+**14, and the three counts agree.** On the full data they were 14 random / 17
+from the rank-$r$ factors / 17 in total; here every maximum is found from a
+random start, so the gap between the two searches closes completely.
+
+```{r no-sparse-table}
+rep_j  <- match(unique(s_ns$cl), s_ns$cl)
+L_ns   <- s_ns$L[, rep_j, drop = FALSE]
+w      <- pmax(L_ns, 0)^2
+o      <- order(colSums(w * as.integer(pop_ns)) / colSums(w))
+L_ns   <- L_ns[, o, drop = FALSE]
+n_rand <- sapply(unique(s_ns$cl), function(k) sum(s_ns$cl[1:1000] == k))[o]
+
+pop_label_ns <- function(x, frac = 0.3) {
+  v <- tapply(x, pop_ns, mean)
+  v <- sort(v[v > 0], decreasing = TRUE)
+  paste(names(v)[v >= frac * v[1]], collapse = "/")
+}
+colnames(L_ns) <- make.unique(sprintf("%s  obj=%.2f  n=%d",
+                                      apply(L_ns, 2, pop_label_ns),
+                                      skew_obj(L_ns), colSums(L_ns > 2)))
+data.frame(factor = colnames(L_ns), rand_starts = n_rand,
+           max_loading = round(apply(L_ns, 2, max), 1), row.names = NULL)
+```
+
+All 14 are population factors. The sparsest has 33 individuals loading above 2
+(PJL) and the largest loading anywhere is 9.4, against 30 on the full data.
+There is nothing left that loads on a handful of people.
+
+Three of the maxima are ones that random starts could never reach before: PUR,
+TSI/IBS and GBR/CEU had 0 random starts each on the full data and now have 20,
+3 and 6. The 307 starts that went to the GIH trio are spread over the
+population factors instead, and PEL/MXL --- the largest basin now --- takes 250.
+
+One maximum is new rather than merely reachable: the STU/ITU/BEB composite
+(`obj` 0.68, 222 individuals above 2). On the full data that was rank-$r$
+factor f26, one of the ones that slid away when the constraint was lifted. With
+the sparse individuals gone it becomes a genuine unconstrained maximum, which
+makes sense --- the South Asian populations were previously carved up by the
+ITU and STU subgroup factors.
+
+```{r no-sparse-plot, fig.width=9, fig.height=10}
+# plot_loadings works off the full `meta`, so make a local version for the
+# reduced sample.
+plot_loadings_ns <- function(L, ncol = 4) {
+  ord <- order(pop_ns)
+  nf  <- ncol(L)
+  df  <- data.frame(
+    idx     = rep(seq_len(nrow(L)), nf),
+    loading = as.vector(L[ord, ]),
+    sp      = rep(meta$super_pop[match(rownames(ns$U_c), meta$sample)][ord], nf),
+    factor  = factor(rep(colnames(L), each = nrow(L)), levels = colnames(L))
+  )
+  brk <- tapply(seq_along(ord), pop_ns[ord], mean)
+  ggplot(df, aes(idx, loading, colour = sp)) +
+    geom_hline(yintercept = 0, linewidth = 0.2, colour = "grey50") +
+    geom_point(size = 0.3, alpha = 0.7) +
+    facet_wrap(~ factor, ncol = ncol, scales = "free_y") +
+    scale_x_continuous(breaks = brk, labels = names(brk)) +
+    scale_colour_manual(values = sp_palette) +
+    labs(x = NULL, y = "loading", colour = "super-population") +
+    theme_cowplot(font_size = 9) +
+    theme(axis.text.x     = element_text(angle = 90, vjust = 0.5, size = 5),
+          legend.position = "bottom") +
+    guides(colour = guide_legend(override.aes = list(size = 3, alpha = 1),
+                                 nrow = 1))
+}
+plot_loadings_ns(L_ns)
+```
+
+### The K = 30 rank-$r$ fit on the pruned data
+
+For comparison with the $K = 30$ section above, here is the rank-$r$ fit itself
+on the pruned data --- the "parallel" runs, all 30 components at once, best of
+five starts.
+
+```{r no-sparse-k30-order}
+# Population ordering and labelling, as for the full data but on the reduced
+# sample.
+L30_ns <- ns$fit$L
+w      <- pmax(L30_ns, 0)^2
+L30_ns <- L30_ns[, order(colSums(w * as.integer(pop_ns)) / colSums(w)),
+                 drop = FALSE]
+colnames(L30_ns) <- sprintf("f%02d", seq_len(ncol(L30_ns)))
+
+with_pop_labels_ns <- function(L) {
+  colnames(L) <- make.unique(sprintf("%s %s  n=%d", colnames(L),
+                                     apply(L, 2, pop_label_ns),
+                                     colSums(L > 2)))
+  L
+}
+round(ns$fit$start_obj, 3)
+```
+
+```{r no-sparse-k30-heat, fig.width=10, fig.height=4.5}
+plot_pop_heatmap_ns <- function(L) {
+  M  <- apply(L, 2, function(x) tapply(x, pop_ns, mean))
+  df <- data.frame(
+    pop    = factor(rep(rownames(M), ncol(M)), levels = rev(pop_order)),
+    factor = factor(rep(colnames(M), each = nrow(M)), levels = colnames(M)),
+    value  = as.vector(M)
+  )
+  lim <- max(abs(df$value))
+  ggplot(df, aes(factor, pop, fill = value)) +
+    geom_tile() +
+    scale_fill_gradient2(low = "#2166AC", mid = "white", high = "#B2182B",
+                         limits = c(-lim, lim)) +
+    labs(x = NULL, y = NULL, fill = "mean\nloading") +
+    theme_cowplot(font_size = 9) +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+}
+plot_pop_heatmap_ns(L30_ns)
+```
+
+Splitting by whether the rank-1 runs recover each factor, exactly as for the
+full data. The converged points from the rank-$r$ starts are the last 30
+columns of the search above, so the test is the correlation between each factor
+and where rank-1 takes it:
+
+```{r no-sparse-k30-split}
+L_after <- s_ns$L[, -(1:1000), drop = FALSE]
+# Put the converged points in the same column order as L30_ns.
+L_after <- L_after[, order(colSums(pmax(ns$fit$L, 0)^2 *
+                                   as.integer(pop_ns)) /
+                           colSums(pmax(ns$fit$L, 0)^2)), drop = FALSE]
+recovered_ns <- diag(cor(L30_ns, L_after)) > 0.9
+table(recovered_ns)
+```
+
+Recovered by the rank-1 runs:
+
+```{r no-sparse-k30-recovered, fig.width=9, fig.height=9}
+plot_loadings_ns(with_pop_labels_ns(L30_ns[, recovered_ns, drop = FALSE]))
+```
+
+Not recovered --- these exist only under the orthogonality constraint:
+
+```{r no-sparse-k30-other, fig.width=9, fig.height=13}
+plot_loadings_ns(with_pop_labels_ns(L30_ns[, !recovered_ns, drop = FALSE]))
+```
+
+
+### Comment
+
+Dropping 40 of 2504 individuals (1.6%) turns a landscape with 17 maxima, wildly
+uneven basins and three maxima unreachable from random starts into one with 14
+maxima, all population factors, all reachable. The $K = 30$ objective falls from
+18.17 to 13.62, which is the other side of the same coin: most of that
+difference was the sparse factors, and they were worth a lot of objective for
+very few individuals.
+
+That is a reason to be careful about reading the full-data results as
+population structure. It also suggests the sparse factors are not a nuisance to
+be tuned away but the thing the $x|x|$ contrast is most sensitive to --- it
+finds close relatives and outlier samples before it finds populations, and on
+these data that is arguably the right behaviour for a first pass.
+
+## Stability selection 
+
+A different way to ask which factors are real: fit the same model to
+two independent halves of the SNPs and keep only the factors that appear in
+both. The SNP names are `chromosome:position`, so we split by chromosome
+parity --- odd chromosomes against even --- which keeps whole chromosomes
+together and so avoids splitting any residual LD across the two halves. Both
+fits use the pruned set of individuals from the previous section, so their
+loadings are directly comparable. In the following sections we
+start by looking at K=30 and then try the rank 1 runs.
+
+
+
+### Stability with $K=30$
+
+```{r stability-setup}
+A <- fit$split$odd$fit$L
+B <- fit$split$even$fit$L
+stopifnot(identical(rownames(A), rownames(B)),
+          identical(rownames(A), rownames(ns$U_c)))   # same individuals as above
+
+c(odd_snps = fit$split$odd$n_snps, even_snps = fit$split$even$n_snps,
+  n = nrow(A))
+```
+
+#### Matching the two fits
+
+We match the 30 factors of one fit to the 30 of the other so as to maximize the
+total correlation (Hungarian algorithm). Correlations are signed rather than
+absolute, since $x|x|$ is not sign-symmetric.
+
+```{r stability-match}
+C    <- cor(A, B)
+pr   <- RcppHungarian::HungarianSolver(-C)$pairs
+perm <- pr[order(pr[, 1]), 2]
+mcor <- C[cbind(seq_along(perm), perm)]
+
+# The assignment is not doing any real work here: taking each factor's single
+# best partner, ignoring the one-to-one constraint, selects the same factors.
+identical(sort(which(apply(C, 1, max) > 0.3)), sort(which(mcor > 0.3)))
+
+round(sort(mcor, decreasing = TRUE), 2)
+```
+
+The matched correlations fall into two groups with nothing in between: 15
+factors between 0.48 and 0.91, then a drop to 0.09 and below for the other 15.
+Any cutoff between 0.1 and 0.48 therefore selects the same 15 factors, so the
+choice is not delicate.
+
+```{r stability-select}
+cutoff  <- 0.3
+matched <- which(mcor > cutoff)
+length(matched)
+
+# Order the matched factors by population, and label with the match correlation.
+Am <- A[, matched, drop = FALSE]
+w  <- pmax(Am, 0)^2
+o  <- order(colSums(w * as.integer(pop_ns)) / colSums(w))
+Am <- Am[, o, drop = FALSE]
+r  <- mcor[matched][o]
+
+data.frame(odd_half  = apply(Am, 2, pop_label_ns),
+           even_half = apply(B[, perm[matched][o], drop = FALSE], 2,
+                             pop_label_ns),
+           r         = round(r, 2), row.names = NULL)
+```
+
+The populations agree for all 15, including the ones whose correlation is only
+around 0.5 --- PJL, PUR, CLM, MXL, TSI/IBS, GBR/CEU are each matched to a
+factor on the same populations in the other half. So the lower correlations are
+not mismatches; they reflect how noisily a factor is estimated from 92,000
+SNPs. Note also the ceiling: the *best* agreement is 0.91, so even the most
+stable factors do not replicate perfectly at this number of SNPs.
+
+These 15 are close to the 14 unconstrained maxima of the previous section: the
+same population factors, with GWD/MSL appearing here as one factor and
+STU/ITU/BEB/PJL absorbing PJL. The 15 unmatched factors are the diffuse
+multi-population composites --- exactly the ones the rank-1 test also rejected.
+Two independent criteria, replication across SNP halves and being a local
+maximum without the orthogonality constraint, pick out nearly the same set.
+
+```{r stability-panels}
+# Matched factors, in a common order so the two tabs line up panel for panel:
+# panel i of the odd tab and panel i of the even tab are a matched pair.
+Am <- A[, matched[o], drop = FALSE]
+Bm <- B[, perm[matched][o], drop = FALSE]
+
+# Unmatched factors. These are not in correspondence, so each half is ordered
+# by population on its own. `r_of` is each factor's assigned correlation, which
+# for these is below the cutoff.
+a_un   <- setdiff(seq_len(ncol(A)), matched)
+b_un   <- perm[a_un]                       # the partners they were assigned
+r_un   <- mcor[a_un]
+
+pop_order_of <- function(L) {
+  w <- pmax(L, 0)^2
+  order(colSums(w * as.integer(pop_ns)) / colSums(w))
+}
+oa <- pop_order_of(A[, a_un, drop = FALSE])
+ob <- pop_order_of(B[, b_un, drop = FALSE])
+Au <- A[, a_un[oa], drop = FALSE]
+Bu <- B[, b_un[ob], drop = FALSE]
+
+# Panel labels: populations, the match correlation, and the number of
+# individuals loading above 2.
+label_with_r <- function(L, rr) {
+  colnames(L) <- make.unique(sprintf("%s  r=%.2f  n=%d",
+                                     apply(L, 2, pop_label_ns), rr,
+                                     colSums(L > 2)))
+  L
+}
+Am <- label_with_r(Am, r)
+Bm <- label_with_r(Bm, r)
+Au <- label_with_r(Au, r_un[oa])
+Bu <- label_with_r(Bu, r_un[ob])
+c(matched = ncol(Am), unmatched_odd = ncol(Au), unmatched_even = ncol(Bu))
+```
+
+#### The matched factors {.tabset}
+
+Panel $i$ is the same matched pair in both tabs, so switching between them
+compares the two halves factor by factor.
+
+##### Odd chromosomes
+
+```{r stability-matched-odd, fig.width=9, fig.height=10}
+plot_loadings_ns(Am)
+```
+
+##### Even chromosomes
+
+```{r stability-matched-even, fig.width=9, fig.height=10}
+plot_loadings_ns(Bm)
+```
+
+#### The unmatched factors {.tabset}
+
+The other 15 from each fit, for comparison. These are not in correspondence
+between the tabs --- that is the point --- so each half is simply ordered by
+population.
+
+##### Odd chromosomes
+
+```{r stability-unmatched-odd, fig.width=9, fig.height=10}
+plot_loadings_ns(Au)
+```
+
+##### Even chromosomes
+
+```{r stability-unmatched-even, fig.width=9, fig.height=10}
+plot_loadings_ns(Bu)
+```
+
+
+### Stability with Rank-1 
+
+ Here we run the 1000 random rank-1 starts separately on
+each half and match the maxima each search finds. Interestingly the results
+replicate in some ways better than the rank r results.
+
+```{r stability-r1}
+half_maxima <- function(U_c) {
+  nk <- nrow(U_c)
+  U  <- sqrt(nk) * t(U_c[, 1:30])
+  set.seed(1)
+  W <- matrix(rnorm(30 * 1000), 30, 1000)
+  W <- sweep(W, 2, sqrt(colSums(W^2)), "/")
+  for (i in 1:500) W <- r1_update(U, W)
+  L  <- t(U) %*% W
+  cl <- cutree(hclust(as.dist(1 - cor(L)), method = "complete"), h = 0.05)
+  j  <- match(unique(cl), cl)
+  sz <- as.integer(table(cl)[as.character(cl[j])])
+  M  <- L[, j, drop = FALSE]
+  o  <- pop_order_of(M)
+  # W is kept as well: the second-round experiment below needs the maxima as
+  # directions in the whitened space, not just as loadings.
+  list(L = M[, o, drop = FALSE], size = sz[o],
+       W = W[, j[o], drop = FALSE], U_w = U)
+}
+
+mx_odd  <- half_maxima(fit$split$odd$U_c)
+mx_even <- half_maxima(fit$split$even$U_c)
+c(odd = ncol(mx_odd$L), even = ncol(mx_even$L))
+```
+
+Fewer maxima than the 14 on the full pruned data, presumably the cost of using only half the SNPs. The finer distinctions merge, so GWD and MSL come back as one factor, as do CDX/KHV with CHS, PUR with TSI/IBS, and STU/ITU/BEB with PJL. In some sense the "shared" structure is more apparent here (eg FIN sharing with GBR), and TSI/IBS with PUR. I believe in some sense both stories are "correct" and a full analysis should be able to extract both the shared structure here and the finer-level structure of the full analysis.
+
+```{r stability-r1-match}
+Cm <- cor(mx_odd$L, mx_even$L)
+
+data.frame(
+  odd        = apply(mx_odd$L, 2, pop_label_ns),
+  odd_basin  = mx_odd$size,
+  best_even  = apply(mx_even$L, 2, pop_label_ns)[apply(Cm, 1, which.max)],
+  r          = round(apply(Cm, 1, max), 2),
+  row.names  = NULL)
+```
+
+Ten pairs match at $r$ between 0.86 and 0.98. This compares with a best of 0.91 and a median near 0.8 for the rank-$r$ factors. So the unconstrained maxima are arguably more stable across independent SNP sets than the factors of the rank-$r$ fit.
+
+The one exception is the odd half's sixth maximum,
+`r pop_label_ns(mx_odd$L[, which.min(apply(Cm, 1, max))])`, whose best partner
+is only at $r =$ `r round(min(apply(Cm, 1, max)), 2)`. 
+
+```{r stability-r1-counts}
+c(odd_matched  = sum(apply(Cm, 1, max) > 0.3),
+  even_matched = sum(apply(Cm, 2, max) > 0.3))
+```
+
+#### All maxima {.tabset}
+
+Every maximum each half finds: the 10 matched ones first, in a common order, so
+panel $i$ is the same pair in both tabs. Any maximum without a partner comes
+after those, so the tabs line up only over the matched block --- the $r$ in each
+label says which block a panel is in.
+
+```{r stability-r1-panels}
+best_o  <- apply(Cm, 1, max)          # each odd maximum's best even partner
+best_e  <- apply(Cm, 2, max)
+keep_o  <- which(best_o > 0.5)                 # matched, in odd order
+part_e  <- apply(Cm, 1, which.max)[keep_o]     # their even partners
+extra_o <- setdiff(seq_len(ncol(mx_odd$L)),  keep_o)   # odd-only maxima
+extra_e <- setdiff(seq_len(ncol(mx_even$L)), part_e)   # even-only maxima
+
+Lo <- label_with_r(mx_odd$L[,  c(keep_o, extra_o), drop = FALSE],
+                   best_o[c(keep_o, extra_o)])
+Le <- label_with_r(mx_even$L[, c(part_e, extra_e), drop = FALSE],
+                   best_e[c(part_e, extra_e)])
+c(odd_matched = length(keep_o), odd_only = length(extra_o),
+  even_matched = length(part_e), even_only = length(extra_e))
+```
+
+##### Odd chromosomes
+
+```{r stability-r1-odd, fig.width=9, fig.height=9}
+plot_loadings_ns(Lo)
+```
+
+##### Even chromosomes
+
+```{r stability-r1-even, fig.width=9, fig.height=8}
+plot_loadings_ns(Le)
+```
+
+
+### The West African factor: a rank-$r$ failure, not a data one
+
+One factor behaves oddly enough to be worth following up. The even-chromosome
+rank-$r$ fit has a clean ESN/YRI/ACB/ASW factor, the graded West African one
+seen throughout this analysis, and the odd-chromosome rank-$r$ fit has nothing
+resembling it:
+
+```{r stability-esn}
+b_esn <- which.max(apply(B, 2, function(x)
+  mean(x[pop_ns %in% c("ESN", "YRI")]) ))
+pop_label_ns(B[, b_esn])
+round(max(C[, b_esn]), 2)          # best correlation with any odd-half factor
+sum(grepl("^ESN|^YRI", apply(A, 2, pop_label_ns)))   # odd-half ESN/YRI factors
+```
+
+Its best correlation with any of the 30 odd-chromosome factors is negative, and
+no odd-chromosome factor has ESN or YRI among its leading populations. This is
+not an artifact of the matching --- greedy matching agrees.
+
+But the rank-1 searches settle what is going on, and it is not a failure of the
+data. Both halves find a West African maximum, and they agree on it closely:
+
+```{r stability-esn-r1}
+j_odd  <- which.max(apply(mx_odd$L,  2, function(x) mean(x[pop_ns %in% c("ESN", "YRI")])))
+j_even <- which.max(apply(mx_even$L, 2, function(x) mean(x[pop_ns %in% c("ESN", "YRI")])))
+c(odd = pop_label_ns(mx_odd$L[, j_odd]), even = pop_label_ns(mx_even$L[, j_even]))
+round(cor(mx_odd$L[, j_odd], mx_even$L[, j_even]), 2)
+c(odd_basin = mx_odd$size[j_odd], even_basin = mx_even$size[j_even])
+```
+
+So the West African direction is a genuine local maximum in both halves,
+matching at $r = 0.96$; what fails is the odd half's *rank-$r$* fit, which does
+not place a component there. Its basin is small in both halves (27 and 17 of
+1000 starts), which fits the pattern from earlier: the factors the rank-$r$ fit
+loses to a bad local optimum are the ones with small basins. The lesson is
+narrower than "a factor can vanish in a replicate" --- it is that a single
+rank-$r$ fit is the unreliable step, and the rank-1 search is what tells you
+whether the direction is really there.
+
+
+## Failed attempts to identify more r1 optima
+
+Since the r1 results only find 10-11 optima, and the K30 results find more, I was wondering if we were missing any. I therefore tried various runs initialized to be orthogonal to the ones we found above; however none of these ideas produce new optima, so this section is documenting things
+that ultimately did not work. One interesting observation I do not fully understand: when I remove the newton term from the fastICA update it apparently osscilates and no longer converges. This may be something to do with the non-smoothness of the gradient? But it is interesting we did not
+see that problem with the newton term included. 
+
+
+### Does orthogonal initialization find new optima?
+
+The rank-1 search from random starts finds the same handful of optima over and
+over, with most of the 1000 runs landing in two or three big basins. A natural
+thing to try: take the optima found in the first round, and start a second
+round of 1000 runs from directions *orthogonal to all of them*. If the small
+basins are simply being crowded out by the big ones, forcing the starts into
+the orthogonal complement should uncover optima the first round missed.
+
+The optima are not mutually orthogonal, so we take an orthonormal basis $Q$ of
+their span and project the random starts with $I - QQ'$. Note that only the
+*initialization* is constrained --- the iteration itself is the same free
+rank-1 update as before.
+
+```{r ortho-round2}
+second_round <- function(mx, seed = 2, n_starts = 1000, n_iter = 500) {
+  U <- mx$U_w
+  Q <- qr.Q(qr(mx$W))                        # basis for the span of round-1 optima
+  set.seed(seed)
+  X <- matrix(rnorm(nrow(U) * n_starts), nrow(U), n_starts)
+  X <- X - Q %*% (t(Q) %*% X)                # project onto the complement
+  W <- sweep(X, 2, sqrt(colSums(X^2)) + 1e-15, "/")
+  start_leak <- max(abs(t(Q) %*% W))         # should be ~0
+
+  for (i in seq_len(n_iter)) W <- r1_update(U, W)
+  L  <- t(U) %*% W
+  cl <- cutree(hclust(as.dist(1 - cor(L)), method = "complete"), h = 0.05)
+  j  <- match(unique(cl), cl)
+  sz <- as.integer(table(cl)[as.character(cl[j])])
+  M  <- L[, j, drop = FALSE]
+  o  <- order(sz, decreasing = TRUE)
+  list(L = M[, o, drop = FALSE], size = sz[o], q_dim = ncol(Q),
+       start_leak = start_leak)
+}
+
+r2_odd  <- second_round(mx_odd)
+r2_even <- second_round(mx_even)
+
+# Dimension of the span, and a check that the starts really are orthogonal to it.
+rbind(odd  = c(span = r2_odd$q_dim,  complement = 30 - r2_odd$q_dim,
+               start_leak = r2_odd$start_leak),
+      even = c(span = r2_even$q_dim, complement = 30 - r2_even$q_dim,
+               start_leak = r2_even$start_leak))
+```
+
+So there is plenty of room to start in: 19 dimensions for the odd half, 20 for
+the even, and the starts have no component along the round-1 optima to within
+rounding error. The result is nonetheless completely negative.
+
+```{r ortho-round2-compare}
+compare_rounds <- function(r2, mx, tag) {
+  C <- cor(r2$L, mx$L)
+  data.frame(
+    half        = tag,
+    round2      = apply(r2$L, 2, pop_label_ns),
+    basin       = r2$size,
+    best_r1     = apply(mx$L, 2, pop_label_ns)[apply(C, 1, which.max)],
+    r           = round(apply(C, 1, max), 2),
+    new         = apply(C, 1, max) <= 0.9,
+    row.names   = NULL)
+}
+rbind(compare_rounds(r2_odd, mx_odd, "odd"),
+      compare_rounds(r2_even, mx_even, "even"))
+```
+
+```{r ortho-round2-counts}
+c(odd_round1 = ncol(mx_odd$L),  odd_round2 = ncol(r2_odd$L),
+  odd_new    = sum(apply(cor(r2_odd$L,  mx_odd$L),  1, max) <= 0.9),
+  even_round1 = ncol(mx_even$L), even_round2 = ncol(r2_even$L),
+  even_new   = sum(apply(cor(r2_even$L, mx_even$L), 1, max) <= 0.9))
+```
+
+Every optimum found in round 2 is one of the round-1 optima, at a correlation
+of 1.00, and every round-1 optimum is refound. **Zero new optima in either
+half.** Orthogonal initialization is not enough.
+
+What it does change is the basins. Starting in the complement reweights which
+optima the runs fall into --- on the odd half PEL/MXL goes from 240 starts to
+289 while GIH drops from 108 to 5, and FIN from 128 to 19 --- so the
+initialization clearly matters for *where* a run ends up. It just does not open
+up anywhere new to end up.
+
+### Why it fails
+
+Because only the starting point is constrained, and the constraint does not
+survive contact with the update. Tracking how much of each run lies in the span
+of the round-1 optima:
+
+```{r ortho-leak}
+Q  <- qr.Q(qr(mx_odd$W))
+set.seed(2)
+X  <- matrix(rnorm(30 * 1000), 30, 1000)
+X  <- X - Q %*% (t(Q) %*% X)
+W  <- sweep(X, 2, sqrt(colSums(X^2)), "/")
+
+leak <- sapply(0:8, function(i) {
+  if (i > 0) W <<- r1_update(mx_odd$U_w, W)
+  mean(sqrt(colSums((t(Q) %*% W)^2)))    # each column is a unit vector
+})
+round(setNames(leak, paste0("iter", 0:8)), 3)
+```
+
+One iteration puts 85% of the typical run's norm back inside the span, and by
+iteration 8 it is 90% and climbing. The update is free to move in any
+direction, and the directions that increase $x|x|$ fastest are the ones the
+old optima already point along; the projection is undone immediately.
+
+The implication is that finding genuinely new optima would need the
+orthogonality imposed *throughout* the iteration --- deflation against the
+previously found optima at every step, as in a sequential fastICA --- rather
+than only at the start. That is a different algorithm, and worth trying
+separately. It is also a reminder of how few distinct one-sided directions
+these data really contain: 2000 rank-1 runs per half, 1000 of them deliberately
+started away from everything already found, and the answer is still 11 optima
+for the odd chromosomes and 10 for the even.
+
+### Initializing from the K = 30 fits
+
+The other obvious place to start is the rank-$r$ fit itself. On the *unpruned*
+full data that was how we found three maxima the random starts never reached,
+so it is the most promising remaining source of new optima. Here we take each
+half's own $K = 30$ factors as 30 starting directions and run the free rank-1
+update from each.
+
+```{r k30-init-halves}
+from_rankr <- function(mx, U_c, L_rankr, n_iter = 500) {
+  U  <- mx$U_w
+  W  <- t(U_c[, 1:30]) %*% L_rankr / sqrt(nrow(U_c))
+  for (i in seq_len(n_iter)) W <- r1_update(U, W)
+  L  <- t(U) %*% W
+  cl <- cutree(hclust(as.dist(1 - cor(L)), method = "complete"), h = 0.05)
+  j  <- match(unique(cl), cl)
+  list(L = L[, j, drop = FALSE],
+       size = as.integer(table(cl)[as.character(cl[j])]))
+}
+
+k30_odd  <- from_rankr(mx_odd,  fit$split$odd$U_c,  fit$split$odd$fit$L)
+k30_even <- from_rankr(mx_even, fit$split$even$U_c, fit$split$even$fit$L)
+
+summarise <- function(kk, mx, tag) {
+  C <- cor(kk$L, mx$L)
+  c(half = tag, random_round1 = ncol(mx$L), from_k30 = ncol(kk$L),
+    new = sum(apply(C, 1, max) <= 0.9),
+    union = length(unique(cutree(hclust(as.dist(1 - cor(cbind(mx$L, kk$L))),
+                                        method = "complete"), h = 0.05))))
+}
+rbind(summarise(k30_odd, mx_odd, "odd"),
+      summarise(k30_even, mx_even, "even"))
+```
+
+**No new optima again.** Every one of the 30 starting directions in each half
+converges to a maximum the random starts had already found, at a correlation of
+1.00. Together with the orthogonal-initialization result, that is 3000 rank-1
+runs per half from three quite different initialization schemes, all returning
+the same 11 and 10 optima.
+
+There is one asymmetry worth noting. On the odd half the rank-$r$ starts reach
+only 10 of the 11 optima, and the one they miss is the West African factor:
+
+```{r k30-init-missed}
+missed <- function(kk, mx) {
+  C <- cor(kk$L, mx$L)
+  apply(mx$L, 2, pop_label_ns)[apply(C, 2, max) <= 0.9]
+}
+list(odd = missed(k30_odd, mx_odd), even = missed(k30_even, mx_even))
+```
+
+That is the same blind spot from two sections ago, seen from the other side.
+The odd half's $K = 30$ fit has no component pointing at the West African
+direction, so rank-1 runs started from its columns cannot find it either --- the
+defect is inherited. On the odd half that maximum is reachable only from random
+starts (27 of 1000) or from the orthogonal complement (70 of 1000), which is a cautionary argument for not treating a rank-$r$ fit as a comprehensive summary of what the data
+contain.
+
+### A slower warm start
+
+The reason orthogonal initialization fails is that the fastICA update leaves the
+orthogonal complement in a single step. That update is a Newton-type step: it
+subtracts a curvature term, $W \leftarrow UG' - W\,\text{colSums}(G'')$. Two
+milder alternatives to run for 100 iterations before switching to the full
+update:
+
+- **Gradient ascent**, a small step in the gradient direction,
+  $W \leftarrow W + \tfrac{\lambda}{n}\,U\,G'(U'W)$ with $G'(x) = 2|x|$,
+  followed by renormalization.
+- **The update with the Newton term simply dropped**,
+  $W \leftarrow U\,G'(U'W)$, renormalized. This has no step size to choose:
+  normalizing makes it scale-invariant.
+
+The hypothesis to test is that these are slower to move away from the orthogonal
+start, and so might stay in the complement long enough to settle into a basin
+the full update runs straight past.
+
+```{r ga-update}
+ga_update <- function(U, W, lr) {
+  P <- t(U) %*% W
+  W <- W + lr * (U %*% (2 * abs(P))) / ncol(U)
+  sweep(W, 2, sqrt(colSums(W^2)) + 1e-15, "/")
+}
+
+# The fastICA update without the Newton/curvature term.
+nonewton_update <- function(U, W) {
+  P <- t(U) %*% W
+  W <- U %*% (2 * abs(P))
+  sweep(W, 2, sqrt(colSums(W^2)) + 1e-15, "/")
+}
+
+r1_obj <- function(U, W) { P <- t(U) %*% W; colMeans(P * abs(P)) }
+
+# Orthogonal starts, as in the previous section.
+Q_odd  <- qr.Q(qr(mx_odd$W))
+ortho_starts <- function(Q, seed = 2, n_starts = 1000) {
+  set.seed(seed)
+  X <- matrix(rnorm(nrow(Q) * n_starts), nrow(Q), n_starts)
+  X <- X - Q %*% (t(Q) %*% X)
+  sweep(X, 2, sqrt(colSums(X^2)), "/")
+}
+```
+
+First, do these in fact stay put longer? We track the mean norm of each run's
+component inside the span of the round-1 optima.
+
+```{r ga-leak}
+leak_curve <- function(step, iters = c(1, 2, 5, 10, 25, 50, 100)) {
+  W <- ortho_starts(Q_odd)
+  out <- numeric(0)
+  for (i in seq_len(max(iters))) {
+    W <- step(W)
+    if (i %in% iters) out <- c(out, mean(sqrt(colSums((t(Q_odd) %*% W)^2))))
+  }
+  setNames(round(out, 3), paste0("it", iters))
+}
+
+rbind(`GA lr=0.01`  = leak_curve(function(W) ga_update(mx_odd$U_w, W, 0.01)),
+      `GA lr=0.1`   = leak_curve(function(W) ga_update(mx_odd$U_w, W, 0.1)),
+      `GA lr=1`     = leak_curve(function(W) ga_update(mx_odd$U_w, W, 1)),
+      `no Newton`   = leak_curve(function(W) nonewton_update(mx_odd$U_w, W)),
+      `full update` = leak_curve(function(W) r1_update(mx_odd$U_w, W)))
+```
+
+For gradient ascent, emphatically yes: the full update has 85% of its norm back
+inside the span after a *single* iteration, while $\lambda = 0.01$ is at 0.003
+after one iteration and still only 0.28 after a hundred. For the no-Newton
+update, emphatically no --- dropping the curvature term makes no difference to
+this at all, 0.86 after one iteration against the full update's 0.85. The
+Newton term is not what carries the iterates back into the span; the gradient
+direction alone does that, and it is the *step size* that controls how fast.
+
+Neither makes any difference to what is found.
+
+```{r ga-switch}
+# Run `step` for n_warm iterations from the orthogonal starts, record where we
+# are, then switch to the full update and see what we end up with.
+warm_then_full <- function(step, label, n_warm = 100, n_full = 500) {
+  U <- mx_odd$U_w
+  W <- ortho_starts(Q_odd)
+  for (i in seq_len(n_warm)) W <- step(W)
+  warm <- c(leak = mean(sqrt(colSums((t(Q_odd) %*% W)^2))),
+            obj  = mean(r1_obj(U, W)),
+            distinct = length(unique(cutree(
+              hclust(as.dist(1 - cor(t(U) %*% W)), method = "complete"),
+              h = 0.05))))
+  for (i in seq_len(n_full)) W <- r1_update(U, W)
+  L  <- t(U) %*% W
+  cl <- cutree(hclust(as.dist(1 - cor(L)), method = "complete"), h = 0.05)
+  j  <- match(unique(cl), cl)
+  C  <- cor(L[, j, drop = FALSE], mx_odd$L)
+  data.frame(warmup = label, n_warm = n_warm,
+             warm_leak = round(warm[["leak"]], 3),
+             warm_obj = round(warm[["obj"]], 3),
+             warm_distinct = warm[["distinct"]],
+             final_optima = length(j),
+             new = sum(apply(C, 1, max) <= 0.9), row.names = NULL)
+}
+
+ga_then_full <- function(lr, ...)
+  warm_then_full(function(W) ga_update(mx_odd$U_w, W, lr),
+                 sprintf("GA lr=%g", lr), ...)
+
+rbind(ga_then_full(0.01), ga_then_full(0.1), ga_then_full(1),
+      warm_then_full(function(W) nonewton_update(mx_odd$U_w, W), "no Newton"))
+```
+
+**Still zero new optima, from any of the four warm-ups.** The `warm_obj`
+column explains why the gradient delay does not help: at $\lambda = 0.01$ the
+mean objective after 100 iterations is about 0.12, against 0.83 at an optimum,
+and all 1000 runs are still mutually distinct. Gradient ascent has not been
+exploring the complement and settling somewhere --- it has barely started
+optimizing. The orthogonality is preserved precisely because almost nothing has
+happened yet, so when the full update takes over it does the same thing it
+would have done from the start.
+
+The no-Newton row needs a different reading, and a warning. It reports about a
+hundred `warm_distinct` clusters at mean objective 0.64, which looks at first
+like a large set of additional optima. It is not: the no-Newton iteration does
+not converge. Checking whether its iterates are stationary points ---
+successive iterates should stop moving, and the Riemannian gradient should
+vanish, as it does at the true optima:
+
+```{r nonewton-nonconvergence}
+U  <- mx_odd$U_w
+W  <- ortho_starts(Q_odd)
+for (i in 1:100) W <- nonewton_update(U, W)
+W_next <- nonewton_update(U, W)
+
+# Riemannian gradient norm of the objective at each column (0 at an optimum).
+rgrad_norm <- function(U, W) {
+  n <- ncol(U)
+  G <- (2 / n) * (U %*% abs(t(U) %*% W))
+  sqrt(colSums((G - sweep(W, 2, colSums(W * G), "*"))^2))
+}
+
+c(step_size   = round(mean(sqrt(colSums((W_next - W)^2))), 3),
+  rgrad_noNewton = round(mean(rgrad_norm(U, W)), 3),
+  rgrad_optima   = signif(max(rgrad_norm(U, mx_odd$W)), 2))
+
+# 2000 more iterations do not settle it.
+for (i in 1:2000) W <- nonewton_update(U, W)
+c(obj = round(mean(r1_obj(U, W)), 3),
+  rgrad = round(mean(rgrad_norm(U, W)), 3),
+  distinct = length(unique(cutree(
+    hclust(as.dist(1 - cor(t(U) %*% W)), method = "complete"), h = 0.05))))
+```
+
+The iterates are still moving by 0.46 per step after 100 iterations, their mean
+Riemannian gradient is 0.58 where the true optima have 1e-15, and 2000 further
+iterations leave all of that unchanged. So the no-Newton update oscillates
+indefinitely rather than converging, and its "distinct clusters" are snapshots
+of moving points, not optima. The Newton term is what makes this iteration
+converge at all --- which is presumably why it is there.
+
+The obvious follow-up for gradient ascent is to let it converge on its own
+rather than switching after a fixed 100 iterations. This took a while so I stopped evaluating it. 
+
+```{r ga-long, eval=FALSE}
+rbind(ga_then_full(0.01, n_warm = 1000),
+      ga_then_full(0.01, n_warm = 5000),
+      ga_then_full(0.1,  n_warm = 5000))
+```
+
+Given enough iterations it does converge, and to fixed points of the same
+objective --- but to only 7 of the 11, and never to anything new. Gradient
+ascent is a coarser search than the Newton update here, not a finer one: its
+basins are larger, so it finds fewer of the optima rather than more.
+
+So every scheme tried in this section --- orthogonal starts, the rank-$r$
+factors, a slow gradient warm start from orthogonal starts, and dropping the
+Newton term --- returns a subset of the 11 optima that 1000 plain random starts
+already find. On
+these data the rank-1 landscape really does appear to have just those 11 (and
+10 for the even chromosomes), and the difficulty is not in finding them but in
+the rank-$r$ fit's tendency to miss the ones with small basins.
