@@ -3,7 +3,11 @@
 .RData
 .Ruserdata
 .DS_Store
+data/methylation*
 data/pbmc*
+data/tgp*
 analysis/figure
 analysis/*html
 analysis/*_cache
+data/refGene_hg19.txt.gz
+data/hgdp_hap_matrix.rds
