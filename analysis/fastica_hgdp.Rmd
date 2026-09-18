@@ -1,0 +1,1464 @@
+---
+title: "fastICA with x|x| contrast on HGDP haplotypes"
+author: "Matthew Stephens"
+date: "2026-09-18"
+output:
+  workflowr::wflow_html:
+    toc: true
+    toc_float: true
+    toc_depth: 2
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
+
+## Introduction
+
+This repeats the analysis of [`fastica_1kg`](fastica_1kg.html) --- fastICA with
+the asymmetric $G(x) = x|x|$ contrast --- on the Human Genome Diversity Panel
+whole-genome data, and uses the recipe that analysis arrived at rather than
+rediscovering it:
+
+* whiten to $K$ components, here $K = 40$ and $K = 60$;
+* find the local maxima of the objective with 1000 independent **rank-1** runs
+  from random starts, and cluster the results, rather than reading factors off
+  a single rank-$r$ fit.
+
+The 1000 Genomes analysis reached that recipe the long way round. Its lesson
+was that a single rank-$r$ fit is the unreliable step --- it can lose a real
+factor to a bad local optimum --- while the rank-1 searches say directly which
+directions are genuine maxima.
+
+It also pruned the data: a small number of related individuals and sample
+outliers dominated very sparse factors there, and dropping 40 of 2504
+reorganized the whole landscape. **That step turns out not to be needed
+here**, so the analysis below uses every individual. The evidence is kept in
+one short section rather than run through the whole document. One plausible
+reason is that the HGDP WGS panel may already have been screened for close
+relatives; another is simply that HGDP populations are small and drifted
+enough that a genuine population factor is already narrow and sharp.
+
+Two things differ from the 1000 Genomes setting. HGDP is smaller and much
+more finely sampled --- 929 individuals from 54 populations in 7 regions,
+against 2504 from 26 populations --- so there are far more populations than
+components. And the data are statistically phased, so we work with the
+$2 \times 929 = 1858$ **haplotypes** as rows rather than with individuals.
+
+```{r load}
+library(ggplot2)
+library(cowplot)
+library(fastTopics)
+
+meta   <- readRDS("../data/hgdp_meta.rds")
+fit    <- readRDS("../output/hgdp_fastica.rds")
+struct <- readRDS("../output/hgdp_structure.rds")
+
+region_palette <- c(AFRICA             = "#E69F00",
+                    MIDDLE_EAST        = "#D55E00",
+                    EUROPE             = "#7570B3",
+                    CENTRAL_SOUTH_ASIA = "#1B9E77",
+                    EAST_ASIA          = "#0072B2",
+                    OCEANIA            = "#CC79A7",
+                    AMERICA            = "#332288")
+
+# One row of metadata per haplotype, in the row order of the fits.
+hap_meta <- function(ids) {
+  m <- meta[match(sub("_[12]$", "", ids), meta$sample), ]
+  m$hap <- ids
+  m
+}
+hm <- hap_meta(fit$hap_ids)
+
+pop_order <- levels(meta$pop)
+skew_obj  <- function(L) colMeans(L * abs(L))
+```
+
+## Data
+
+The genotypes are the statistically phased autosomal VCF from the
+[HGDP WGS release](https://ngs.sanger.ac.uk/production/hgdp/hgdp_wgs.20190516/statphase/)
+(GRCh38, 929 samples), and the sample table is the
+[metadata file](https://ngs.sanger.ac.uk/production/hgdp/hgdp_wgs.20190516/metadata/)
+from the same release. That VCF is 5.9 Gb compressed and has tens of millions
+of variants, so [`code/vcf_thin.c`](https://github.com/stephenslab/misc/blob/master/code/vcf_thin.c)
+streams it once and keeps a thinned subset: biallelic `PASS` SNPs with an
+`AA_ensembl` ancestral allele matching one of the two alleles, no missing call
+in any sample, derived-allele frequency in $[0.05, 0.95]$, and at least 6 kb
+from the previous SNP kept on that chromosome. Each kept SNP is written as
+1858 derived-allele indicators, one per haplotype.
+
+Distance thinning is a cruder stand-in for LD pruning than the $r^2$ pruning
+behind the 1000 Genomes matrix, but it costs one pass over the file instead of
+several. The 6 kb spacing is not a tuned choice, and the last section checks
+what it buys: halving it from 12 kb, which doubles the SNP count, leaves every
+maximum in place at $r \ge 0.98$.
+
+[`code/prep_hgdp_data.R`](https://github.com/stephenslab/misc/blob/master/code/prep_hgdp_data.R)
+turns that into `data/hgdp_hap_matrix.rds`, and
+[`code/fit_hgdp_fastica.R`](https://github.com/stephenslab/misc/blob/master/code/fit_hgdp_fastica.R)
+does everything below. As in the TGP script the columns are centred and
+nothing else is done to them --- no division by $\sqrt{2p(1-p)}$ --- and the
+left singular vectors come from the $1858 \times 1858$ centred Gram matrix
+rather than from an SVD of the centred data.
+
+```{r data-size}
+c(haplotypes = length(fit$hap_ids), individuals = nrow(meta),
+  SNPs = fit$nsnp, populations = nlevels(meta$pop), regions = nlevels(meta$region))
+table(meta$region)
+```
+
+## Eigenvalue scree plot
+
+```{r scree, fig.width=6, fig.height=3.2}
+ggplot(data.frame(k = 1:60, d = fit$d[1:60]), aes(k, d)) +
+  geom_point(size = 1.2) +
+  geom_vline(xintercept = fit$K, linetype = "dashed", colour = "dodgerblue") +
+  scale_x_continuous(breaks = c(1, 10, 20, 30, 40, 50, 60)) +
+  labs(x = "component", y = "singular value") +
+  theme_cowplot(font_size = 10)
+round(fit$d[1:20])
+```
+
+The first four are well separated --- Africa, then Oceania and the Americas
+--- and from about the tenth the spectrum is a slow decline with no elbow, so
+$K$ is a choice about how many sources we are willing to look for rather
+than a dimension the data hand us --- which is why both 40 and 60 are tried.
+With 54 populations there are fewer components than populations at $K = 40$,
+the opposite of the 1000 Genomes setting (30 components, 26 populations), and
+that is worth keeping in mind below.
+
+## Plotting functions
+
+```{r plot-fns}
+# Order factors so they roughly follow the (geographic) population order: each
+# factor takes the mean population rank of the haplotypes it loads on, weighted
+# by pmax(L,0)^2 so only the large positive loadings count.
+pop_order_of <- function(L, m) {
+  w <- pmax(L, 0)^2
+  order(colSums(w * as.integer(m$pop)) / colSums(w))
+}
+
+# Populations carrying a factor: those whose mean loading is within `frac` of
+# the largest. Capped at `top` names so that panel strips stay readable --- a
+# factor spread over more than a few populations gets a trailing "+".
+pop_label <- function(x, m, frac = 0.3, top = 3) {
+  v <- tapply(x, m$pop, mean)
+  v <- sort(v[v > 0], decreasing = TRUE)
+  v <- names(v)[v >= frac * v[1]]
+  paste0(paste(head(v, top), collapse = "/"), if (length(v) > top) "+" else "")
+}
+
+# Factors are referred to by short names (f01, f02, ...) everywhere, with the
+# populations, objective, basin size and sparsity kept in a companion table.
+name_maxima <- function(L, m, n_rand) {
+  o <- pop_order_of(L, m)
+  L <- L[, o, drop = FALSE]
+  colnames(L) <- sprintf("f%02d", seq_len(ncol(L)))
+  list(L   = L,
+       tab = data.frame(factor      = colnames(L),
+                        pops        = apply(L, 2, pop_label, m = m),
+                        obj         = round(skew_obj(L), 2),
+                        n_above2    = colSums(L > 2),
+                        max_loading = round(apply(L, 2, max), 1),
+                        rand_starts = n_rand[o],
+                        row.names   = NULL))
+}
+
+# Loadings of every haplotype, x-axis grouped by sampling population.
+plot_loadings <- function(L, m, tab, ncol = 2) {
+  ord <- order(m$pop)
+  nf  <- ncol(L)
+  strip <- sprintf("%s  %s  n=%d", colnames(L), tab$pops, tab$n_above2)
+  df  <- data.frame(
+    idx     = rep(seq_len(nrow(L)), nf),
+    loading = as.vector(L[ord, ]),
+    region  = rep(m$region[ord], nf),
+    factor  = factor(rep(strip, each = nrow(L)), levels = strip))
+  brk <- tapply(seq_along(ord), m$pop[ord], mean)
+  ggplot(df, aes(idx, loading, colour = region)) +
+    geom_hline(yintercept = 0, linewidth = 0.2, colour = "grey50") +
+    geom_point(size = 0.35, alpha = 0.7) +
+    facet_wrap(~ factor, ncol = ncol, scales = "free_y") +
+    # Population positions are haplotype indices, so the small populations sit
+    # very close together; dodging the labels over two rows stops them
+    # colliding without moving any point.
+    scale_x_continuous(breaks = brk, labels = names(brk), expand = c(0.01, 0),
+                       guide = guide_axis(n.dodge = 2)) +
+    scale_colour_manual(values = region_palette) +
+    labs(x = NULL, y = "loading", colour = "region") +
+    theme_cowplot(font_size = 9) +
+    theme(axis.text.x     = element_text(angle = 90, vjust = 0.5, hjust = 1,
+                                         size = 5.5),
+          strip.text      = element_text(size = 7),
+          legend.position = "bottom") +
+    guides(colour = guide_legend(override.aes = list(size = 3, alpha = 1),
+                                 nrow = 1))
+}
+
+# Population-mean loadings as a heatmap, populations in geographic order.
+plot_pop_heatmap <- function(L, m) {
+  M  <- apply(L, 2, function(x) tapply(x, m$pop, mean))
+  df <- data.frame(
+    pop    = factor(rep(rownames(M), ncol(M)), levels = rev(pop_order)),
+    factor = factor(rep(colnames(M), each = nrow(M)), levels = colnames(M)),
+    value  = as.vector(M))
+  # A few isolated populations (San, Surui) load an order of magnitude higher
+  # than anything else, so a full-range scale renders every broad factor as
+  # white. Clip the scale at the 98th percentile and squish the rest.
+  lim <- as.numeric(quantile(abs(df$value), 0.98))
+  ggplot(df, aes(factor, pop, fill = value)) +
+    geom_tile() +
+    scale_fill_gradient2(low = "#2166AC", mid = "white", high = "#B2182B",
+                         limits = c(-lim, lim), oob = scales::squish) +
+    labs(x = NULL, y = NULL, fill = "mean\nloading") +
+    theme_cowplot(font_size = 9) +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, size = 6),
+          axis.text.y = element_text(size = 5.5))
+}
+```
+
+## The 1000 rank-1 runs at $K = 40$
+
+As in the 1000 Genomes analysis we run 1000 independent rank-1 fastICA runs in
+parallel --- one column of `W` per run, each renormalized to unit length after
+every update, with no orthogonalization between them --- from random starts in
+the $K = 40$ whitened space. What the runs converge to are the local maxima of
+the objective, and the number of runs landing in each is a rough measure of its
+basin of attraction. Runs that found the same maximum are merged by clustering
+on signed correlation with complete linkage; the correlation is signed, not
+absolute, because $x|x|$ is not sign-symmetric and $w$ and $-w$ are genuinely
+different solutions.
+
+```{r r1-basics}
+mx <- fit$fits$k40$maxima
+c(largest_change_last_iter = signif(mx$converged, 3))
+# Number of distinct maxima if we cut the tree at correlation 0.90 / 0.95 / 0.99.
+mx$n_cut
+c(n_maxima = ncol(mx$L),
+  found_by_random_starts = sum(mx$n_random > 0),
+  found_only_from_rank_r = sum(mx$n_random == 0))
+```
+
+```{r r1-order}
+r1   <- name_maxima(mx$L, hm, mx$n_random)
+L_r1 <- r1$L
+r1$tab
+```
+
+The clustering is not sensitive to where we cut --- the same number of maxima
+at a correlation of 0.90, 0.95 and 0.99 --- so these are well-separated
+solutions, not a continuum.
+
+The striking thing, against the 1000 Genomes result, is that **almost every
+maximum is a population factor**. There is no analogue of the GIH trio that
+took 307 of 1000 starts there, and no relative-pair factors at all in this
+list. The only exceptions are the second Bedouin factor and the Hazara factor,
+each loading on five or six individuals at up to 13, and both are taken up in
+the next section. Everything else
+is a population, a pair of neighbouring populations, or a regional cluster,
+and the ordering runs cleanly from Africa through the Middle East, Europe,
+Central/South Asia and East Asia to Oceania and the Americas.
+
+```{r r1-plot, fig.width=10, fig.height=2 + 1.7 * ceiling(ncol(L_r1) / 2)}
+plot_loadings(L_r1, hm, r1$tab)
+```
+
+```{r r1-heat, fig.width=9, fig.height=7}
+plot_pop_heatmap(L_r1, hm)
+```
+
+### Basin size against objective
+
+```{r r1-basins, fig.width=4.5, fig.height=3.5}
+df <- data.frame(size = r1$tab$rand_starts, obj = skew_obj(L_r1))
+ggplot(df, aes(size, obj)) + geom_point(size = 1.4) +
+  labs(x = "random starts reaching this maximum", y = "objective") +
+  theme_cowplot(font_size = 10)
+round(cor(df$size, df$obj), 2)
+```
+
+Basin size and objective are more strongly related here than in the 1000
+Genomes data (0.39 there), but the relationship is still not one a search
+could rely on. The pattern behind it is geographic rather than numerical: the
+maxima with large basins are the isolated, strongly drifted populations --- San,
+Surui, Karitiana, Mbuti, the Papuan groups, Bougainville, Pima --- and the ones
+random starts almost never reach are the broad, shallow factors spanning many
+related populations, such as Russian/Orcadian/French, Brahui/Makrani/Balochi,
+Burusho/Pathan/Sindhi and Japanese/Hezhen/Daur. Those have basins of zero: they
+are found only by starting rank-1 at the corresponding rank-$r$ factor.
+
+```{r r1-unreachable}
+data.frame(factor = colnames(L_r1), pops = r1$tab$pops,
+           obj = r1$tab$obj)[r1$tab$rand_starts == 0, ]
+```
+
+This is the same lesson as in the 1000 Genomes analysis, and it is the reason
+for running the rank-$r$ fit at all: 1000 random rank-1 starts, on their own,
+would miss `r sum(r1$tab$rand_starts == 0)` of the `r ncol(L_r1)` maxima,
+including most of the broad continental ones.
+
+## Is pruning needed? No
+
+In the 1000 Genomes data a handful of related individuals and sample outliers
+dominated very sparse factors, and removing them reorganized the landscape:
+17 maxima became 14, three maxima that random starts could never reach became
+reachable, and a new composite factor appeared. Here almost none of that
+happens, and this section is the check.
+
+The 1000 Genomes rule --- "fewer than 20 individuals load above 2" --- does not
+transfer, and this is worth recording because applying it unchanged does real
+damage. Every 1000 Genomes population has 60--100 individuals, so nothing that
+narrow could be a population; HGDP populations run from 6 to 46, and a bare
+count deletes whole populations --- San (6), Colombian (7), Surui (8) and Mbuti
+(13) each have their own maximum and each looks "very sparse" by that rule.
+Run as written it drops three entire populations and loses their factors,
+while the fit converges just as cleanly and still reports a tidy list.
+
+So the test is made relative to population size. A maximum is *screened in* if
+it is narrow --- fewer than `r fit$prune_check$sparse_nmax` haplotypes load
+above 2 --- and judged a nuisance only if the individuals it singles out
+(loading above `r fit$prune_check$sparse_lmin` on either haplotype) are less
+than `r fit$prune_check$sparse_fracmax` of the population most of them belong
+to. `frac` is the column that does the work: the whole-population maxima sit
+at 0.92--1.00 and the within-population ones at 0.13--0.36, with nothing in
+between.
+
+```{r prune-screen}
+pc <- fit$prune_check
+st <- pc$screen_tab
+st$verdict <- ifelse(st$frac < pc$sparse_fracmax, "within-population",
+                     "whole population")
+st[order(st$frac), ]
+```
+
+Note the objective alone would not have separated these: the
+within-population maxima score 0.52--0.75 and the whole-population ones
+0.61--0.96, which overlap. It is the fraction, not the sharpness.
+
+```{r prune-set}
+c(individuals_dropped = length(pc$dropped),
+  individuals_left    = nrow(meta) - length(pc$dropped),
+  maxima_before       = ncol(fit$fits$k40$maxima$L),
+  maxima_after        = ncol(pc$maxima$L))
+table(droplevels(meta$pop[match(pc$dropped, meta$sample)]))
+```
+
+Twenty-seven individuals in five clusters of 4--8, from BantuKenya, Bedouin,
+Druze, Makrani and Hazara. Clusters of that size and sharpness within a
+population are what close relatives look like.
+
+And the result of removing them:
+
+```{r prune-compare}
+hm_pc  <- hap_meta(pc$hap_ids)
+L_pc   <- pc$maxima$L[, pop_order_of(pc$maxima$L, hm_pc), drop = FALSE]
+Cpc    <- cor(L_r1[match(pc$hap_ids, fit$hap_ids), , drop = FALSE], L_pc)
+data.frame(before = r1$tab$pops,
+           after  = apply(L_pc, 2, pop_label, m = hm_pc)[apply(Cpc, 1, which.max)],
+           r      = round(apply(Cpc, 1, max), 2), row.names = NULL)
+c(unchanged = sum(apply(Cpc, 1, max) > 0.9),
+  lost      = sum(apply(Cpc, 1, max) < 0.9),
+  new       = sum(apply(Cpc, 2, max) < 0.9))
+```
+
+The only two maxima that go are the Bedouin and Hazara within-population
+clusters --- the things we deliberately removed. Every other maximum survives
+at $r \ge 0.95$ and nothing new appears. Pruning here buys the removal of two
+factors we can simply recognize and set aside, at the cost of 27 individuals,
+so the rest of this analysis does not prune.
+
+Two plausible reasons it matters so much less than in the 1000 Genomes data.
+The HGDP WGS panel may already have been screened for close relatives. And
+HGDP populations are small and many are strongly drifted, so a genuine
+population factor here is already narrow and sharp --- San loads 6
+individuals at 12 --- and occupies the part of the $x|x|$ landscape that
+relative pairs occupied in the 1000 Genomes data.
+
+## $K = 60$
+
+The obvious question is whether 40 components is enough, given 54 populations.
+Repeating everything at $K = 60$ --- same data, same 1000 rank-1 runs, no
+pruning:
+
+```{r k60-basics}
+mx60 <- fit$fits$k60$maxima
+r60  <- name_maxima(mx60$L, hm, mx60$n_random)
+L_60 <- r60$L
+rbind(`K=40` = c(maxima = ncol(L_r1), rank_r_only = sum(r1$tab$rand_starts == 0)),
+      `K=60` = c(maxima = ncol(L_60), rank_r_only = sum(r60$tab$rand_starts == 0)))
+mx60$n_cut   # distinct maxima cutting at correlation 0.90 / 0.95 / 0.99
+r60$tab
+```
+
+**The same 25 maxima.** Matching them to the $K = 40$ set:
+
+```{r k60-match}
+C60 <- cor(L_r1, L_60)
+data.frame(`K=40` = r1$tab$pops, `K=60` = r60$tab$pops[apply(C60, 1, which.max)],
+           r = round(apply(C60, 1, max), 3),
+           starts_40 = r1$tab$rand_starts,
+           starts_60 = r60$tab$rand_starts[apply(C60, 1, which.max)],
+           check.names = FALSE, row.names = NULL)
+c(matched_r_gt_0.9 = sum(apply(C60, 2, max) > 0.9),
+  worst_r          = round(min(apply(C60, 2, max)), 3),
+  k60_only         = sum(apply(C60, 2, max) < 0.9),
+  k40_only         = sum(apply(C60, 1, max) < 0.9))
+```
+
+Every maximum matches one-to-one, the worst at
+`r round(min(apply(cor(L_r1, L_60), 2, max)), 3)` and most above 0.99, and the
+basin sizes barely move. So between 40 and 60 the whitening dimension makes no
+difference to the unconstrained maxima: PCs 41--60 carry too little population
+signal to create new ones. The user-facing answer is that 40 was already
+enough, and that the maxima are a property of the data rather than of $K$.
+
+### Factor plots
+
+```{r k60-plot, fig.width=10, fig.height=2 + 1.7 * ceiling(ncol(L_60) / 2)}
+plot_loadings(L_60, hm, r60$tab)
+```
+
+```{r k60-heat, fig.width=9, fig.height=7}
+plot_pop_heatmap(L_60, hm)
+```
+
+### Where the extra 20 components do go
+
+The rank-$r$ fit is a different matter: it must use all 60 directions, and its
+total objective rises from `r round(sum(skew_obj(fit$fits$k40$fit$L)), 1)` at
+$K = 40$ to `r round(sum(skew_obj(fit$fits$k60$fit$L)), 1)` at $K = 60$. So
+the extra components are doing something --- they are just not creating new
+unconstrained maxima. Here are all 60:
+
+```{r k60-rankr-order}
+rr60 <- fit$fits$k60$fit$L
+rr60 <- rr60[, pop_order_of(rr60, hm), drop = FALSE]
+colnames(rr60) <- sprintf("f%02d", seq_len(ncol(rr60)))
+rr_tab <- data.frame(factor = colnames(rr60),
+                     pops = apply(rr60, 2, pop_label, m = hm),
+                     obj = round(skew_obj(rr60), 2),
+                     n_above2 = colSums(rr60 > 2),
+                     max_loading = round(apply(rr60, 2, max), 1),
+                     row.names = NULL)
+rr_tab
+```
+
+```{r k60-rankr-plot, fig.width=12, fig.height=2 + 1.6 * ceiling(ncol(rr60) / 3)}
+# Three columns rather than two: 60 panels at two columns is an unreadably
+# long figure.
+plot_loadings(rr60, hm, rr_tab, ncol = 3)
+```
+
+Splitting them by whether they correspond to an unconstrained maximum tells
+the story:
+
+```{r k60-rankr-split}
+Cx <- cor(rr60, L_60)
+is_max <- apply(Cx, 1, max) > 0.9
+c(matches_a_maximum = sum(is_max), does_not = sum(!is_max),
+  maxima_represented = sum(apply(Cx, 2, max) > 0.9), of_maxima = ncol(L_60))
+round(rbind(`matches a maximum` = summary(rr_tab$obj[is_max]),
+            `does not`          = summary(rr_tab$obj[!is_max])), 2)
+summary(rr_tab$n_above2[!is_max])
+```
+
+Only 19 of the 60 correspond to a maximum, and those are the good ones ---
+objectives 0.60 to 0.94, median 0.82, in the same range as the maxima
+themselves (0.58 to 0.96). The other 41 have objectives from 0.15 to 0.74
+with a median of 0.27, and they are **not** narrow: a median of 64 haplotypes
+load above 2 on them. They are diffuse, low-objective directions that exist
+only because orthogonality requires 60 components to be produced, and they
+dissolve if the constraint is lifted --- the same thing the 1000 Genomes
+analysis saw with the factors that "slid away" under rank-1 refinement.
+
+Note also that the rank-$r$ fit does not even represent all the maxima: 6 of
+the 25 have no $K = 60$ factor correlating above 0.9 with them. Raising $K$
+buys objective and diffuse extra directions, not resolution. The next section
+adds that these factors also fail the non-negativity test the maxima pass.
+
+## Stability: odd against even chromosomes
+
+A different way to ask which maxima are real: fit the two halves of the SNPs
+independently and keep only what both find. SNP names are `chrN:pos`, so we
+split on chromosome parity, which keeps whole chromosomes together and so
+cannot split residual LD across the two halves. Each half gets its own
+centred SVD, its own $K = 40$ rank-$r$ fit and its own 1000 rank-1 runs ---
+nothing is shared but the individuals.
+
+```{r split-basics}
+sp <- fit$split
+odd  <- name_maxima(sp$odd$maxima$L,  hm, sp$odd$maxima$n_random)
+even <- name_maxima(sp$even$maxima$L, hm, sp$even$maxima$n_random)
+rbind(odd  = c(SNPs = sp$odd$n_snps,  maxima = ncol(odd$L)),
+      even = c(SNPs = sp$even$n_snps, maxima = ncol(even$L)),
+      all  = c(SNPs = fit$nsnp,       maxima = ncol(L_r1)))
+```
+
+Each half finds 20 maxima against 25 on the full data. Matching them to each
+other:
+
+```{r split-match}
+Cs <- cor(odd$L, even$L)
+data.frame(odd        = odd$tab$pops,
+           odd_starts = odd$tab$rand_starts,
+           even       = even$tab$pops[apply(Cs, 1, which.max)],
+           even_starts = even$tab$rand_starts[apply(Cs, 1, which.max)],
+           r          = round(apply(Cs, 1, max), 3), row.names = NULL)
+c(odd_matched_0.9  = sum(apply(Cs, 1, max) > 0.9),
+  even_matched_0.9 = sum(apply(Cs, 2, max) > 0.9),
+  odd_matched_0.8  = sum(apply(Cs, 1, max) > 0.8),
+  of               = ncol(odd$L))
+```
+
+Nineteen of the 20 pair up, and the agreement is close: 16 pairs above
+$r = 0.9$ and three more between 0.83 and 0.89 --- Druze, Palestinian and
+Burusho/Pathan, the broad shallow factors, which are the ones a halved SNP
+set should estimate least precisely. Basin sizes across the matched pairs
+correlate at 0.99.
+
+```{r split-basins}
+ok <- apply(Cs, 1, max) > 0.8
+round(cor(odd$tab$rand_starts[ok],
+          even$tab$rand_starts[apply(Cs, 1, which.max)][ok]), 2)
+```
+
+The single genuine disagreement is the odd half's eighth maximum, matching
+its best even partner at $r =$ `r round(min(apply(Cs, 1, max)), 2)`:
+
+```{r split-odd-only}
+odd$tab$pops[which.min(apply(Cs, 1, max))]
+```
+
+### What the halves lose
+
+More interesting is what both halves miss relative to the full data. They
+miss the *same* seven maxima:
+
+```{r split-vs-full}
+Do <- cor(L_r1, odd$L); De <- cor(L_r1, even$L)
+data.frame(full = r1$tab$pops,
+           best_odd  = round(apply(Do, 1, max), 2),
+           best_even = round(apply(De, 1, max), 2),
+           row.names = NULL)
+miss_o <- r1$tab$pops[apply(Do, 1, max) < 0.9]
+miss_e <- r1$tab$pops[apply(De, 1, max) < 0.9]
+c(missing_from_odd = length(miss_o), missing_from_even = length(miss_e),
+  same_set = identical(sort(miss_o), sort(miss_e)))
+miss_o
+```
+
+That the two independent halves lose exactly the same seven is the point ---
+these are not random failures. Where each one goes:
+
+```{r split-where}
+mo <- apply(Do, 1, max) < 0.9
+data.frame(full      = r1$tab$pops[mo],
+           best_odd  = odd$tab$pops[apply(Do, 1, which.max)][mo],
+           r_odd     = round(apply(Do, 1, max)[mo], 2),
+           best_even = even$tab$pops[apply(De, 1, which.max)][mo],
+           r_even    = round(apply(De, 1, max)[mo], 2), row.names = NULL)
+```
+
+They fall into three groups.
+
+**Merged.** Basque and Sardinian are absorbed into a broad European factor
+in both halves ($r$ = 0.64--0.79), and Russian/Orcadian/French partly with
+them. Europe goes from three factors on the full data to one on the odd half
+and two on the even --- the split is real but needs the full marker set.
+
+```{r split-europe}
+list(full = grep("Basque|Sardinian|Russian|Orcadian|French", r1$tab$pops, value = TRUE),
+     odd  = grep("Basque|Sardinian|Russian|Orcadian|French", odd$tab$pops,  value = TRUE),
+     even = grep("Basque|Sardinian|Russian|Orcadian|French", even$tab$pops, value = TRUE))
+```
+
+**Unresolved.** Japanese/Hezhen/Daur and Colombian/Maya have no counterpart
+at all ($r \le 0.27$): East Asia drops from three factors to two and the
+Americas from four to three. These are splits the halves cannot see rather
+than splits they blur.
+
+**The nuisance factors.** Hazara is the least reproducible thing in the whole
+analysis --- $r$ of 0.04 and 0.09, effectively absent from both halves --- and
+the Bedouin cluster is found by the odd half ($r = 0.86$) and not the even
+($r = 0.13$). That is a point against those two factors rather than against
+the data, and it agrees with the pruning check, which identified exactly
+these two as within-population clusters. So two independent lines of evidence
+say the same thing about them.
+
+This is the same behaviour as in the 1000 Genomes analysis, where the halves
+also merged the finer distinctions, and it is worth reading both ways: the
+coarse structure is what replicates on half the markers, and the finer splits
+the full data supports are real but need the markers to see.
+
+### Factor plots for each half {.tabset}
+
+#### Odd chromosomes
+
+```{r split-odd-plot, fig.width=10, fig.height=2 + 1.7 * ceiling(ncol(odd$L) / 2)}
+plot_loadings(odd$L, hm, odd$tab)
+```
+
+#### Even chromosomes
+
+```{r split-even-plot, fig.width=10, fig.height=2 + 1.7 * ceiling(ncol(even$L) / 2)}
+plot_loadings(even$L, hm, even$tab)
+```
+
+### {-}
+
+```{r split-heat, fig.width=9, fig.height=7}
+plot_pop_heatmap(odd$L, hm) + labs(title = "odd chromosomes")
+plot_pop_heatmap(even$L, hm) + labs(title = "even chromosomes")
+```
+
+## Structure plots
+
+Following [`fastica_1kg_structure`](fastica_1kg_structure.html), we turn the
+maxima into structure plots. A structure plot needs non-negative memberships,
+which signed ICA sources are not; but the $x|x|$ sources are one-sided, so
+their positive parts may serve directly. Take
+$$
+A = \max(L, 0), \qquad X \approx AB + E \ \text{fitted by least squares},
+$$
+and *if* $B$ comes out non-negative, rescale each row of $B$ to sum to 1 and
+scale the corresponding column of $A$ to compensate. The rows of $A$ are then
+memberships on a common scale. There is **no intercept column** and $X$ is
+left uncentered: with an intercept the rows of $B$ become increments to allele
+frequency, which are necessarily signed. This is done in
+[`code/fit_hgdp_structure.R`](https://github.com/stephenslab/misc/blob/master/code/fit_hgdp_structure.R).
+
+One thing differs from the 1000 Genomes version: the rows here are
+haplotypes, so a membership is a membership of a single chromosome, and an
+individual appears as two adjacent bars that need not agree.
+
+### Does $B \ge 0$ hold?
+
+```{r struct-diag}
+do.call(rbind, lapply(names(struct), function(nm) {
+  z <- struct[[nm]]
+  data.frame(sources = nm, K = z$K,
+             `n B < -0.01` = z$n_lt, of = z$K * z$n_snps,
+             frac = signif(z$frac_lt, 2),
+             min_B = round(z$min_B, 3), `mean |B|` = round(z$mean_abs, 3),
+             R2 = round(z$r2, 3), check.names = FALSE, row.names = NULL)
+}))
+```
+
+The same split as in the 1000 Genomes data, and sharper. For the **rank-1
+maxima** at both $K$, $B$ is non-negative to within rounding: 46 and 47
+entries out of 5.4 million below $-0.01$, with minima of about $-0.014$
+against a mean $|B|$ of 0.05. Clipping those at zero changes nothing.
+
+For both **rank-$r$ fits** it fails, and it gets worse as $K$ grows: 5.6% of
+entries below $-0.01$ at $K = 40$ and 8.3% at $K = 60$, with minima of
+$-0.18$ and $-0.25$.
+
+The $R^2$ column is the other half of the same point. It is the fit of
+$X \approx \max(L,0) B$, so it measures how much of the data survives taking
+positive parts. The 25 maxima reach 0.585, *better than the 60 rank-$r$
+factors at 0.569* despite using less than half as many components, because
+the maxima are one-sided and lose almost nothing to $\max(L, 0)$ while the
+rank-$r$ factors are two-sided and lose a great deal.
+
+The structure plots below therefore use maxima only.
+
+### Building the memberships
+
+```{r struct-build}
+src <- list(
+  `K = 40 maxima` = list(L = fit$fits$k40$maxima$L, key = "maxima_k40"),
+  `K = 60 maxima` = list(L = fit$fits$k60$maxima$L, key = "maxima_k60"))
+
+# A = pmax(L, 0) with columns rescaled so the rows of B sum to 1, factors in
+# the same geographic order as everywhere else and labelled by the populations
+# they carry.
+memberships <- function(name) {
+  L <- src[[name]]$L
+  r <- struct[[src[[name]]$key]]$r
+  o <- pop_order_of(L, hm)
+  A <- sweep(pmax(L[, o, drop = FALSE], 0), 2, r[o], "*")
+  colnames(A) <- make.unique(apply(L[, o, drop = FALSE], 2, pop_label,
+                                   m = hm, top = 2))
+  A <- A / mean(rowSums(A))     # bar heights on a scale of about 1
+
+  # A haplotype with no positive loading on any source has no membership
+  # representation at all; drop those and record how many.
+  zero <- rowSums(A) == 0
+  list(A = A[!zero, , drop = FALSE], pop = droplevels(hm$pop[!zero]),
+       n_dropped = sum(zero))
+}
+
+plot_structure <- function(name, normalize = FALSE) {
+  m <- memberships(name)
+  A <- if (normalize) m$A / rowSums(m$A) else m$A
+  set.seed(1)   # structure_plot orders within each group by t-SNE
+  structure_plot(A, grouping = m$pop, gap = 8, verbose = FALSE,
+                 colors = Polychrome::glasbey.colors(ncol(A) + 1)[-1]) +
+    labs(y = "membership", fill = NULL,
+         title = sprintf("%s (%s)%s", name,
+                         if (normalize) "normalized" else "unnormalized",
+                         if (m$n_dropped)
+                           sprintf(" - %d haplotype(s) dropped", m$n_dropped)
+                         else "")) +
+    theme(axis.text.x     = element_text(angle = 90, vjust = 0.5, hjust = 1,
+                                         size = 6),
+          legend.text     = element_text(size = 6),
+          legend.key.size = unit(0.32, "cm"))
+}
+```
+
+The normalized plots show composition; the unnormalized ones keep the bar
+heights, which carry information the normalized version discards --- a short
+bar is a haplotype poorly explained by all the factors in the set.
+
+### $K = 40$ maxima {.tabset}
+
+#### Normalized
+
+```{r struct-40-norm, fig.width=11, fig.height=5}
+plot_structure("K = 40 maxima", normalize = TRUE)
+```
+
+#### Unnormalized
+
+```{r struct-40-raw, fig.width=11, fig.height=5}
+plot_structure("K = 40 maxima")
+```
+
+### {-}
+
+### $K = 60$ maxima {.tabset}
+
+The maxima are the same, so these should be --- and are --- the same plots.
+They are shown for completeness.
+
+#### Normalized
+
+```{r struct-60-norm, fig.width=11, fig.height=5}
+plot_structure("K = 60 maxima", normalize = TRUE)
+```
+
+#### Unnormalized
+
+```{r struct-60-raw, fig.width=11, fig.height=5}
+plot_structure("K = 60 maxima")
+```
+
+### {-}
+
+### What the memberships say
+
+```{r struct-pop-means}
+mp <- memberships("K = 40 maxima")
+P  <- mp$A / rowSums(mp$A)
+M  <- apply(P, 2, function(x) tapply(x, mp$pop, mean))
+# For each population, the factors making up at least 10% of it on average.
+data.frame(
+  pop = rownames(M),
+  composition = apply(M, 1, function(x) {
+    x <- sort(x[x >= 0.1], decreasing = TRUE)
+    paste(sprintf("%s %d%%", names(x), round(100 * x)), collapse = ", ")
+  }), row.names = NULL)
+```
+
+Most populations come out close to a hard assignment --- San 98%, PapuanHighlands
+97%, Mbuti and Japanese and Colombian and Lahu 96%, Biaka and Bougainville and
+PapuanSepik 95% --- and where there is mixture it is where geography says it
+should be:
+
+* **BantuSouthAfrica is 57% the West/Central African factor and 24% San**,
+  the Khoe-San ancestry in southern African Bantu speakers.
+* **Europe shows a south-north gradient** rather than discrete clusters:
+  Sardinian 87% and Basque 83% on their own factors, Tuscan 35%
+  Russian/Orcadian with 26% Sardinian and 17% Basque, BergamoItalian 39/31/15,
+  French 58/18/14, Russian 86%.
+* **A Central/South Asian cline** runs Brahui 86% and Makrani 81% on
+  Brahui/Makrani, through Sindhi at 45/40 and Pathan at 49/29, to Burusho 89%
+  on Burusho/Pathan.
+* **East Asia is a Lahu/Dai--Japanese/Hezhen gradient**, with Han split
+  47/47, Yi 47/43, Naxi 48/41, Tujia 51/44, and the Siberian populations
+  pulled onto Yakut/Oroqen.
+* **Uygur is the most mixed population in the panel**, with no factor of its
+  own: 29% Japanese/Hezhen, 15% Yakut/Oroqen, 14% Burusho/Pathan and 13%
+  Russian/Orcadian --- the Silk Road signal.
+* **The Americas are nearly pure**, 86--96% on their own factors.
+
+These are the expected admixture patterns, read off ICA sources rather than
+fitted under a non-negativity constraint.
+
+Not pruning has a visible cost here, and it is worth naming. Two of the 25
+factors are the within-population clusters from the pruning check, and they
+absorb membership that would otherwise go to a population factor: the Bedouin
+are split 46% Bedouin and 22% `Bedouin.1`, and BantuKenya picks up 15% on the
+Hazara cluster factor. Hazara itself now has 45% on a factor of its own,
+where in the pruned fit it was a genuinely admixed population with none. So
+the unpruned memberships are readable, but the two nuisance factors have to
+be recognized as such rather than read as ancestry.
+
+The unnormalized plots add something the normalized ones cannot show. Bar
+heights run from about 0.4 to 1.6 around a median near 1, and the low end is
+systematic rather than noise: the populations with the shortest bars are the
+ones that sit *between* factors rather than owning one.
+
+```{r struct-heights-bypop}
+mk <- memberships("K = 40 maxima")
+mh <- sort(tapply(rowSums(mk$A), mk$pop, mean))
+round(head(mh, 6), 2)          # shortest bars
+round(rev(tail(mh, 6)), 2)     # tallest
+round(quantile(rowSums(mk$A), c(0, 0.01, 0.5, 0.99, 1)), 2)
+```
+
+The shortest bars are BantuKenya and BantuSouthAfrica, the two admixed
+African populations, then Uygur and Adygei, the two admixed populations
+between West Eurasia and East Asia, then Yoruba and Tu. The tallest are Lahu,
+Japanese, Mandenka, Russian, Colombian and Burusho --- populations that
+essentially own a factor each. So the bar height is reading as "how well any
+one source explains this haplotype", which is the diagnostic it is supposed
+to provide and which the normalized plot discards. Unlike the 1000 Genomes
+case no single bar dominates: the 99th percentile is 1.57 against a maximum
+of 1.84.
+
+## Structure in the residuals
+
+The structure fit gives a residual, $E = X - AB$, and the obvious question is
+whether the $x|x|$ search finds anything in it. So we run exactly the same
+procedure on $E$ that the main analysis ran on $X$: centre, whiten to 40
+dimensions, 1000 random rank-1 starts, cluster.
+[`code/fit_hgdp_residual.R`](https://github.com/stephenslab/misc/blob/master/code/fit_hgdp_residual.R)
+does this, and never forms $E$ --- with $M = XB'$ its Gram matrix is
+$$
+EE' = XX' - MA' - AM' + A(BB')A',
+$$
+and the centred version follows from that and $\mu_E$ as usual.
+
+```{r res-load}
+res <- readRDS("../output/hgdp_residual.rds")
+c(sources_removed = res$n_sources,
+  residual_ss_fraction = round(res$ss_ratio, 3),
+  centred_var_fraction = round(sum(res$d^2) / sum(fit$d^2), 3))
+```
+
+The 25 non-negative sources take out 58% of the raw sum of squares and 89% of
+the *centred* variance. What is left is not flat, though:
+
+```{r res-scree, fig.width=6, fig.height=3.2}
+ggplot(data.frame(k = 1:40, d = res$d[1:40]), aes(k, d)) +
+  geom_point(size = 1.2) +
+  labs(x = "component", y = "singular value of the centred residual") +
+  theme_cowplot(font_size = 10)
+round(res$d[1:12])
+round(res$d[1]^2 / sum(res$d^2), 3)   # share of residual variance in PC1
+```
+
+One direction dominates completely --- 57% of the remaining centred variance
+--- then two more stand a little above a flat plateau from component 4 on,
+which is what noise looks like.
+
+### What the 1000 rank-1 runs find
+
+```{r res-maxima}
+hm_res <- hap_meta(res$ids)
+c(n_maxima = ncol(res$L), largest_basin = max(res$size))
+res$n_cut   # cutting at correlation 0.90 / 0.95 / 0.99
+o_r <- pop_order_of(res$L, hm_res)
+L_res <- res$L[, o_r, drop = FALSE]
+colnames(L_res) <- sprintf("r%02d", seq_len(ncol(L_res)))
+res_tab <- data.frame(factor = colnames(L_res),
+                      pops = apply(L_res, 2, pop_label, m = hm_res),
+                      obj = round(skew_obj(L_res), 2),
+                      n_above2 = colSums(L_res > 2),
+                      max_loading = round(apply(L_res, 2, max), 1),
+                      basin = res$size[o_r], row.names = NULL)
+res_tab
+```
+
+Four maxima against 25 on the data itself, and 928 of the 1000 starts go to
+one of them. They are also genuinely new directions rather than leftovers of
+the sources we removed:
+
+```{r res-vs-original}
+round(apply(cor(res$L, fit$fits$k40$maxima$L), 1, function(z) max(abs(z))), 2)
+```
+
+```{r res-plot, fig.width=10, fig.height=2 + 1.7 * ceiling(ncol(L_res) / 2)}
+plot_loadings(L_res, hm_res, res_tab)
+```
+
+### The dominant residual direction is model misfit, not new structure
+
+The leading residual maximum loads on BantuKenya at a mean of 6.8 and
+BantuSouthAfrica at 2.3, with essentially nothing anywhere else --- the two
+admixed African populations. That is a strong hint, and the residual PC1
+makes it exact. Compare it with the structure-plot bar heights, which measure
+how well the non-negative model explains each haplotype:
+
+```{r res-pc1-vs-height, fig.width=4.6, fig.height=3.6}
+h   <- rowSums(mk$A)                 # bar height per haplotype, from above
+pc1 <- res$U_c[, 1]
+if (cor(pc1, h) > 0) pc1 <- -pc1     # orient so positive = poorly explained
+round(cor(pc1, h), 3)
+ggplot(data.frame(pc1 = pc1, h = h, region = hm_res$region),
+       aes(pc1, h, colour = region)) +
+  geom_point(size = 0.7, alpha = 0.8) +
+  scale_colour_manual(values = region_palette) +
+  labs(x = "residual PC1 (oriented)", y = "structure bar height") +
+  theme_cowplot(font_size = 9) + theme(legend.position = "none")
+```
+
+The correlation is $-0.983$ at the haplotype level and $-0.967$ at the
+population level. **The dominant direction in the residual is not population
+structure the sources missed; it is the sources failing on the admixed
+individuals.** A model of 25 one-sided, non-negative sources represents a
+haplotype well when one source owns it and badly when it is a mixture, and
+the residual's first component is precisely that failure, sorted.
+
+That also explains why the rank-1 search finds so little. The residual is
+89% smaller than the data in centred variance, most of what remains is the
+misfit axis rather than a source, and the four maxima it does find are all
+low-objective --- 0.40 to 0.75 against 0.58 to 0.96 for the real ones. None
+of them is a new population: `r01` is the admixed African pair, `r02` a
+cluster inside Druze, `r04` a handful of Makrani, and `r03` a broad, shallow
+West Eurasian gradient over Bedouin, Adygei and Tuscan with a maximum
+loading under 8. There is no hidden 26th population factor here.
+
+It is worth being clear about what this does and does not test. It says the
+*non-negative* representation leaves nothing source-like behind, which is a
+statement about $A = \max(L, 0)$ and $B$, not about the ICA fit itself: the
+residual is defined by discarding the negative parts of the sources, so some
+of what it contains is the information those negative parts carried.
+
+## A worked example: Mandenka and Yoruba
+
+One factor covers both Mandenka and Yoruba, but it does not cover them
+equally, and following that through explains both the bar-height diagnostic
+and the residual result better than either does on its own.
+
+```{r wk-setup}
+nc  <- c("Mandenka", "Yoruba", "BantuKenya", "BantuSouthAfrica")
+j1  <- which.max(colMeans(pmax(L_r1, 0)[hm$pop == "Mandenka", , drop = FALSE]))
+round(rbind(`loading on the shared factor` = tapply(L_r1[, j1], hm$pop, mean)[nc],
+            `structure bar height`         = tapply(rowSums(mk$A), mk$pop, mean)[nc]), 2)
+```
+
+Mandenka load at 5.5 and Yoruba at 2.6 --- a factor of 2.1 --- and the bar
+heights follow. Note the ordering continues into the two Bantu populations.
+
+### It is not the obvious things
+
+```{r wk-nulls}
+rbind(`drift ||f_pop - mu||^2`    = round(res$pop_dev[nc]),
+      `heterozygosity x 1000`     = round(1000 * res$pop_het[nc], 1),
+      `centred haplotype norm^2`  = round(tapply(res$cx2, hm$pop, mean)[nc]),
+      `sample size (individuals)` = table(meta$pop)[nc])
+```
+
+Mandenka and Yoruba are the same size (22 individuals each), equally
+heterozygous, and equally far from the global mean --- so this is not "Yoruba
+are less differentiated". Nor is the missing loading picked up elsewhere:
+
+```{r wk-elsewhere}
+round(colMeans(mk$A[mk$pop == "Yoruba", -j1, drop = FALSE]), 3) -> other
+round(c(`Yoruba on the shared factor` = mean(mk$A[mk$pop == "Yoruba", j1]),
+        `Yoruba on all other factors` = sum(other)), 3)
+```
+
+### The whole gap is one component
+
+Write the factor as a unit direction $w$ in the whitened space and split the
+population-mean loading over the 40 whitened PCs. The loading of a population
+is $\sum_k \bar z_k w_k$, so each PC makes a separate contribution.
+
+```{r wk-decompose}
+Z  <- sqrt(length(fit$hap_ids)) * fit$U_c[, 1:fit$K[1], drop = FALSE]
+U_w <- t(Z)
+w  <- as.vector(U_w %*% L_r1[, j1]) / length(fit$hap_ids)
+zm <- colMeans(Z[hm$pop == "Mandenka", , drop = FALSE])
+zy <- colMeans(Z[hm$pop == "Yoruba",   , drop = FALSE])
+dec <- data.frame(PC = seq_along(w), w = round(w, 3),
+                  Mandenka = round(zm * w, 3), Yoruba = round(zy * w, 3),
+                  diff = round((zm - zy) * w, 3))
+head(dec[order(-abs(dec$diff)), ], 5)
+c(total_gap = round(sum((zm - zy) * w), 2),
+  from_PC1_3 = round(sum(((zm - zy) * w)[1:3]), 2),
+  from_PC22  = round(((zm - zy) * w)[22], 2))
+```
+
+**PC22 accounts for 2.7 of the 2.9 gap; PC1--3 account for none of it.** On
+the axes that carry most of the variance the two populations are
+indistinguishable. And PC22 is not a general axis --- it is a within-Africa
+one, with only the four Niger-Congo populations away from zero:
+
+```{r wk-pc22}
+m22 <- tapply(Z[, 22], hm$pop, mean)
+round(m22[abs(m22) > 1], 2)                    # every other population
+round(range(m22[abs(m22) <= 1]), 2)            # ... lies in this range
+c(d1 = round(fit$d[1]), d6 = round(fit$d[6]), d22 = round(fit$d[22]))
+```
+
+It runs Mandenka at one end and BantuKenya at the other with Yoruba in
+between, which is a Mande-versus-Bantu contrast. It is also uniform within
+Mandenka rather than driven by a few individuals:
+
+```{r wk-pc22-within}
+z <- Z[hm$pop == "Mandenka", 22]
+round(c(min = min(z), mean = mean(z), max = max(z), sd = sd(z)), 2)
+```
+
+### Why the contrast uses it
+
+Two things combine. Whitening puts PC22 ($d = 213$) on the same footing as
+PC1 ($d = 1384$), so a modest real axis becomes cheap to exploit. And $x|x|$
+rewards concentration rather than evenness, so the optimizer is happy to
+spend weight there: $w$ puts 0.57 on PC6, the shared West African axis, and
+0.43 on PC22.
+
+Comparing the fitted direction with two alternatives makes the trade explicit
+--- one with PC22 removed, and one pointing at the four Niger-Congo
+populations equally:
+
+```{r wk-alternatives}
+obj_of <- function(v) { v <- v / sqrt(sum(v^2)); q <- as.vector(Z %*% v)
+                        mean(q * abs(q)) }
+load_of <- function(v) { v <- v / sqrt(sum(v^2)); q <- as.vector(Z %*% v)
+                         round(tapply(q, hm$pop, mean)[nc], 2) }
+nsharp <- function(v) { v <- v / sqrt(sum(v^2)); sum(as.vector(Z %*% v) > 2) }
+
+cand <- list(`fitted factor` = w,
+             `PC22 removed`  = replace(w, 22, 0),
+             `even West African` = colMeans(Z[hm$pop %in% nc, , drop = FALSE]))
+data.frame(objective   = round(sapply(cand, obj_of), 3),
+           n_above2    = sapply(cand, nsharp),
+           t(sapply(cand, load_of)))
+```
+
+An even West African direction exists and is a perfectly reasonable ancestry
+axis, but it is not a local maximum: tilting onto PC22 turns a broad plateau
+over 130 haplotypes into a spike over 89 and raises the objective from 0.835
+to 0.849. **The contrast prefers an anchored source to a fair one.**
+
+### A prediction, and a check
+
+If that is the mechanism then PC22 has to be available, so below $K = 22$ the
+factor should even out. Re-running the rank-1 search across a range of $K$
+(300 starts each, which finds fewer maxima than the 1000 used elsewhere but
+is ample for this):
+
+```{r wk-ksweep}
+r1_update <- function(U, W) {
+  P <- t(U) %*% W
+  W <- U %*% (2 * abs(P)) - sweep(W, 2, colSums(2 * sign(P)), "*")
+  sweep(W, 2, sqrt(colSums(W^2)) + 1e-15, "/")
+}
+do.call(rbind, lapply(c(10, 15, 20, 25, 30, 40), function(k) {
+  U <- sqrt(nrow(fit$U_c)) * t(fit$U_c[, 1:k, drop = FALSE])
+  set.seed(1)
+  Wk <- matrix(rnorm(k * 300), k, 300)
+  Wk <- sweep(Wk, 2, sqrt(colSums(Wk^2)), "/")
+  for (i in 1:500) Wk <- r1_update(U, Wk)
+  L  <- t(U) %*% Wk
+  M  <- L[, match(unique(cutree(hclust(as.dist(1 - cor(L)), method = "complete"),
+                                h = 0.05)),
+                  cutree(hclust(as.dist(1 - cor(L)), method = "complete"),
+                         h = 0.05)), drop = FALSE]
+  v  <- tapply(M[, which.max(colMeans(pmax(M, 0)[hm$pop == "Mandenka", ,
+                                                 drop = FALSE]))], hm$pop, mean)
+  data.frame(K = k, Mandenka = round(v["Mandenka"], 2),
+             Yoruba = round(v["Yoruba"], 2),
+             ratio = round(v["Mandenka"] / v["Yoruba"], 2), row.names = NULL)
+}))
+```
+
+The ratio is 1.0 up to $K = 20$ and 2.1 from $K = 25$, switching exactly where
+PC22 enters the whitened space.
+
+### Why not a Yoruba factor as well?
+
+If PC6 separates the Niger-Congo populations from everyone else and PC22
+separates Mandenka from Yoruba, the plane they span ought to contain a
+Mandenka-anchored direction *and* a Yoruba-anchored one, and the natural
+expectation is two factors rather than Yoruba sitting part-way along the
+Mandenka axis.
+
+The first thing to check is whether PC22 is the only axis separating them.
+It is not:
+
+```{r wk-otherpcs}
+Zall <- sqrt(nrow(fit$U_c)) * fit$U_c
+iM <- hm$pop == "Mandenka"; iY <- hm$pop == "Yoruba"
+sep <- data.frame(PC = seq_len(ncol(Zall)), d = round(fit$d[seq_len(ncol(Zall))]),
+                  Mandenka = round(colMeans(Zall[iM, ]), 2),
+                  Yoruba   = round(colMeans(Zall[iY, ]), 2))
+sep$diff <- round(sep$Mandenka - sep$Yoruba, 2)
+head(sep[order(-abs(sep$diff)), ], 4)
+```
+
+**PC31 separates them too**, in the opposite sense: Yoruba $+2.47$ against
+Mandenka $-1.02$. And it is a population-level axis, not a few outliers ---
+within Yoruba it runs from 0.7 to 4.3 with sd 0.70. So Yoruba is genuinely
+distinguishable from Mandenka in the whitened space, and a Yoruba-anchored
+direction exists and looks reasonable:
+
+```{r wk-yoruba-dir}
+nrm  <- function(v) v / sqrt(sum(v^2))
+objv <- function(v) { q <- as.vector(Z %*% nrm(v)); mean(q * abs(q)) }
+Zpop <- t(sapply(levels(hm$pop), function(pp) colMeans(Z[hm$pop == pp, , drop = FALSE])))
+v_Y  <- Zpop["Yoruba", ] - colMeans(Zpop[rownames(Zpop) != "Yoruba", , drop = FALSE])
+round(sort(tapply(as.vector(Z %*% nrm(v_Y)), hm$pop, mean), decreasing = TRUE)[1:4], 2)
+round(objv(v_Y), 3)
+```
+
+Plotting the three PCs pairwise makes the situation concrete. Points are
+haplotypes; filled circles are population centroids; the arrows are the
+fitted factor and the best Yoruba direction, projected onto each plane.
+
+```{r wk-pcpairs, fig.width=12, fig.height=4.8}
+w_fit <- nrm(as.vector(t(Z) %*% L_r1[, j1]) / nrow(Z))   # the fitted direction
+v_Y   <- nrm(v_Y)
+
+pc_pair_plot <- function(a, b) {
+  nc4  <- c("Mandenka", "Yoruba", "BantuSouthAfrica", "BantuKenya")
+  oaf  <- c("Biaka", "Mbuti", "San")
+  grp  <- factor(ifelse(as.character(hm$pop) %in% nc4, as.character(hm$pop),
+                 ifelse(as.character(hm$pop) %in% oaf, "other African",
+                        "rest of world")),
+                 levels = c(nc4, "other African", "rest of world"))
+  pal <- c(Mandenka = "#D55E00", Yoruba = "#0072B2",
+           BantuSouthAfrica = "#009E73", BantuKenya = "#CC79A7",
+           `other African` = "#E69F00", `rest of world` = "grey80")
+  df  <- data.frame(x = Z[, a], y = Z[, b], grp = grp)
+  df  <- df[order(df$grp == "rest of world", decreasing = TRUE), ]
+  cen <- data.frame(x = Zpop[c(nc4, oaf), a], y = Zpop[c(nc4, oaf), b],
+                    grp = factor(c(nc4, rep("other African", 3)),
+                                 levels = levels(grp)))
+  sc  <- 0.8 * max(abs(c(Z[, a], Z[, b])))
+  arr <- data.frame(xe = c(w_fit[a], v_Y[a]) * sc,
+                    ye = c(w_fit[b], v_Y[b]) * sc,
+                    lab = c("fitted factor", "best Yoruba direction"))
+  ggplot(df, aes(x, y)) +
+    geom_hline(yintercept = 0, colour = "grey70", linewidth = 0.2) +
+    geom_vline(xintercept = 0, colour = "grey70", linewidth = 0.2) +
+    geom_point(aes(colour = grp), size = 0.7, alpha = 0.75) +
+    geom_point(data = cen, aes(fill = grp), shape = 21, size = 3,
+               colour = "black", stroke = 0.4) +
+    geom_segment(data = arr, aes(x = 0, y = 0, xend = xe, yend = ye,
+                                 linetype = lab),
+                 arrow = grid::arrow(length = grid::unit(0.16, "cm")),
+                 linewidth = 0.5) +
+    scale_colour_manual(values = pal, name = NULL) +
+    scale_fill_manual(values = pal, guide = "none") +
+    scale_linetype_manual(values = c(`fitted factor` = "solid",
+                                     `best Yoruba direction` = "22"),
+                          name = NULL) +
+    labs(x = paste0("PC", a), y = paste0("PC", b)) +
+    theme_cowplot(font_size = 9)
+}
+ps   <- lapply(list(c(6, 22), c(6, 31), c(22, 31)),
+               function(ab) pc_pair_plot(ab[1], ab[2]))
+leg  <- get_legend(ps[[1]] + theme(legend.position = "bottom") +
+                   guides(colour = guide_legend(override.aes = list(size = 2.5),
+                                                nrow = 1)))
+plot_grid(plot_grid(plotlist = lapply(ps, function(q)
+                      q + theme(legend.position = "none")), nrow = 1),
+          leg, ncol = 1, rel_heights = c(1, 0.22))
+```
+
+Three things are worth reading off this. PC6 is not "West African versus the
+world" --- it separates the four Niger-Congo populations (positive) from
+Biaka, Mbuti and San (strongly negative), with the rest of the world at
+zero. In the PC6 planes the four Niger-Congo groups are almost on top of one
+another, which is the sense in which they share an ancestry component. And
+in the **PC22--PC31 plane on the right they separate cleanly into three
+directions**: Mandenka to the right, Yoruba up and to the left, BantuKenya
+down and to the left, with the rest of the world as a tight cloud at the
+origin. Yoruba is a corner of that cloud in its own right, not a point on a
+line between the other two --- which is exactly why one might expect it to
+get its own factor.
+
+Yoruba is cleanly the top population on the best Yoruba direction. But its
+objective is 0.698 against 0.849 for the fitted factor, and it is **not a
+local maximum**.
+Running rank-1 from five Yoruba-anchored starts, including ones on which
+Mandenka loads strongly negative, every one climbs to the same
+Mandenka-anchored optimum:
+
+```{r wk-yoruba-starts}
+zy <- Zpop["Yoruba", ]; zm <- Zpop["Mandenka", ]; zbk <- Zpop["BantuKenya", ]
+starts <- list(`Yoruba centroid`          = zy,
+               `orthogonal to the factor` = zy - sum(zy * w_fit) * w_fit,
+               `Yoruba minus Mandenka`    = zy - zm,
+               `Yoruba minus mean(M, BK)` = zy - 0.5 * (zm + zbk),
+               `max Yoruba margin`        = v_Y)
+do.call(rbind, lapply(names(starts), function(nm) {
+  v <- nrm(starts[[nm]]); W1 <- matrix(v, ncol = 1)
+  l0 <- tapply(as.vector(Z %*% v), hm$pop, mean)
+  for (i in 1:500) W1 <- r1_update(t(Z), W1)
+  v1 <- as.vector(W1); l1 <- tapply(as.vector(Z %*% v1), hm$pop, mean)
+  data.frame(start = nm, obj_start = round(objv(v), 3),
+             Mandenka_start = round(l0["Mandenka"], 2),
+             Yoruba_start   = round(l0["Yoruba"], 2),
+             obj_end = round(objv(v1), 3),
+             Mandenka_end = round(l1["Mandenka"], 2),
+             Yoruba_end   = round(l1["Yoruba"], 2), row.names = NULL)
+}))
+```
+
+Nor is it hiding behind the Mandenka factor. Deflating that direction out and
+running the full 1000-start search in the 39-dimensional complement produces
+no Yoruba maximum either --- the only Niger-Congo maximum that appears is
+BantuKenya/BantuSouthAfrica, and with a basin of one:
+
+```{r wk-deflate}
+Q  <- qr.Q(qr(cbind(w_fit, diag(ncol(Z)))))[, 2:ncol(Z)]
+Zd <- Z %*% Q
+set.seed(1)
+Wd <- matrix(rnorm((ncol(Z) - 1) * 1000), ncol(Z) - 1, 1000)
+Wd <- sweep(Wd, 2, sqrt(colSums(Wd^2)), "/")
+for (i in 1:500) Wd <- r1_update(t(Zd), Wd)
+Ld <- Zd %*% Wd
+cld <- cutree(hclust(as.dist(1 - cor(Ld)), method = "complete"), h = 0.05)
+jd  <- match(unique(cld), cld); Md <- Ld[, jd, drop = FALSE]
+labd <- apply(Md, 2, pop_label, m = hm)
+afr <- grep("Mandenka|Yoruba|Bantu", labd)
+data.frame(factor = labd[afr],
+           basin  = as.integer(table(cld)[as.character(cld[jd])])[afr],
+           t(round(apply(Md[, afr, drop = FALSE], 2,
+                         function(x) tapply(x, hm$pop, mean)[nc]), 2)),
+           row.names = NULL)
+```
+
+So the absence of a Yoruba factor is not a search failure and not a
+consequence of Yoruba being undifferentiated. It is that on *both* of the
+minor African axes, the largest excursion belongs to someone else:
+
+```{r wk-excursions}
+round(Zpop[nc, c(6, 22, 31)], 2)
+```
+
+Mandenka owns the $+$ end of PC22 at $4.39$; BantuKenya owns the $-$ end of
+PC31 at $-3.21$. Yoruba's own excursion, $+2.47$ on PC31, is the smaller
+one, and because all four populations share the same large PC1/PC2/PC6
+African component, a direction built on it cannot avoid bringing
+BantuSouthAfrica (3.03) up with it. The result is a shorter, broader tail ---
+0.698 against 0.849 --- and gradient ascent walks away from it. Under $x|x|$
+the biggest excursion in a neighbourhood takes the factor, and the
+second-biggest gets represented as a fraction of it.
+
+### Every population as a starting point
+
+That suggests a general check: start rank-1 at each of the 54 population
+centroids in turn and see where it goes. This is the most targeted
+initialization available --- if a population has a factor of its own, this
+should find it.
+
+```{r wk-all-centroids}
+W0 <- sweep(t(Zpop), 2, sqrt(colSums(t(Zpop)^2)), "/")
+obj0 <- apply(W0, 2, objv)
+Wc <- W0
+for (i in 1:500) Wc <- r1_update(t(Z), Wc)
+Cc  <- cor(Z %*% Wc, L_r1)
+land <- colnames(L_r1)[apply(Cc, 1, which.max)]
+lab  <- r1$tab$pops[apply(Cc, 1, which.max)]
+own  <- mapply(function(p, l) grepl(p, l, fixed = TRUE), levels(hm$pop), lab)
+c(`lands on a maximum containing itself` = sum(own),
+  `slides to a neighbour`                = sum(!own),
+  `distinct endpoints`                   = length(unique(land)),
+  `endpoints that are new maxima`        = sum(apply(Cc, 1, max) < 0.9))
+```
+
+Thirty-two of the 54 populations reach a maximum that includes them; the
+other 22 slide onto a neighbour. Crucially **none of the 54 finds anything
+new** --- every endpoint is one of the 25 maxima already known, at $r = 1.00$.
+The populations that slide:
+
+```{r wk-sliders}
+data.frame(population = levels(hm$pop)[!own],
+           obj_at_its_own_centroid = round(obj0[!own], 3),
+           lands_on = lab[!own],
+           obj_there = round(apply(Wc, 2, objv)[!own], 3),
+           row.names = NULL)
+```
+
+They are exactly the populations that sit inside the cloud rather than at a
+corner of it: the Han-adjacent East Asian groups collapsing onto
+Lahu/Dai or Japanese/Hezhen, the Italian and French groups onto Sardinian or
+Basque, Sindhi and Balochi onto their South Asian neighbours, Uygur onto
+Yakut/Oroqen, and BantuKenya onto Mandenka/Yoruba. In every case the
+objective rises along the way, so these are not near-misses --- the centroid
+of such a population is not close to being a maximum at all.
+
+### What it explains
+
+Because the sources are one-sided, only the positive end of PC22 gets a
+factor. The negative end --- Yoruba, then BantuSouthAfrica, then BantuKenya
+--- gets nothing, so that part of their variation is simply not modelled.
+Both of the earlier diagnostics are reading this:
+
+* the **bar heights** order exactly along PC22 (Mandenka 1.23, Yoruba 0.64,
+  BantuSouthAfrica 0.54, BantuKenya 0.40), because a short bar is a
+  haplotype no source covers;
+* the **largest residual maximum** is BantuKenya at 6.8 and
+  BantuSouthAfrica at 2.3 --- the unmodelled negative end of PC22 coming back
+  as the single biggest thing left in the data.
+
+So neither is a data problem. They are the same fact seen twice: the $x|x|$
+contrast traded an interpretable ancestry axis for a sharper one-sided
+source, on a minor axis that whitening made cheap. It is worth knowing that
+this is a choice the method makes rather than a statement about African
+population structure, and that lowering $K$ --- or presumably using a
+symmetric contrast --- reverses it.
+
+The wider lesson is about what "25 maxima" means. The maxima are the largest
+excursions of the whitened cloud, not a partition of the populations. A
+population can be perfectly well separated from its neighbours --- Yoruba is,
+on PC31 --- and still get no factor, because a nearby population has a bigger
+excursion and the search converges there from every direction. So the count
+should not be read as "25 ancestries": at $K = 40$ the data supports 25
+one-sided directions, and a population is represented in its own right only
+if it wins its local neighbourhood, not merely if it is distinguishable.
+
+## Does the SNP density matter?
+
+The 6 kb spacing was chosen to put the SNP count in the same range as the
+185k of the 1000 Genomes matrix, not from any argument about LD, so it is
+worth knowing whether it matters. The whole pipeline was also run at 12 kb,
+which gives 140,628 SNPs against 215,468 --- a factor of 1.53 --- and
+`output/hgdp_fastica_12kb.rds` holds the maxima from that run.
+
+```{r density-load}
+alt <- readRDS("../output/hgdp_fastica_12kb.rds")
+hm_alt <- hap_meta(alt$hap_ids)
+c(`6kb` = fit$nsnp, `12kb` = alt$nsnp)
+```
+
+The eigenvalues agree to three decimals once scaled by $\sqrt{p}$, so the
+extra SNPs are not changing the subspace fastICA works in:
+
+```{r density-scree}
+round(rbind(`6kb`  = fit$d[1:12] / sqrt(fit$nsnp),
+            `12kb` = alt$d[1:12] / sqrt(alt$nsnp)), 3)
+```
+
+Matching the maxima across the two densities:
+
+```{r density-match}
+alt_o <- pop_order_of(alt$maxima$L, hm_alt)
+L_alt <- alt$maxima$L[, alt_o, drop = FALSE]
+Cd    <- cor(L_r1, L_alt)
+data.frame(`6kb`      = r1$tab$pops,
+           starts_6   = r1$tab$rand_starts,
+           `12kb`     = apply(L_alt, 2, pop_label, m = hm_alt)[apply(Cd, 1, which.max)],
+           starts_12  = alt$maxima$n_random[alt_o][apply(Cd, 1, which.max)],
+           r          = round(apply(Cd, 1, max), 3),
+           check.names = FALSE, row.names = NULL)
+c(n_6kb = ncol(L_r1), n_12kb = ncol(L_alt),
+  matched_r_gt_0.9 = sum(apply(Cd, 2, max) > 0.9),
+  worst_matched_r  = round(min(apply(Cd, 2, max)), 3))
+```
+
+Every one of the `r ncol(L_alt)` maxima found at 12 kb reappears at 6 kb, the
+worst match being $r =$ `r round(min(apply(cor(L_r1, alt$maxima$L), 2, max)), 3)`,
+and the basin sizes track closely:
+
+```{r density-basins, fig.width=4.2, fig.height=3.6}
+j  <- apply(Cd, 1, which.max)
+ok <- apply(Cd, 1, max) > 0.9
+db <- data.frame(six = r1$tab$rand_starts[ok],
+                 twelve = alt$maxima$n_random[alt_o][j][ok])
+ggplot(db, aes(twelve, six)) +
+  geom_abline(slope = 1, linetype = "dashed", colour = "grey60") +
+  geom_point(size = 1.4) +
+  labs(x = "random starts, 12 kb", y = "random starts, 6 kb") +
+  theme_cowplot(font_size = 10)
+round(cor(db$twelve, db$six), 3)
+```
+
+The one difference is that 6 kb finds `r ncol(L_r1) - ncol(L_alt)` maximum
+that 12 kb does not, and it is not new population structure: it is the Hazara
+cluster, one of the within-population groups the pruning check identifies. At
+12 kb that cluster is present too, but only as a rank-$r$ factor --- rank-1
+started there converges to it, while no random start does. With more SNPs it
+becomes a genuine rank-1 maximum with a basin of its own. The same marginal
+wobble shows up in the pruning check: the two densities agree on 26 of the
+individuals to drop, and disagree on a Palestinian cluster of four that is a
+narrow rank-$r$ factor at 12 kb and not at 6 kb.
+
+```{r density-pruning}
+c(dropped_6kb  = length(pc$dropped), dropped_12kb = length(alt$pruned$dropped),
+  in_both      = length(intersect(pc$dropped, alt$pruned$dropped)),
+  only_6kb     = length(setdiff(pc$dropped, alt$pruned$dropped)),
+  only_12kb    = length(setdiff(alt$pruned$dropped, pc$dropped)))
+meta[match(setdiff(alt$pruned$dropped, pc$dropped), meta$sample), c("sample", "pop")]
+```
+
+So the SNP count is not what is limiting this analysis. Between 140k and 215k
+SNPs the subspace, the maxima, their objectives and their basins are all
+stable to two or three decimals, and the only things that move are the
+marginal nuisance factors, which are recognizable in either case. That is
+reassuring about the 6 kb choice but it is a narrow check --- it says the
+answer is stable to *how many* SNPs are taken, not that distance thinning is
+picking a good set.
+
+## Comment
+
+The recipe from the 1000 Genomes analysis transfers, but the thing it was
+built to fix is largely absent here. There, dropping 40 of 2504 individuals
+turned a landscape with 17 maxima, wildly uneven basins and three maxima that
+random starts could never reach into one with 14 maxima, all population
+factors. Here the landscape is *already* almost all population factors:
+`r ncol(L_r1) - 2` of the `r ncol(L_r1)` maxima are populations or groups of
+neighbouring populations with no pruning at all, and removing the 27
+individuals behind the other two changes nothing else. So the analysis does
+not prune.
+
+Four checks come out the same way, which is the main thing to take from this.
+The maxima do not depend on the whitening dimension (identical at $K = 40$
+and $K = 60$, worst match $r = 0.94$), they do not depend on the SNP density
+(every 12 kb maximum reappears at 6 kb, worst $r = 0.98$, basin sizes
+correlated at 0.99), they do not depend on the 27 individuals the pruning
+check removes, and 18 of the 25 are found independently by each half of the
+chromosomes, matching each other at $r$ up to 0.99 with basin sizes again
+correlated at 0.99. Whatever else they are, they are not artifacts of those
+choices.
+
+The stability split also sharpens what the seven non-replicating maxima are.
+Both halves lose exactly the same seven, which is itself informative: Basque,
+Sardinian and Russian/Orcadian/French merge into a broad European factor,
+Japanese/Hezhen and Colombian/Maya are not resolved at all, and the Bedouin
+and Hazara clusters --- the two the pruning check flags as within-population
+--- are the least reproducible things in the analysis. The finer population
+splits are real but need the full marker set; the two nuisance factors are
+called out by the split and by the pruning check independently.
+
+The rank-$r$ fits behave quite differently, and consistently worse. They are
+the only route to `r sum(r1$tab$rand_starts == 0)` of the maxima --- so they
+are still needed --- but as a factorization in their own right they fail on
+both counts we can check: $B$ goes 5.6% negative at $K = 40$ and 8.3% at
+$K = 60$, against essentially zero for the maxima, and the 25 maxima capture
+more of the data after taking positive parts ($R^2 = 0.585$) than 60 rank-$r$
+factors do ($0.569$). At $K = 60$ only 19 of the 60 factors correspond to a
+maximum; the other 41 are diffuse, low-objective directions (median objective
+0.27 against 0.82 for the 19) that exist because orthogonality requires 60
+components to be produced. Raising $K$ from 40 to 60 buys a higher objective
+and 20 more of those, and no new structure.
+
+Running the same search on the residual of the non-negative fit closes this
+off. The 25 sources take out 89% of the centred variance; of what is left,
+57% sits in a single direction that correlates at $-0.98$ with the
+structure-plot bar heights --- it is the model failing on admixed
+individuals, not structure it missed --- and the 1000 rank-1 starts find only
+four low-objective maxima, none of them a new population. That is a
+statement about the non-negative representation rather than about the ICA
+fit, since the residual is defined by throwing away the negative parts of
+the sources, but within that scope nothing source-like is left behind.
+
+One methodological point worth keeping even though the pruning was dropped.
+The count-based sparsity rule from the TGP script measures the wrong thing
+once populations can be smaller than the threshold: applied unchanged to HGDP
+it deletes San, Colombian and Surui, three real populations with three of the
+highest objectives in the fit. Nothing in the output would flag it --- the fit
+converges just as cleanly and still reports a tidy list of population factors,
+with three populations quietly missing. Testing sparsity relative to the size
+of the population involved is a one-line change and fixes it.

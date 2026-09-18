@@ -111,7 +111,10 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 * [EB FastICA with asymmetric prior: alternating optimization for sparse sources](fastICA_asymmetric.html)
 * [EBproj: quasi-Newton with binary prior and Section-5 sigma (Test 1)](ebproj_newton.html)
 * [fastICA with x|x| contrast on 1000 Genomes data](fastica_1kg.html)
+* [Optimizing the x|x| contrast on unwhitened data: a quasi-Newton family](fastica_unwhitened_optim.html)
 * [Unwhitened fastICA (x|x| contrast) on 1000 Genomes data](fastica_1kg_unwhitened.html)
+* [Structure plots from fastICA sources on 1000 Genomes data](fastica_1kg_structure.html)
+* [fastICA with x|x| contrast on HGDP haplotypes](fastica_hgdp.html)
 
 * [Motivated by ICA, I try a flash+low-rank approach](flash_pca.html)
 * [Motivated by ICA, I try an EB approach to find subspaces](EB_subspace.html)
