@@ -12,3 +12,7 @@ analysis/*_cache
 data/refGene_hg19.txt.gz
 data/hgdp_hap_matrix.rds
 output/admixture/
+
+# ADMIXTURE working directory: PLINK binaries, per-seed runs and the binary
+# itself. The results the analysis uses are in output/hgdp_admixture_compare.rds.
+output/admixture/
