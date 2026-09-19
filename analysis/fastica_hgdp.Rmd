@@ -36,10 +36,12 @@ It also pruned the data: a small number of related individuals and sample
 outliers dominated very sparse factors there, and dropping 40 of 2504
 reorganized the whole landscape. **That step turns out not to be needed
 here**, so the analysis below uses every individual. The evidence is kept in
-one short section rather than run through the whole document. One plausible
-reason is that the HGDP WGS panel may already have been screened for close
-relatives; another is simply that HGDP populations are small and drifted
-enough that a genuine population factor is already narrow and sharp.
+one short section rather than run through the whole document. Part of the
+reason is that these 929 samples contain no duplicates and no first-degree
+relative pairs at all (checked below), so the relative pairs that dominated
+the sparse 1000 Genomes factors are simply not present; and part is that
+HGDP populations are small and drifted enough that a genuine population
+factor is already narrow and sharp.
 
 Two things differ from the 1000 Genomes setting. HGDP is smaller and much
 more finely sampled --- 929 individuals from 54 populations in 7 regions,
@@ -55,6 +57,7 @@ library(fastTopics)
 meta   <- readRDS("../data/hgdp_meta.rds")
 fit    <- readRDS("../output/hgdp_fastica.rds")
 struct <- readRDS("../output/hgdp_structure.rds")
+kin    <- readRDS("../output/hgdp_kinship.rds")
 
 region_palette <- c(AFRICA             = "#E69F00",
                     MIDDLE_EAST        = "#D55E00",
@@ -347,8 +350,64 @@ table(droplevels(meta$pop[match(pc$dropped, meta$sample)]))
 ```
 
 Twenty-seven individuals in five clusters of 4--8, from BantuKenya, Bedouin,
-Druze, Makrani and Hazara. Clusters of that size and sharpness within a
-population are what close relatives look like.
+Druze, Makrani and Hazara.
+
+### Are those clusters relatives?
+
+The obvious reading, and the one the 1000 Genomes analysis would suggest, is
+that clusters that size and that sharp are close relatives. On these data
+that is mostly **wrong**, which is worth establishing rather than assuming.
+[`code/fit_hgdp_kinship.R`](https://github.com/stephenslab/misc/blob/master/code/fit_hgdp_kinship.R)
+computes KING-robust kinship for all 431,056 pairs from the same SNPs.
+
+```{r kinship-counts}
+kin$counts
+```
+
+There are **no duplicates and no first-degree pairs** among the 929. That is
+itself informative: the full HGDP-CEPH panel of 1064 needs 77 individuals
+removed to reach that state (Rosenberg 2006 defines the nested clean subsets
+H1048, H971 and H952 for exactly this purpose), so these samples must come
+from a relatedness-aware starting set, even though the sequencing paper's
+supplement documents its QC in terms of coverage, error rates, array
+concordance and cell-line artefacts rather than relatedness. Twenty pairs sit
+in the second-degree band and 69 in the third, and they are concentrated in
+Surui, Karitiana, Pima and Bougainville --- the smallest and most drifted
+populations, where KING-robust is inflated by background relatedness and a
+"second-degree" call need not be a pedigree relationship.
+
+Against that background, here is the maximum kinship of each dropped
+individual to anyone in the panel:
+
+```{r kinship-dropped}
+dm <- data.frame(sample = pc$dropped,
+                 pop = as.character(meta$pop[match(pc$dropped, meta$sample)]),
+                 max_kinship = round(kin$max_kinship[pc$dropped], 3))
+aggregate(max_kinship ~ pop, dm, function(x)
+  c(n = length(x), max = max(x), median = median(x)))
+```
+
+Only the BantuKenya cluster is clearly relatedness (0.121, second degree).
+Hazara reaches 0.084 and Druze 0.077, both third-degree at best. **Bedouin
+(0.037) and Makrani (0.034) show no detectable relatedness at all** --- those
+are genuine fine-scale substructure within a population, not families.
+
+The contrast is not blind to relatedness, though. Dropped individuals are
+enriched for it by about fivefold:
+
+```{r kinship-enrichment}
+rel3 <- kin$ids[kin$max_kinship > 0.0442]
+c(`dropped, in a 3rd-degree-or-closer pair` =
+    mean(pc$dropped %in% rel3),
+  `not dropped, same`                       =
+    mean(setdiff(kin$ids, pc$dropped) %in% rel3))
+```
+
+So the narrow factors pick up relatedness where it exists, but on this panel
+most of what they pick up is real population substructure. That makes the
+decision not to prune easier rather than harder: pruning would have thrown
+away four Bedouin-internal and four Makrani-internal signals that are not
+artifacts of anything.
 
 And the result of removing them:
 
