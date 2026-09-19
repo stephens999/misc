@@ -174,6 +174,50 @@ split_fits <- lapply(halves, function(cols) {
        fit = fit_one(e$U_c, 30))
 })
 
+# ---- the unconstrained maxima, for every fit --------------------------------
+#
+# The rank-1 maxima are the objects the analysis actually treats as real, so we
+# save them alongside the rank-r fits. For each whitened space we pool 1000
+# random rank-1 starts with rank-1 runs started from that space's K = 30
+# rank-r factors, and cluster the pooled results; the representatives are the
+# distinct maxima. Seeds match the ones used in the analysis file, so the two
+# agree.
+
+maxima_of <- function(U_c, L_rankr, n_starts = 1000, n_iter = 500, seed = 1) {
+  nk <- nrow(U_c)
+  U  <- sqrt(nk) * t(U_c[, 1:30, drop = FALSE])
+
+  set.seed(seed)
+  W <- matrix(rnorm(30 * n_starts), 30, n_starts)
+  W <- sweep(W, 2, sqrt(colSums(W^2)), "/")
+  for (i in seq_len(n_iter)) W <- r1_update(U, W)
+
+  W_k <- t(U_c[, 1:30, drop = FALSE]) %*% L_rankr / sqrt(nk)
+  for (i in seq_len(n_iter)) W_k <- r1_update(U, W_k)
+
+  L  <- cbind(t(U) %*% W, t(U) %*% W_k)
+  cl <- cutree(hclust(as.dist(1 - cor(L)), method = "complete"), h = 0.05)
+  j  <- match(unique(cl), cl)
+  M  <- L[, j, drop = FALSE]
+  rownames(M) <- rownames(U_c)
+  list(L          = M,
+       n_random   = sapply(unique(cl), function(k) sum(cl[seq_len(n_starts)] == k)),
+       from_rankr = sapply(unique(cl), function(k) any(cl[-seq_len(n_starts)] == k)))
+}
+
+maxima <- list(
+  full      = maxima_of(U_c,                    fits$k30$L),
+  no_sparse = maxima_of(no_sparse$U_c,          fit_no_sparse$L),
+  odd       = maxima_of(split_fits$odd$U_c,     split_fits$odd$fit$L),
+  even      = maxima_of(split_fits$even$U_c,    split_fits$even$fit$L))
+
+# Individuals retained in each fit, so a follow-up analysis can line the
+# sources up with the genotype matrix without recomputing anything.
+ids <- list(full      = rownames(Y),
+            no_sparse = rownames(Y)[keep_ind],
+            odd       = rownames(Y)[keep_ind],
+            even      = rownames(Y)[keep_ind])
+
 rm(Y); gc()
 
 saveRDS(list(fits      = fits,
@@ -189,5 +233,7 @@ saveRDS(list(fits      = fits,
                               d           = no_sparse$d,
                               U_c         = no_sparse$U_c[, 1:30, drop = FALSE],
                               fit         = fit_no_sparse),
-             split     = split_fits),
+             split     = split_fits,
+             maxima    = maxima,
+             ids       = ids),
         "output/tgp_fastica.rds")

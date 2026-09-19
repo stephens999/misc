@@ -11,3 +11,4 @@ analysis/*html
 analysis/*_cache
 data/refGene_hg19.txt.gz
 data/hgdp_hap_matrix.rds
+output/admixture/
