@@ -1,0 +1,2068 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Matthew Stephens" />
+
+<meta name="date" content="2026-09-18" />
+
+<title>Structure plots from fastICA sources on 1000 Genomes data</title>
+
+<script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">misc</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/stephens999/misc">source</a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Structure plots from fastICA sources on 1000 Genomes data</h1>
+<h4 class="author">Matthew Stephens</h4>
+<h4 class="date">2026-09-18</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2026-09-18
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>misc/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version 1.7.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed1code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(1)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed1code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(1)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree7bcee6eda389e7dd1ad157faffe47c86c84dad43targetblank7bcee6ea"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/7bcee6eda389e7dd1ad157faffe47c86c84dad43" target="_blank">7bcee6e</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree7bcee6eda389e7dd1ad157faffe47c86c84dad43targetblank7bcee6ea" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/7bcee6eda389e7dd1ad157faffe47c86c84dad43" target="_blank">7bcee6e</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    .claude/
+    Ignored:    GSE87571/
+    Ignored:    analysis/.RData
+    Ignored:    analysis/.Rhistory
+    Ignored:    analysis/ALStruct_cache/
+    Ignored:    analysis/binary_quad_comparison_cache/
+    Ignored:    analysis/ebproj_01.html
+    Ignored:    analysis/gset_G63_cache/
+    Ignored:    data/.Rhistory
+    Ignored:    data/hgdp_hap_matrix.rds
+    Ignored:    data/methylation-data-for-matthew.rds
+    Ignored:    data/pbmc/
+    Ignored:    data/pbmc_purified.RData
+    Ignored:    data/refGene_hg19.txt.gz
+    Ignored:    data/tgp_data_matrix.rds
+    Ignored:    data/tgp_meta.rds
+    Ignored:    output/admixture/
+
+Untracked files:
+    Untracked:  .dropbox
+    Untracked:  GSE41037/
+    Untracked:  Icon
+    Untracked:  Rplots.pdf
+    Untracked:  analysis/GHstan.Rmd
+    Untracked:  analysis/GTEX-cogaps.Rmd
+    Untracked:  analysis/PACS.Rmd
+    Untracked:  analysis/Rplot.png
+    Untracked:  analysis/Rplots.pdf
+    Untracked:  analysis/SPCAvRP.rmd
+    Untracked:  analysis/abf_comparisons.Rmd
+    Untracked:  analysis/admm_02.Rmd
+    Untracked:  analysis/admm_03.Rmd
+    Untracked:  analysis/binary_quad_comparison.Rmd
+    Untracked:  analysis/bispca.Rmd
+    Untracked:  analysis/cache/
+    Untracked:  analysis/cholesky.Rmd
+    Untracked:  analysis/compare-transformed-models.Rmd
+    Untracked:  analysis/cormotif.Rmd
+    Untracked:  analysis/cp_ash.Rmd
+    Untracked:  analysis/eQTL.perm.rand.pdf
+    Untracked:  analysis/eb_power2.Rmd
+    Untracked:  analysis/eb_prepilot.Rmd
+    Untracked:  analysis/eb_var.Rmd
+    Untracked:  analysis/ebpmf1.Rmd
+    Untracked:  analysis/ebpmf_sla_text.Rmd
+    Untracked:  analysis/ebproj_01.Rmd
+    Untracked:  analysis/ebproj_newton.Rmd
+    Untracked:  analysis/ebspca_sims.Rmd
+    Untracked:  analysis/explore_psvd.Rmd
+    Untracked:  analysis/fa_check_identify.Rmd
+    Untracked:  analysis/fa_iterative.Rmd
+    Untracked:  analysis/fastica_1kg_unwhitened.Rmd
+    Untracked:  analysis/fastica_heated.Rmd
+    Untracked:  analysis/fastica_unwhitened.Rmd
+    Untracked:  analysis/fastica_unwhitened_optim.Rmd
+    Untracked:  analysis/flash_cov_overlapping_groups_init.Rmd
+    Untracked:  analysis/flash_test_tree.Rmd
+    Untracked:  analysis/flashier_newgroups.Rmd
+    Untracked:  analysis/flashier_nmf_triples.Rmd
+    Untracked:  analysis/flashier_pbmc.Rmd
+    Untracked:  analysis/flashier_snn_shifted_prior.Rmd
+    Untracked:  analysis/greedy_ebpmf_exploration_00.Rmd
+    Untracked:  analysis/gset_G63.Rmd
+    Untracked:  analysis/ieQTL.perm.rand.pdf
+    Untracked:  analysis/lasso_em_03.Rmd
+    Untracked:  analysis/m6amash.Rmd
+    Untracked:  analysis/mash_bhat_z.Rmd
+    Untracked:  analysis/mash_ieqtl_permutations.Rmd
+    Untracked:  analysis/matrix_beta.Rmd
+    Untracked:  analysis/meth_flash_01.Rmd
+    Untracked:  analysis/methylation_example.Rmd
+    Untracked:  analysis/mixsqp.Rmd
+    Untracked:  analysis/mr.ash_lasso_init.Rmd
+    Untracked:  analysis/mr.mash.test.Rmd
+    Untracked:  analysis/mr_ash_modular.Rmd
+    Untracked:  analysis/mr_ash_parameterization.Rmd
+    Untracked:  analysis/mr_ash_ridge.Rmd
+    Untracked:  analysis/mv_gaussian_message_passing.Rmd
+    Untracked:  analysis/nejm.Rmd
+    Untracked:  analysis/nmf_bg.Rmd
+    Untracked:  analysis/nonneg_underapprox.Rmd
+    Untracked:  analysis/normal_conditional_on_r2.Rmd
+    Untracked:  analysis/normalize.Rmd
+    Untracked:  analysis/pbmc.Rmd
+    Untracked:  analysis/pca_binary_weighted.Rmd
+    Untracked:  analysis/pca_l1.Rmd
+    Untracked:  analysis/poisson_nmf_approx.Rmd
+    Untracked:  analysis/poisson_shrink.Rmd
+    Untracked:  analysis/poisson_transform.Rmd
+    Untracked:  analysis/qrnotes.txt
+    Untracked:  analysis/ridge_iterative_02.Rmd
+    Untracked:  analysis/ridge_iterative_splitting.Rmd
+    Untracked:  analysis/samps/
+    Untracked:  analysis/sc_bimodal.Rmd
+    Untracked:  analysis/shrinkage_comparisons_changepoints.Rmd
+    Untracked:  analysis/susie_cov.Rmd
+    Untracked:  analysis/susie_en.Rmd
+    Untracked:  analysis/susie_z_investigate.Rmd
+    Untracked:  analysis/svd-timing.Rmd
+    Untracked:  analysis/temp.RDS
+    Untracked:  analysis/temp.Rmd
+    Untracked:  analysis/test-figure/
+    Untracked:  analysis/test.Rmd
+    Untracked:  analysis/test.Rpres
+    Untracked:  analysis/test.md
+    Untracked:  analysis/test_qr.R
+    Untracked:  analysis/test_sparse.Rmd
+    Untracked:  analysis/tree_dist_top_eigenvector.Rmd
+    Untracked:  analysis/z.txt
+    Untracked:  code/coordinate_descent_symNMF.R
+    Untracked:  code/multivariate_testfuncs.R
+    Untracked:  code/rqb.hacked.R
+    Untracked:  code/write_plink_bed.R
+    Untracked:  data/4matthew/
+    Untracked:  data/4matthew2/
+    Untracked:  data/E-MTAB-2805.processed.1/
+    Untracked:  data/ENSG00000156738.Sim_Y2.RDS
+    Untracked:  data/G63
+    Untracked:  data/GDS5363_full.soft.gz
+    Untracked:  data/GSE41265_allGenesTPM.txt
+    Untracked:  data/Muscle_Skeletal.ACTN3.pm1Mb.RDS
+    Untracked:  data/P.rds
+    Untracked:  data/Thyroid.FMO2.pm1Mb.RDS
+    Untracked:  data/bmass.HaemgenRBC2016.MAF01.Vs2.MergedDataSources.200kRanSubset.ChrBPMAFMarkerZScores.vs1.txt.gz
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.PreviousSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/eb_prepilot/
+    Untracked:  data/finemap_data/fmo2.sim/b.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/data
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.ld
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.z
+    Untracked:  data/finemap_data/fmo2.sim/pos.txt
+    Untracked:  data/logm.csv
+    Untracked:  data/m.cd.RDS
+    Untracked:  data/m.cdu.old.RDS
+    Untracked:  data/m.new.cd.RDS
+    Untracked:  data/m.old.cd.RDS
+    Untracked:  data/mainbib.bib.old
+    Untracked:  data/mat.csv
+    Untracked:  data/mat.txt
+    Untracked:  data/mat_new.csv
+    Untracked:  data/matrix_lik.rds
+    Untracked:  data/paintor_data/
+    Untracked:  data/running_data_chris.csv
+    Untracked:  data/running_data_matthew.csv
+    Untracked:  data/temp.txt
+    Untracked:  data/y.txt
+    Untracked:  data/y_f.txt
+    Untracked:  data/zscore_jointLCLs_m6AQTLs_susie_eQTLpruned.rds
+    Untracked:  data/zscore_jointLCLs_random.rds
+    Untracked:  explore_udi.R
+    Untracked:  output/fit.k10.rds
+    Untracked:  output/fit.nn.pbmc.purified.rds
+    Untracked:  output/fit.nn.rds
+    Untracked:  output/fit.nn.s.001.rds
+    Untracked:  output/fit.nn.s.01.rds
+    Untracked:  output/fit.nn.s.1.rds
+    Untracked:  output/fit.nn.s.10.rds
+    Untracked:  output/fit.snn.s.001.rds
+    Untracked:  output/fit.snn.s.01.nninit.rds
+    Untracked:  output/fit.snn.s.01.rds
+    Untracked:  output/fit.varbvs.RDS
+    Untracked:  output/fit2.nn.pbmc.purified.rds
+    Untracked:  output/glmnet.fit.RDS
+    Untracked:  output/snn07.txt
+    Untracked:  output/snn34.txt
+    Untracked:  output/test.bv.txt
+    Untracked:  output/test.gamma.txt
+    Untracked:  output/test.hyp.txt
+    Untracked:  output/test.log.txt
+    Untracked:  output/test.param.txt
+    Untracked:  output/test2.bv.txt
+    Untracked:  output/test2.gamma.txt
+    Untracked:  output/test2.hyp.txt
+    Untracked:  output/test2.log.txt
+    Untracked:  output/test2.param.txt
+    Untracked:  output/test3.bv.txt
+    Untracked:  output/test3.gamma.txt
+    Untracked:  output/test3.hyp.txt
+    Untracked:  output/test3.log.txt
+    Untracked:  output/test3.param.txt
+    Untracked:  output/test4.bv.txt
+    Untracked:  output/test4.gamma.txt
+    Untracked:  output/test4.hyp.txt
+    Untracked:  output/test4.log.txt
+    Untracked:  output/test4.param.txt
+    Untracked:  output/test5.bv.txt
+    Untracked:  output/test5.gamma.txt
+    Untracked:  output/test5.hyp.txt
+    Untracked:  output/test5.log.txt
+    Untracked:  output/test5.param.txt
+
+Unstaged changes:
+    Modified:   analysis/eb_snmu.Rmd
+    Modified:   analysis/ebnm_binormal.Rmd
+    Modified:   analysis/ebpower.Rmd
+    Modified:   analysis/fastica_asymmetric_03.Rmd
+    Modified:   analysis/fastica_bm_spd.Rmd
+    Modified:   analysis/flashier_log1p.Rmd
+    Modified:   analysis/flashier_sla_text.Rmd
+    Modified:   analysis/logistic_z_scores.Rmd
+    Modified:   analysis/mr_ash_pen.Rmd
+    Modified:   analysis/nmu_em.Rmd
+    Modified:   analysis/susie_flash.Rmd
+    Modified:   analysis/tap_free_energy.Rmd
+    Modified:   misc.Rproj
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/fastica_1kg_structure.Rmd</code>) and HTML (<code>docs/fastica_1kg_structure.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/7bcee6eda389e7dd1ad157faffe47c86c84dad43/analysis/fastica_1kg_structure.Rmd" target="_blank">7bcee6e</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-18
+</td>
+<td>
+Add structure plots from the 1000 Genomes fastICA sources
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>This follows up <a href="fastica_1kg.html"><code>fastica_1kg</code></a>, which fitted fastICA with the <span class="math inline">\(x|x|\)</span> contrast to the 1000 Genomes genotype data and argued that the objects worth taking seriously are the <em>unconstrained rank-1 maxima</em> rather than the factors of any one rank-<span class="math inline">\(r\)</span> fit. Here we turn those sources into structure plots.</p>
+<p>A structure plot needs non-negative memberships, which signed ICA sources are not. But the <span class="math inline">\(x|x|\)</span> sources are one-sided — most loadings near zero, a minority large and positive — so their positive parts may serve directly. Take <span class="math display">\[
+A = \max(L, 0), \qquad X \approx AB + E \ \text{fitted by least squares},
+\]</span> and <em>if</em> <span class="math inline">\(B\)</span> comes out non-negative, rescale each row of <span class="math inline">\(B\)</span> to sum to 1 and scale the corresponding column of <span class="math inline">\(A\)</span> to compensate. The rows of <span class="math inline">\(A\)</span> are then memberships on a common scale, ready for a stacked bar plot. Their sums need not be 1, which <code>fastTopics::structure_plot</code> handles by letting bars differ in height.</p>
+<p>Two points about the centering, which is the thing that makes this awkward. There is <strong>no intercept column</strong> in <span class="math inline">\(A\)</span>, and none is needed: every individual has at least one positive source, so the positive parts already span the mean. Adding one is actively harmful — with an intercept the remaining rows of <span class="math inline">\(B\)</span> become <em>increments</em> to allele frequency, which are necessarily signed, and about half of <span class="math inline">\(B\)</span> goes negative. Fitting the uncentered <span class="math inline">\(X\)</span> with no intercept is what keeps <span class="math inline">\(B\)</span> non-negative.</p>
+<p>Whether <span class="math inline">\(B \ge 0\)</span> really holds is an empirical question, and it is the main thing this analysis checks.</p>
+<pre class="r"><code>library(ggplot2)
+library(cowplot)
+library(fastTopics)
+
+meta   &lt;- readRDS(&quot;../data/tgp_meta.rds&quot;)
+fit    &lt;- readRDS(&quot;../output/tgp_fastica.rds&quot;)
+struct &lt;- readRDS(&quot;../output/tgp_structure.rds&quot;)
+
+pop_order &lt;- c(&quot;LWK&quot;,&quot;ESN&quot;,&quot;YRI&quot;,&quot;MSL&quot;,&quot;GWD&quot;,&quot;ACB&quot;,&quot;ASW&quot;,     # AFR
+               &quot;CLM&quot;,&quot;MXL&quot;,&quot;PUR&quot;,&quot;PEL&quot;,                       # AMR
+               &quot;TSI&quot;,&quot;IBS&quot;,&quot;GBR&quot;,&quot;CEU&quot;,&quot;FIN&quot;,                 # EUR
+               &quot;PJL&quot;,&quot;GIH&quot;,&quot;ITU&quot;,&quot;STU&quot;,&quot;BEB&quot;,                 # SAS
+               &quot;CDX&quot;,&quot;KHV&quot;,&quot;CHS&quot;,&quot;CHB&quot;,&quot;JPT&quot;)                 # EAS
+meta$pop &lt;- factor(as.character(meta$pop), levels = pop_order)
+
+sp_palette &lt;- c(AFR = &quot;#E69F00&quot;, AMR = &quot;#D55E00&quot;, EUR = &quot;#7570B3&quot;,
+                SAS = &quot;#1B9E77&quot;, EAS = &quot;#0072B2&quot;)</code></pre>
+<p>The sources come from <a href="https://github.com/stephens999/misc/blob/master/code/fit_tgp_fastica.R"><code>code/fit_tgp_fastica.R</code></a>, which saves every fit made in the previous analysis: the rank-<span class="math inline">\(r\)</span> fits at <span class="math inline">\(K = 20\)</span> and <span class="math inline">\(K = 30\)</span> on the full data, the <span class="math inline">\(K = 30\)</span> fit with the 40 sparse-factor individuals pruned, the two chromosome-half fits, and the rank-1 maxima of each of those four whitened spaces. The least-squares <span class="math inline">\(B\)</span> and its diagnostics are computed separately, in <a href="https://github.com/stephens999/misc/blob/master/code/fit_tgp_structure.R"><code>code/fit_tgp_structure.R</code></a>, since that needs the genotype matrix; the chromosome halves are fit against their own half of the SNPs.</p>
+</div>
+<div id="does-b-ge-0-hold" class="section level2">
+<h2>Does <span class="math inline">\(B \ge 0\)</span> hold?</h2>
+<pre class="r"><code>sets &lt;- setdiff(names(struct), &quot;half_match&quot;)
+tab &lt;- do.call(rbind, lapply(sets, function(nm) {
+  s &lt;- struct[[nm]]
+  data.frame(sources = nm, K = s$K, `frac B &lt; -0.01` = round(s$frac_lt, 4),
+             min_B = round(s$min_B, 3), R2 = round(s$r2, 3),
+             check.names = FALSE, row.names = NULL)
+}))
+tab[order(tab$`frac B &lt; -0.01`), ]</code></pre>
+<pre><code>           sources  K frac B &lt; -0.01  min_B    R2
+5    pruned_maxima 14         0.0000 -0.023 0.680
+9      even_maxima 10         0.0000 -0.027 0.637
+7       odd_maxima 11         0.0005 -0.259 0.652
+3      full_maxima 17         0.0006 -0.032 0.634
+10  odd_k30_stable 15         0.0341 -0.119 0.607
+11 even_k30_stable 15         0.0500 -0.235 0.579
+6          odd_k30 30         0.0975 -0.606 0.668
+2         full_k30 30         0.1011 -0.409 0.583
+1         full_k20 20         0.1084 -0.261 0.519
+8         even_k30 30         0.1172 -0.813 0.672
+4       pruned_k30 30         0.1474 -0.508 0.642</code></pre>
+<p>For every set of <strong>rank-1 maxima</strong> — full data, pruned, odd chromosomes, even chromosomes — <span class="math inline">\(B\)</span> is non-negative to within rounding: at most 0.06% of entries below <span class="math inline">\(-0.01\)</span>, against a mean <span class="math inline">\(|B|\)</span> of order <span class="math inline">\(0.1\)</span>. Clipping those at zero changes nothing.</p>
+<p>For every <strong>rank-<span class="math inline">\(r\)</span> fit</strong> it fails: 10–15% of entries below <span class="math inline">\(-0.01\)</span>, with minima from <span class="math inline">\(-0.26\)</span> to <span class="math inline">\(-0.81\)</span>. So the construction works for the maxima and not for the rank-<span class="math inline">\(r\)</span> factors, in all four whitened spaces independently. That is a fifth respect — after the local-maximum test, basin sizes, replication across SNP halves, and initialization experiments — in which the maxima behave like real structure and a rank-<span class="math inline">\(r\)</span> factor set does not.</p>
+<p>The structure plots below therefore use maxima only.</p>
+</div>
+<div id="building-the-memberships" class="section level2">
+<h2>Building the memberships</h2>
+<pre class="r"><code>hm  &lt;- struct$half_match
+src &lt;- list(
+  `pruned maxima (K=14)` = list(L = fit$maxima$no_sparse$L, key = &quot;pruned_maxima&quot;),
+  `full maxima (K=17)`   = list(L = fit$maxima$full$L,      key = &quot;full_maxima&quot;),
+  `odd maxima (K=11)`    = list(L = fit$maxima$odd$L,       key = &quot;odd_maxima&quot;),
+  `even maxima (K=10)`   = list(L = fit$maxima$even$L,      key = &quot;even_maxima&quot;),
+  `odd K=30 stable`      = list(L = fit$split$odd$fit$L[, hm$stable, drop = FALSE],
+                                key = &quot;odd_k30_stable&quot;),
+  `even K=30 stable`     = list(L = fit$split$even$fit$L[, hm$perm[hm$stable], drop = FALSE],
+                                key = &quot;even_k30_stable&quot;))
+
+# A = pmax(L, 0) with columns rescaled so the rows of B sum to 1, factors
+# ordered and labelled by the populations they carry.
+memberships &lt;- function(name) {
+  L   &lt;- src[[name]]$L
+  r   &lt;- struct[[src[[name]]$key]]$r
+  pop &lt;- meta$pop[match(rownames(L), meta$sample)]
+
+  w &lt;- pmax(L, 0)^2
+  o &lt;- order(colSums(w * as.integer(pop)) / colSums(w))
+  A &lt;- sweep(pmax(L[, o, drop = FALSE], 0), 2, r[o], &quot;*&quot;)
+
+  colnames(A) &lt;- make.unique(apply(L[, o, drop = FALSE], 2, function(x) {
+    v &lt;- tapply(x, pop, mean); v &lt;- sort(v[v &gt; 0], decreasing = TRUE)
+    paste(names(v)[v &gt;= 0.3 * v[1]], collapse = &quot;/&quot;)
+  }))
+  A &lt;- A / mean(rowSums(A))     # bar heights on a scale of about 1
+
+  # An individual with no positive loading on any source has no membership
+  # representation at all; drop those and record how many.
+  zero &lt;- rowSums(A) == 0
+  list(A = A[!zero, , drop = FALSE], pop = droplevels(pop[!zero]),
+       n_dropped = sum(zero), o = o)
+}
+
+plot_structure &lt;- function(name, normalize = FALSE, colors = NULL) {
+  m &lt;- memberships(name)
+  A &lt;- if (normalize) m$A / rowSums(m$A) else m$A
+  if (is.null(colors)) colors &lt;- Polychrome::kelly.colors()[2:(ncol(A) + 1)]
+  structure_plot(A, grouping = m$pop, colors = colors,
+                 gap = 16, verbose = FALSE) +
+    labs(y = &quot;membership&quot;,
+         title = sprintf(&quot;%s%s%s&quot;, name,
+                         if (normalize) &quot; (normalized)&quot; else &quot; (unnormalized)&quot;,
+                         if (m$n_dropped) sprintf(&quot; - %d individual(s) dropped&quot;,
+                                                  m$n_dropped) else &quot;&quot;))
+}</code></pre>
+<p>The normalized plots show composition; the unnormalized ones keep the bar heights, which carry information the normalized version discards — a short bar is an individual poorly explained by all the factors in that set.</p>
+<pre class="r"><code>sapply(names(src), function(nm) {
+  h &lt;- rowSums(memberships(nm)$A)
+  round(c(min = min(h), median = median(h), max = max(h)), 2)
+})</code></pre>
+<pre><code>       pruned maxima (K=14) full maxima (K=17) odd maxima (K=11)
+min                    0.06               0.01              0.07
+median                 1.07               1.13              1.04
+max                    2.51               2.69              2.39
+       even maxima (K=10) odd K=30 stable even K=30 stable
+min                  0.02            0.00             0.00
+median               1.05            1.09             1.02
+max                  2.22            3.18             9.58</code></pre>
+</div>
+<div id="pruned-data-14-maxima" class="section level2 tabset">
+<h2 class="tabset">Pruned data, 14 maxima</h2>
+<p>The cleanest set: the 14 maxima of the pruned data, all of which replicate across SNP halves and are reachable from random starts.</p>
+<div id="normalized" class="section level3">
+<h3>Normalized</h3>
+<pre class="r"><code>plot_structure(&quot;pruned maxima (K=14)&quot;, normalize = TRUE)</code></pre>
+<p><img src="figure/fastica_1kg_structure.Rmd/pruned-norm-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+</div>
+<div id="unnormalized" class="section level3">
+<h3>Unnormalized</h3>
+<pre class="r"><code>plot_structure(&quot;pruned maxima (K=14)&quot;)</code></pre>
+<p><img src="figure/fastica_1kg_structure.Rmd/pruned-raw-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="section" class="section level2 unnumbered">
+<h2 class="unnumbered"></h2>
+<p>The normalized version is close to a hard population assignment — LWK 97%, ESN/YRI 98%, GWD 97%, TSI 93%, CDX 95% and JPT 92% on their own factors — with mixture where mixture is expected. ASW comes out 60% ESN/YRI with 11% GBR/CEU and 9% LWK; CLM 37% PEL/MXL and 33% TSI/IBS; IBS 61% TSI/IBS and 25% GBR/CEU; FIN 80% its own factor and 15% GBR/CEU; CHS 65% CHB/CHS and 30% CDX/KHV; PJL splits 38/42 with STU/ITU/BEB. These are the expected admixture patterns, read off ICA sources rather than fitted under a non-negativity constraint.</p>
+</div>
+<div id="full-data-17-maxima" class="section level2 tabset">
+<h2 class="tabset">Full data, 17 maxima</h2>
+<p>The same for the unpruned data, where three of the 17 maxima are the sparse relative and subgroup factors.</p>
+<div id="normalized-1" class="section level3">
+<h3>Normalized</h3>
+<pre class="r"><code>plot_structure(&quot;full maxima (K=17)&quot;, normalize = TRUE)</code></pre>
+<p><img src="figure/fastica_1kg_structure.Rmd/full-norm-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+</div>
+<div id="unnormalized-1" class="section level3">
+<h3>Unnormalized</h3>
+<pre class="r"><code>plot_structure(&quot;full maxima (K=17)&quot;)</code></pre>
+<p><img src="figure/fastica_1kg_structure.Rmd/full-raw-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="chromosome-halves-maxima" class="section level2 tabset">
+<h2 class="tabset">Chromosome halves, maxima</h2>
+<p>The stability check as structure plots: the halves are independent SNP sets, so agreement between the two is evidence the memberships do not depend on which markers were used. They find 11 and 10 maxima respectively.</p>
+<div id="odd-normalized" class="section level3">
+<h3>Odd, normalized</h3>
+<pre class="r"><code>plot_structure(&quot;odd maxima (K=11)&quot;, normalize = TRUE)</code></pre>
+<p><img src="figure/fastica_1kg_structure.Rmd/odd-norm-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+</div>
+<div id="odd-unnormalized" class="section level3">
+<h3>Odd, unnormalized</h3>
+<pre class="r"><code>plot_structure(&quot;odd maxima (K=11)&quot;)</code></pre>
+<p><img src="figure/fastica_1kg_structure.Rmd/odd-raw-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+</div>
+<div id="even-normalized" class="section level3">
+<h3>Even, normalized</h3>
+<pre class="r"><code>plot_structure(&quot;even maxima (K=10)&quot;, normalize = TRUE)</code></pre>
+<p><img src="figure/fastica_1kg_structure.Rmd/even-norm-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+</div>
+<div id="even-unnormalized" class="section level3">
+<h3>Even, unnormalized</h3>
+<pre class="r"><code>plot_structure(&quot;even maxima (K=10)&quot;)</code></pre>
+<p><img src="figure/fastica_1kg_structure.Rmd/even-raw-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="stability-pruned-k-30" class="section level2 tabset">
+<h2 class="tabset">Stability-pruned K = 30</h2>
+<p>The rank-<span class="math inline">\(r\)</span> fits fail the <span class="math inline">\(B \ge 0\)</span> check, but it is worth asking how much of that is down to the factors that do not replicate. Matching the two half fits factor to factor and keeping only the pairs that agree leaves 15 of the 30, with matched correlations from 0.48 to 0.91; the 15 discarded sit at 0.09 and below.</p>
+<p>Pruning does help, but not enough: <span class="math inline">\(B\)</span> below <span class="math inline">\(-0.01\)</span> falls from 9.8% to 3.4% of entries on the odd half and from 11.7% to 5.0% on the even, against 0.05% or less for the maxima. So the non-replicating factors are part of the problem and not the whole of it — even the replicating rank-<span class="math inline">\(r\)</span> factors do not give non-negative <span class="math inline">\(B\)</span> the way the maxima do.</p>
+<p>Two further things to note when reading these plots. Restricting to 15 of the 30 factors leaves a fair number of individuals with no positive loading on any retained factor — 47 on the odd half and 17 on the even — and those are dropped, against one individual for the worst of the maxima sets. And the even half has a single bar of height 9.6 against a 99th percentile of 2.2, so the unnormalized plot there is dominated by one individual.</p>
+<div id="odd-normalized-1" class="section level3">
+<h3>Odd, normalized</h3>
+<pre class="r"><code>plot_structure(&quot;odd K=30 stable&quot;, normalize = TRUE)</code></pre>
+<p><img src="figure/fastica_1kg_structure.Rmd/odd-stable-norm-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+</div>
+<div id="odd-unnormalized-1" class="section level3">
+<h3>Odd, unnormalized</h3>
+<pre class="r"><code>plot_structure(&quot;odd K=30 stable&quot;)</code></pre>
+<p><img src="figure/fastica_1kg_structure.Rmd/odd-stable-raw-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+</div>
+<div id="even-normalized-1" class="section level3">
+<h3>Even, normalized</h3>
+<pre class="r"><code>plot_structure(&quot;even K=30 stable&quot;, normalize = TRUE)</code></pre>
+<p><img src="figure/fastica_1kg_structure.Rmd/even-stable-norm-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+</div>
+<div id="even-unnormalized-1" class="section level3">
+<h3>Even, unnormalized</h3>
+<pre class="r"><code>plot_structure(&quot;even K=30 stable&quot;)</code></pre>
+<p><img src="figure/fastica_1kg_structure.Rmd/even-stable-raw-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="comparison-with-an-admixture-run-at-k-12" class="section level2">
+<h2>Comparison with an ADMIXTURE run at K = 12</h2>
+<p>For an external point of reference, here is our 14-factor result recoloured to match an ADMIXTURE-style run on the same data at <span class="math inline">\(K = 12\)</span>, with that run’s <span class="math inline">\(K = 12\)</span> panel directly below it. The populations are in the same order and the bar widths are proportional to sample size in both, so the two line up.</p>
+<p>The colours were read off the <span class="math inline">\(K = 12\)</span> panel: for each population we took the modal colour of its column, which is the colour of whichever component dominates it. Our factors then take the colour of the component covering the same populations. Where our <span class="math inline">\(K = 14\)</span> splits something the <span class="math inline">\(K = 12\)</span> does not, the extra factor gets a darker shade of the same hue rather than a new colour, so the correspondence stays readable:</p>
+<pre class="r"><code>k12_colors &lt;- c(
+  &quot;LWK&quot;             = &quot;#0048f0&quot;,   # exact matches to the K = 12 components
+  &quot;ESN/YRI/ACB/ASW&quot; = &quot;#18f000&quot;,
+  &quot;GWD&quot;             = &quot;#f00000&quot;,
+  &quot;PUR&quot;             = &quot;#f000d8&quot;,
+  &quot;PEL/MXL&quot;         = &quot;#90f000&quot;,
+  &quot;TSI/IBS&quot;         = &quot;#a00090&quot;,   # darker: K = 12 has TSI with PUR/CLM
+  &quot;GBR/CEU&quot;         = &quot;#f06000&quot;,
+  &quot;FIN&quot;             = &quot;#f0d800&quot;,
+  &quot;PJL&quot;             = &quot;#00c0f0&quot;,
+  &quot;GIH&quot;             = &quot;#1800f0&quot;,
+  &quot;STU/ITU/BEB&quot;     = &quot;#0080a0&quot;,   # darker: K = 12 has these with PJL
+  &quot;CDX/KHV&quot;         = &quot;#00f0c0&quot;,
+  &quot;CHB/CHS&quot;         = &quot;#6000a0&quot;,   # darker: K = 12 has CHS with CDX/KHV
+  &quot;JPT&quot;             = &quot;#9000f0&quot;)
+
+# The palette is keyed by factor label, so check it lines up with the plot.
+m14 &lt;- memberships(&quot;pruned maxima (K=14)&quot;)
+stopifnot(identical(colnames(m14$A), names(k12_colors)))</code></pre>
+<pre class="r"><code>plot_structure(&quot;pruned maxima (K=14)&quot;, normalize = TRUE,
+               colors = unname(k12_colors)) +
+  labs(title = &quot;Ours: 14 maxima, pruned data, recoloured to match K = 12 below&quot;)</code></pre>
+<p><img src="figure/fastica_1kg_structure.Rmd/k12-ours-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>img &lt;- png::readPNG(&quot;../data/admixture_k12.png&quot;)
+grid::grid.newpage()
+grid::grid.raster(img)</code></pre>
+<p><img src="figure/fastica_1kg_structure.Rmd/k12-theirs-1.png" alt="" width="1350" style="display: block; margin: auto;" /></p>
+<p>Read together, the two agree on most of the structure and differ in resolution in ways the <span class="math inline">\(K\)</span> difference predicts. Both give LWK its own component, both put ESN/YRI/ACB/ASW together with ACB and ASW as gradients, both separate MSL/GWD from the other African populations, both give FIN its own component, and both group the four South Asian populations with GIH set apart.</p>
+<p>The visible differences are the ones where our extra two factors buy resolution: the <span class="math inline">\(K = 12\)</span> run puts TSI with CLM and PUR in a single component (magenta) where we split PUR from TSI/IBS, and it groups CHS with CDX/KHV where we split CDX/KHV from CHB/CHS. Our decomposition is also markedly less gradual within populations — their bars vary continuously across individuals within a population, ours are closer to flat — which follows from the <span class="math inline">\(x|x|\)</span> contrast rewarding one-sided factors.</p>
+</div>
+<div id="correlations-between-the-components-allele-frequencies" class="section level2">
+<h2>Correlations between the components’ allele frequencies</h2>
+<p>Each row of <span class="math inline">\(B\)</span> is a component’s estimated allele frequency profile across the 185,116 SNPs, so the <span class="math inline">\(K \times K\)</span> correlation matrix of <span class="math inline">\(B\)</span> says how similar the components are as populations. Focusing on the <span class="math inline">\(K = 14\)</span> result:</p>
+<pre class="r"><code>m14 &lt;- memberships(&quot;pruned maxima (K=14)&quot;)
+C   &lt;- struct$pruned_maxima$cor_B[m14$o, m14$o]
+dimnames(C) &lt;- list(colnames(m14$A), colnames(m14$A))
+round(range(C[upper.tri(C)]), 3)</code></pre>
+<pre><code>[1] 0.598 0.987</code></pre>
+<p>Every off-diagonal entry is large, between 0.60 and 0.99. That is expected rather than informative on its own: because there is no intercept column, each row of <span class="math inline">\(B\)</span> is an <em>absolute</em> frequency profile, and all fourteen share the overall allele frequency spectrum of the data. What matters is the pattern in those high values, so the colour scale below spans the observed range rather than starting at zero.</p>
+<pre class="r"><code>heat &lt;- function(M, title) {
+  df &lt;- data.frame(
+    i = factor(rep(rownames(M), ncol(M)), levels = rev(rownames(M))),
+    j = factor(rep(colnames(M), each = nrow(M)), levels = colnames(M)),
+    r = as.vector(M))
+  ggplot(df, aes(j, i, fill = r)) +
+    geom_tile() +
+    geom_text(aes(label = sprintf(&quot;%.2f&quot;, r)), size = 2.1,
+              colour = ifelse(df$r &gt; mean(range(df$r)), &quot;white&quot;, &quot;grey20&quot;)) +
+    scale_fill_viridis_c(limits = range(M), option = &quot;mako&quot;, direction = -1) +
+    labs(x = NULL, y = NULL, fill = &quot;cor&quot;, title = title) +
+    theme_cowplot(font_size = 9) +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+}
+heat(C, &quot;Correlation of estimated allele frequencies, K = 14&quot;)</code></pre>
+<p><img src="figure/fastica_1kg_structure.Rmd/corB-heatmap-1.png" alt="" width="624" style="display: block; margin: auto;" /></p>
+<p>The structure is the expected continental one, in four blocks along the diagonal:</p>
+<ul>
+<li><strong>Africa</strong> (LWK, ESN/YRI/ACB/ASW, GWD) mutually 0.96–0.98, and the most distinct from everything else at 0.60–0.74.</li>
+<li><strong>Europe and the Americas</strong> (PUR, TSI/IBS, GBR/CEU, FIN) mutually 0.95–0.99.</li>
+<li><strong>South Asia</strong> (PJL, GIH, STU/ITU/BEB) mutually 0.96–0.98.</li>
+<li><strong>East Asia</strong> (CDX/KHV, CHB/CHS, JPT) mutually 0.97–0.98.</li>
+</ul>
+<p>Two features are worth pointing out. Africa being the most differentiated block is what the out-of-Africa history predicts, and it falls out of the correlations without anything being fitted to produce it. And PEL/MXL does not sit cleanly in any block: 0.88 with PUR, 0.83–0.84 with the European components, but 0.85–0.86 with the East Asian ones, which is the signature of Native American ancestry being closer to East Asia than to Europe. It is the only component whose highest correlations are split across two continents.</p>
+<p>Reordering by hierarchical clustering on <span class="math inline">\(1 - r\)</span> rather than by population makes the grouping explicit:</p>
+<pre class="r"><code>ord &lt;- hclust(as.dist(1 - C), method = &quot;average&quot;)$order
+heat(C[ord, ord], &quot;Same, ordered by hierarchical clustering&quot;)</code></pre>
+<p><img src="figure/fastica_1kg_structure.Rmd/corB-clustered-1.png" alt="" width="624" style="display: block; margin: auto;" /></p>
+<p>Because all of them share the frequency spectrum, the raw correlations are a weak summary: the interesting variation sits in the third decimal place. It is worth removing the shared component, which is what the next subsection does.</p>
+<div id="pairwise-scatter-plots-and-outliers" class="section level3">
+<h3>Pairwise scatter plots and outliers</h3>
+<p>The correlations above are aggregate; a scatter plot of each high-correlation pair shows whether the agreement is uniform across SNPs or whether particular SNPs break it. We take the 14 pairs with <span class="math inline">\(r &gt; 0.95\)</span>, fit a least-squares line to each, and flag SNPs whose standardized residual exceeds 6 in absolute value.</p>
+<pre class="r"><code>B &lt;- readRDS(&quot;../output/tgp_B_pruned_maxima.rds&quot;)[m14$o, ]
+rownames(B) &lt;- colnames(m14$A)
+
+hi &lt;- which(upper.tri(C) &amp; C &gt; 0.95, arr.ind = TRUE)
+pairs_df &lt;- do.call(rbind, lapply(seq_len(nrow(hi)), function(k) {
+  i &lt;- hi[k, 1]; j &lt;- hi[k, 2]
+  z &lt;- local({ r &lt;- residuals(lm(B[j, ] ~ B[i, ])); r / sd(r) })
+  data.frame(pair = sprintf(&quot;%s vs %s\n(r = %.3f)&quot;, rownames(B)[i],
+                            rownames(B)[j], C[i, j]),
+             snp = colnames(B), x = B[i, ], y = B[j, ], z = z,
+             row.names = NULL)
+}))
+pairs_df$outlier &lt;- abs(pairs_df$z) &gt; 6
+
+# Nearest gene for every SNP, from the UCSC hg19 refGene table via
+# code/annotate_snps.R. GRCh37 is the build these data use; the installed
+# org.Hs.eg.db is GRCh38 and would be offset by hundreds of kb here.
+genes &lt;- readRDS(&quot;../output/tgp_snp_genes.rds&quot;)
+pairs_df$gene &lt;- genes$gene[match(pairs_df$snp, genes$snp)]
+pairs_df$dist &lt;- genes$dist[match(pairs_df$snp, genes$snp)]
+# Label with the gene, marking those the SNP is not actually inside.
+pairs_df$label &lt;- ifelse(pairs_df$dist == 0, pairs_df$gene,
+                         sprintf(&quot;%s*&quot;, pairs_df$gene))
+# Within a panel, several outlier SNPs often sit in the same gene (the LCT
+# region contributes 22 points to one panel). Label only the most extreme SNP
+# per gene per panel; the region table below keeps the full detail.
+pairs_df$label[pairs_df$outlier] &lt;- local({
+  d &lt;- pairs_df[pairs_df$outlier, ]
+  keep &lt;- ave(abs(d$z), d$pair, d$gene, FUN = function(z) z == max(z)) == 1
+  ifelse(keep, d$label, NA_character_)
+})
+
+# All flagged points are kept; the bulk is thinned for rendering only.
+set.seed(1)
+bulk &lt;- pairs_df[!pairs_df$outlier, ]
+bulk &lt;- bulk[sample(nrow(bulk), 3e4), ]
+plot_df &lt;- rbind(bulk, pairs_df[pairs_df$outlier, ])
+c(pairs = nrow(hi), flagged = sum(pairs_df$outlier),
+  distinct_snps = length(unique(pairs_df$snp[pairs_df$outlier])))</code></pre>
+<pre><code>        pairs       flagged distinct_snps 
+           14            70            48 </code></pre>
+<pre class="r"><code>ggplot(plot_df, aes(x, y)) +
+  geom_point(data = subset(plot_df, !outlier), size = 0.15, alpha = 0.25,
+             colour = &quot;grey55&quot;) +
+  geom_point(data = subset(plot_df, outlier), size = 0.9, colour = &quot;#D55E00&quot;) +
+  ggrepel::geom_text_repel(data = subset(plot_df, outlier &amp; !is.na(label)),
+                           aes(label = label), size = 3.7, colour = &quot;#8a3800&quot;,
+                           fontface = &quot;italic&quot;,
+                           segment.size = 0.2, segment.colour = &quot;grey55&quot;,
+                           min.segment.length = 0, max.overlaps = Inf,
+                           box.padding = 0.3, point.padding = 0.2) +
+  facet_wrap(~ pair, ncol = 4, scales = &quot;free&quot;) +
+  labs(x = &quot;allele frequency, first component&quot;,
+       y = &quot;allele frequency, second component&quot;,
+       caption = &quot;* = nearest gene, SNP not inside it&quot;) +
+  theme_cowplot(font_size = 12) +
+  theme(strip.text = element_text(size = 11, lineheight = 0.9),
+        strip.background = element_rect(fill = &quot;grey92&quot;, colour = NA))</code></pre>
+<p><img src="figure/fastica_1kg_structure.Rmd/corB-pairs-1.png" alt="" width="1440" style="display: block; margin: auto;" /></p>
+<p>The clouds are tight and essentially linear, so the high correlations are not being produced by a few influential points — but every pair has a small number of clear outliers, and they are not scattered at random. Grouping the flagged SNPs into genomic regions (same chromosome, gaps of at most 1 Mb) shows how concentrated they are:</p>
+<pre class="r"><code>out &lt;- subset(pairs_df, outlier)
+out$chr &lt;- sub(&quot;:.*&quot;, &quot;&quot;, out$snp)
+out$pos &lt;- as.numeric(sub(&quot;.*:&quot;, &quot;&quot;, out$snp))
+
+# Assign each distinct SNP to a region.
+u &lt;- unique(out[, c(&quot;snp&quot;, &quot;chr&quot;, &quot;pos&quot;)])
+u &lt;- u[order(u$chr, u$pos), ]
+u$region &lt;- cumsum(c(1, (u$chr[-1] != u$chr[-nrow(u)]) |
+                        (diff(u$pos) &gt; 1e6)))
+out$region &lt;- u$region[match(out$snp, u$snp)]
+
+region_tab &lt;- do.call(rbind, lapply(split(out, out$region), function(d) {
+  us &lt;- unique(d[, c(&quot;snp&quot;, &quot;pos&quot;, &quot;gene&quot;, &quot;dist&quot;)])
+  data.frame(
+    `genomic region` = sprintf(&quot;chr%s:%.2f-%.2f Mb&quot;, d$chr[1],
+                               min(us$pos) / 1e6, max(us$pos) / 1e6),
+    SNPs      = nrow(us),
+    `max |z|` = round(max(abs(d$z)), 1),
+    `nearby genes` = paste(head(unique(us$gene[order(us$dist)]), 5),
+                           collapse = &quot;, &quot;),
+    `pair comparisons` = paste(unique(sub(&quot;\\s*\\(r *=.*&quot;, &quot;&quot;, d$pair)),
+                               collapse = &quot;; &quot;),
+    check.names = FALSE, stringsAsFactors = FALSE)
+}))
+region_tab &lt;- region_tab[order(-region_tab$SNPs, -region_tab$`max |z|`), ]
+knitr::kable(region_tab, row.names = FALSE)</code></pre>
+<table>
+<colgroup>
+<col width="12%" />
+<col width="2%" />
+<col width="9%" />
+<col width="26%" />
+<col width="48%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">genomic region</th>
+<th align="right">SNPs</th>
+<th align="right">max |z|</th>
+<th align="left">nearby genes</th>
+<th align="left">pair comparisons</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">chr2:135.29-136.97 Mb</td>
+<td align="right">21</td>
+<td align="right">11.4</td>
+<td align="left">TMEM163, ACMSD, CCNT2, UBXN4, LCT</td>
+<td align="left">PUR vs GBR/CEU; TSI/IBS vs GBR/CEU</td>
+</tr>
+<tr class="even">
+<td align="left">chr14:105.98-106.26 Mb</td>
+<td align="right">5</td>
+<td align="right">9.8</td>
+<td align="left">TMEM121, LOC105370697, TEDC1, MIR8071-1, MIR4507</td>
+<td align="left">CDX/KHV vs CHB/CHS; CDX/KHV vs JPT</td>
+</tr>
+<tr class="odd">
+<td align="left">chr12:76.44-76.44 Mb</td>
+<td align="right">1</td>
+<td align="right">15.8</td>
+<td align="left">NAP1L1</td>
+<td align="left">LWK vs ESN/YRI/ACB/ASW; LWK vs GWD; ESN/YRI/ACB/ASW vs GWD; PJL vs GIH; GIH vs STU/ITU/BEB</td>
+</tr>
+<tr class="even">
+<td align="left">chr5:40.77-40.77 Mb</td>
+<td align="right">1</td>
+<td align="right">15.3</td>
+<td align="left">MIR4454</td>
+<td align="left">LWK vs ESN/YRI/ACB/ASW; LWK vs GWD; ESN/YRI/ACB/ASW vs GWD; PJL vs GIH; GIH vs STU/ITU/BEB</td>
+</tr>
+<tr class="odd">
+<td align="left">chr3:71.16-71.16 Mb</td>
+<td align="right">1</td>
+<td align="right">14.6</td>
+<td align="left">FOXP1</td>
+<td align="left">LWK vs ESN/YRI/ACB/ASW; LWK vs GWD; ESN/YRI/ACB/ASW vs GWD; PJL vs GIH; GIH vs STU/ITU/BEB</td>
+</tr>
+<tr class="even">
+<td align="left">chr14:26.34-26.34 Mb</td>
+<td align="right">1</td>
+<td align="right">12.4</td>
+<td align="left">NOVA1</td>
+<td align="left">PJL vs GIH; GIH vs STU/ITU/BEB</td>
+</tr>
+<tr class="odd">
+<td align="left">chr5:34.69-34.69 Mb</td>
+<td align="right">1</td>
+<td align="right">12.0</td>
+<td align="left">MIR4454</td>
+<td align="left">PJL vs GIH; GIH vs STU/ITU/BEB</td>
+</tr>
+<tr class="even">
+<td align="left">chr11:110.66-110.66 Mb</td>
+<td align="right">1</td>
+<td align="right">11.7</td>
+<td align="left">ARHGAP20</td>
+<td align="left">LWK vs ESN/YRI/ACB/ASW; LWK vs GWD; ESN/YRI/ACB/ASW vs GWD</td>
+</tr>
+<tr class="odd">
+<td align="left">chr12:14.49-14.49 Mb</td>
+<td align="right">1</td>
+<td align="right">9.4</td>
+<td align="left">ATF7IP</td>
+<td align="left">LWK vs GWD; PJL vs GIH; GIH vs STU/ITU/BEB</td>
+</tr>
+<tr class="even">
+<td align="left">chr4:139.45-139.45 Mb</td>
+<td align="right">1</td>
+<td align="right">8.8</td>
+<td align="left">LINC00499</td>
+<td align="left">GIH vs STU/ITU/BEB</td>
+</tr>
+<tr class="odd">
+<td align="left">chr22:45.33-45.33 Mb</td>
+<td align="right">1</td>
+<td align="right">8.6</td>
+<td align="left">PHF21B</td>
+<td align="left">GIH vs STU/ITU/BEB</td>
+</tr>
+<tr class="even">
+<td align="left">chr4:110.27-110.27 Mb</td>
+<td align="right">1</td>
+<td align="right">8.6</td>
+<td align="left">COL25A1-DT</td>
+<td align="left">LWK vs GWD</td>
+</tr>
+<tr class="odd">
+<td align="left">chr19:55.31-55.31 Mb</td>
+<td align="right">1</td>
+<td align="right">7.5</td>
+<td align="left">LOC112268354</td>
+<td align="left">GIH vs STU/ITU/BEB</td>
+</tr>
+<tr class="even">
+<td align="left">chr11:61.57-61.57 Mb</td>
+<td align="right">1</td>
+<td align="right">7.4</td>
+<td align="left">FADS1</td>
+<td align="left">CDX/KHV vs CHB/CHS; CDX/KHV vs JPT</td>
+</tr>
+<tr class="odd">
+<td align="left">chr3:84.59-84.59 Mb</td>
+<td align="right">1</td>
+<td align="right">7.4</td>
+<td align="left">LINC00971</td>
+<td align="left">GIH vs STU/ITU/BEB</td>
+</tr>
+<tr class="even">
+<td align="left">chr6:64.96-64.96 Mb</td>
+<td align="right">1</td>
+<td align="right">6.9</td>
+<td align="left">EYS</td>
+<td align="left">LWK vs GWD</td>
+</tr>
+<tr class="odd">
+<td align="left">chr14:37.60-37.60 Mb</td>
+<td align="right">1</td>
+<td align="right">6.7</td>
+<td align="left">SLC25A21</td>
+<td align="left">GIH vs STU/ITU/BEB</td>
+</tr>
+<tr class="even">
+<td align="left">chr6:32.46-32.46 Mb</td>
+<td align="right">1</td>
+<td align="right">6.7</td>
+<td align="left">HLA-DRB5</td>
+<td align="left">ESN/YRI/ACB/ASW vs GWD</td>
+</tr>
+<tr class="odd">
+<td align="left">chr4:75.48-75.48 Mb</td>
+<td align="right">1</td>
+<td align="right">6.6</td>
+<td align="left">AREG</td>
+<td align="left">LWK vs GWD</td>
+</tr>
+<tr class="even">
+<td align="left">chr1:95.64-95.64 Mb</td>
+<td align="right">1</td>
+<td align="right">6.5</td>
+<td align="left">LOC101928118</td>
+<td align="left">LWK vs GWD</td>
+</tr>
+<tr class="odd">
+<td align="left">chr8:31.45-31.45 Mb</td>
+<td align="right">1</td>
+<td align="right">6.5</td>
+<td align="left">NRG1</td>
+<td align="left">GIH vs STU/ITU/BEB</td>
+</tr>
+<tr class="even">
+<td align="left">chr18:0.61-0.61 Mb</td>
+<td align="right">1</td>
+<td align="right">6.3</td>
+<td align="left">CLUL1</td>
+<td align="left">LWK vs GWD</td>
+</tr>
+<tr class="odd">
+<td align="left">chr9:92.73-92.73 Mb</td>
+<td align="right">1</td>
+<td align="right">6.3</td>
+<td align="left">LOC101927847</td>
+<td align="left">GIH vs STU/ITU/BEB</td>
+</tr>
+<tr class="even">
+<td align="left">chr12:70.77-70.77 Mb</td>
+<td align="right">1</td>
+<td align="right">6.1</td>
+<td align="left">KCNMB4</td>
+<td align="left">TSI/IBS vs GBR/CEU</td>
+</tr>
+</tbody>
+</table>
+<p>24 regions hold the 48 outlier SNPs, and two of them dominate.</p>
+<p><strong>chr2:135.29–136.97 Mb</strong> contains 21 of the 48, all from the two European comparisons (PUR vs GBR/CEU and TSI/IBS vs GBR/CEU). The gene labels spread across the region rather than pointing at one gene, but <em>LCT</em> and its immediate neighbours <em>UBXN4</em>, <em>DARS1</em> and <em>DARS-AS1</em> are among them. This is the lactase persistence locus, one of the strongest selective sweeps known in humans, and exactly the sort of site whose allele frequency differs sharply between European and non-European populations while the rest of the genome does not. The sweep haplotype is long, which fits outliers spreading over more than a megabyte into the flanking genes. Only two of the 21 SNPs are inside <em>LCT</em> itself, so the locus is identified here by position rather than by the labels.</p>
+<p><strong>chr14:105.98–106.26 Mb</strong> holds five, from the two East Asian comparisons. The nearest annotated features are microRNAs at 18–62 kb; this is the immunoglobulin heavy chain region, structurally complex and a common source of mapping artifacts, so that cluster is more likely technical than selective.</p>
+<p>The remaining 22 regions are single SNPs, but three of them recur in five different pairs each — <em>NAP1L1</em> (chr12), <em>FOXP1</em> (chr3) and <em>MIR4454</em> (chr5). Each appears in all three African comparisons and in two South Asian ones, so these are SNPs that break the agreement between closely related components in more than one part of the world. <em>HLA-DRB5</em> appears as a second classic high-differentiation locus, in the ESN/YRI vs GWD comparison.</p>
+<div id="single-snp-outliers-are-probably-technical" class="section level4">
+<h4>Single-SNP outliers are probably technical</h4>
+<p>Selection acts on haplotypes, so a sweep should perturb a run of nearby markers, not one in isolation. That makes the isolated single-SNP outliers suspicious. The obvious objection is that these data are LD-thinned, so a real signal might survive at only one marker — but the thinning is not nearly that severe:</p>
+<pre class="r"><code>snp_all &lt;- colnames(B); chr_all &lt;- sub(&quot;:.*&quot;, &quot;&quot;, snp_all)
+pos_all &lt;- as.numeric(sub(&quot;.*:&quot;, &quot;&quot;, snp_all))
+sp &lt;- unlist(lapply(split(pos_all, chr_all), function(p) diff(sort(p))))
+c(median_spacing_kb = round(median(sp) / 1e3, 1),
+  mean_spacing_kb   = round(mean(sp) / 1e3, 1))</code></pre>
+<pre><code>median_spacing_kb   mean_spacing_kb 
+              8.6              15.1 </code></pre>
+<p>At a median spacing of 8.6 kb a 100 kb window holds about 15 markers, so a sweep has plenty of opportunity to show up more than once. We can therefore ask directly whether each outlier’s neighbours carry any signal in the <em>same</em> pair comparison:</p>
+<pre class="r"><code>Zmat &lt;- sapply(seq_len(nrow(hi)), function(k)
+  local({ r &lt;- residuals(lm(B[hi[k, 2], ] ~ B[hi[k, 1], ])); r / sd(r) }))
+
+nb_tab &lt;- do.call(rbind, lapply(seq_len(ncol(Zmat)), function(k) {
+  w6 &lt;- which(abs(Zmat[, k]) &gt; 6)
+  if (!length(w6)) return(NULL)
+  do.call(rbind, lapply(w6, function(i) {
+    nb &lt;- which(chr_all == chr_all[i] &amp; abs(pos_all - pos_all[i]) &lt;= 1e5 &amp;
+                seq_along(pos_all) != i)
+    data.frame(snp = snp_all[i], z = Zmat[i, k], n_nb = length(nb),
+               max_nb_z = if (length(nb)) max(abs(Zmat[nb, k])) else NA_real_)
+  }))
+}))
+c(outliers = nrow(nb_tab),
+  `with neighbours` = sum(nb_tab$n_nb &gt; 0),
+  `neighbour |z|&gt;3` = sum(nb_tab$max_nb_z &gt; 3, na.rm = TRUE),
+  `neighbour |z|&gt;6` = sum(nb_tab$max_nb_z &gt; 6, na.rm = TRUE))</code></pre>
+<pre><code>       outliers with neighbours neighbour |z|&gt;3 neighbour |z|&gt;6 
+             70              70              35              25 </code></pre>
+<pre class="r"><code>nb_tab$gene &lt;- genes$gene[match(nb_tab$snp, genes$snp)]
+iso &lt;- subset(nb_tab, max_nb_z &lt; 3)
+head(iso[order(-abs(iso$z)), c(&quot;snp&quot;, &quot;gene&quot;, &quot;z&quot;, &quot;n_nb&quot;, &quot;max_nb_z&quot;)], 8)</code></pre>
+<pre><code>                       snp     gene         z n_nb max_nb_z
+12:764418204   12:76441820   NAP1L1  15.83527   11 2.080480
+5:407658624     5:40765862  MIR4454  15.31738   10 2.189975
+3:711585784     3:71158578    FOXP1 -14.64397   11 2.891886
+12:764418201   12:76441820   NAP1L1  12.51821   11 1.829767
+14:263436311   14:26343631    NOVA1 -12.41060   14 1.670528
+5:407658621     5:40765862  MIR4454  12.32926   10 1.864840
+5:346853331     5:34685333  MIR4454 -12.02691   19 1.778017
+11:1106642321 11:110664232 ARHGAP20 -11.70153   23 2.268906</code></pre>
+<p>Every outlier has neighbours, but only half of them have a neighbour reaching even <span class="math inline">\(|z| &gt; 3\)</span>. And the pattern is the wrong way round for selection: the <em>most</em> extreme outliers are the <em>most</em> isolated. <code>NAP1L1</code> reaches <span class="math inline">\(z = 15.8\)</span> with eleven neighbours whose largest <span class="math inline">\(|z|\)</span> is 2.1; <code>ARHGAP20</code> reaches <span class="math inline">\(-11.7\)</span> with twenty-three neighbours all below 2.3. No haplotype-level process produces a fifteen-sigma deviation at one marker while two dozen markers around it show nothing. These are the same SNPs that recur across five pair comparisons each, which fits the same reading — a bad marker is bad in every comparison it enters.</p>
+<p>So the useful division is not “clustered versus single” but that the two clusters (LCT, IGH) behave like genomic signals and the isolated singletons behave like marker-level failures.</p>
+<div id="what-technical-effects-could-do-this" class="section level5">
+<h5>What technical effects could do this?</h5>
+<p>Several mechanisms produce a frequency error at one SNP that differs between populations, which is what it takes to move a single point off a pairwise line:</p>
+<ul>
+<li><strong>Mis-mapping and paralogy.</strong> Reads from a duplicated or repetitive region mapping to a single locus create a spurious variant whose apparent frequency tracks copy number, and copy number varies between populations. This is the most likely explanation for the chr14 IGH cluster, and it is suggestive that <code>MIR4454</code> appears twice in the outlier list at two different positions (chr5:34.7 Mb and chr5:40.8 Mb), which is what a multiply-mapping annotation looks like. <code>NAP1L1</code> is worth checking on the same grounds, since genes with processed pseudogenes elsewhere in the genome are classic mis-mapping targets.</li>
+<li><strong>Reference bias.</strong> Reads carrying the non-reference allele align less readily, and the penalty is larger where a sample’s haplotype is more diverged from the reference. Since divergence from the reference differs systematically by population, this biases allele frequencies differentially.</li>
+<li><strong>Batch and centre effects.</strong> 1000 Genomes phase 3 samples were sequenced at several centres over several years, and populations were not evenly spread across batches. Differences in depth, library preparation and caller behaviour then align with population labels.</li>
+<li><strong>Imputation and phasing.</strong> Phase 3 genotypes come from low-coverage sequencing with imputation, whose accuracy depends on how well each population is represented in the reference panel. A SNP that imputes badly in one population only will show exactly this signature.</li>
+<li><strong>Copy number variation overlapping the SNP</strong>, where genotype calls reflect copy number rather than allele dosage.</li>
+</ul>
+<p>One mechanism that is <em>not</em> a likely explanation here is ancestral allele misassignment, even though the matrix was re-coded to derived allele counts. A wrong ancestral call flips <span class="math inline">\(p \to 1-p\)</span> for every component at that SNP, which moves the point to a line parallel to the fitted one — so mis-polarized SNPs would deviate in a consistent direction by a similar amount, whereas the observed outliers scatter on both sides with a wide range of residuals.</p>
+<p>Distinguishing among the remaining mechanisms is not possible from the genotype matrix alone. It would need the per-SNP quality information that was discarded in building this dataset: read depth, mapping quality, VQSR score, Hardy-Weinberg departure computed within population, and overlap with segmental duplication and CNV tracks. A cheap partial check would be to intersect the isolated outliers with a segmental duplication track, which would test the mis-mapping hypothesis directly.</p>
+</div>
+</div>
+<div id="which-signals-look-like-real-selection" class="section level4">
+<h4>Which signals look like real selection?</h4>
+<p>The neighbour test gives a way to rank the loci rather than just split them in two. Widening the window to 500 kb and counting how many nearby markers are also perturbed in the same comparison:</p>
+<pre class="r"><code>nb_wide &lt;- do.call(rbind, lapply(seq_len(ncol(Zmat)), function(k) {
+  w6 &lt;- which(abs(Zmat[, k]) &gt; 6)
+  if (!length(w6)) return(NULL)
+  do.call(rbind, lapply(w6, function(i) {
+    n1 &lt;- which(chr_all == chr_all[i] &amp; abs(pos_all - pos_all[i]) &lt;= 1e5 &amp;
+                seq_along(pos_all) != i)
+    n5 &lt;- which(chr_all == chr_all[i] &amp; abs(pos_all - pos_all[i]) &lt;= 5e5 &amp;
+                seq_along(pos_all) != i)
+    data.frame(pair = sub(&quot;\\s*\\(r *=.*&quot;, &quot;&quot;,
+                          sprintf(&quot;%s vs %s&quot;, rownames(B)[hi[k, 1]],
+                                  rownames(B)[hi[k, 2]])),
+               snp = snp_all[i], gene = genes$gene[match(snp_all[i], genes$snp)],
+               z = round(Zmat[i, k], 1), n_100kb = length(n1),
+               max_nb_z = round(max(abs(Zmat[n1, k])), 1),
+               nb_gt3_500kb = sum(abs(Zmat[n5, k]) &gt; 3),
+               nb_gt6_500kb = sum(abs(Zmat[n5, k]) &gt; 6))
+  }))
+}))
+
+in_cluster &lt;- (nb_wide$snp %in% snp_all[chr_all == &quot;2&quot; &amp;
+                 pos_all &gt; 1.35e8 &amp; pos_all &lt; 1.37e8]) |
+              (nb_wide$snp %in% snp_all[chr_all == &quot;14&quot; &amp;
+                 pos_all &gt; 1.05e8 &amp; pos_all &lt; 1.07e8])
+out &lt;- nb_wide[!in_cluster, ]
+head(out[order(-out$nb_gt3_500kb, -out$max_nb_z), ], 8)</code></pre>
+<pre><code>                               pair          snp       gene     z n_100kb
+6:32455859   ESN/YRI/ACB/ASW vs GWD   6:32455859   HLA-DRB5   6.7      56
+11:615698301         CDX/KHV vs JPT  11:61569830      FADS1   6.6      13
+11:61569830      CDX/KHV vs CHB/CHS  11:61569830      FADS1   7.4      13
+12:70765494      TSI/IBS vs GBR/CEU  12:70765494     KCNMB4   6.1      24
+11:110664232 LWK vs ESN/YRI/ACB/ASW 11:110664232   ARHGAP20  -7.9      23
+14:263436311     GIH vs STU/ITU/BEB  14:26343631      NOVA1 -12.4      14
+14:26343631              PJL vs GIH  14:26343631      NOVA1   8.0      14
+4:110274473              LWK vs GWD  4:110274473 COL25A1-DT   8.6      11
+             max_nb_z nb_gt3_500kb nb_gt6_500kb
+6:32455859        5.9           44            0
+11:615698301      4.9            6            0
+11:61569830       5.4            5            0
+12:70765494       5.4            3            0
+11:110664232      3.5            3            0
+14:263436311      1.7            2            0
+14:26343631       3.1            1            0
+4:110274473       2.8            1            0</code></pre>
+<p><strong>HLA is the strongest candidate after <em>LCT</em>, and the region table above understates it.</strong> That table grouped SNPs passing <span class="math inline">\(|z| &gt; 6\)</span>, and the MHC contributes only one such SNP — but it has 56 markers within 100 kb, of which the most extreme reaches <span class="math inline">\(|z| = 5.9\)</span>, and <strong>44 markers within 500 kb exceed <span class="math inline">\(|z| &gt; 3\)</span></strong>. That is more perturbed neighbours than the <em>LCT</em> region averages (22.5). A broad shoulder of moderately deviating markers with few extreme ones is what long-standing balancing selection should look like, as opposed to the tall narrow peak of a recent sweep, so the MHC being invisible to a hard <span class="math inline">\(|z| &gt; 6\)</span> cut is a property of the statistic rather than of the locus.</p>
+<p><strong><em>FADS1</em> also has genuine neighbour support</strong> — 13 markers within 100 kb with a maximum neighbour of <span class="math inline">\(|z| \approx 5\)</span>, and five or six above <span class="math inline">\(|z| &gt; 3\)</span> in each of the two East Asian comparisons. It is therefore a useful counterexample to a blanket “isolated SNP means artifact” rule: it is a documented selection locus that contributes only one marker above the threshold while still showing a real regional shoulder.</p>
+<p><em>KCNMB4</em> is marginal — 24 neighbours, the best at <span class="math inline">\(|z| = 5.4\)</span>, but only three above 3, and no published selection result I can point to. I would not push it.</p>
+<p>Everything below that is isolated, and <em>FOXP1</em> is the clearest case for treating these as technical: <span class="math inline">\(z = -14.6\)</span> with <strong>zero</strong> neighbours above <span class="math inline">\(|z| &gt; 3\)</span> anywhere within 500 kb.</p>
+<pre class="r"><code>c(`non-cluster outliers` = sum(!in_cluster),
+  `with any neighbour |z|&gt;6 within 500kb` = sum(out$nb_gt6_500kb &gt; 0),
+  `LCT region, mean such neighbours` =
+    round(mean(nb_wide$nb_gt6_500kb[in_cluster &amp; sub(&quot;:.*&quot;, &quot;&quot;, nb_wide$snp) == &quot;2&quot;]), 1),
+  `IGH region, mean such neighbours` =
+    round(mean(nb_wide$nb_gt6_500kb[in_cluster &amp; sub(&quot;:.*&quot;, &quot;&quot;, nb_wide$snp) == &quot;14&quot;]), 1))</code></pre>
+<pre><code>                 non-cluster outliers with any neighbour |z|&gt;6 within 500kb 
+                                 41.0                                   0.0 
+     LCT region, mean such neighbours      IGH region, mean such neighbours 
+                                  9.1                                   3.1 </code></pre>
+<p>Not one of the 41 non-cluster outliers has a neighbour reaching <span class="math inline">\(|z| &gt; 6\)</span> within 500 kb, against an average of 9.1 in the <em>LCT</em> region. On this evidence the ordering is <em>LCT</em> first by a wide margin, then HLA, then <em>FADS1</em>, with everything else either technical or unresolved.</p>
+</div>
+<div id="cross-reference-with-published-selection-findings" class="section level4">
+<h4>Cross-reference with published selection findings</h4>
+<p>Three of these regions match well-established selection signals, and in each case the <em>direction</em> in our data is consistent with the published account. To check that, we put the rows of <span class="math inline">\(B\)</span> on a comparable scale (dividing each by its mean, since the row scale is not identified) and look at the relative frequency by component:</p>
+<pre class="r"><code>Bn &lt;- B / rowMeans(B)
+freq_at &lt;- function(snp) round(sort(Bn[, snp], decreasing = TRUE), 2)
+freq_at(&quot;2:136570613&quot;)     # LCT</code></pre>
+<pre><code>            PJL             GIH         PEL/MXL     STU/ITU/BEB             JPT 
+           1.45            1.32            1.18            1.04            0.83 
+            PUR ESN/YRI/ACB/ASW             LWK             GWD         TSI/IBS 
+           0.78            0.76            0.74            0.71            0.68 
+        CDX/KHV             FIN         CHB/CHS         GBR/CEU 
+           0.67            0.50            0.41            0.13 </code></pre>
+<pre class="r"><code>freq_at(&quot;11:61569830&quot;)     # FADS1 / rs174546</code></pre>
+<pre><code>            GWD ESN/YRI/ACB/ASW             LWK             GIH             PJL 
+           3.31            3.30            3.28            2.77            2.76 
+    STU/ITU/BEB         TSI/IBS             JPT         GBR/CEU         CHB/CHS 
+           2.53            2.20            1.97            1.85            1.80 
+            FIN             PUR         PEL/MXL         CDX/KHV 
+           1.50            1.31            0.48            0.44 </code></pre>
+<p><strong>LCT / MCM6 (chr2:135.3–137.0 Mb).</strong> Lactase persistence is the textbook example of a recent strong sweep in Europeans, with an unusually long haplotype around the <em>MCM6</em> regulatory variant (Bersaglieri et al. 2004; independent persistence alleles arose in African pastoralists, Tishkoff et al. 2007), and <em>LCT</em> is consistently among the top hits of genome-wide scans such as Sabeti et al. 2007. Our data reproduce three features of that account. The outliers are confined to the two comparisons involving GBR/CEU, which is the extreme component at these SNPs; there is a north-south gradient across the European components (GBR/CEU 0.13, FIN 0.50, TSI/IBS 0.68 at 2:136570613), matching the well-documented cline in lactase persistence frequency; and the signal spreads over more than a megabyte into the flanking genes, as a long sweep haplotype should in an LD-thinned marker set.</p>
+<p><strong>FADS1 (chr11:61.57 Mb).</strong> The <em>FADS1/FADS2</em> fatty acid desaturase cluster carries selection signals reported in several populations — among the strongest signals in ancient European DNA (Mathieson et al. 2015), in Greenlandic Inuit (Fumagalli et al. 2015), and in South Asian populations with long vegetarian dietary histories. <code>11:61569830</code> is rs174546, a known <em>FADS1</em> regulatory variant. Here it appears as an outlier specifically in the two comparisons involving CDX/KHV, which sits at 0.44 against 1.80 for CHB/CHS and 1.97 for JPT — a four-fold difference <em>within</em> East Asia — while the African components are at 3.3. A locus with this much frequency structure between closely related populations is exactly what breaks a pairwise correlation.</p>
+<p><strong>HLA (chr6:32.46 Mb, <em>HLA-DRB5</em>).</strong> The MHC is the classic target of balancing selection and one of the most polymorphic and differentiated regions in the genome, so its appearance here is unsurprising. Our outlier comes from the ESN/YRI vs GWD comparison, i.e. it distinguishes West African components from each other.</p>
+<p>The chr14:106 Mb cluster is a different matter: that is the immunoglobulin heavy chain locus, which is structurally complex and segmentally duplicated. Signals there are more plausibly mapping artifacts than selection, and I would not treat those five SNPs as biology without independent checking.</p>
+<p>For the remaining twenty-odd single-SNP regions I could not match anything to a published selection result with confidence, and I have not invented attributions for them. One point worth flagging to avoid a natural confusion: the <em>FOXP1</em> hit on chromosome 3 is <strong>not</strong> <em>FOXP2</em>, the chromosome 7 gene associated with the well-known selection and language literature. Note also that this cross-reference is from background knowledge rather than a systematic lookup; doing it properly would mean intersecting these regions with a catalogue of published selection-scan results, which would also give a null expectation for how many matches to expect by chance.</p>
+<p>One more is worth naming on its own. <code>11:61569830</code> is an outlier in two pairs and sits inside <em>FADS1</em>; it is rs174546, the same SNP Annie Xie’s GBCD analysis of these data picked out as a large-effect marker, reached here by a completely different route.</p>
+<p>So the answer to the question is: no, the high correlations are not driven by outliers, and the outliers that do exist are mostly real biology at two or three well-known loci rather than a problem with the decomposition.</p>
+</div>
+</div>
+<div id="removing-the-shared-spectrum" class="section level3">
+<h3>Removing the shared spectrum</h3>
+<p>Every row of <span class="math inline">\(B\)</span> is an absolute frequency profile, so all of them contain the overall spectrum of the data and the raw correlations sit between 0.6 and 0.99. Removing that shared component should expose the residual structure. The obvious way to try it is to centre each SNP across the <span class="math inline">\(K\)</span> components, subtracting <span class="math inline">\(\bar m_j = \frac{1}{K}\sum_k B_{kj}\)</span>, and that does not work well. It is worth understanding why, because the reason dictates what does.</p>
+<p>Two facts about <span class="math inline">\(B\)</span>:</p>
+<pre class="r"><code>mbar &lt;- colMeans(B)
+c(min_row_mean = min(rowMeans(B)), max_row_mean = max(rowMeans(B)),
+  ratio = max(rowMeans(B)) / min(rowMeans(B))) |&gt; round(3)</code></pre>
+<pre><code>min_row_mean max_row_mean        ratio 
+       0.084        0.229        2.716 </code></pre>
+<pre class="r"><code># how tightly the components&#39; overall level and their spread move together
+round(cor(rowMeans(B), apply(B, 1, sd)), 3)</code></pre>
+<pre><code>[1] 0.992</code></pre>
+<pre class="r"><code># share of B&#39;s total sum of squares in its leading singular value
+local({ d &lt;- svd(B)$d; round(d[1]^2 / sum(d^2), 3) })</code></pre>
+<pre><code>[1] 0.918</code></pre>
+<p>The components differ in overall level by a factor of 2.7, their level and their spread move together almost perfectly (<span class="math inline">\(r = 0.99\)</span>), and a single rank-1 term accounts for 92% of <span class="math inline">\(B\)</span>. In other words the shared structure is <strong>multiplicative</strong>, <span class="math inline">\(B_{kj} \approx s_k m_j\)</span>, not additive. Subtracting an unweighted mean removes <span class="math inline">\(\bar s\, m_j\)</span> and leaves <span class="math inline">\((s_k - \bar s)\,m_j\)</span> behind — still proportional to the shared spectrum, with a coefficient that depends only on the component’s scale. The spectrum is not removed, it is retained with a scale-dependent loading:</p>
+<pre class="r"><code>D  &lt;- B - rep(1, nrow(B)) %o% mbar        # naive per-SNP centring
+sv &lt;- svd(D)
+c(`rank-1 share of the deviations` = sv$d[1]^2 / sum(sv$d^2),
+  `|cor| of its loading with row scale` = abs(cor(sv$u[, 1], rowMeans(B))),
+  `|cor| of its profile with mbar`      = abs(cor(sv$v[, 1], mbar))) |&gt; round(3)</code></pre>
+<pre><code>     rank-1 share of the deviations |cor| of its loading with row scale 
+                              0.432                               0.982 
+     |cor| of its profile with mbar 
+                              0.971 </code></pre>
+<p>Forty-three percent of the “deviations” are a rank-1 term whose loading correlates 0.98 with the components’ overall scale and whose profile correlates 0.97 with the spectrum we were trying to remove.</p>
+<p>This also means the row scale of <span class="math inline">\(B\)</span> is the wrong thing to lean on: it is not identified. <span class="math inline">\(B = (A&#39;A)^{-1}A&#39;X\)</span> with <span class="math inline">\(A = \max(L, 0)\)</span>, and the columns of <span class="math inline">\(A\)</span> have whatever scale the sources happen to have, so the 2.7-fold range in row level is a property of that arbitrary normalization rather than of the populations. Only scale-invariant summaries of <span class="math inline">\(B\)</span> are meaningful.</p>
+<p>So the shared component has to be removed in a scale-free way. Three natural ways to do it:</p>
+<pre class="r"><code>K &lt;- nrow(B)
+variants &lt;- list(
+  `raw`                          = cor(t(B)),
+  `naive per-SNP centring`       = cor(t(D)),
+  `row-standardise, then centre` = cor(t(local({
+      Z &lt;- t(scale(t(B))); Z - rep(1, K) %o% colMeans(Z) }))),
+  `remove rank 1 of B`           = cor(t(local({
+      sv &lt;- svd(B); B - sv$d[1] * sv$u[, 1] %o% sv$v[, 1] }))),
+  `regress each row on mbar`     = cor(t(local({
+      t(apply(B, 1, function(b) residuals(lm(b ~ mbar)))) }))))
+
+# Score each by how well it separates continents: mean within-block
+# correlation minus mean between-block.
+blocks &lt;- c(&quot;AFR&quot;,&quot;AFR&quot;,&quot;AFR&quot;,&quot;AMR&quot;,&quot;AMR&quot;,&quot;EUR&quot;,&quot;EUR&quot;,&quot;EUR&quot;,
+            &quot;SAS&quot;,&quot;SAS&quot;,&quot;SAS&quot;,&quot;EAS&quot;,&quot;EAS&quot;,&quot;EAS&quot;)
+t(sapply(variants, function(M) {
+  u &lt;- upper.tri(M); same &lt;- outer(blocks, blocks, &quot;==&quot;)[u]
+  round(c(within = mean(M[u][same]), between = mean(M[u][!same]),
+          gap = mean(M[u][same]) - mean(M[u][!same])), 3)
+}))</code></pre>
+<pre><code>                             within between   gap
+raw                           0.966   0.768 0.197
+naive per-SNP centring        0.495  -0.151 0.646
+row-standardise, then centre  0.768  -0.189 0.957
+remove rank 1 of B            0.772  -0.184 0.957
+regress each row on mbar      0.771  -0.186 0.957</code></pre>
+<p>All three scale-free variants give a within-minus-between gap of 0.96, against 0.20 for the raw correlations and 0.65 for naive centring, and they agree with each other closely:</p>
+<pre class="r"><code>v &lt;- variants[3:5]
+round(c(`std-centre vs rank-1`  = max(abs(v[[1]] - v[[2]])),
+        `std-centre vs regress` = max(abs(v[[1]] - v[[3]])),
+        `rank-1 vs regress`     = max(abs(v[[2]] - v[[3]]))), 3)</code></pre>
+<pre><code> std-centre vs rank-1 std-centre vs regress     rank-1 vs regress 
+                0.054                 0.036                 0.018 </code></pre>
+<pre class="r"><code>R &lt;- variants[[&quot;regress each row on mbar&quot;]]
+heat(R, &quot;Correlation after removing the shared spectrum, K = 14&quot;)</code></pre>
+<p><img src="figure/fastica_1kg_structure.Rmd/shared-heatmap-1.png" alt="" width="624" style="display: block; margin: auto;" /></p>
+<p>This is a far more informative picture than the raw matrix. The four continental blocks are now strongly positive internally — East Asia 0.82–0.89, Europe 0.73–0.78, South Asia 0.60–0.79 — and clearly negative between, and the two features noted earlier become much more legible. PEL/MXL sits apart from every block, with its only positive correlations being 0.20–0.25 with the three East Asian components, and PUR shows its European affinity directly (0.53 with FIN, 0.19–0.26 with the other European components) while being negative with East Asia.</p>
+<p>A correction is in order here. An earlier version of this analysis reported that this centring produced implausible values — CHB/CHS with GIH at 0.94 — and concluded that removing the shared spectrum was a bad idea. That was a mistake of mine: the matrix I computed applied the population reordering twice, once through the row and column names and once through the indexing, so the labels did not match the values. Under proper centring that pair is -0.19, and scale-free it is -0.09 — essentially uncorrelated, as it should be. Removing the shared component is a good idea; it just has to be done in a way that respects the unidentified row scale.</p>
+</div>
+</div>
+<div id="structure-in-the-residuals" class="section level2">
+<h2>Structure in the residuals</h2>
+<p>If the 14 factors capture the population structure, the residual <span class="math inline">\(E = X - AB\)</span> should be close to noise. It is not.</p>
+<p>The residual is <span class="math inline">\(2464 \times 185116\)</span> and never needs to be formed: <span class="math inline">\(EE&#39; = G_X - MA&#39; - AM&#39; + A(BB&#39;)A&#39;\)</span> with <span class="math inline">\(M = XB&#39;\)</span>, all of which are available or cheap. <a href="https://github.com/stephens999/misc/blob/master/code/fit_tgp_residual.R"><code>code/fit_tgp_residual.R</code></a> builds that, centres it, whitens to 30 dimensions, and runs the same rank-1 search as before — 1000 independent random starts, 500 iterations, clustered at the same threshold.</p>
+<pre class="r"><code>res &lt;- readRDS(&quot;../output/tgp_residual.rds&quot;)
+pop_r &lt;- meta$pop[match(res$ids, meta$sample)]
+c(residual_ss_fraction = round(res$ss_ratio, 3))</code></pre>
+<pre><code>residual_ss_fraction 
+                0.32 </code></pre>
+<pre class="r"><code>round(res$d[1:12])</code></pre>
+<pre><code> [1] 4391 1126  420  406  321  309  308  305  304  303  302  301</code></pre>
+<p>The residual holds 32% of the sum of squares, and its spectrum is not flat: two very large singular values, then 420, 406, 321, and only then the noise plateau near 300. So several strong directions survive the fit.</p>
+<pre class="r"><code>Lr &lt;- res$L
+w  &lt;- pmax(Lr, 0)^2
+o  &lt;- order(colSums(w * as.integer(pop_r)) / colSums(w))
+Lr &lt;- Lr[, o, drop = FALSE]
+sz &lt;- res$size[o]
+colnames(Lr) &lt;- make.unique(apply(Lr, 2, function(x) {
+  v &lt;- tapply(x, pop_r, mean); v &lt;- sort(v[v &gt; 0], decreasing = TRUE)
+  paste(names(v)[v &gt;= 0.3 * v[1]], collapse = &quot;/&quot;) }))
+
+data.frame(factor = colnames(Lr), basin = sz,
+           skewness = round(apply(Lr, 2, function(x)
+             mean(x^3) / mean(x^2)^1.5), 1),
+           `n &gt; 2` = colSums(Lr &gt; 2),
+           max = round(apply(Lr, 2, max), 1),
+           check.names = FALSE, row.names = NULL)</code></pre>
+<pre><code>                               factor basin skewness n &gt; 2  max
+1                         MSL/ASW/ACB   121      3.0    99  5.7
+2 MXL/ITU/CLM/ESN/CEU/PJL/YRI/CHS/IBS   112     14.4     5 26.3
+3             MXL/ESN/CEU/CLM/IBS/STU     1     12.7     7 24.7
+4                             CLM/MXL   537      3.2   112  6.5
+5                                 PJL    31      3.3    84  8.8
+6                     STU/MXL/ASW/CLM   198     15.4     8 27.0</code></pre>
+<p>Six maxima, and they are of the two kinds seen throughout this work. Three are population-level (skewness around 3, with 84–112 individuals loading above 2): one on <strong>MSL</strong>, one on <strong>CLM</strong>, and a second <strong>PJL</strong> direction. Three are the familiar individual-level kind (skewness 13–15, fewer than 10 individuals), picking out the LWK pair NA19331/NA19334 and the STU pair HG03750/HG03754 — relatives that survived the earlier pruning, because that pruning was decided on the full-data pool before these fits existed.</p>
+<pre class="r"><code>plot_resid &lt;- function(L) {
+  ord &lt;- order(pop_r); nf &lt;- ncol(L)
+  df &lt;- data.frame(idx = rep(seq_len(nrow(L)), nf),
+                   loading = as.vector(L[ord, ]),
+                   sp = rep(meta$super_pop[match(res$ids, meta$sample)][ord], nf),
+                   factor = factor(rep(colnames(L), each = nrow(L)),
+                                   levels = colnames(L)))
+  brk &lt;- tapply(seq_along(ord), pop_r[ord], mean)
+  ggplot(df, aes(idx, loading, colour = sp)) +
+    geom_hline(yintercept = 0, linewidth = 0.2, colour = &quot;grey50&quot;) +
+    geom_point(size = 0.3, alpha = 0.7) +
+    facet_wrap(~ factor, ncol = 3, scales = &quot;free_y&quot;) +
+    scale_x_continuous(breaks = brk, labels = names(brk)) +
+    scale_colour_manual(values = sp_palette) +
+    labs(x = NULL, y = &quot;loading&quot;, colour = &quot;super-population&quot;) +
+    theme_cowplot(font_size = 9) +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, size = 5),
+          legend.position = &quot;bottom&quot;) +
+    guides(colour = guide_legend(override.aes = list(size = 3, alpha = 1),
+                                 nrow = 1))
+}
+plot_resid(Lr)</code></pre>
+<p><img src="figure/fastica_1kg_structure.Rmd/resid-plot-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+<div id="is-this-new-structure-or-just-what-maxl0-threw-away" class="section level3">
+<h3>Is this new structure, or just what <span class="math inline">\(\max(L,0)\)</span> threw away?</h3>
+<p>Fitting with <span class="math inline">\(A = \max(L,0)\)</span> discards the negative part of every source, so some residual structure is guaranteed. The question is whether these six directions are inside the span of the 14 sources — in which case they are an artifact of the non-negative approximation — or outside it, in which case the source set itself is incomplete.</p>
+<pre class="r"><code>L14 &lt;- fit$maxima$no_sparse$L
+data.frame(factor = colnames(Lr),
+           R2_on_span = round(sapply(seq_len(ncol(Lr)), function(j)
+             summary(lm(Lr[, j] ~ L14))$r.squared), 3),
+           row.names = NULL)</code></pre>
+<pre><code>                               factor R2_on_span
+1                         MSL/ASW/ACB      0.370
+2 MXL/ITU/CLM/ESN/CEU/PJL/YRI/CHS/IBS      0.001
+3             MXL/ESN/CEU/CLM/IBS/STU      0.002
+4                             CLM/MXL      0.272
+5                                 PJL      0.046
+6                     STU/MXL/ASW/CLM      0.016</code></pre>
+<p>They are mostly outside it: 0.001–0.05 for four of the six, and only 0.27 and 0.37 for the CLM and MSL directions. A cleaner version of the same test asks how well the 14 sources can represent a population at all, by regressing a pure population indicator on their span:</p>
+<pre class="r"><code>sapply(c(&quot;LWK&quot;, &quot;GWD&quot;, &quot;MSL&quot;, &quot;CLM&quot;, &quot;PJL&quot;), function(pp)
+  round(summary(lm(as.numeric(pop_r == pp) ~ L14))$r.squared, 3))</code></pre>
+<pre><code>  LWK   GWD   MSL   CLM   PJL 
+0.962 0.895 0.349 0.235 0.380 </code></pre>
+<p>That settles it. LWK and GWD, which have their own factors among the 14, are represented almost perfectly (0.96 and 0.90). MSL and CLM are not (0.35 and 0.24) — and MSL and CLM are precisely the two populations the residual search recovers. They are real populations with no factor of their own in the <span class="math inline">\(K = 14\)</span> solution, so the structure in the residual is genuinely missing from the sources rather than lost in the non-negative step.</p>
+<p>The practical reading is that <span class="math inline">\(K = 14\)</span> is too small for these data even though it is what the rank-1 search converges on: the maxima it finds are real, but they do not exhaust the population structure. MSL and CLM are visible in the <span class="math inline">\(K = 20\)</span> and <span class="math inline">\(K = 30\)</span> rank-<span class="math inline">\(r\)</span> fits of the earlier analysis, where they appear as ordinary population factors — and MSL was one of the factors there that dissolved when the orthogonality constraint was lifted. Taken together, these are populations the <span class="math inline">\(x|x|\)</span> objective does not make a local maximum of, but which are nonetheless present in the data.</p>
+</div>
+</div>
+<div id="a-binary-subset-decomposition-of-the-correlation-matrix" class="section level2">
+<h2>A binary-subset decomposition of the correlation matrix</h2>
+<p>The correlation matrix of the <span class="math inline">\(K = 14\)</span> components can be read as a sum of contributions from shared ancestry. Model it as <span class="math display">\[
+C \approx \sum_k d_k\, t_k t_k&#39; + E, \qquad t_k \in \{0,1\}^{14},\ d_k \ge 0,
+\]</span> so each binary vector picks a subset <span class="math inline">\(S_k\)</span> of components and adds <span class="math inline">\(d_k\)</span> to the correlation of every pair inside it. With <span class="math inline">\(K = 14\)</span> we can simply enumerate all <span class="math inline">\(2^{14}\)</span> subsets and let an <span class="math inline">\(L_1\)</span>-penalized non-negative regression choose a sparse set of them. We fit the <strong>off-diagonal</strong> entries only, and use the raw correlation matrix with the shared component still in it — the all-ones subset is in the dictionary, so that component is something the model can represent rather than something we have to remove first.</p>
+<pre class="r"><code>Cm &lt;- struct$pruned_maxima$cor_B[m14$o, m14$o]
+dimnames(Cm) &lt;- list(colnames(m14$A), colnames(m14$A))
+Kc &lt;- nrow(Cm)
+short &lt;- sub(&quot;/.*&quot;, &quot;&quot;, colnames(m14$A))      # short labels for printing
+
+# All subsets with at least two members (a singleton contributes no pairs).
+Tm &lt;- sapply(0:(2^Kc - 1), function(x) as.integer(intToBits(x))[1:Kc])
+Tm &lt;- Tm[, colSums(Tm) &gt;= 2]
+
+ij &lt;- which(upper.tri(Cm), arr.ind = TRUE)
+Xd &lt;- t(sapply(seq_len(nrow(ij)), function(r) Tm[ij[r, 1], ] * Tm[ij[r, 2], ]))
+yd &lt;- Cm[upper.tri(Cm)]
+c(pairs = length(yd), subsets = ncol(Tm))</code></pre>
+<pre><code>  pairs subsets 
+     91   16369 </code></pre>
+<div id="a-caution-about-the-solver" class="section level3">
+<h3>A caution about the solver</h3>
+<p><code>glmnet</code> gives the wrong answer on this design. The columns are near-duplicates — the all-ones subset and the fourteen “all but one” subsets agree on at least 78 of the 91 pairs — and its screening rules discard the all-ones column even though that column has the largest <span class="math inline">\(x&#39;y\)</span> and should enter first. The result is a solution that is not merely a different sparse representation but has a strictly worse objective, so we use a plain active-set coordinate descent instead and check the KKT conditions.</p>
+<pre class="r"><code>nnlasso &lt;- function(X, y, lam, pf = rep(1, ncol(X)), tol = 1e-10) {
+  n &lt;- length(y); xx &lt;- colSums(X^2)
+  b &lt;- numeric(ncol(X)); act &lt;- integer(0); r &lt;- y
+  for (out in 1:100) {
+    g    &lt;- as.vector(crossprod(X, r)) / n - lam * pf
+    viol &lt;- setdiff(which(g &gt; tol), act)
+    if (!length(viol)) break
+    act &lt;- union(act, viol[order(-g[viol])][1:min(20, length(viol))])
+    Xa &lt;- X[, act, drop = FALSE]; ba &lt;- b[act]; xa &lt;- xx[act]; pa &lt;- pf[act]
+    r  &lt;- y - Xa %*% ba
+    for (it in 1:5000) {                       # CD on the active set
+      md &lt;- 0
+      for (jj in seq_along(act)) {
+        r  &lt;- r + Xa[, jj] * ba[jj]
+        nb &lt;- max(0, sum(Xa[, jj] * r) / n - lam * pa[jj]) / (xa[jj] / n)
+        md &lt;- max(md, abs(nb - ba[jj])); ba[jj] &lt;- nb
+        r  &lt;- r - Xa[, jj] * nb
+      }
+      if (md &lt; 1e-13) break
+    }
+    b[act] &lt;- ba; act &lt;- act[b[act] &gt; 0]; r &lt;- as.vector(y - X %*% b)
+  }
+  b
+}</code></pre>
+</div>
+<div id="the-path" class="section level3">
+<h3>The path</h3>
+<pre class="r"><code>setname &lt;- function(t) paste(short[t == 1], collapse = &quot;+&quot;)
+lams &lt;- c(0.30, 0.15, 0.08, 0.04, 0.02, 0.01)
+fits &lt;- lapply(lams, function(l) nnlasso(Xd, yd, l))
+
+do.call(rbind, lapply(seq_along(lams), function(i) {
+  b &lt;- fits[[i]]
+  data.frame(lambda = lams[i], terms = sum(b &gt; 1e-8),
+             R2 = round(1 - sum((yd - Xd %*% b)^2) / sum(yd^2), 4),
+             max_KKT = signif(max(as.vector(crossprod(Xd, yd - Xd %*% b)) /
+                                  length(yd) - lams[i]), 2))
+}))</code></pre>
+<pre><code>  lambda terms     R2 max_KKT
+1   0.30     1 0.8369 2.2e-16
+2   0.15     1 0.9407 2.8e-16
+3   0.08     2 0.9744 4.5e-14
+4   0.04     2 0.9866 3.8e-14
+5   0.02     3 0.9918 3.3e-16
+6   0.01    10 0.9948 1.5e-14</code></pre>
+<p>The KKT residuals are at machine precision throughout, so these are the exact solutions. The sequence in which subsets enter is the interesting part:</p>
+<pre class="r"><code>for (i in seq_along(lams)) {
+  b &lt;- fits[[i]]; nz &lt;- which(b &gt; 1e-8)
+  if (length(nz) &gt; 6) next
+  cat(sprintf(&quot;lambda = %.2f\n&quot;, lams[i]))
+  for (j in nz[order(-b[nz])])
+    cat(sprintf(&quot;   d = %.3f  |S| = %2d  %s\n&quot;, b[j], sum(Tm[, j]),
+                setname(Tm[, j])))
+}</code></pre>
+<pre><code>lambda = 0.30
+   d = 0.496  |S| = 14  LWK+ESN+GWD+PUR+PEL+TSI+GBR+FIN+PJL+GIH+STU+CDX+CHB+JPT
+lambda = 0.15
+   d = 0.646  |S| = 14  LWK+ESN+GWD+PUR+PEL+TSI+GBR+FIN+PJL+GIH+STU+CDX+CHB+JPT
+lambda = 0.08
+   d = 0.673  |S| = 14  LWK+ESN+GWD+PUR+PEL+TSI+GBR+FIN+PJL+GIH+STU+CDX+CHB+JPT
+   d = 0.072  |S| = 11  PUR+PEL+TSI+GBR+FIN+PJL+GIH+STU+CDX+CHB+JPT
+lambda = 0.04
+   d = 0.673  |S| = 14  LWK+ESN+GWD+PUR+PEL+TSI+GBR+FIN+PJL+GIH+STU+CDX+CHB+JPT
+   d = 0.139  |S| = 11  PUR+PEL+TSI+GBR+FIN+PJL+GIH+STU+CDX+CHB+JPT
+lambda = 0.02
+   d = 0.646  |S| = 14  LWK+ESN+GWD+PUR+PEL+TSI+GBR+FIN+PJL+GIH+STU+CDX+CHB+JPT
+   d = 0.183  |S| = 11  PUR+PEL+TSI+GBR+FIN+PJL+GIH+STU+CDX+CHB+JPT
+   d = 0.040  |S| = 10  LWK+ESN+GWD+PUR+TSI+GBR+FIN+PJL+GIH+STU</code></pre>
+<p>The decomposition is nested and reads as a population history:</p>
+<ol style="list-style-type: decimal">
+<li><strong>All fourteen</strong>, <span class="math inline">\(d \approx 0.65\)</span>, entering first and alone explaining 94% of the off-diagonal sum of squares. This is the shared allele frequency spectrum — the thing that made the raw correlations all exceed 0.6.</li>
+<li><strong>Everything except the three African components</strong>, <span class="math inline">\(d \approx 0.14\)</span>–<span class="math inline">\(0.23\)</span>. The out-of-Africa split, recovered as the single most useful subset after the global term, taking the fit to 0.99.</li>
+</ol>
+<p>The third term the lasso adds is <em>not</em> the obvious one, and that turns out to be a defect of the penalty rather than a feature of the data.</p>
+</div>
+<div id="the-l_1-penalty-has-a-size-bias" class="section level3">
+<h3>The <span class="math inline">\(L_1\)</span> penalty has a size bias</h3>
+<p>Looking at the heatmap, a three-component model ought to be: a shared component, an African component, and an out-of-Africa component. The lasso instead picks African <span class="math inline">\(\cup\)</span> European <span class="math inline">\(\cup\)</span> South Asian as its third subset, which gives African pairs a fitted correlation of only <span class="math inline">\(0.646 + 0.040 = 0.686\)</span> where the observed values are 0.96–0.98. It is underfitting the African block badly.</p>
+<p>The reason is that an <span class="math inline">\(L_1\)</span> penalty on <span class="math inline">\(d\)</span> alone does not account for how many pairs a subset touches. The African subset covers 3 of the 91 pairs and needs <span class="math inline">\(d \approx 0.33\)</span> to fit them, costing 0.33 in penalty; a subset of size 10 covers 45 pairs and buys a comparable reduction in squared error for a cost of 0.09. Small-but-strong blocks are therefore systematically passed over. Fitting the two candidate three-term models by unpenalized non-negative least squares shows the cost:</p>
+<pre class="r"><code>nnls_cols &lt;- function(cols, iters = 3000) {
+  Xa &lt;- X_sub[, cols, drop = FALSE]; b &lt;- numeric(length(cols))
+  r &lt;- yd; xx &lt;- colSums(Xa^2)
+  for (it in 1:iters) {
+    md &lt;- 0
+    for (j in seq_along(cols)) {
+      r  &lt;- r + Xa[, j] * b[j]
+      nb &lt;- max(0, sum(Xa[, j] * r) / xx[j])
+      md &lt;- max(md, abs(nb - b[j])); b[j] &lt;- nb
+      r  &lt;- r - Xa[, j] * nb
+    }
+    if (md &lt; 1e-13) break
+  }
+  list(b = b, sse = sum((yd - Xa %*% b)^2))
+}
+X_sub  &lt;- Xd
+idx_of &lt;- function(v) which(apply(Tm, 2, function(t) all(t == v)))
+i_all  &lt;- idx_of(rep(1, Kc))
+i_afr  &lt;- idx_of(c(1, 1, 1, rep(0, Kc - 3)))
+i_ooa  &lt;- idx_of(c(0, 0, 0, rep(1, Kc - 3)))
+i_lasso3 &lt;- idx_of(c(1,1,1,1,0,1,1,1,1,1,1,0,0,0))
+
+sapply(list(`lasso: all + nonAFR + (AFR,EUR,SAS)` = c(i_all, i_ooa, i_lasso3),
+            `all + AFR + out-of-Africa`           = c(i_all, i_afr, i_ooa)),
+       function(cl) round(1 - nnls_cols(cl)$sse / sum(yd^2), 4))</code></pre>
+<pre><code>lasso: all + nonAFR + (AFR,EUR,SAS)           all + AFR + out-of-Africa 
+                             0.9938                              0.9957 </code></pre>
+<p>The proposed model fits better with the same number of terms. And unpenalized greedy forward selection — which has no size bias, since it just asks which single subset most reduces the squared error — picks it out directly:</p>
+<pre class="r"><code>sel &lt;- integer(0)
+for (step in 1:3) {
+  sse &lt;- sapply(seq_len(ncol(Xd)),
+                function(j) if (j %in% sel) Inf else nnls_cols(c(sel, j))$sse)
+  sel &lt;- c(sel, which.min(sse))
+  cat(sprintf(&quot;step %d: add %-30s R2 = %.4f\n&quot;, step, setname(Tm[, sel[step]]),
+              1 - nnls_cols(sel)$sse / sum(yd^2)))
+}</code></pre>
+<pre><code>step 1: add LWK+ESN+GWD+PUR+PEL+TSI+GBR+FIN+PJL+GIH+STU+CDX+CHB+JPT R2 = 0.9753
+step 2: add PUR+PEL+TSI+GBR+FIN+PJL+GIH+STU+CDX+CHB+JPT R2 = 0.9907
+step 3: add LWK+ESN+GWD                    R2 = 0.9957</code></pre>
+<p>So the interpretable three-component model is the one the eye picks off the heatmap: <strong>a shared component</strong> (<span class="math inline">\(d = 0.645\)</span>), <strong>an African component</strong> (<span class="math inline">\(d = 0.328\)</span> on LWK, ESN/YRI/ACB/ASW, GWD) and <strong>an out-of-Africa component</strong> (<span class="math inline">\(d = 0.232\)</span> on the other eleven), reaching <span class="math inline">\(R^2 = 0.996\)</span> on the off-diagonals. That a greedy search over all 16,369 subsets recovers exactly this, in this order and with no tree structure imposed, is good evidence that the <span class="math inline">\(x|x|\)</span> components carry real ancestry information.</p>
+</div>
+<div id="does-normalizing-the-columns-fix-it" class="section level3">
+<h3>Does normalizing the columns fix it?</h3>
+<p>The natural remedy is to put the columns on an equal footing before penalizing. Since the columns are 0/1, scaling each to unit <span class="math inline">\(L_2\)</span> norm is the same as a penalty factor of <span class="math inline">\(\sqrt{\#\text{pairs}}\)</span>, half way between the uniform penalty above and a per-pair one. All three were tried, with the same solver:</p>
+<table>
+<thead>
+<tr class="header">
+<th>column scaling</th>
+<th>penalty <span class="math inline">\(\propto\)</span></th>
+<th>behaviour</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>none</td>
+<td><span class="math inline">\(1\)</span></td>
+<td>African subset never enters in the sparse regime</td>
+</tr>
+<tr class="even">
+<td>unit <span class="math inline">\(L_2\)</span> norm</td>
+<td><span class="math inline">\(\sqrt{\#\text{pairs}}\)</span></td>
+<td>African enters 4th, at <span class="math inline">\(\lambda = 0.005\)</span></td>
+</tr>
+<tr class="odd">
+<td>per pair</td>
+<td><span class="math inline">\(\#\text{pairs}\)</span></td>
+<td>floods: 105 terms at the largest <span class="math inline">\(\lambda\)</span> tried</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>pf   &lt;- sqrt(colSums(Xd))            # = ||x_j||_2, i.e. unit-L2 columns
+fit2 &lt;- lapply(c(0.010, 0.008, 0.005), function(l) nnlasso(Xd, yd, l, pf = pf))
+for (i in seq_along(fit2)) {
+  b &lt;- fit2[[i]]; nz &lt;- which(b &gt; 1e-8)
+  cat(sprintf(&quot;lambda = %.3f  terms = %d  R2 = %.4f : %s\n&quot;,
+              c(0.010, 0.008, 0.005)[i], length(nz),
+              1 - sum((yd - Xd %*% b)^2) / sum(yd^2),
+              paste(sapply(nz[order(-b[nz])], function(j) setname(Tm[, j])),
+                    collapse = &quot; | &quot;)))
+}</code></pre>
+<pre><code>lambda = 0.010  terms = 2  R2 = 0.9750 : LWK+ESN+GWD+PUR+PEL+TSI+GBR+FIN+PJL+GIH+STU+CDX+CHB+JPT | PUR+PEL+TSI+GBR+FIN+PJL+GIH+STU+CDX+CHB+JPT
+lambda = 0.008  terms = 3  R2 = 0.9812 : LWK+ESN+GWD+PUR+PEL+TSI+GBR+FIN+PJL+GIH+STU+CDX+CHB+JPT | PUR+PEL+TSI+GBR+FIN+PJL+GIH+STU+CDX+CHB+JPT | LWK+ESN+GWD+PUR+TSI+GBR+FIN+PJL+GIH+STU
+lambda = 0.005  terms = 4  R2 = 0.9903 : LWK+ESN+GWD+PUR+PEL+TSI+GBR+FIN+PJL+GIH+STU+CDX+CHB+JPT | PUR+PEL+TSI+GBR+FIN+PJL+GIH+STU+CDX+CHB+JPT | LWK+ESN+GWD | LWK+ESN+GWD+PUR+TSI+GBR+FIN+PJL+GIH+STU</code></pre>
+<p>Normalizing helps — the African block enters the solution at all, which it never does under a uniform penalty — but it still arrives fourth, behind the same size-10 subset, and the four-term fit (<span class="math inline">\(R^2 = 0.990\)</span>) is worse than the greedy three-term one. The size bias is reduced, not removed: even with equal column norms, a subset covering 45 pairs still has 15 times as many chances to reduce the squared error as one covering 3.</p>
+</div>
+<div id="susier" class="section level3">
+<h3>susieR</h3>
+<p>The real problem is that <span class="math inline">\(L_1\)</span> conflates selection with shrinkage: the penalty that decides <em>which</em> subset enters is the same one that sets <em>how large</em> its coefficient is, and the two want different scalings. <code>susieR</code> separates them. Each single effect picks its column by Bayes factor and estimates the effect size on its own, so there is no size bias, and the near-duplicate columns that defeated <code>glmnet</code> are exactly what its credible sets are designed for.</p>
+<pre class="r"><code>nrm  &lt;- sqrt(colSums(Xd^2))
+Xn   &lt;- sweep(Xd, 2, nrm, &quot;/&quot;)          # unit L2 columns
+sfit &lt;- susieR::susie(Xn, yd, L = 10, intercept = FALSE, standardize = FALSE)
+dhat &lt;- coef(sfit)[-1] / nrm            # back to the d scale
+
+c(converged = sfit$converged,
+  R2 = round(1 - sum((yd - Xd %*% dhat)^2) / sum(yd^2), 4),
+  all_positive = all(dhat[dhat != 0] &gt; 0))</code></pre>
+<pre><code>   converged           R2 all_positive 
+      1.0000       0.9988       0.0000 </code></pre>
+<pre class="r"><code>cs &lt;- susieR::susie_get_cs(sfit, X = Xn)
+do.call(rbind, lapply(seq_along(cs$cs), function(i) {
+  j &lt;- cs$cs[[i]][which.max(sfit$pip[cs$cs[[i]]])]
+  data.frame(CS = i, size = length(cs$cs[[i]]),
+             purity = round(cs$purity[i, &quot;min.abs.corr&quot;], 2),
+             pip = round(sfit$pip[j], 3), d = round(dhat[j], 3),
+             `|S|` = sum(Tm[, j]), subset = setname(Tm[, j]),
+             check.names = FALSE, row.names = NULL)
+}))</code></pre>
+<pre><code>  CS size purity pip     d |S|
+1  1    1      1   1 0.590  14
+2  2    1      1   1 0.246  11
+3  3    1      1   1 0.295   3
+4  4    1      1   1 0.137   3
+5  5    1      1   1 0.087  10
+                                                   subset
+1 LWK+ESN+GWD+PUR+PEL+TSI+GBR+FIN+PJL+GIH+STU+CDX+CHB+JPT
+2             PUR+PEL+TSI+GBR+FIN+PJL+GIH+STU+CDX+CHB+JPT
+3                                             LWK+ESN+GWD
+4                                             CDX+CHB+JPT
+5                 LWK+ESN+GWD+PUR+TSI+GBR+FIN+PJL+GIH+STU</code></pre>
+<p>This is the decomposition we were after, and it is cleaner than anything the lasso produced. Five credible sets, <strong>every one a singleton with purity 1 and PIP 1</strong>, reaching <span class="math inline">\(R^2 = 0.999\)</span>:</p>
+<ul>
+<li><strong>all fourteen</strong>, <span class="math inline">\(d = 0.59\)</span> — the shared spectrum</li>
+<li><strong>out-of-Africa</strong> (the eleven non-African), <span class="math inline">\(d = 0.25\)</span></li>
+<li><strong>African</strong> (LWK, ESN/YRI/ACB/ASW, GWD), <span class="math inline">\(d = 0.30\)</span> — the block the lasso would not select at any penalty</li>
+<li><strong>East Asian</strong> (CDX/KHV, CHB/CHS, JPT), <span class="math inline">\(d = 0.14\)</span></li>
+<li><strong>African <span class="math inline">\(\cup\)</span> European <span class="math inline">\(\cup\)</span> South Asian</strong>, <span class="math inline">\(d = 0.09\)</span></li>
+</ul>
+<p>The implied fitted values check out against the heatmap: African pairs get <span class="math inline">\(0.59 + 0.30 + 0.09 = 0.97\)</span> against 0.96–0.98 observed, East Asian pairs <span class="math inline">\(0.59 + 0.25 + 0.14 = 0.97\)</span> against 0.97–0.98, and African-to-East-Asian pairs get the shared term alone, 0.59, against 0.60–0.62 observed.</p>
+<p><code>L</code> is not binding: <code>L = 6</code>, <code>L = 10</code> and <code>L = 15</code> all return the same five credible sets with the same subsets and the same <span class="math inline">\(d\)</span> to three decimals, at identical <span class="math inline">\(R^2\)</span> and an ELBO agreeing to 128.376 vs 128.377.</p>
+<pre class="r"><code>sapply(c(6, 10, 15), function(LL) {
+  fl &lt;- susieR::susie(Xn, yd, L = LL, intercept = FALSE, standardize = FALSE)
+  dl &lt;- coef(fl)[-1] / nrm
+  c(L = LL, nCS = length(susieR::susie_get_cs(fl, X = Xn)$cs),
+    R2 = round(1 - sum((yd - Xd %*% dl)^2) / sum(yd^2), 5),
+    ELBO = round(susieR::susie_get_objective(fl), 3))
+})</code></pre>
+<pre><code>          [,1]      [,2]      [,3]
+L      6.00000  10.00000  15.00000
+nCS    5.00000   5.00000   5.00000
+R2     0.99881   0.99881   0.99881
+ELBO 128.37600 128.37700 128.37700</code></pre>
+<p>Two other things worth noting. Every coefficient came out positive without non-negativity being imposed, so the constraint is not binding — the data prefer a non-negative decomposition on their own. And the credible sets are all singletons despite a dictionary in which the top columns correlate above 0.99, which is the case <code>susieR</code> is built for and where both <code>glmnet</code> and the greedy search were on shakier ground.</p>
+<p>For a decomposition at this scale <code>susieR</code> is clearly the right tool. Greedy selection gets the first three terms right; the <span class="math inline">\(L_1\)</span> path is reliable only for the first two.</p>
+</div>
+<div id="residuals-after-removing-the-binary-components" class="section level3">
+<h3>Residuals after removing the binary components</h3>
+<pre class="r"><code>resid_vec &lt;- as.vector(yd - Xd %*% dhat)
+Rm &lt;- matrix(0, Kc, Kc, dimnames = dimnames(Cm))
+Rm[upper.tri(Rm)] &lt;- resid_vec
+Rm &lt;- Rm + t(Rm)
+
+c(sd = round(sd(resid_vec), 4), min = round(min(resid_vec), 3),
+  max = round(max(resid_vec), 3))</code></pre>
+<pre><code>     sd     min     max 
+ 0.0279 -0.0520  0.0630 </code></pre>
+<pre class="r"><code>lim &lt;- max(abs(Rm))
+dfR &lt;- data.frame(
+  i = factor(rep(rownames(Rm), ncol(Rm)), levels = rev(rownames(Rm))),
+  j = factor(rep(colnames(Rm), each = nrow(Rm)), levels = colnames(Rm)),
+  r = as.vector(Rm))
+ggplot(dfR, aes(j, i, fill = r)) +
+  geom_tile() +
+  geom_text(aes(label = ifelse(r == 0, &quot;&quot;, sprintf(&quot;%+.02f&quot;, r))), size = 2.1,
+            colour = &quot;grey15&quot;) +
+  scale_fill_gradient2(low = &quot;#2166AC&quot;, mid = &quot;white&quot;, high = &quot;#B2182B&quot;,
+                       limits = c(-lim, lim)) +
+  labs(x = NULL, y = NULL, fill = &quot;residual&quot;,
+       title = &quot;Correlation residuals after the five binary components&quot;) +
+  theme_cowplot(font_size = 9) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5))</code></pre>
+<p><img src="figure/fastica_1kg_structure.Rmd/subset-resid-1.png" alt="" width="624" style="display: block; margin: auto;" /></p>
+<p>The residuals are an order of magnitude smaller than the correlations themselves — standard deviation about 0.026 against correlations of 0.6 to 0.99 — but they are plainly not noise, and what is left tells us what the five subsets miss.</p>
+<pre class="r"><code>ord &lt;- order(-abs(resid_vec))[1:8]
+data.frame(pair = paste(rownames(Cm)[ij[ord, 1]], &quot;vs&quot;, colnames(Cm)[ij[ord, 2]]),
+           observed = round(yd[ord], 3),
+           residual = round(resid_vec[ord], 3), row.names = NULL)</code></pre>
+<pre><code>                pair observed residual
+1 TSI/IBS vs GBR/CEU    0.987    0.063
+2         LWK vs PUR    0.736    0.058
+3 GIH vs STU/ITU/BEB    0.979    0.056
+4     GBR/CEU vs JPT    0.785   -0.052
+5     TSI/IBS vs JPT    0.785   -0.052
+6 GBR/CEU vs CDX/KHV    0.785   -0.051
+7 TSI/IBS vs CDX/KHV    0.786   -0.051
+8 GBR/CEU vs CHB/CHS    0.786   -0.051</code></pre>
+<p>Three things stand out.</p>
+<p><strong>Europe and South Asia have no block of their own.</strong> The model gives Africa and East Asia their own subsets but not Europe or South Asia, and the residuals show exactly that gap: TSI/IBS–GBR/CEU is the largest positive residual at +0.063, with GBR/CEU–FIN at +0.048, and on the South Asian side GIH–STU/ITU/BEB at +0.056 and PJL–STU/ITU/BEB at +0.044. Those blocks are under-fitted, and the corresponding European-to-East-Asian entries are over-fitted at about <span class="math inline">\(-0.05\)</span>.</p>
+<p><strong>PUR does not fit the subset structure at all.</strong> Its entire row is positive against Africa, the Americas and Europe (+0.04 to +0.06) and negative against East Asia. A model built from binary memberships cannot represent a population that is a genuine three-way admixture, so PUR shows up as a uniformly under-predicted row rather than as a missing block.</p>
+<p><strong>The structure is nested, not partitioned.</strong> A tree would leave residuals without this pattern of matched positive and negative blocks. What the residuals describe is the difference between a strict hierarchy and real population history with gene flow across the branches.</p>
+<p>It is worth noting that <code>susieR</code> stopped at five components with <code>L = 15</code> available, so it judged the European and South Asian blocks not worth adding on 91 data points. The residual plot suggests they are real; with only 91 off-diagonal entries there is simply not much power to establish them.</p>
+</div>
+</div>
+<div id="caveats" class="section level2">
+<h2>Caveats</h2>
+<ul>
+<li><p>Individuals with no positive loading on any source in a set have no membership representation and are dropped from that plot: one for the odd maxima, none for the other three maxima sets, but 47 and 17 for the stability-pruned K = 30 sets. Each plot title reports its own count.</p></li>
+<li><p><span class="math inline">\(B \ge 0\)</span> is empirical, not guaranteed. It holds for every maxima set here and fails for every rank-<span class="math inline">\(r\)</span> fit, so it should be rechecked for any new set of sources rather than assumed.</p></li>
+<li><p>The <span class="math inline">\(R^2\)</span> values are against the raw sum of squares of <span class="math inline">\(X\)</span>, which is dominated by the mean. They are not evidence that individual genotypes are well predicted and should not be read as such.</p></li>
+<li><p>This is <strong>not</strong> the <span class="math inline">\(X \approx 2QP\)</span> parameterization with <span class="math inline">\(Q\)</span> non-negative, rows summing to 1, and <span class="math inline">\(P\)</span> a matrix of allele frequencies. That version is infeasible on these data. Making <span class="math inline">\(Q\)</span> non-negative with rows summing to 1 requires a simplex whose vertices sit about 2.9 times further from the baseline than any observed individual, and the implied frequencies at those vertices then run from <span class="math inline">\(-2.6\)</span> to <span class="math inline">\(3.9\)</span>, with 46% outside <span class="math inline">\([0,1]\)</span>. An enclosing simplex has to extrapolate past the data, and the frequency map is already marginal at the data itself (about 4% of fitted individual frequencies fall outside <span class="math inline">\([0,1]\)</span>). What is plotted here is the weaker, achievable thing: non-negative memberships on a common scale, with no claim that the rows of <span class="math inline">\(B\)</span> are population allele frequencies.</p></li>
+</ul>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.4.2 (2024-10-31)
+Platform: aarch64-apple-darwin20
+Running under: macOS 26.5.2
+
+Matrix products: default
+BLAS:   /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libBLAS.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.0
+
+locale:
+[1] C
+
+time zone: America/Chicago
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] fastTopics_0.7-38 cowplot_1.2.0     ggplot2_4.0.2    
+
+loaded via a namespace (and not attached):
+ [1] tidyselect_1.2.1      viridisLite_0.4.3     dplyr_1.2.0          
+ [4] farver_2.1.2          S7_0.2.1              fastmap_1.2.0        
+ [7] lazyeval_0.2.2        reshape_0.8.10        promises_1.5.0       
+[10] digest_0.6.39         lifecycle_1.0.5       invgamma_1.2         
+[13] magrittr_2.0.4        compiler_4.4.2        rlang_1.1.7          
+[16] sass_0.4.10           progress_1.2.3        tools_4.4.2          
+[19] yaml_2.3.12           data.table_1.18.2.1   knitr_1.51           
+[22] prettyunits_1.2.0     labeling_0.4.3        htmlwidgets_1.6.4    
+[25] scatterplot3d_0.3-44  plyr_1.8.9            RColorBrewer_1.1-3   
+[28] Rtsne_0.17            workflowr_1.7.2       withr_3.0.2          
+[31] purrr_1.2.1           grid_4.4.2            susieR_0.14.2        
+[34] git2r_0.36.2          colorspace_2.1-2      scales_1.4.0         
+[37] gtools_3.9.5          cli_3.6.5             rmarkdown_2.30       
+[40] crayon_1.5.3          generics_0.1.4        otel_0.2.0           
+[43] RcppParallel_5.1.11-1 httr_1.4.8            reshape2_1.4.5       
+[46] pbapply_1.7-4         cachem_1.1.0          stringr_1.6.0        
+[49] parallel_4.4.2        matrixStats_1.5.0     vctrs_0.7.2          
+[52] Matrix_1.7-4          jsonlite_2.0.0        hms_1.1.4            
+[55] mixsqp_0.3-54         ggrepel_0.9.6         irlba_2.3.7          
+[58] plotly_4.12.0         tidyr_1.3.2           jquerylib_0.1.4      
+[61] glue_1.8.0            uwot_0.2.4            stringi_1.8.7        
+[64] Polychrome_1.5.4      gtable_0.3.6          later_1.4.6          
+[67] quadprog_1.5-8        tibble_3.3.1          pillar_1.11.1        
+[70] htmltools_0.5.9       truncnorm_1.0-9       R6_2.6.1             
+[73] zigg_0.0.2            rprojroot_2.1.1       evaluate_1.0.5       
+[76] lattice_0.22-9        png_0.1-8             Rfast_2.1.5.2        
+[79] RhpcBLASctl_0.23-42   SQUAREM_2026.1        ashr_2.2-69          
+[82] httpuv_1.6.16         bslib_0.10.0          Rcpp_1.1.1           
+[85] whisker_0.4.1         xfun_0.56             fs_1.6.6             
+[88] pkgconfig_2.0.3      </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

@@ -374,7 +374,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2026-09-17
+<strong>Last updated:</strong> 2026-09-18
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -465,16 +465,16 @@ This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a> analysi
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreef3aa24ff17ea80da6d6aae7cb7ac1b619cf4bbaatargetblankf3aa24fa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/f3aa24ff17ea80da6d6aae7cb7ac1b619cf4bbaa" target="_blank">f3aa24f</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree7bcee6eda389e7dd1ad157faffe47c86c84dad43targetblank7bcee6ea"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/7bcee6eda389e7dd1ad157faffe47c86c84dad43" target="_blank">7bcee6e</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreef3aa24ff17ea80da6d6aae7cb7ac1b619cf4bbaatargetblankf3aa24fa" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree7bcee6eda389e7dd1ad157faffe47c86c84dad43targetblank7bcee6ea" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/f3aa24ff17ea80da6d6aae7cb7ac1b619cf4bbaa" target="_blank">f3aa24f</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/7bcee6eda389e7dd1ad157faffe47c86c84dad43" target="_blank">7bcee6e</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -493,11 +493,14 @@ Ignored files:
     Ignored:    analysis/ebproj_01.html
     Ignored:    analysis/gset_G63_cache/
     Ignored:    data/.Rhistory
+    Ignored:    data/hgdp_hap_matrix.rds
     Ignored:    data/methylation-data-for-matthew.rds
     Ignored:    data/pbmc/
     Ignored:    data/pbmc_purified.RData
+    Ignored:    data/refGene_hg19.txt.gz
     Ignored:    data/tgp_data_matrix.rds
     Ignored:    data/tgp_meta.rds
+    Ignored:    output/admixture/
 
 Untracked files:
     Untracked:  .dropbox
@@ -535,6 +538,7 @@ Untracked files:
     Untracked:  analysis/fastica_1kg_unwhitened.Rmd
     Untracked:  analysis/fastica_heated.Rmd
     Untracked:  analysis/fastica_unwhitened.Rmd
+    Untracked:  analysis/fastica_unwhitened_optim.Rmd
     Untracked:  analysis/flash_cov_overlapping_groups_init.Rmd
     Untracked:  analysis/flash_test_tree.Rmd
     Untracked:  analysis/flashier_newgroups.Rmd
@@ -592,6 +596,7 @@ Untracked files:
     Untracked:  code/coordinate_descent_symNMF.R
     Untracked:  code/multivariate_testfuncs.R
     Untracked:  code/rqb.hacked.R
+    Untracked:  code/write_plink_bed.R
     Untracked:  data/4matthew/
     Untracked:  data/4matthew2/
     Untracked:  data/E-MTAB-2805.processed.1/
@@ -681,7 +686,6 @@ Untracked files:
     Untracked:  output/test5.param.txt
 
 Unstaged changes:
-    Modified:   .gitignore
     Modified:   analysis/eb_snmu.Rmd
     Modified:   analysis/ebnm_binormal.Rmd
     Modified:   analysis/ebpower.Rmd
@@ -733,6 +737,23 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/1dd792d2a9d35eeff8c8ec02ef880f6c350820f0/docs/fastica_1kg.html" target="_blank">1dd792d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-17
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -798,6 +819,43 @@ ggplot(data.frame(k = 1:40, d = d[1:40]), aes(k, d)) +
   labs(x = &quot;component&quot;, y = &quot;singular value&quot;) +
   theme_cowplot(font_size = 10)</code></pre>
 <p><img src="figure/fastica_1kg.Rmd/scree-1.png" alt="" width="576" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-scree-1">
+Past versions of scree-1.png
+</button>
+</p>
+<div id="fig-scree-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1dd792d2a9d35eeff8c8ec02ef880f6c350820f0/docs/figure/fastica_1kg.Rmd/scree-1.png" target="_blank">1dd792d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>round(d[1:25])</code></pre>
 <pre><code> [1] 3934 2594 1348 1162  524  476  446  399  361  345  337  330  327  326  325
 [16]  317  315  314  313  311  311  310  308  307  307</code></pre>
@@ -828,6 +886,43 @@ ggplot(tr, aes(iter, obj, colour = K)) +
   labs(x = &quot;iteration&quot;, y = &quot;sum of column objectives&quot;) +
   theme_cowplot(font_size = 10)</code></pre>
 <p><img src="figure/fastica_1kg.Rmd/traces-1.png" alt="" width="576" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-traces-1">
+Past versions of traces-1.png
+</button>
+</p>
+<div id="fig-traces-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1dd792d2a9d35eeff8c8ec02ef880f6c350820f0/docs/figure/fastica_1kg.Rmd/traces-1.png" target="_blank">1dd792d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code># Change in objective over the last 50 iterations.
 round(sapply(fit$fits, function(f) f$trace[200] - f$trace[150]), 8)</code></pre>
 <pre><code>       k20        k30 
@@ -971,6 +1066,43 @@ as.integer(size)</code></pre>
 <p>So the 1000 runs found only 14 distinct maxima, and the answer is the same whether we cut at a correlation of 0.90 or 0.99 — these are well separated, not a continuum.</p>
 <pre class="r"><code>plot_loadings(L_c, ncol = 4)</code></pre>
 <p><img src="figure/fastica_1kg.Rmd/r1-plot-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-r1-plot-1">
+Past versions of r1-plot-1.png
+</button>
+</p>
+<div id="fig-r1-plot-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1dd792d2a9d35eeff8c8ec02ef880f6c350820f0/docs/figure/fastica_1kg.Rmd/r1-plot-1.png" target="_blank">1dd792d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="basin-size-is-not-objective" class="section level3">
 <h3>Basin size is not objective</h3>
@@ -1149,6 +1281,43 @@ ncol(L17)</code></pre>
 <pre><code>[1] 17</code></pre>
 <pre class="r"><code>plot_loadings(L17, ncol = 4)</code></pre>
 <p><img src="figure/fastica_1kg.Rmd/all17-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-all17-1">
+Past versions of all17-1.png
+</button>
+</p>
+<div id="fig-all17-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1dd792d2a9d35eeff8c8ec02ef880f6c350820f0/docs/figure/fastica_1kg.Rmd/all17-1.png" target="_blank">1dd792d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Twelve of the 17 are population factors and five are sparser, individual-level kind (the panels with <code>n</code> in single figures, one with <span class="math inline">\(n=17\)</span> is borderline): a GIH trio, an ASW pair, an STU pair, and the ITU and STU subgroups. Note that GIH appears twice — once as the trio, with a maximum loading of 30, and once as a population factor.</p>
 </div>
 </div>
@@ -1158,8 +1327,82 @@ ncol(L17)</code></pre>
 <pre class="r"><code>L20 &lt;- ordered_L(&quot;k20&quot;)
 plot_pop_heatmap(L20)</code></pre>
 <p><img src="figure/fastica_1kg.Rmd/skew-k20-heat-1.png" alt="" width="768" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-skew-k20-heat-1">
+Past versions of skew-k20-heat-1.png
+</button>
+</p>
+<div id="fig-skew-k20-heat-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1dd792d2a9d35eeff8c8ec02ef880f6c350820f0/docs/figure/fastica_1kg.Rmd/skew-k20-heat-1.png" target="_blank">1dd792d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>plot_loadings(with_pop_labels(L20), ncol = 4)</code></pre>
 <p><img src="figure/fastica_1kg.Rmd/skew-k20-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-skew-k20-1">
+Past versions of skew-k20-1.png
+</button>
+</p>
+<div id="fig-skew-k20-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1dd792d2a9d35eeff8c8ec02ef880f6c350820f0/docs/figure/fastica_1kg.Rmd/skew-k20-1.png" target="_blank">1dd792d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>With 20 components and 26 populations, 16 of the factors are a single population or a tight pair, and in the new order they read across the panel as LWK (f01); ESN/YRI with ACB/ASW intermediate (f02); GWD (f03); MSL (f04); CLM (f05); MXL (f06); PUR (f07); PEL (f08); TSI (f09); GBR/CEU (f10); FIN (f11); GIH (f14); STU/ITU/BEB (f17); CDX/KHV (f18); CHB/CHS (f19); and JPT (f20). Admixture sometimes appears as intermediate loadings, but some admixed populations are assigned their own factor.</p>
 <pre class="r"><code>fac_summary(L20)</code></pre>
 <pre><code>                f01    f02    f03   f04   f05   f06    f07   f08    f09    f10
@@ -1223,6 +1466,43 @@ f20 &quot;NA18983/JPT(5)&quot;  &quot;NA18957/JPT(5)&quot; </code></pre>
 <pre class="r"><code>L30 &lt;- ordered_L(&quot;k30&quot;)
 plot_pop_heatmap(L30)</code></pre>
 <p><img src="figure/fastica_1kg.Rmd/skew-k30-heat-1.png" alt="" width="960" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-skew-k30-heat-1">
+Past versions of skew-k30-heat-1.png
+</button>
+</p>
+<div id="fig-skew-k30-heat-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1dd792d2a9d35eeff8c8ec02ef880f6c350820f0/docs/figure/fastica_1kg.Rmd/skew-k30-heat-1.png" target="_blank">1dd792d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Splitting the factors by whether the rank-1 runs recover them, using the test from above: a factor counts as recovered if, when we lift the orthogonality constraint and run rank-1 from it, we come back to the same place (correlation above 0.9). Equivalently, these are the factors that sit at one of the 17 unconstrained maxima.</p>
 <pre class="r"><code>recovered &lt;- tab[[&quot;cor with start after r1&quot;]][match(colnames(L30), tab$factor)] &gt; 0.9
 table(recovered)</code></pre>
@@ -1232,9 +1512,83 @@ FALSE  TRUE
 <p>Recovered by the rank-1 runs:</p>
 <pre class="r"><code>plot_loadings(with_pop_labels(L30[, recovered, drop = FALSE]), ncol = 4)</code></pre>
 <p><img src="figure/fastica_1kg.Rmd/skew-k30-recovered-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-skew-k30-recovered-1">
+Past versions of skew-k30-recovered-1.png
+</button>
+</p>
+<div id="fig-skew-k30-recovered-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1dd792d2a9d35eeff8c8ec02ef880f6c350820f0/docs/figure/fastica_1kg.Rmd/skew-k30-recovered-1.png" target="_blank">1dd792d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Not recovered — these exist only under the orthogonality constraint:</p>
 <pre class="r"><code>plot_loadings(with_pop_labels(L30[, !recovered, drop = FALSE]), ncol = 4)</code></pre>
 <p><img src="figure/fastica_1kg.Rmd/skew-k30-other-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-skew-k30-other-1">
+Past versions of skew-k30-other-1.png
+</button>
+</p>
+<div id="fig-skew-k30-other-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1dd792d2a9d35eeff8c8ec02ef880f6c350820f0/docs/figure/fastica_1kg.Rmd/skew-k30-other-1.png" target="_blank">1dd792d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>The split is not simply “population factors versus sparse ones”. The recovered group holds most of the population factors (LWK, GWD, MSL, PUR, PEL, TSI/IBS, GBR/CEU, FIN, PJL, GIH, CDX/KHV, CHB/CHS, JPT) <em>and</em> the ITU, STU and GIH-trio subgroups. The unrecovered group mixes the relative-pair factors with several ordinary-looking population factors — CLM, MXL, and the STU/BEB/ITU composite. Note also that three of the recovered factors (PUR, TSI/IBS, GBR/CEU) sit at maxima that the 1000 random starts never reached; they are recovered only when rank-1 is started at the rank-<span class="math inline">\(r\)</span> factor itself.</p>
 <pre class="r"><code>fac_summary(L30)</code></pre>
 <pre><code>                f01    f02   f03    f04   f05   f06   f07   f08   f09   f10
@@ -1392,6 +1746,43 @@ ggplot(df, aes(x, y, colour = grp, size = grp)) +
   theme_cowplot(font_size = 9) +
   theme(legend.position = &quot;bottom&quot;)</code></pre>
 <p><img src="figure/fastica_1kg.Rmd/itu-pairs-1.png" alt="" width="768" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-itu-pairs-1">
+Past versions of itu-pairs-1.png
+</button>
+</p>
+<div id="fig-itu-pairs-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1dd792d2a9d35eeff8c8ec02ef880f6c350820f0/docs/figure/fastica_1kg.Rmd/itu-pairs-1.png" target="_blank">1dd792d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>The natural reading of that plot is that the subgroup shares something with the African populations, and that at larger <span class="math inline">\(K\)</span> the orthogonality constraint is better served by spreading it over the African directions than by keeping a separate one. That reading is wrong. What actually happened is simply that <code>seed = 1</code> converged to an inferior local optimum: it is the worst of the five starts by total objective, and the only one that loses the factor.</p>
 <pre class="r"><code># For each start: total objective, and the largest mean loading over the 16.
 round(rbind(
@@ -1510,6 +1901,43 @@ plot_loadings_ns &lt;- function(L, ncol = 4) {
 }
 plot_loadings_ns(L_ns)</code></pre>
 <p><img src="figure/fastica_1kg.Rmd/no-sparse-plot-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-no-sparse-plot-1">
+Past versions of no-sparse-plot-1.png
+</button>
+</p>
+<div id="fig-no-sparse-plot-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1dd792d2a9d35eeff8c8ec02ef880f6c350820f0/docs/figure/fastica_1kg.Rmd/no-sparse-plot-1.png" target="_blank">1dd792d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="the-k-30-rank-r-fit-on-the-pruned-data" class="section level3">
 <h3>The K = 30 rank-<span class="math inline">\(r\)</span> fit on the pruned data</h3>
@@ -1548,6 +1976,43 @@ round(ns$fit$start_obj, 3)</code></pre>
 }
 plot_pop_heatmap_ns(L30_ns)</code></pre>
 <p><img src="figure/fastica_1kg.Rmd/no-sparse-k30-heat-1.png" alt="" width="960" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-no-sparse-k30-heat-1">
+Past versions of no-sparse-k30-heat-1.png
+</button>
+</p>
+<div id="fig-no-sparse-k30-heat-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1dd792d2a9d35eeff8c8ec02ef880f6c350820f0/docs/figure/fastica_1kg.Rmd/no-sparse-k30-heat-1.png" target="_blank">1dd792d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Splitting by whether the rank-1 runs recover each factor, exactly as for the full data. The converged points from the rank-<span class="math inline">\(r\)</span> starts are the last 30 columns of the search above, so the test is the correlation between each factor and where rank-1 takes it:</p>
 <pre class="r"><code>L_after &lt;- s_ns$L[, -(1:1000), drop = FALSE]
 # Put the converged points in the same column order as L30_ns.
@@ -1562,9 +2027,83 @@ FALSE  TRUE
 <p>Recovered by the rank-1 runs:</p>
 <pre class="r"><code>plot_loadings_ns(with_pop_labels_ns(L30_ns[, recovered_ns, drop = FALSE]))</code></pre>
 <p><img src="figure/fastica_1kg.Rmd/no-sparse-k30-recovered-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-no-sparse-k30-recovered-1">
+Past versions of no-sparse-k30-recovered-1.png
+</button>
+</p>
+<div id="fig-no-sparse-k30-recovered-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1dd792d2a9d35eeff8c8ec02ef880f6c350820f0/docs/figure/fastica_1kg.Rmd/no-sparse-k30-recovered-1.png" target="_blank">1dd792d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Not recovered — these exist only under the orthogonality constraint:</p>
 <pre class="r"><code>plot_loadings_ns(with_pop_labels_ns(L30_ns[, !recovered_ns, drop = FALSE]))</code></pre>
 <p><img src="figure/fastica_1kg.Rmd/no-sparse-k30-other-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-no-sparse-k30-other-1">
+Past versions of no-sparse-k30-other-1.png
+</button>
+</p>
+<div id="fig-no-sparse-k30-other-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1dd792d2a9d35eeff8c8ec02ef880f6c350820f0/docs/figure/fastica_1kg.Rmd/no-sparse-k30-other-1.png" target="_blank">1dd792d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="comment" class="section level3">
 <h3>Comment</h3>
@@ -1680,11 +2219,85 @@ c(matched = ncol(Am), unmatched_odd = ncol(Au), unmatched_even = ncol(Bu))</code
 <h5>Odd chromosomes</h5>
 <pre class="r"><code>plot_loadings_ns(Am)</code></pre>
 <p><img src="figure/fastica_1kg.Rmd/stability-matched-odd-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-stability-matched-odd-1">
+Past versions of stability-matched-odd-1.png
+</button>
+</p>
+<div id="fig-stability-matched-odd-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1dd792d2a9d35eeff8c8ec02ef880f6c350820f0/docs/figure/fastica_1kg.Rmd/stability-matched-odd-1.png" target="_blank">1dd792d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="even-chromosomes" class="section level5">
 <h5>Even chromosomes</h5>
 <pre class="r"><code>plot_loadings_ns(Bm)</code></pre>
 <p><img src="figure/fastica_1kg.Rmd/stability-matched-even-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-stability-matched-even-1">
+Past versions of stability-matched-even-1.png
+</button>
+</p>
+<div id="fig-stability-matched-even-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1dd792d2a9d35eeff8c8ec02ef880f6c350820f0/docs/figure/fastica_1kg.Rmd/stability-matched-even-1.png" target="_blank">1dd792d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 </div>
 <div id="the-unmatched-factors" class="section level4 tabset">
@@ -1694,11 +2307,85 @@ c(matched = ncol(Am), unmatched_odd = ncol(Au), unmatched_even = ncol(Bu))</code
 <h5>Odd chromosomes</h5>
 <pre class="r"><code>plot_loadings_ns(Au)</code></pre>
 <p><img src="figure/fastica_1kg.Rmd/stability-unmatched-odd-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-stability-unmatched-odd-1">
+Past versions of stability-unmatched-odd-1.png
+</button>
+</p>
+<div id="fig-stability-unmatched-odd-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1dd792d2a9d35eeff8c8ec02ef880f6c350820f0/docs/figure/fastica_1kg.Rmd/stability-unmatched-odd-1.png" target="_blank">1dd792d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="even-chromosomes-1" class="section level5">
 <h5>Even chromosomes</h5>
 <pre class="r"><code>plot_loadings_ns(Bu)</code></pre>
 <p><img src="figure/fastica_1kg.Rmd/stability-unmatched-even-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-stability-unmatched-even-1">
+Past versions of stability-unmatched-even-1.png
+</button>
+</p>
+<div id="fig-stability-unmatched-even-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1dd792d2a9d35eeff8c8ec02ef880f6c350820f0/docs/figure/fastica_1kg.Rmd/stability-unmatched-even-1.png" target="_blank">1dd792d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -1778,11 +2465,85 @@ c(odd_matched = length(keep_o), odd_only = length(extra_o),
 <h5>Odd chromosomes</h5>
 <pre class="r"><code>plot_loadings_ns(Lo)</code></pre>
 <p><img src="figure/fastica_1kg.Rmd/stability-r1-odd-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-stability-r1-odd-1">
+Past versions of stability-r1-odd-1.png
+</button>
+</p>
+<div id="fig-stability-r1-odd-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1dd792d2a9d35eeff8c8ec02ef880f6c350820f0/docs/figure/fastica_1kg.Rmd/stability-r1-odd-1.png" target="_blank">1dd792d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="even-chromosomes-2" class="section level5">
 <h5>Even chromosomes</h5>
 <pre class="r"><code>plot_loadings_ns(Le)</code></pre>
 <p><img src="figure/fastica_1kg.Rmd/stability-r1-even-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-stability-r1-even-1">
+Past versions of stability-r1-even-1.png
+</button>
+</p>
+<div id="fig-stability-r1-even-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/1dd792d2a9d35eeff8c8ec02ef880f6c350820f0/docs/figure/fastica_1kg.Rmd/stability-r1-even-1.png" target="_blank">1dd792d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-17
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 </div>
 </div>
