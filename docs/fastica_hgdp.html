@@ -465,16 +465,16 @@ This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a> analysi
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreefbe04d32eeeb2b3a165307a229182b32e6924b12targetblankfbe04d3a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/fbe04d32eeeb2b3a165307a229182b32e6924b12" target="_blank">fbe04d3</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree0b554675c0f33da0c1a29f28bdb4fa67aad07cf4targetblank0b55467a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/0b554675c0f33da0c1a29f28bdb4fa67aad07cf4" target="_blank">0b55467</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreefbe04d32eeeb2b3a165307a229182b32e6924b12targetblankfbe04d3a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree0b554675c0f33da0c1a29f28bdb4fa67aad07cf4targetblank0b55467a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/fbe04d32eeeb2b3a165307a229182b32e6924b12" target="_blank">fbe04d3</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/0b554675c0f33da0c1a29f28bdb4fa67aad07cf4" target="_blank">0b55467</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -500,6 +500,7 @@ Ignored files:
     Ignored:    data/refGene_hg19.txt.gz
     Ignored:    data/tgp_data_matrix.rds
     Ignored:    data/tgp_meta.rds
+    Ignored:    output/admixture/
 
 Untracked files:
     Untracked:  .dropbox
@@ -534,7 +535,6 @@ Untracked files:
     Untracked:  analysis/explore_psvd.Rmd
     Untracked:  analysis/fa_check_identify.Rmd
     Untracked:  analysis/fa_iterative.Rmd
-    Untracked:  analysis/fastica_1kg_structure.Rmd
     Untracked:  analysis/fastica_1kg_unwhitened.Rmd
     Untracked:  analysis/fastica_heated.Rmd
     Untracked:  analysis/fastica_unwhitened.Rmd
@@ -593,12 +593,10 @@ Untracked files:
     Untracked:  analysis/test_sparse.Rmd
     Untracked:  analysis/tree_dist_top_eigenvector.Rmd
     Untracked:  analysis/z.txt
-    Untracked:  code/annotate_snps.R
     Untracked:  code/coordinate_descent_symNMF.R
-    Untracked:  code/fit_tgp_residual.R
-    Untracked:  code/fit_tgp_structure.R
     Untracked:  code/multivariate_testfuncs.R
     Untracked:  code/rqb.hacked.R
+    Untracked:  code/write_plink_bed.R
     Untracked:  data/4matthew/
     Untracked:  data/4matthew2/
     Untracked:  data/E-MTAB-2805.processed.1/
@@ -609,7 +607,6 @@ Untracked files:
     Untracked:  data/Muscle_Skeletal.ACTN3.pm1Mb.RDS
     Untracked:  data/P.rds
     Untracked:  data/Thyroid.FMO2.pm1Mb.RDS
-    Untracked:  data/admixture_k12.png
     Untracked:  data/bmass.HaemgenRBC2016.MAF01.Vs2.MergedDataSources.200kRanSubset.ChrBPMAFMarkerZScores.vs1.txt.gz
     Untracked:  data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt
     Untracked:  data/bmass.HaemgenRBC2016.Vs2.PreviousSNPs.ZScores.hclust.vs1.txt
@@ -687,10 +684,6 @@ Untracked files:
     Untracked:  output/test5.hyp.txt
     Untracked:  output/test5.log.txt
     Untracked:  output/test5.param.txt
-    Untracked:  output/tgp_B_pruned_maxima.rds
-    Untracked:  output/tgp_residual.rds
-    Untracked:  output/tgp_snp_genes.rds
-    Untracked:  output/tgp_structure.rds
 
 Unstaged changes:
     Modified:   analysis/eb_snmu.Rmd
@@ -705,9 +698,7 @@ Unstaged changes:
     Modified:   analysis/nmu_em.Rmd
     Modified:   analysis/susie_flash.Rmd
     Modified:   analysis/tap_free_energy.Rmd
-    Modified:   code/fit_tgp_fastica.R
     Modified:   misc.Rproj
-    Modified:   output/tgp_fastica.rds
 
 </code></pre>
 <p>
@@ -751,6 +742,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/stephens999/misc/blob/0b554675c0f33da0c1a29f28bdb4fa67aad07cf4/analysis/fastica_hgdp.Rmd" target="_blank">0b55467</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-18
+</td>
+<td>
+Check relatedness in the HGDP samples, and correct the pruning section
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/c54cd5bd820b01b7cee786c67aa4b995363fdd49/docs/fastica_hgdp.html" target="_blank">c54cd5b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-18
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/stephens999/misc/blob/fbe04d32eeeb2b3a165307a229182b32e6924b12/analysis/fastica_hgdp.Rmd" target="_blank">fbe04d3</a>
 </td>
 <td>
@@ -778,7 +803,7 @@ Add fastICA x|x| analysis of HGDP haplotypes
 <li>find the local maxima of the objective with 1000 independent <strong>rank-1</strong> runs from random starts, and cluster the results, rather than reading factors off a single rank-<span class="math inline">\(r\)</span> fit.</li>
 </ul>
 <p>The 1000 Genomes analysis reached that recipe the long way round. Its lesson was that a single rank-<span class="math inline">\(r\)</span> fit is the unreliable step — it can lose a real factor to a bad local optimum — while the rank-1 searches say directly which directions are genuine maxima.</p>
-<p>It also pruned the data: a small number of related individuals and sample outliers dominated very sparse factors there, and dropping 40 of 2504 reorganized the whole landscape. <strong>That step turns out not to be needed here</strong>, so the analysis below uses every individual. The evidence is kept in one short section rather than run through the whole document. One plausible reason is that the HGDP WGS panel may already have been screened for close relatives; another is simply that HGDP populations are small and drifted enough that a genuine population factor is already narrow and sharp.</p>
+<p>It also pruned the data: a small number of related individuals and sample outliers dominated very sparse factors there, and dropping 40 of 2504 reorganized the whole landscape. <strong>That step turns out not to be needed here</strong>, so the analysis below uses every individual. The evidence is kept in one short section rather than run through the whole document. Part of the reason is that these 929 samples contain no duplicates and no first-degree relative pairs at all (checked below), so the relative pairs that dominated the sparse 1000 Genomes factors are simply not present; and part is that HGDP populations are small and drifted enough that a genuine population factor is already narrow and sharp.</p>
 <p>Two things differ from the 1000 Genomes setting. HGDP is smaller and much more finely sampled — 929 individuals from 54 populations in 7 regions, against 2504 from 26 populations — so there are far more populations than components. And the data are statistically phased, so we work with the <span class="math inline">\(2 \times 929 = 1858\)</span> <strong>haplotypes</strong> as rows rather than with individuals.</p>
 <pre class="r"><code>library(ggplot2)
 library(cowplot)
@@ -787,6 +812,7 @@ library(fastTopics)
 meta   &lt;- readRDS(&quot;../data/hgdp_meta.rds&quot;)
 fit    &lt;- readRDS(&quot;../output/hgdp_fastica.rds&quot;)
 struct &lt;- readRDS(&quot;../output/hgdp_structure.rds&quot;)
+kin    &lt;- readRDS(&quot;../output/hgdp_kinship.rds&quot;)
 
 region_palette &lt;- c(AFRICA             = &quot;#E69F00&quot;,
                     MIDDLE_EAST        = &quot;#D55E00&quot;,
@@ -832,6 +858,43 @@ skew_obj  &lt;- function(L) colMeans(L * abs(L))</code></pre>
   labs(x = &quot;component&quot;, y = &quot;singular value&quot;) +
   theme_cowplot(font_size = 10)</code></pre>
 <p><img src="figure/fastica_hgdp.Rmd/scree-1.png" alt="" width="576" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-scree-1">
+Past versions of scree-1.png
+</button>
+</p>
+<div id="fig-scree-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c54cd5bd820b01b7cee786c67aa4b995363fdd49/docs/figure/fastica_hgdp.Rmd/scree-1.png" target="_blank">c54cd5b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-18
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>round(fit$d[1:20])</code></pre>
 <pre><code> [1] 1384 1213  716  602  424  390  337  305  299  287  282  276  274  265  263
 [16]  253  239  230  221  218</code></pre>
@@ -973,8 +1036,82 @@ r1$tab</code></pre>
 <p>The striking thing, against the 1000 Genomes result, is that <strong>almost every maximum is a population factor</strong>. There is no analogue of the GIH trio that took 307 of 1000 starts there, and no relative-pair factors at all in this list. The only exceptions are the second Bedouin factor and the Hazara factor, each loading on five or six individuals at up to 13, and both are taken up in the next section. Everything else is a population, a pair of neighbouring populations, or a regional cluster, and the ordering runs cleanly from Africa through the Middle East, Europe, Central/South Asia and East Asia to Oceania and the Americas.</p>
 <pre class="r"><code>plot_loadings(L_r1, hm, r1$tab)</code></pre>
 <p><img src="figure/fastica_hgdp.Rmd/r1-plot-1.png" alt="" width="960" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-r1-plot-1">
+Past versions of r1-plot-1.png
+</button>
+</p>
+<div id="fig-r1-plot-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c54cd5bd820b01b7cee786c67aa4b995363fdd49/docs/figure/fastica_hgdp.Rmd/r1-plot-1.png" target="_blank">c54cd5b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-18
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>plot_pop_heatmap(L_r1, hm)</code></pre>
 <p><img src="figure/fastica_hgdp.Rmd/r1-heat-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-r1-heat-1">
+Past versions of r1-heat-1.png
+</button>
+</p>
+<div id="fig-r1-heat-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c54cd5bd820b01b7cee786c67aa4b995363fdd49/docs/figure/fastica_hgdp.Rmd/r1-heat-1.png" target="_blank">c54cd5b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-18
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <div id="basin-size-against-objective" class="section level3">
 <h3>Basin size against objective</h3>
 <pre class="r"><code>df &lt;- data.frame(size = r1$tab$rand_starts, obj = skew_obj(L_r1))
@@ -982,6 +1119,43 @@ ggplot(df, aes(size, obj)) + geom_point(size = 1.4) +
   labs(x = &quot;random starts reaching this maximum&quot;, y = &quot;objective&quot;) +
   theme_cowplot(font_size = 10)</code></pre>
 <p><img src="figure/fastica_hgdp.Rmd/r1-basins-1.png" alt="" width="432" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-r1-basins-1">
+Past versions of r1-basins-1.png
+</button>
+</p>
+<div id="fig-r1-basins-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c54cd5bd820b01b7cee786c67aa4b995363fdd49/docs/figure/fastica_hgdp.Rmd/r1-basins-1.png" target="_blank">c54cd5b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-18
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>round(cor(df$size, df$obj), 2)</code></pre>
 <pre><code>[1] 0.71</code></pre>
 <p>Basin size and objective are more strongly related here than in the 1000 Genomes data (0.39 there), but the relationship is still not one a search could rely on. The pattern behind it is geographic rather than numerical: the maxima with large basins are the isolated, strongly drifted populations — San, Surui, Karitiana, Mbuti, the Papuan groups, Bougainville, Pima — and the ones random starts almost never reach are the broad, shallow factors spanning many related populations, such as Russian/Orcadian/French, Brahui/Makrani/Balochi, Burusho/Pathan/Sindhi and Japanese/Hezhen/Daur. Those have basins of zero: they are found only by starting rank-1 at the corresponding rank-<span class="math inline">\(r\)</span> factor.</p>
@@ -1068,7 +1242,37 @@ st[order(st$frac), ]</code></pre>
 <pre><code>
 BantuKenya    Bedouin      Druze    Makrani     Hazara 
          4          6          8          4          5 </code></pre>
-<p>Twenty-seven individuals in five clusters of 4–8, from BantuKenya, Bedouin, Druze, Makrani and Hazara. Clusters of that size and sharpness within a population are what close relatives look like.</p>
+<p>Twenty-seven individuals in five clusters of 4–8, from BantuKenya, Bedouin, Druze, Makrani and Hazara.</p>
+<div id="are-those-clusters-relatives" class="section level3">
+<h3>Are those clusters relatives?</h3>
+<p>The obvious reading, and the one the 1000 Genomes analysis would suggest, is that clusters that size and that sharp are close relatives. On these data that is mostly <strong>wrong</strong>, which is worth establishing rather than assuming. <a href="https://github.com/stephenslab/misc/blob/master/code/fit_hgdp_kinship.R"><code>code/fit_hgdp_kinship.R</code></a> computes KING-robust kinship for all 431,056 pairs from the same SNPs.</p>
+<pre class="r"><code>kin$counts</code></pre>
+<pre><code>
+   dup/MZ       1st       2nd       3rd unrelated 
+        0         0        20        69    430967 </code></pre>
+<p>There are <strong>no duplicates and no first-degree pairs</strong> among the 929. That is itself informative: the full HGDP-CEPH panel of 1064 needs 77 individuals removed to reach that state (Rosenberg 2006 defines the nested clean subsets H1048, H971 and H952 for exactly this purpose), so these samples must come from a relatedness-aware starting set, even though the sequencing paper’s supplement documents its QC in terms of coverage, error rates, array concordance and cell-line artefacts rather than relatedness. Twenty pairs sit in the second-degree band and 69 in the third, and they are concentrated in Surui, Karitiana, Pima and Bougainville — the smallest and most drifted populations, where KING-robust is inflated by background relatedness and a “second-degree” call need not be a pedigree relationship.</p>
+<p>Against that background, here is the maximum kinship of each dropped individual to anyone in the panel:</p>
+<pre class="r"><code>dm &lt;- data.frame(sample = pc$dropped,
+                 pop = as.character(meta$pop[match(pc$dropped, meta$sample)]),
+                 max_kinship = round(kin$max_kinship[pc$dropped], 3))
+aggregate(max_kinship ~ pop, dm, function(x)
+  c(n = length(x), max = max(x), median = median(x)))</code></pre>
+<pre><code>         pop max_kinship.n max_kinship.max max_kinship.median
+1 BantuKenya        4.0000          0.1210             0.0895
+2    Bedouin        6.0000          0.0370             0.0280
+3      Druze        8.0000          0.0770             0.0525
+4     Hazara        5.0000          0.0840             0.0550
+5    Makrani        4.0000          0.0340             0.0275</code></pre>
+<p>Only the BantuKenya cluster is clearly relatedness (0.121, second degree). Hazara reaches 0.084 and Druze 0.077, both third-degree at best. <strong>Bedouin (0.037) and Makrani (0.034) show no detectable relatedness at all</strong> — those are genuine fine-scale substructure within a population, not families.</p>
+<p>The contrast is not blind to relatedness, though. Dropped individuals are enriched for it by about fivefold:</p>
+<pre class="r"><code>rel3 &lt;- kin$ids[kin$max_kinship &gt; 0.0442]
+c(`dropped, in a 3rd-degree-or-closer pair` =
+    mean(pc$dropped %in% rel3),
+  `not dropped, same`                       =
+    mean(setdiff(kin$ids, pc$dropped) %in% rel3))</code></pre>
+<pre><code>dropped, in a 3rd-degree-or-closer pair                       not dropped, same 
+                             0.44444444                              0.07982262 </code></pre>
+<p>So the narrow factors pick up relatedness where it exists, but on this panel most of what they pick up is real population substructure. That makes the decision not to prune easier rather than harder: pruning would have thrown away four Bedouin-internal and four Makrani-internal signals that are not artifacts of anything.</p>
 <p>And the result of removing them:</p>
 <pre class="r"><code>hm_pc  &lt;- hap_meta(pc$hap_ids)
 L_pc   &lt;- pc$maxima$L[, pop_order_of(pc$maxima$L, hm_pc), drop = FALSE]
@@ -1109,6 +1313,7 @@ data.frame(before = r1$tab$pops,
        23         2         0 </code></pre>
 <p>The only two maxima that go are the Bedouin and Hazara within-population clusters — the things we deliberately removed. Every other maximum survives at <span class="math inline">\(r \ge 0.95\)</span> and nothing new appears. Pruning here buys the removal of two factors we can simply recognize and set aside, at the cost of 27 individuals, so the rest of this analysis does not prune.</p>
 <p>Two plausible reasons it matters so much less than in the 1000 Genomes data. The HGDP WGS panel may already have been screened for close relatives. And HGDP populations are small and many are strongly drifted, so a genuine population factor here is already narrow and sharp — San loads 6 individuals at 12 — and occupies the part of the <span class="math inline">\(x|x|\)</span> landscape that relative pairs occupied in the 1000 Genomes data.</p>
+</div>
 </div>
 <div id="k-60" class="section level2">
 <h2><span class="math inline">\(K = 60\)</span></h2>
@@ -1220,8 +1425,82 @@ data.frame(`K=40` = r1$tab$pops, `K=60` = r60$tab$pops[apply(C60, 1, which.max)]
 <h3>Factor plots</h3>
 <pre class="r"><code>plot_loadings(L_60, hm, r60$tab)</code></pre>
 <p><img src="figure/fastica_hgdp.Rmd/k60-plot-1.png" alt="" width="960" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-k60-plot-1">
+Past versions of k60-plot-1.png
+</button>
+</p>
+<div id="fig-k60-plot-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c54cd5bd820b01b7cee786c67aa4b995363fdd49/docs/figure/fastica_hgdp.Rmd/k60-plot-1.png" target="_blank">c54cd5b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-18
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>plot_pop_heatmap(L_60, hm)</code></pre>
 <p><img src="figure/fastica_hgdp.Rmd/k60-heat-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-k60-heat-1">
+Past versions of k60-heat-1.png
+</button>
+</p>
+<div id="fig-k60-heat-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c54cd5bd820b01b7cee786c67aa4b995363fdd49/docs/figure/fastica_hgdp.Rmd/k60-heat-1.png" target="_blank">c54cd5b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-18
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="where-the-extra-20-components-do-go" class="section level3">
 <h3>Where the extra 20 components do go</h3>
@@ -1301,6 +1580,43 @@ rr_tab</code></pre>
 # long figure.
 plot_loadings(rr60, hm, rr_tab, ncol = 3)</code></pre>
 <p><img src="figure/fastica_hgdp.Rmd/k60-rankr-plot-1.png" alt="" width="1152" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-k60-rankr-plot-1">
+Past versions of k60-rankr-plot-1.png
+</button>
+</p>
+<div id="fig-k60-rankr-plot-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c54cd5bd820b01b7cee786c67aa4b995363fdd49/docs/figure/fastica_hgdp.Rmd/k60-rankr-plot-1.png" target="_blank">c54cd5b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-18
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Splitting them by whether they correspond to an unconstrained maximum tells the story:</p>
 <pre class="r"><code>Cx &lt;- cor(rr60, L_60)
 is_max &lt;- apply(Cx, 1, max) &gt; 0.9
@@ -1488,19 +1804,167 @@ $even
 <h4>Odd chromosomes</h4>
 <pre class="r"><code>plot_loadings(odd$L, hm, odd$tab)</code></pre>
 <p><img src="figure/fastica_hgdp.Rmd/split-odd-plot-1.png" alt="" width="960" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-split-odd-plot-1">
+Past versions of split-odd-plot-1.png
+</button>
+</p>
+<div id="fig-split-odd-plot-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c54cd5bd820b01b7cee786c67aa4b995363fdd49/docs/figure/fastica_hgdp.Rmd/split-odd-plot-1.png" target="_blank">c54cd5b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-18
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="even-chromosomes" class="section level4">
 <h4>Even chromosomes</h4>
 <pre class="r"><code>plot_loadings(even$L, hm, even$tab)</code></pre>
 <p><img src="figure/fastica_hgdp.Rmd/split-even-plot-1.png" alt="" width="960" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-split-even-plot-1">
+Past versions of split-even-plot-1.png
+</button>
+</p>
+<div id="fig-split-even-plot-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c54cd5bd820b01b7cee786c67aa4b995363fdd49/docs/figure/fastica_hgdp.Rmd/split-even-plot-1.png" target="_blank">c54cd5b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-18
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 </div>
 <div id="section" class="section level3 unnumbered">
 <h3 class="unnumbered"></h3>
 <pre class="r"><code>plot_pop_heatmap(odd$L, hm) + labs(title = &quot;odd chromosomes&quot;)</code></pre>
 <p><img src="figure/fastica_hgdp.Rmd/split-heat-1.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-split-heat-1">
+Past versions of split-heat-1.png
+</button>
+</p>
+<div id="fig-split-heat-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c54cd5bd820b01b7cee786c67aa4b995363fdd49/docs/figure/fastica_hgdp.Rmd/split-heat-1.png" target="_blank">c54cd5b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-18
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>plot_pop_heatmap(even$L, hm) + labs(title = &quot;even chromosomes&quot;)</code></pre>
 <p><img src="figure/fastica_hgdp.Rmd/split-heat-2.png" alt="" width="864" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-split-heat-2">
+Past versions of split-heat-2.png
+</button>
+</p>
+<div id="fig-split-heat-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c54cd5bd820b01b7cee786c67aa4b995363fdd49/docs/figure/fastica_hgdp.Rmd/split-heat-2.png" target="_blank">c54cd5b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-18
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 </div>
 <div id="structure-plots" class="section level2">
@@ -1579,11 +2043,85 @@ plot_structure &lt;- function(name, normalize = FALSE) {
 <h4>Normalized</h4>
 <pre class="r"><code>plot_structure(&quot;K = 40 maxima&quot;, normalize = TRUE)</code></pre>
 <p><img src="figure/fastica_hgdp.Rmd/struct-40-norm-1.png" alt="" width="1056" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-struct-40-norm-1">
+Past versions of struct-40-norm-1.png
+</button>
+</p>
+<div id="fig-struct-40-norm-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c54cd5bd820b01b7cee786c67aa4b995363fdd49/docs/figure/fastica_hgdp.Rmd/struct-40-norm-1.png" target="_blank">c54cd5b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-18
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="unnormalized" class="section level4">
 <h4>Unnormalized</h4>
 <pre class="r"><code>plot_structure(&quot;K = 40 maxima&quot;)</code></pre>
 <p><img src="figure/fastica_hgdp.Rmd/struct-40-raw-1.png" alt="" width="1056" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-struct-40-raw-1">
+Past versions of struct-40-raw-1.png
+</button>
+</p>
+<div id="fig-struct-40-raw-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c54cd5bd820b01b7cee786c67aa4b995363fdd49/docs/figure/fastica_hgdp.Rmd/struct-40-raw-1.png" target="_blank">c54cd5b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-18
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 </div>
 <div id="section-1" class="section level3 unnumbered">
@@ -1596,11 +2134,85 @@ plot_structure &lt;- function(name, normalize = FALSE) {
 <h4>Normalized</h4>
 <pre class="r"><code>plot_structure(&quot;K = 60 maxima&quot;, normalize = TRUE)</code></pre>
 <p><img src="figure/fastica_hgdp.Rmd/struct-60-norm-1.png" alt="" width="1056" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-struct-60-norm-1">
+Past versions of struct-60-norm-1.png
+</button>
+</p>
+<div id="fig-struct-60-norm-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c54cd5bd820b01b7cee786c67aa4b995363fdd49/docs/figure/fastica_hgdp.Rmd/struct-60-norm-1.png" target="_blank">c54cd5b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-18
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="unnormalized-1" class="section level4">
 <h4>Unnormalized</h4>
 <pre class="r"><code>plot_structure(&quot;K = 60 maxima&quot;)</code></pre>
 <p><img src="figure/fastica_hgdp.Rmd/struct-60-raw-1.png" alt="" width="1056" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-struct-60-raw-1">
+Past versions of struct-60-raw-1.png
+</button>
+</p>
+<div id="fig-struct-60-raw-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c54cd5bd820b01b7cee786c67aa4b995363fdd49/docs/figure/fastica_hgdp.Rmd/struct-60-raw-1.png" target="_blank">c54cd5b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-18
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 </div>
 <div id="section-2" class="section level3 unnumbered">
@@ -1773,6 +2385,43 @@ c(sources_removed = res$n_sources,
   labs(x = &quot;component&quot;, y = &quot;singular value of the centred residual&quot;) +
   theme_cowplot(font_size = 10)</code></pre>
 <p><img src="figure/fastica_hgdp.Rmd/res-scree-1.png" alt="" width="576" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-res-scree-1">
+Past versions of res-scree-1.png
+</button>
+</p>
+<div id="fig-res-scree-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c54cd5bd820b01b7cee786c67aa4b995363fdd49/docs/figure/fastica_hgdp.Rmd/res-scree-1.png" target="_blank">c54cd5b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-18
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>round(res$d[1:12])</code></pre>
 <pre><code> [1] 1817  459  349  206  204  203  201  199  199  199  197  197</code></pre>
 <pre class="r"><code>round(res$d[1]^2 / sum(res$d^2), 3)   # share of residual variance in PC1</code></pre>
@@ -1806,6 +2455,43 @@ res_tab</code></pre>
 <pre><code>[1] 0.04 0.02 0.03 0.06</code></pre>
 <pre class="r"><code>plot_loadings(L_res, hm_res, res_tab)</code></pre>
 <p><img src="figure/fastica_hgdp.Rmd/res-plot-1.png" alt="" width="960" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-res-plot-1">
+Past versions of res-plot-1.png
+</button>
+</p>
+<div id="fig-res-plot-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c54cd5bd820b01b7cee786c67aa4b995363fdd49/docs/figure/fastica_hgdp.Rmd/res-plot-1.png" target="_blank">c54cd5b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-18
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="the-dominant-residual-direction-is-model-misfit-not-new-structure" class="section level3">
 <h3>The dominant residual direction is model misfit, not new structure</h3>
@@ -1822,6 +2508,43 @@ round(cor(pc1, h), 3)</code></pre>
   labs(x = &quot;residual PC1 (oriented)&quot;, y = &quot;structure bar height&quot;) +
   theme_cowplot(font_size = 9) + theme(legend.position = &quot;none&quot;)</code></pre>
 <p><img src="figure/fastica_hgdp.Rmd/res-pc1-vs-height-1.png" alt="" width="441.6" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-res-pc1-vs-height-1">
+Past versions of res-pc1-vs-height-1.png
+</button>
+</p>
+<div id="fig-res-pc1-vs-height-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c54cd5bd820b01b7cee786c67aa4b995363fdd49/docs/figure/fastica_hgdp.Rmd/res-pc1-vs-height-1.png" target="_blank">c54cd5b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-18
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>The correlation is <span class="math inline">\(-0.983\)</span> at the haplotype level and <span class="math inline">\(-0.967\)</span> at the population level. <strong>The dominant direction in the residual is not population structure the sources missed; it is the sources failing on the admixed individuals.</strong> A model of 25 one-sided, non-negative sources represents a haplotype well when one source owns it and badly when it is a mixture, and the residual’s first component is precisely that failure, sorted.</p>
 <p>That also explains why the rank-1 search finds so little. The residual is 89% smaller than the data in centred variance, most of what remains is the misfit axis rather than a source, and the four maxima it does find are all low-objective — 0.40 to 0.75 against 0.58 to 0.96 for the real ones. None of them is a new population: <code>r01</code> is the admixed African pair, <code>r02</code> a cluster inside Druze, <code>r04</code> a handful of Makrani, and <code>r03</code> a broad, shallow West Eurasian gradient over Bedouin, Adygei and Tuscan with a maximum loading under 8. There is no hidden 26th population factor here.</p>
 <p>It is worth being clear about what this does and does not test. It says the <em>non-negative</em> representation leaves nothing source-like behind, which is a statement about <span class="math inline">\(A = \max(L, 0)\)</span> and <span class="math inline">\(B\)</span>, not about the ICA fit itself: the residual is defined by discarding the negative parts of the sources, so some of what it contains is the information those negative parts carried.</p>
@@ -2031,6 +2754,43 @@ plot_grid(plot_grid(plotlist = lapply(ps, function(q)
                       q + theme(legend.position = &quot;none&quot;)), nrow = 1),
           leg, ncol = 1, rel_heights = c(1, 0.22))</code></pre>
 <p><img src="figure/fastica_hgdp.Rmd/wk-pcpairs-1.png" alt="" width="1152" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-wk-pcpairs-1">
+Past versions of wk-pcpairs-1.png
+</button>
+</p>
+<div id="fig-wk-pcpairs-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c54cd5bd820b01b7cee786c67aa4b995363fdd49/docs/figure/fastica_hgdp.Rmd/wk-pcpairs-1.png" target="_blank">c54cd5b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-18
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Three things are worth reading off this. PC6 is not “West African versus the world” — it separates the four Niger-Congo populations (positive) from Biaka, Mbuti and San (strongly negative), with the rest of the world at zero. In the PC6 planes the four Niger-Congo groups are almost on top of one another, which is the sense in which they share an ancestry component. And in the <strong>PC22–PC31 plane on the right they separate cleanly into three directions</strong>: Mandenka to the right, Yoruba up and to the left, BantuKenya down and to the left, with the rest of the world as a tight cloud at the origin. Yoruba is a corner of that cloud in its own right, not a point on a line between the other two — which is exactly why one might expect it to get its own factor.</p>
 <p>Yoruba is cleanly the top population on the best Yoruba direction. But its objective is 0.698 against 0.849 for the fitted factor, and it is <strong>not a local maximum</strong>. Running rank-1 from five Yoruba-anchored starts, including ones on which Mandenka loads strongly negative, every one climbs to the same Mandenka-anchored optimum:</p>
 <pre class="r"><code>zy &lt;- Zpop[&quot;Yoruba&quot;, ]; zm &lt;- Zpop[&quot;Mandenka&quot;, ]; zbk &lt;- Zpop[&quot;BantuKenya&quot;, ]
@@ -2241,6 +3001,43 @@ ggplot(db, aes(twelve, six)) +
   labs(x = &quot;random starts, 12 kb&quot;, y = &quot;random starts, 6 kb&quot;) +
   theme_cowplot(font_size = 10)</code></pre>
 <p><img src="figure/fastica_hgdp.Rmd/density-basins-1.png" alt="" width="403.2" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-density-basins-1">
+Past versions of density-basins-1.png
+</button>
+</p>
+<div id="fig-density-basins-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/stephens999/misc/blob/c54cd5bd820b01b7cee786c67aa4b995363fdd49/docs/figure/fastica_hgdp.Rmd/density-basins-1.png" target="_blank">c54cd5b</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-18
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>round(cor(db$twelve, db$six), 3)</code></pre>
 <pre><code>[1] 0.989</code></pre>
 <p>The one difference is that 6 kb finds 1 maximum that 12 kb does not, and it is not new population structure: it is the Hazara cluster, one of the within-population groups the pruning check identifies. At 12 kb that cluster is present too, but only as a rank-<span class="math inline">\(r\)</span> factor — rank-1 started there converges to it, while no random start does. With more SNPs it becomes a genuine rank-1 maximum with a basin of its own. The same marginal wobble shows up in the pruning check: the two densities agree on 26 of the individuals to drop, and disagree on a Palestinian cluster of four that is a narrow rank-<span class="math inline">\(r\)</span> factor at 12 kb and not at 6 kb.</p>
