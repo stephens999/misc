@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Matthew Stephens" />
+
+<meta name="date" content="2026-09-22" />
+
+<title>fastica_asymmetric_05</title>
+
+<script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">misc</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/stephens999/misc">source</a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">fastica_asymmetric_05</h1>
+<h4 class="author">Matthew Stephens</h4>
+<h4 class="date">2026-09-22</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2026-09-23
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>misc/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version 1.7.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed1code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(1)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed1code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(1)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree8801686652ad7d3b361b5afa3b9d5952b66f7389targetblank8801686a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/8801686652ad7d3b361b5afa3b9d5952b66f7389" target="_blank">8801686</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree8801686652ad7d3b361b5afa3b9d5952b66f7389targetblank8801686a" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/8801686652ad7d3b361b5afa3b9d5952b66f7389" target="_blank">8801686</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    .claude/
+    Ignored:    GSE87571/
+    Ignored:    analysis/.RData
+    Ignored:    analysis/.Rhistory
+    Ignored:    analysis/ALStruct_cache/
+    Ignored:    analysis/binary_quad_comparison_cache/
+    Ignored:    analysis/ebproj_01.html
+    Ignored:    analysis/gset_G63_cache/
+    Ignored:    data/.Rhistory
+    Ignored:    data/hgdp_hap_matrix.rds
+    Ignored:    data/methylation-data-for-matthew.rds
+    Ignored:    data/pbmc/
+    Ignored:    data/pbmc_purified.RData
+    Ignored:    data/refGene_hg19.txt.gz
+    Ignored:    data/tgp_data_matrix.rds
+    Ignored:    data/tgp_meta.rds
+    Ignored:    output/admixture/
+    Ignored:    output/immgent_svd.rds
+    Ignored:    output/immgent_svd_K200.rds
+
+Untracked files:
+    Untracked:  .dropbox
+    Untracked:  GSE41037/
+    Untracked:  Icon
+    Untracked:  Rplots.pdf
+    Untracked:  analysis/GHstan.Rmd
+    Untracked:  analysis/GTEX-cogaps.Rmd
+    Untracked:  analysis/PACS.Rmd
+    Untracked:  analysis/Rplot.png
+    Untracked:  analysis/Rplots.pdf
+    Untracked:  analysis/SPCAvRP.rmd
+    Untracked:  analysis/abf_comparisons.Rmd
+    Untracked:  analysis/admm_02.Rmd
+    Untracked:  analysis/admm_03.Rmd
+    Untracked:  analysis/binary_quad_comparison.Rmd
+    Untracked:  analysis/bispca.Rmd
+    Untracked:  analysis/cache/
+    Untracked:  analysis/cholesky.Rmd
+    Untracked:  analysis/compare-transformed-models.Rmd
+    Untracked:  analysis/cormotif.Rmd
+    Untracked:  analysis/cp_ash.Rmd
+    Untracked:  analysis/eQTL.perm.rand.pdf
+    Untracked:  analysis/eb_power2.Rmd
+    Untracked:  analysis/eb_prepilot.Rmd
+    Untracked:  analysis/eb_var.Rmd
+    Untracked:  analysis/ebpmf1.Rmd
+    Untracked:  analysis/ebpmf_sla_text.Rmd
+    Untracked:  analysis/ebproj_01.Rmd
+    Untracked:  analysis/ebproj_newton.Rmd
+    Untracked:  analysis/ebspca_sims.Rmd
+    Untracked:  analysis/explore_psvd.Rmd
+    Untracked:  analysis/fa_check_identify.Rmd
+    Untracked:  analysis/fa_iterative.Rmd
+    Untracked:  analysis/fastica_1kg_unwhitened.Rmd
+    Untracked:  analysis/fastica_heated.Rmd
+    Untracked:  analysis/fastica_immgent.Rmd
+    Untracked:  analysis/fastica_unwhitened.Rmd
+    Untracked:  analysis/fastica_unwhitened_optim.Rmd
+    Untracked:  analysis/flash_cov_overlapping_groups_init.Rmd
+    Untracked:  analysis/flash_test_tree.Rmd
+    Untracked:  analysis/flashier_newgroups.Rmd
+    Untracked:  analysis/flashier_nmf_triples.Rmd
+    Untracked:  analysis/flashier_pbmc.Rmd
+    Untracked:  analysis/flashier_snn_shifted_prior.Rmd
+    Untracked:  analysis/greedy_ebpmf_exploration_00.Rmd
+    Untracked:  analysis/gset_G63.Rmd
+    Untracked:  analysis/ieQTL.perm.rand.pdf
+    Untracked:  analysis/lasso_em_03.Rmd
+    Untracked:  analysis/m6amash.Rmd
+    Untracked:  analysis/mash_bhat_z.Rmd
+    Untracked:  analysis/mash_ieqtl_permutations.Rmd
+    Untracked:  analysis/matrix_beta.Rmd
+    Untracked:  analysis/meth_flash_01.Rmd
+    Untracked:  analysis/methylation_example.Rmd
+    Untracked:  analysis/mixsqp.Rmd
+    Untracked:  analysis/mr.ash_lasso_init.Rmd
+    Untracked:  analysis/mr.mash.test.Rmd
+    Untracked:  analysis/mr_ash_modular.Rmd
+    Untracked:  analysis/mr_ash_parameterization.Rmd
+    Untracked:  analysis/mr_ash_ridge.Rmd
+    Untracked:  analysis/mv_gaussian_message_passing.Rmd
+    Untracked:  analysis/nejm.Rmd
+    Untracked:  analysis/nmf_bg.Rmd
+    Untracked:  analysis/nonneg_underapprox.Rmd
+    Untracked:  analysis/normal_conditional_on_r2.Rmd
+    Untracked:  analysis/normalize.Rmd
+    Untracked:  analysis/pbmc.Rmd
+    Untracked:  analysis/pca_binary_weighted.Rmd
+    Untracked:  analysis/pca_l1.Rmd
+    Untracked:  analysis/poisson_nmf_approx.Rmd
+    Untracked:  analysis/poisson_shrink.Rmd
+    Untracked:  analysis/poisson_transform.Rmd
+    Untracked:  analysis/qrnotes.txt
+    Untracked:  analysis/ridge_iterative_02.Rmd
+    Untracked:  analysis/ridge_iterative_splitting.Rmd
+    Untracked:  analysis/samps/
+    Untracked:  analysis/sc_bimodal.Rmd
+    Untracked:  analysis/shrinkage_comparisons_changepoints.Rmd
+    Untracked:  analysis/susie_cov.Rmd
+    Untracked:  analysis/susie_en.Rmd
+    Untracked:  analysis/susie_nmu.Rmd
+    Untracked:  analysis/susie_nn_ser.Rmd
+    Untracked:  analysis/susie_z_investigate.Rmd
+    Untracked:  analysis/svd-timing.Rmd
+    Untracked:  analysis/temp.RDS
+    Untracked:  analysis/temp.Rmd
+    Untracked:  analysis/test-figure/
+    Untracked:  analysis/test.Rmd
+    Untracked:  analysis/test.Rpres
+    Untracked:  analysis/test.md
+    Untracked:  analysis/test_qr.R
+    Untracked:  analysis/test_sparse.Rmd
+    Untracked:  analysis/tree_dist_top_eigenvector.Rmd
+    Untracked:  analysis/z.txt
+    Untracked:  code/compare_gp.R
+    Untracked:  code/compare_rna_protein_ica.R
+    Untracked:  code/coordinate_descent_symNMF.R
+    Untracked:  code/fit_immgent_ica.R
+    Untracked:  code/fit_immgent_mspace.R
+    Untracked:  code/fit_immgent_protein_ica.R
+    Untracked:  code/fit_immgent_split.R
+    Untracked:  code/fit_immgent_split_mspace.R
+    Untracked:  code/fit_immgent_structure.R
+    Untracked:  code/fit_immgent_svd.R
+    Untracked:  code/han_intermediate.R
+    Untracked:  code/immgent_ica.sbatch
+    Untracked:  code/immgent_split.sbatch
+    Untracked:  code/immgent_structure.sbatch
+    Untracked:  code/immgent_svd.sbatch
+    Untracked:  code/immgent_svd200.sbatch
+    Untracked:  code/multivariate_testfuncs.R
+    Untracked:  code/plot_han_intermediate.R
+    Untracked:  code/prep_immgent_counts.R
+    Untracked:  code/prep_immgent_meta.R
+    Untracked:  code/project_immgent_protein.R
+    Untracked:  code/rqb.hacked.R
+    Untracked:  code/sinkhorn.R
+    Untracked:  code/slim_immgent_ica.R
+    Untracked:  code/slim_immgent_ica.sbatch
+    Untracked:  code/summarize_protein_ica.R
+    Untracked:  code/time_hgdp_fastica.R
+    Untracked:  data/4matthew/
+    Untracked:  data/4matthew2/
+    Untracked:  data/E-MTAB-2805.processed.1/
+    Untracked:  data/ENSG00000156738.Sim_Y2.RDS
+    Untracked:  data/G63
+    Untracked:  data/GDS5363_full.soft.gz
+    Untracked:  data/GSE41265_allGenesTPM.txt
+    Untracked:  data/Muscle_Skeletal.ACTN3.pm1Mb.RDS
+    Untracked:  data/P.rds
+    Untracked:  data/Thyroid.FMO2.pm1Mb.RDS
+    Untracked:  data/bmass.HaemgenRBC2016.MAF01.Vs2.MergedDataSources.200kRanSubset.ChrBPMAFMarkerZScores.vs1.txt.gz
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/bmass.HaemgenRBC2016.Vs2.PreviousSNPs.ZScores.hclust.vs1.txt
+    Untracked:  data/eb_prepilot/
+    Untracked:  data/finemap_data/fmo2.sim/b.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out2_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/dap_out_snp.txt
+    Untracked:  data/finemap_data/fmo2.sim/data
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.config
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.k4.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.ld
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.snp
+    Untracked:  data/finemap_data/fmo2.sim/fmo2.sim.z
+    Untracked:  data/finemap_data/fmo2.sim/pos.txt
+    Untracked:  data/logm.csv
+    Untracked:  data/m.cd.RDS
+    Untracked:  data/m.cdu.old.RDS
+    Untracked:  data/m.new.cd.RDS
+    Untracked:  data/m.old.cd.RDS
+    Untracked:  data/mainbib.bib.old
+    Untracked:  data/mat.csv
+    Untracked:  data/mat.txt
+    Untracked:  data/mat_new.csv
+    Untracked:  data/matrix_lik.rds
+    Untracked:  data/paintor_data/
+    Untracked:  data/running_data_chris.csv
+    Untracked:  data/running_data_matthew.csv
+    Untracked:  data/temp.txt
+    Untracked:  data/y.txt
+    Untracked:  data/y_f.txt
+    Untracked:  data/zscore_jointLCLs_m6AQTLs_susie_eQTLpruned.rds
+    Untracked:  data/zscore_jointLCLs_random.rds
+    Untracked:  explore_udi.R
+    Untracked:  output/fit.k10.rds
+    Untracked:  output/fit.nn.pbmc.purified.rds
+    Untracked:  output/fit.nn.rds
+    Untracked:  output/fit.nn.s.001.rds
+    Untracked:  output/fit.nn.s.01.rds
+    Untracked:  output/fit.nn.s.1.rds
+    Untracked:  output/fit.nn.s.10.rds
+    Untracked:  output/fit.snn.s.001.rds
+    Untracked:  output/fit.snn.s.01.nninit.rds
+    Untracked:  output/fit.snn.s.01.rds
+    Untracked:  output/fit.varbvs.RDS
+    Untracked:  output/fit2.nn.pbmc.purified.rds
+    Untracked:  output/glmnet.fit.RDS
+    Untracked:  output/hgdp_han_f3.rds
+    Untracked:  output/immgent_gp_Fpm.rds
+    Untracked:  output/immgent_gp_compare.rds
+    Untracked:  output/immgent_ica_W.rds
+    Untracked:  output/immgent_meta.rds
+    Untracked:  output/immgent_mspace_ica_W.rds
+    Untracked:  output/immgent_mspace_svd.rds
+    Untracked:  output/immgent_protein_ica.rds
+    Untracked:  output/immgent_protein_ica_summary.rds
+    Untracked:  output/immgent_protein_projection.rds
+    Untracked:  output/immgent_rna_protein_compare.rds
+    Untracked:  output/immgent_sinkhorn_ica_W.rds
+    Untracked:  output/immgent_split_log1p.rds
+    Untracked:  output/immgent_split_mspace.rds
+    Untracked:  output/immgent_split_sinkhorn.rds
+    Untracked:  output/immgent_structure.rds
+    Untracked:  output/snn07.txt
+    Untracked:  output/snn34.txt
+    Untracked:  output/test.bv.txt
+    Untracked:  output/test.gamma.txt
+    Untracked:  output/test.hyp.txt
+    Untracked:  output/test.log.txt
+    Untracked:  output/test.param.txt
+    Untracked:  output/test2.bv.txt
+    Untracked:  output/test2.gamma.txt
+    Untracked:  output/test2.hyp.txt
+    Untracked:  output/test2.log.txt
+    Untracked:  output/test2.param.txt
+    Untracked:  output/test3.bv.txt
+    Untracked:  output/test3.gamma.txt
+    Untracked:  output/test3.hyp.txt
+    Untracked:  output/test3.log.txt
+    Untracked:  output/test3.param.txt
+    Untracked:  output/test4.bv.txt
+    Untracked:  output/test4.gamma.txt
+    Untracked:  output/test4.hyp.txt
+    Untracked:  output/test4.log.txt
+    Untracked:  output/test4.param.txt
+    Untracked:  output/test5.bv.txt
+    Untracked:  output/test5.gamma.txt
+    Untracked:  output/test5.hyp.txt
+    Untracked:  output/test5.log.txt
+    Untracked:  output/test5.param.txt
+    Untracked:  output/tgp_corB14.rds
+
+Unstaged changes:
+    Modified:   .gitignore
+    Modified:   analysis/eb_snmu.Rmd
+    Modified:   analysis/ebnm_binormal.Rmd
+    Modified:   analysis/ebpower.Rmd
+    Modified:   analysis/fastica_asymmetric_03.Rmd
+    Modified:   analysis/fastica_bm_spd.Rmd
+    Modified:   analysis/fastica_hgdp.Rmd
+    Modified:   analysis/flashier_log1p.Rmd
+    Modified:   analysis/flashier_sla_text.Rmd
+    Modified:   analysis/logistic_z_scores.Rmd
+    Modified:   analysis/mr_ash_pen.Rmd
+    Modified:   analysis/nmu_em.Rmd
+    Modified:   analysis/susie_flash.Rmd
+    Modified:   analysis/tap_free_energy.Rmd
+    Modified:   misc.Rproj
+    Modified:   output/hgdp_admixture_compare.rds
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/fastica_asymmetric_05.Rmd</code>) and HTML (<code>docs/fastica_asymmetric_05.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/stephens999/misc/blob/8801686652ad7d3b361b5afa3b9d5952b66f7389/analysis/fastica_asymmetric_05.Rmd" target="_blank">8801686</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-23
+</td>
+<td>
+Extend the asymmetric fastICA/EBproj ideas to a point-exponential prior
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>This file extends <code>fastica_asymmetric_03.Rmd</code> and <code>fastica_asymmetric_04.Rmd</code> from the centred <strong>binary</strong> prior to a centred, scaled <strong>point-exponential</strong> prior <span class="math display">\[g_0 = \pi_0 \delta_0 + (1-\pi_0)\,\text{Exp}(1).\]</span> As in <code>04</code>, the emphasis is on running many Newton updates for <span class="math inline">\(w\)</span> <strong>in parallel</strong> (one column of <span class="math inline">\(W\)</span> per random start), with the option to update the hyperparameters <span class="math inline">\(\pi_0\)</span>, <span class="math inline">\(c\)</span> and <span class="math inline">\(\sigma^2\)</span> at every iteration.</p>
+<p>The motivation for replacing binary by point-exponential is that the binary prior commits to a single non-zero effect size, whereas the point-exponential has a continuous slab and so can represent sources whose non-zero values vary in magnitude, while still being strongly skewed. The skewness is the property that drives the asymmetric objective, so we should retain the behaviour that made the binary version work, while being less rigid about effect sizes.</p>
+<div id="parameterisation" class="section level3">
+<h3>Parameterisation</h3>
+<p>Following the <code>g_0</code>/<code>c</code> split used in <code>03</code>/<code>04</code>, we constrain the <strong>base prior</strong> <span class="math inline">\(g_0\)</span> to have mean 0 and variance 1, and carry the scale in <span class="math inline">\(c\)</span>. Let <span class="math display">\[\theta_0 \sim \pi_0 \delta_0 + (1-\pi_0)\,\text{Exp}(1), \qquad
+  m_0 = \mathbb{E}\theta_0 = 1-\pi_0, \qquad
+  v_0 = \text{Var}(\theta_0) = 2(1-\pi_0) - (1-\pi_0)^2,\]</span> and define <span class="math display">\[g_0 = \text{law of } \frac{\theta_0 - m_0}{\sqrt{v_0}}, \qquad
+  g = \text{law of } c\,g_0 .\]</span> So <span class="math inline">\(g\)</span> has mean 0 and <strong>variance <span class="math inline">\(c^2\)</span></strong>, and <span class="math inline">\(\pi_0\)</span> is the single shape parameter, exactly parallel to <span class="math inline">\(p\)</span> in the binary case. It is convenient to write <span class="math inline">\(g\)</span> directly in terms of an exponential scale <span class="math inline">\(s\)</span> and a shift <span class="math inline">\(\mu\)</span>: <span class="math display">\[s = \frac{c}{\sqrt{v_0}}, \qquad \mu = s\,(1-\pi_0),\]</span> <span class="math display">\[g(\theta) = \pi_0\,\delta_{-\mu}(\theta) \;+\; (1-\pi_0)\,\tfrac{1}{s}e^{-(\theta+\mu)/s}\,\mathbb{1}(\theta &gt; -\mu).\]</span> That is: a point mass at <span class="math inline">\(-\mu\)</span>, plus an exponential slab starting at <span class="math inline">\(-\mu\)</span>.</p>
+<p>The default settings suggested below are <span class="math inline">\(\pi_0 = 0.5\)</span> and <span class="math inline">\(c^2 = \sigma^2 = 0.5\)</span>, so that prior variance plus residual variance equals 1. This plays the role that <span class="math inline">\(c = c_\text{golden}\)</span>, <span class="math inline">\(\sigma^2 = c\)</span> played for the binary prior (where <span class="math inline">\(c_\text{golden}^2 + c_\text{golden} = 1\)</span>).</p>
+</div>
+</div>
+<div id="the-objective-and-its-derivatives" class="section level2">
+<h2>The objective and its derivatives</h2>
+<p>As before the objective is <span class="math inline">\(J(w) = \sum_i \log Z(x_i)\)</span> with <span class="math inline">\(x = U^Tw\)</span> and <span class="math display">\[Z(x) = \int g(\theta)\exp\!\left(\frac{2x\theta - \theta^2}{2\sigma^2}\right)d\theta.\]</span></p>
+<p>Substituting <span class="math inline">\(u = \theta + \mu\)</span> (so <span class="math inline">\(u \ge 0\)</span> and <span class="math inline">\(u\)</span> has the <em>uncentred</em> prior <span class="math inline">\(g_u = \pi_0\delta_0 + (1-\pi_0)\text{Exp}(1/s)\)</span>) and writing <span class="math inline">\(\tilde x = x + \mu\)</span>, <span class="math display">\[2x\theta - \theta^2 = 2\tilde x u - u^2 - 2x\mu - \mu^2,\]</span> so <span class="math display">\[\log Z(x) = -\frac{2x\mu + \mu^2}{2\sigma^2} + \log A(\tilde x), \qquad
+  A(\tilde x) = \int g_u(u)\exp\!\left(\frac{2\tilde x u - u^2}{2\sigma^2}\right)du .\]</span></p>
+<p>For the slab, completing the square with <span class="math inline">\(m = \tilde x - \sigma^2/s\)</span> gives <span class="math display">\[-\frac{(u-\tilde x)^2}{2\sigma^2} - \frac{u}{s} = \frac{m^2}{2\sigma^2} - \frac{(u-m)^2}{2\sigma^2} - \frac{\tilde x^2}{2\sigma^2} + \frac{\tilde x^2}{2\sigma^2},\]</span> and hence <span class="math display">\[\int_0^\infty \tfrac{1}{s}e^{-u/s}\exp\!\left(\frac{2\tilde xu-u^2}{2\sigma^2}\right)du
+ = \tfrac{1}{s}\sqrt{2\pi}\,\sigma\, e^{m^2/(2\sigma^2)}\,\Phi(m/\sigma).\]</span> So, with log-scale unnormalised component weights <span class="math display">\[\ell_0 = \log \pi_0, \qquad
+  \ell_1 = \log(1-\pi_0) - \log s + \tfrac12\log(2\pi\sigma^2) + \frac{m^2}{2\sigma^2} + \log\Phi(m/\sigma),\]</span> we have <span class="math inline">\(\log A(\tilde x) = \text{logsumexp}(\ell_0, \ell_1)\)</span>. Working on the log scale matters here: <span class="math inline">\(m^2/(2\sigma^2)\)</span> overflows easily, and <span class="math inline">\(\log\Phi\)</span> must be evaluated with <code>pnorm(..., log.p = TRUE)</code> to stay accurate in the left tail.</p>
+<p>The quantities needed for the Newton step follow from <span class="math inline">\(\partial_x \log Z = \mathbb{E}[\theta\mid x]/\sigma^2\)</span> and <span class="math inline">\(\partial_x^2 \log Z = \text{Var}[\theta\mid x]/\sigma^2\)</span>: <span class="math display">\[M(x) = \mathbb{E}[u\mid \tilde x] - \mu, \qquad M&#39;(x) = \text{Var}[u\mid \tilde x]/\sigma^2 .\]</span> The posterior on <span class="math inline">\(u\)</span> is <span class="math inline">\(\bar\pi_0 \delta_0 + (1-\bar\pi_0)\,TN(m,\sigma^2;\,u&gt;0)\)</span> with <span class="math inline">\(\bar\pi_1 = e^{\ell_1 - \log A}\)</span>. Writing <span class="math inline">\(z = m/\sigma\)</span> and <span class="math inline">\(\lambda = \phi(z)/\Phi(z)\)</span> for the inverse Mills ratio, <span class="math display">\[\mathbb{E}[u \mid u&gt;0] = m + \sigma\lambda, \qquad
+  \text{Var}[u \mid u&gt;0] = \sigma^2\left(1 - z\lambda - \lambda^2\right),\]</span> and then <span class="math inline">\(\mathbb{E}[u] = \bar\pi_1(m+\sigma\lambda)\)</span>, <span class="math inline">\(\mathbb{E}[u^2] = \bar\pi_1(\text{Var}[u\mid u&gt;0] + (m+\sigma\lambda)^2)\)</span>. (The variance formula suffers cancellation for very negative <span class="math inline">\(z\)</span>; it is clamped at 0 below. In practice <span class="math inline">\(z\)</span> stays in a benign range for the settings used here.)</p>
+<p>Note that <span class="math inline">\(\log Z\)</span> contains a term linear in <span class="math inline">\(x\)</span> (through <span class="math inline">\(-2x\mu/(2\sigma^2)\)</span>), just as the binary <span class="math inline">\(\log Z\)</span> did for <span class="math inline">\(p \ne 0.5\)</span>. It is handled automatically by <span class="math inline">\(M(x)\)</span>, so no special treatment is needed in the update.</p>
+</div>
+<div id="implementation" class="section level2">
+<h2>Implementation</h2>
+<p>Everything is vectorised over columns: <code>P</code> is an <span class="math inline">\(n \times m\)</span> matrix of <span class="math inline">\(x\)</span> values (one column per start) and the hyperparameters may be scalars or length-<span class="math inline">\(m\)</span> vectors, so that each start can carry its own <span class="math inline">\((\pi_0, c, \sigma^2)\)</span>.</p>
+<pre class="r"><code>pe_v0 = function(pi0) 2*(1-pi0) - (1-pi0)^2   # Var of the Exp(1) spike-and-slab
+
+# broadcast length-1 or length-m vector to an n x m matrix (constant down columns)
+pe_bc = function(v, n, m)
+  if (length(v) == 1) matrix(v, n, m) else matrix(v, n, m, byrow = TRUE)
+
+# Per-observation posterior quantities for the centred, unit-variance
+# point-exponential base prior scaled by c (so Var(g) = c^2).
+pe_stats = function(P, pi0, cc, s2) {
+  n = nrow(P); m = ncol(P)
+  pi0 = pmin(pmax(pi0, 1e-6), 1 - 1e-6)
+  PI0 = pe_bc(pi0, n, m);  CC = pe_bc(cc, n, m);  S2 = pe_bc(s2, n, m)
+  SS  = CC / sqrt(pe_v0(PI0))          # exponential scale s
+  SIG = sqrt(S2)
+  MU  = SS * (1 - PI0)                 # centring shift: the atom sits at -MU
+  MM  = P + MU - S2 / SS               # mean of the untruncated normal in u
+  Z   = MM / SIG
+  logPhi = pnorm(Z, log.p = TRUE)
+
+  l0 = log(PI0)
+  l1 = log1p(-PI0) - log(SS) + 0.5*log(2*pi*S2) + MM^2/(2*S2) + logPhi
+  mx = pmax(l0, l1)
+  logA = mx + log(exp(l0 - mx) + exp(l1 - mx))
+
+  pi1 = exp(l1 - logA)                        # posterior P(slab)
+  lam = exp(dnorm(Z, log = TRUE) - logPhi)    # inverse Mills ratio phi/Phi
+  m1  = MM + SIG*lam                          # E[u | slab]
+  v1  = pmax(S2*(1 - Z*lam - lam^2), 0)       # Var[u | slab]
+  Eu  = pi1*m1
+  Eu2 = pi1*(v1 + m1^2)
+
+  list(logZ = -(2*P*MU + MU^2)/(2*S2) + logA,
+       pi1  = pi1,
+       M    = Eu - MU,                        # posterior mean of theta
+       Mp   = pmax(Eu2 - Eu^2, 0) / S2,       # dM/dx = Var(theta)/sigma^2
+       M2   = Eu2 - 2*MU*Eu + MU^2,           # E[theta^2]
+       m1   = m1, s = SS)
+}
+
+pe_logZ = function(x, pi0, cc, s2)
+  as.vector(pe_stats(matrix(x, ncol = 1), pi0, cc, s2)$logZ)</code></pre>
+<div id="objective-and-newton-update" class="section level3">
+<h3>Objective and Newton update</h3>
+<p><code>U</code> is <span class="math inline">\(k \times n\)</span> (rows scaled so <span class="math inline">\(\sum_i U_{ji}^2 = n\)</span>) and <code>W</code> is <span class="math inline">\(k \times m\)</span>, as in <code>04</code>. Since we only care about centred sources there is no intercept row.</p>
+<pre class="r"><code># J = sum_i log Z(x_i), returned as a length-m vector
+pe_objective = function(U, W, pi0, cc, s2)
+  colSums(pe_stats(crossprod(U, W), pi0, cc, s2)$logZ)
+
+# EBproj objective F = nu/2 (log tau - tau + 1) + J,  with tau = n/(nu sigma^2)
+pe_ebproj_objective = function(U, W, pi0, cc, s2, nu, n) {
+  tau = n / (nu * s2)
+  (nu/2)*(log(tau) - tau + 1) + pe_objective(U, W, pi0, cc, s2)
+}
+
+# Newton update with the fastICA (&quot;ica&quot;) diagonal Hessian approximation
+pe_newton_update = function(U, W, pi0, cc, s2, hessian = &quot;ica&quot;) {
+  st = pe_stats(crossprod(U, W), pi0, cc, s2)
+  Wn = U %*% st$M
+  if (hessian == &quot;ica&quot;) Wn = Wn - sweep(W, 2, colSums(st$Mp), &quot;*&quot;)
+  sweep(Wn, 2, sqrt(colSums(Wn^2)) + 1e-15, &quot;/&quot;)
+}</code></pre>
+</div>
+<div id="hyperparameter-updates" class="section level3">
+<h3>Hyperparameter updates</h3>
+<p>Two families are provided.</p>
+<p><strong>Grid updates</strong> do exact coordinate ascent in <span class="math inline">\(J\)</span> for <span class="math inline">\(\pi_0\)</span> and <span class="math inline">\(c\)</span>. Since <span class="math inline">\(x = U^Tw\)</span> does not change during a hyperparameter update, a whole grid can be swept for all starts at once, so the cost is (grid size) matrix passes per iteration. A parabolic refinement around the best grid point gives sub-grid resolution.</p>
+<p><strong>EM updates</strong> are the exact EM updates for the point-exponential in <span class="math inline">\(u\)</span>-space holding the centring shift <span class="math inline">\(\mu\)</span> fixed at its current value, after which <span class="math inline">\(\mu\)</span> is recomputed. Because the constraint <span class="math inline">\(\mu = s(1-\pi_0)\)</span> couples <span class="math inline">\(\mu\)</span> to <span class="math inline">\((\pi_0, c)\)</span>, this is not an exact EM for the constrained model and is not guaranteed to increase <span class="math inline">\(J\)</span> — but it is <span class="math inline">\(O(n)\)</span> rather than <span class="math inline">\(O(n\times\text{grid})\)</span>, and (see below) it turns out to behave considerably <em>better</em> than exact coordinate ascent.</p>
+<pre class="r"><code># vectorised 1-D maximiser: grid sweep + parabolic refinement.
+# f(t) returns a length-m vector of objective values at transformed value t.
+pe_opt_1d = function(f, grid, m) {
+  G = length(grid); V = matrix(0, G, m)
+  for (g in seq_len(G)) V[g, ] = f(grid[g])
+  i  = max.col(t(V), ties.method = &quot;first&quot;)
+  ii = seq_len(m); step = grid[2] - grid[1]
+  v0 = V[cbind(pmax(i-1,1), ii)]; v1 = V[cbind(i, ii)]; v2 = V[cbind(pmin(i+1,G), ii)]
+  den = v0 - 2*v1 + v2
+  off = ifelse(abs(den) &gt; 1e-12 &amp; i &gt; 1 &amp; i &lt; G, 0.5*(v0 - v2)/den, 0)
+  list(par = grid[i] + pmin(pmax(off, -1), 1)*step, at_edge = (i == 1 | i == G))
+}
+
+logit = function(p) log(p/(1-p));  expit = function(z) 1/(1+exp(-z))
+
+pe_update_pi0_grid = function(P, pi0, cc, s2,
+                              grid = seq(logit(0.01), logit(0.99), length.out = 31))
+  expit(pe_opt_1d(function(t) colSums(pe_stats(P, expit(t), cc, s2)$logZ), grid, ncol(P))$par)
+
+pe_update_c_grid = function(P, pi0, cc, s2,
+                            grid = seq(log(0.05), log(5), length.out = 31))
+  exp(pe_opt_1d(function(t) colSums(pe_stats(P, pi0, exp(t), s2)$logZ), grid, ncol(P))$par)
+
+# EM-style update of (pi0, c), holding the centring shift fixed within the step
+pe_update_g_em = function(P, pi0, cc, s2, update_pi0 = TRUE, update_c = TRUE) {
+  st = pe_stats(P, pi0, cc, s2)
+  ss = cc / sqrt(pe_v0(pi0))
+  if (update_c)   ss  = colSums(st$pi1 * st$m1) / colSums(st$pi1)
+  if (update_pi0) pi0 = pmin(pmax(colMeans(1 - st$pi1), 1e-6), 1 - 1e-6)
+  list(pi0 = pi0, c = ss * sqrt(pe_v0(pi0)))
+}
+
+# sigma^2 via the EBproj fixed point tau = 1/(1-rho), rho = vbar&#39; P vbar / U_q.
+# In this parameterisation P_proj = U&#39;U/n, so rho = ||U M||^2 / (n * sum(M2)).
+pe_update_s2 = function(U, P, pi0, cc, s2, nu, n, rho_max = 0.999) {
+  st  = pe_stats(P, pi0, cc, s2)
+  rho = colSums((U %*% st$M)^2) / (n * colSums(st$M2))
+  n / (nu * (1/(1 - pmin(rho, rho_max))))
+}</code></pre>
+</div>
+<div id="main-parallel-loop" class="section level3">
+<h3>Main parallel loop</h3>
+<pre class="r"><code>pe_fit = function(U, n_starts = 100, n_iter = 50, pi0 = 0.5, cc = sqrt(0.5), s2 = 0.5,
+                  b = 0, W = NULL, update_pi0 = FALSE, update_c = FALSE,
+                  update_s2 = FALSE, g_method = c(&quot;grid&quot;, &quot;em&quot;),
+                  hessian = &quot;ica&quot;, trace = FALSE) {
+  g_method = match.arg(g_method)
+  k = nrow(U); n = ncol(U); nu = n - k - 2*b
+  if (is.null(W)) {
+    W = matrix(rnorm(k*n_starts), k, n_starts)
+    W = sweep(W, 2, sqrt(colSums(W^2)), &quot;/&quot;)
+  }
+  m = ncol(W)
+  pi0 = rep(pi0, length.out = m); cc = rep(cc, length.out = m); s2 = rep(s2, length.out = m)
+  Jtr = if (trace) matrix(NA_real_, n_iter, m) else NULL
+
+  for (it in seq_len(n_iter)) {
+    P = crossprod(U, W)
+    if (update_s2) s2 = pe_update_s2(U, P, pi0, cc, s2, nu, n)
+    if (update_pi0 || update_c) {
+      if (g_method == &quot;em&quot;) {
+        g = pe_update_g_em(P, pi0, cc, s2, update_pi0, update_c); pi0 = g$pi0; cc = g$c
+      } else {
+        if (update_pi0) pi0 = pe_update_pi0_grid(P, pi0, cc, s2)
+        if (update_c)   cc  = pe_update_c_grid(P, pi0, cc, s2)
+      }
+    }
+    W = pe_newton_update(U, W, pi0, cc, s2, hessian = hessian)
+    if (trace) Jtr[it, ] = pe_objective(U, W, pi0, cc, s2)
+  }
+  list(W = W, pi0 = pi0, c = cc, s2 = s2, nu = nu, n = n, k = k,
+       J = pe_objective(U, W, pi0, cc, s2),
+       F = pe_ebproj_objective(U, W, pi0, cc, s2, nu, n), Jtrace = Jtr)
+}</code></pre>
+</div>
+</div>
+<div id="numerical-checks" class="section level2">
+<h2>Numerical checks</h2>
+<p>Check <span class="math inline">\(\log Z\)</span> against brute-force numerical integration, <span class="math inline">\(M\)</span> against <span class="math inline">\(\sigma^2\,\partial_x \log Z\)</span>, <span class="math inline">\(M&#39;\)</span> against <span class="math inline">\(\partial_x M\)</span>, and confirm that the prior really does have mean 0 and variance <span class="math inline">\(c^2\)</span>.</p>
+<pre class="r"><code>logZ_num = function(x, pi0, cc, s2) {
+  ss = cc/sqrt(pe_v0(pi0)); mu = ss*(1-pi0)
+  f = function(th) exp((2*x*th - th^2)/(2*s2)) * (1/ss)*exp(-(th+mu)/ss)
+  log(pi0*exp((2*x*(-mu) - mu^2)/(2*s2)) +
+      (1-pi0)*integrate(f, -mu, Inf, rel.tol = 1e-12)$value)
+}
+
+xs   = c(-3, -1, -0.2, 0, 0.5, 1, 3, 6)
+pars = list(c(0.5, sqrt(0.5), 0.5), c(0.2, 0.3, 0.7), c(0.9, 1.5, 0.2), c(0.05, 0.8, 1.3))
+for (p in pars) {
+  pi0 = p[1]; cc = p[2]; s2 = p[3]; h = 1e-5
+  a  = pe_logZ(xs, pi0, cc, s2)
+  b  = sapply(xs, logZ_num, pi0 = pi0, cc = cc, s2 = s2)
+  st = pe_stats(matrix(xs, ncol = 1), pi0, cc, s2)
+  Mnum  = s2*(pe_logZ(xs+h, pi0, cc, s2) - pe_logZ(xs-h, pi0, cc, s2))/(2*h)
+  Mpnum = (pe_stats(matrix(xs+h, ncol=1), pi0, cc, s2)$M -
+           pe_stats(matrix(xs-h, ncol=1), pi0, cc, s2)$M)/(2*h)
+  set.seed(1); N = 2e6
+  th0 = ifelse(runif(N) &lt; pi0, 0, rexp(N))
+  g   = cc*(th0 - (1-pi0))/sqrt(pe_v0(pi0))
+  cat(sprintf(&quot;pi0=%.2f c=%.2f s2=%.2f | logZ err %.1e | M err %.1e | Mp err %.1e | prior mean %.4f var %.4f (target 0, %.4f)\n&quot;,
+      pi0, cc, s2, max(abs(a-b)), max(abs(st$M-Mnum)), max(abs(st$Mp-Mpnum)),
+      mean(g), var(g), cc^2))
+}</code></pre>
+<pre><code>pi0=0.50 c=0.71 s2=0.50 | logZ err 8.9e-16 | M err 1.4e-10 | Mp err 8.5e-11 | prior mean 0.0004 var 0.5008 (target 0, 0.5000)
+pi0=0.20 c=0.30 s2=0.70 | logZ err 1.8e-15 | M err 1.1e-10 | Mp err 2.1e-10 | prior mean 0.0003 var 0.0902 (target 0, 0.0900)
+pi0=0.90 c=1.50 s2=0.20 | logZ err 2.8e-14 | M err 4.3e-10 | Mp err 6.4e-10 | prior mean 0.0002 var 2.2598 (target 0, 2.2500)
+pi0=0.05 c=0.80 s2=1.30 | logZ err 1.6e-15 | M err 2.2e-10 | Mp err 1.1e-10 | prior mean 0.0005 var 0.6410 (target 0, 0.6400)</code></pre>
+<p>All agree to essentially machine precision.</p>
+</div>
+<div id="shape-of-the-objective" class="section level2">
+<h2>Shape of the objective</h2>
+<p><code>log Z(x)</code> for a range of <span class="math inline">\(\pi_0\)</span>, at the default <span class="math inline">\(c^2 = \sigma^2 = 0.5\)</span>. Unlike the binary case these curves are strongly <strong>asymmetric</strong>: they are close to linear on the left (where the atom dominates) and curve upward on the right (where the slab dominates). Larger <span class="math inline">\(\pi_0\)</span> gives a sharper knee.</p>
+<pre class="r"><code>c_val  = sqrt(0.5); s2_val = 0.5
+pi0s   = c(0.1, 0.3, 0.5, 0.7, 0.8, 0.9)
+cols   = palette.colors(length(pi0s), palette = &quot;Okabe-Ito&quot;)
+x_grid = seq(-5, 5, length.out = 500)
+logZ_mat = sapply(pi0s, function(q) pe_logZ(x_grid, q, c_val, s2_val))
+matplot(x_grid, logZ_mat, type = &quot;l&quot;, lty = 1, col = cols, lwd = 2,
+        xlab = &quot;x&quot;, ylab = &quot;log Z(x)&quot;, main = &quot;log Z(x) by pi_0  (c^2 = sigma^2 = 0.5)&quot;)
+legend(&quot;top&quot;, legend = paste0(&quot;pi_0 = &quot;, pi0s), col = cols, lty = 1, lwd = 2, cex = 0.8)</code></pre>
+<p><img src="figure/fastica_asymmetric_05.Rmd/unnamed-chunk-6-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<div id="expected-objective-by-source-type" class="section level3">
+<h3>Expected objective by source type</h3>
+<p>We restrict attention throughout to <strong>centred (zero-mean) sources</strong>, so there is no intercept to profile over. For a zero-mean binary source with weight <span class="math inline">\(p_\text{s}\)</span> and unit variance the atoms are <span class="math display">\[a_0 = -p_s d, \quad a_1 = (1-p_s)d, \quad d = \frac{1}{\sqrt{p_s(1-p_s)}},\]</span> i.e. the usual <span class="math inline">\(a_1 = \sqrt{(1-p_s)/p_s}\)</span>, <span class="math inline">\(a_0 = -\sqrt{p_s/(1-p_s)}\)</span>. A source is detectable as a maximum of this objective if <span class="math inline">\(\mathbb{E}[\log Z]\)</span> sits above the standard normal baseline.</p>
+<pre class="r"><code>E_logZ_binary = function(p_s, pi0, cc, s2) {
+  a1 = sqrt((1-p_s)/p_s); a0 = -sqrt(p_s/(1-p_s))
+  (1-p_s)*pe_logZ(a0, pi0, cc, s2) + p_s*pe_logZ(a1, pi0, cc, s2)
+}
+E_logZ_gauss = function(pi0, cc, s2)
+  integrate(function(x) pe_logZ(x, pi0, cc, s2)*dnorm(x), -8, 8)$value
+
+p_srcs    = c(0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5)
+ps_grid   = seq(0.01, 0.99, by = 0.01)
+E_mat     = sapply(pi0s, function(q) sapply(ps_grid, function(ps) E_logZ_binary(ps, q, c_val, s2_val)))
+E_gauss   = sapply(pi0s, function(q) E_logZ_gauss(q, c_val, s2_val))
+
+matplot(ps_grid, E_mat, type = &quot;l&quot;, lty = 1, col = cols, lwd = 2,
+        xlab = expression(p[source]), ylab = expression(E[source]*&quot;[log Z(x)]&quot;),
+        main = &quot;Expected objective, zero-mean binary sources&quot;)
+for (i in seq_along(pi0s)) abline(h = E_gauss[i], col = cols[i], lty = 2, lwd = 1.2)
+legend(&quot;topright&quot;, legend = c(paste0(&quot;pi_0 = &quot;, pi0s), &quot;Gaussian (dashed)&quot;),
+       col = c(cols, &quot;grey50&quot;), lty = c(rep(1, length(pi0s)), 2), lwd = 2, cex = 0.7)</code></pre>
+<p><img src="figure/fastica_asymmetric_05.Rmd/unnamed-chunk-7-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<p>This is qualitatively different from the binary objective, and is the main structural finding of this file. For the binary prior, <span class="math inline">\(p_\text{obj}\)</span> selected <em>which</em> sources were favoured — <span class="math inline">\(p_\text{obj}=0.5\)</span> favoured balanced sources, small <span class="math inline">\(p_\text{obj}\)</span> favoured sparse ones. Here the expected objective is <strong>monotone decreasing in <span class="math inline">\(p_\text{source}\)</span> at every <span class="math inline">\(\pi_0\)</span></strong>: sparse/skewed sources always score above common ones, and <span class="math inline">\(\pi_0\)</span> only tunes how steeply.</p>
+<p>The flip side is that a balanced (<span class="math inline">\(p_s = 0.5\)</span>) binary source falls <em>below</em> the Gaussian baseline for every <span class="math inline">\(\pi_0\)</span>. So this objective is a detector for skewed sources specifically, and should not be expected to find symmetric ones. That is inherent: the prior is one-sided, so it cannot reward a symmetric source.</p>
+<pre class="r"><code>for (q in c(0.3, 0.5, 0.7, 0.9)) {
+  e0 = sapply(p_srcs, function(ps) E_logZ_binary(ps, q, c_val, s2_val))
+  gb = E_logZ_gauss(q, c_val, s2_val)
+  cat(sprintf(&quot;pi_0=%.1f  Gaussian=%.4f | E[logZ] by p_src (%s): %s\n&quot;, q, gb,
+      paste(p_srcs, collapse = &quot; &quot;), paste(sprintf(&quot;%.4f&quot;, e0), collapse = &quot; &quot;)))
+}</code></pre>
+<pre><code>pi_0=0.3  Gaussian=0.1212 | E[logZ] by p_src (0.02 0.05 0.1 0.2 0.3 0.4 0.5): 0.5916 0.5063 0.4127 0.2897 0.2069 0.1453 0.0955
+pi_0=0.5  Gaussian=0.1109 | E[logZ] by p_src (0.02 0.05 0.1 0.2 0.3 0.4 0.5): 0.6353 0.5501 0.4490 0.3032 0.2009 0.1269 0.0703
+pi_0=0.7  Gaussian=0.0928 | E[logZ] by p_src (0.02 0.05 0.1 0.2 0.3 0.4 0.5): 0.7058 0.6146 0.4933 0.2998 0.1677 0.0837 0.0276
+pi_0=0.9  Gaussian=0.0557 | E[logZ] by p_src (0.02 0.05 0.1 0.2 0.3 0.4 0.5): 0.8089 0.6891 0.5058 0.2065 0.0648 0.0082 -0.0192</code></pre>
+</div>
+<div id="the-detectability-boundary" class="section level3">
+<h3>The detectability boundary</h3>
+<p>Because <span class="math inline">\(\mathbb{E}[\log Z]\)</span> is monotone decreasing in <span class="math inline">\(p_\text{source}\)</span>, for each <span class="math inline">\(\pi_0\)</span> there is a single crossing <span class="math inline">\(p^*(\pi_0)\)</span> at which it meets the Gaussian baseline. Sources with <span class="math inline">\(p_\text{source} &lt; p^*\)</span> are detectable (they sit above the baseline, so they are maxima of the objective) and those with <span class="math inline">\(p_\text{source} &gt; p^*\)</span> are not. Plotting <span class="math inline">\(p^*\)</span> against <span class="math inline">\(\pi_0\)</span> therefore summarises, in one curve, which sources each <span class="math inline">\(\pi_0\)</span> can find.</p>
+<p><span class="math inline">\(\pi_0 = 0\)</span> is included: that is the pure centred exponential slab with no spike, which is perfectly well defined here (<span class="math inline">\(v_0 = 1\)</span>, so <span class="math inline">\(s = c\)</span>).</p>
+<pre class="r"><code>p_cross = function(pi0, cc, s2) {
+  gb = E_logZ_gauss(pi0, cc, s2)
+  h  = function(p) E_logZ_binary(p, pi0, cc, s2) - gb
+  lo = 1e-4; hi = 1 - 1e-4
+  if (h(lo) &lt; 0) return(NA_real_)   # nothing detectable
+  if (h(hi) &gt; 0) return(1)          # everything detectable
+  uniroot(h, c(lo, hi), tol = 1e-10)$root
+}
+
+pi0_grid = seq(0, 0.99, length.out = 100)
+p_star   = sapply(pi0_grid, p_cross, cc = c_val, s2 = s2_val)
+
+plot(pi0_grid, p_star, type = &quot;n&quot;, ylim = c(0, 0.5),
+     xlab = expression(pi[0]), ylab = expression(p^&quot;*&quot;),
+     main = &quot;Detectability boundary (c^2 = sigma^2 = 0.5)&quot;)
+polygon(c(pi0_grid, rev(pi0_grid)), c(p_star, rep(0, length(p_star))),
+        col = &quot;grey90&quot;, border = NA)
+lines(pi0_grid, p_star, lwd = 2)
+abline(h = 0.2, lty = 3, col = &quot;red&quot;)
+text(0.5, 0.13, &quot;detectable&quot;, cex = 0.9)
+text(0.5, 0.47, &quot;not detectable&quot;, cex = 0.9, col = &quot;grey40&quot;)
+legend(&quot;bottomleft&quot;, legend = c(expression(p^&quot;*&quot;), &quot;p_source = 0.2 (simulation)&quot;),
+       col = c(&quot;black&quot;, &quot;red&quot;), lty = c(1, 3), lwd = c(2, 1), bty = &quot;n&quot;, cex = 0.8)</code></pre>
+<p><img src="figure/fastica_asymmetric_05.Rmd/unnamed-chunk-9-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>knitr::kable(
+  data.frame(pi_0 = c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99),
+             p_star = round(sapply(c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99),
+                                   p_cross, cc = c_val, s2 = s2_val), 4)),
+  col.names = c(&quot;pi_0&quot;, &quot;p*&quot;),
+  caption = &quot;Largest detectable p_source for each pi_0&quot;)</code></pre>
+<table>
+<caption>Largest detectable p_source for each pi_0</caption>
+<thead>
+<tr class="header">
+<th align="right">pi_0</th>
+<th align="right">p*</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.00</td>
+<td align="right">0.4510</td>
+</tr>
+<tr class="even">
+<td align="right">0.10</td>
+<td align="right">0.4514</td>
+</tr>
+<tr class="odd">
+<td align="right">0.20</td>
+<td align="right">0.4505</td>
+</tr>
+<tr class="even">
+<td align="right">0.30</td>
+<td align="right">0.4463</td>
+</tr>
+<tr class="odd">
+<td align="right">0.40</td>
+<td align="right">0.4382</td>
+</tr>
+<tr class="even">
+<td align="right">0.50</td>
+<td align="right">0.4259</td>
+</tr>
+<tr class="odd">
+<td align="right">0.60</td>
+<td align="right">0.4091</td>
+</tr>
+<tr class="even">
+<td align="right">0.70</td>
+<td align="right">0.3868</td>
+</tr>
+<tr class="odd">
+<td align="right">0.80</td>
+<td align="right">0.3568</td>
+</tr>
+<tr class="even">
+<td align="right">0.90</td>
+<td align="right">0.3113</td>
+</tr>
+<tr class="odd">
+<td align="right">0.95</td>
+<td align="right">0.2734</td>
+</tr>
+<tr class="even">
+<td align="right">0.99</td>
+<td align="right">0.2089</td>
+</tr>
+</tbody>
+</table>
+<p>The shape of this curve is the opposite of what one might guess. Making the prior sparser does <strong>not</strong> widen the range of sparse sources that can be found: <span class="math inline">\(p^*\)</span> is essentially flat at about 0.45 for <span class="math inline">\(\pi_0 \lesssim 0.2\)</span> and then <em>falls</em>, down to about 0.21 by <span class="math inline">\(\pi_0 = 0.99\)</span>. Increasing <span class="math inline">\(\pi_0\)</span> narrows the detectable set rather than shifting it towards sparser sources. The reason is that the Gaussian baseline is not fixed — it moves with <span class="math inline">\(\pi_0\)</span> too — and raising <span class="math inline">\(\pi_0\)</span> pulls the source curves down faster than it pulls the baseline down.</p>
+<p>Two practical consequences. First, there may be reason to keep <span class="math inline">\(\pi_0\)</span> from being too high, certainly there seems no reason to initialize it high. Second, the boundary never reaches 0.5, which is the analytic statement of the earlier remark that a balanced binary source will not be detected by this one-sided objective.</p>
+<p>This also explains the somewhat counter-intuitive behaviour in the <span class="math inline">\(\pi_0\)</span> sweep in the simulation below. The true sources there have <span class="math inline">\(p_\text{source} = 0.2\)</span> (red line): it sits comfortably inside the detectable region for <span class="math inline">\(\pi_0 \le 0.7\)</span>, is getting close to the boundary by <span class="math inline">\(\pi_0 = 0.9\)</span> (<span class="math inline">\(p^* = 0.31\)</span>), and at <span class="math inline">\(\pi_0 = 0.99\)</span> would be right on it (<span class="math inline">\(p^* = 0.21\)</span>) — which matches recovery being perfect up to 0.7 and collapsing at 0.9. So maybe matching <span class="math inline">\(\pi_0\)</span> to the “true” null value is not going to be advantageous in practice? This may require more investigation.</p>
+</div>
+</div>
+<div id="simulation-nine-groups-with-p-approx-0.2" class="section level2">
+<h2>Simulation: nine groups with <span class="math inline">\(p \approx 0.2\)</span></h2>
+<p>The same simulation used in <code>04</code>: <span class="math inline">\(K=9\)</span> binary loading vectors, each with 20 non-zero entries among <span class="math inline">\(n=100\)</span> observations. One deliberate difference from <code>04</code>: because we are interested in <strong>centred sources</strong>, <code>U</code> is <em>not</em> augmented with an intercept row. (Essentially I have moved on from my original idea of including an intercept, which I originally introduced to deal with the fact that fastICA with log-cosh cannot find asymmetric sources; we are now fixing that by using asymmetric contrast functions, which in hindsight seems much the preferable route. Indeed, the ICA theory seems to depend on centered sources, so we keep the theory this way).</p>
+<pre class="r"><code>set.seed(1)
+n = 100; p_dim = 1000; K = 9
+L = matrix(0, n, K); for (i in 1:K) L[sample(n, 20), i] = 1
+FF = matrix(rnorm(p_dim*K), p_dim)
+Y  = L %*% t(FF) + matrix(rnorm(n*p_dim, 0, 0.1), n)
+
+n.comp = 9
+Y  = scale(Y, scale = FALSE)
+U  = sqrt(nrow(Y)) * t(svd(Y)$u[, 1:n.comp])</code></pre>
+<div id="fixed-hyperparameters" class="section level3">
+<h3>Fixed hyperparameters</h3>
+<p>Run 1000 starts in parallel at the default <span class="math inline">\(\pi_0 = 0.5\)</span>, <span class="math inline">\(c^2 = \sigma^2 = 0.5\)</span>.</p>
+<pre class="r"><code>set.seed(1)
+system.time(fit0 &lt;- pe_fit(U, n_starts = 1000, n_iter = 50, trace = TRUE))</code></pre>
+<pre><code>   user  system elapsed 
+  1.240   0.223   1.474 </code></pre>
+<pre class="r"><code>Lhat = crossprod(U, fit0$W)
+bestcor = apply(abs(cor(Lhat, L)), 1, max)
+plot(fit0$J, xlab = &quot;start&quot;, ylab = &quot;J&quot;, main = &quot;objective by start (pi_0 = 0.5)&quot;)</code></pre>
+<p><img src="figure/fastica_asymmetric_05.Rmd/unnamed-chunk-12-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(bestcor, fit0$J, xlab = &quot;best |cor| with a true source&quot;, ylab = &quot;J&quot;)</code></pre>
+<p><img src="figure/fastica_asymmetric_05.Rmd/unnamed-chunk-12-2.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>cat(sprintf(&quot;frac of starts with |cor| &gt; 0.9 : %.2f\n&quot;, mean(bestcor &gt; 0.9)))</code></pre>
+<pre><code>frac of starts with |cor| &gt; 0.9 : 1.00</code></pre>
+<pre class="r"><code>cat(sprintf(&quot;|cor| at the best-objective start: %.3f\n&quot;, bestcor[which.max(fit0$J)]))</code></pre>
+<pre><code>|cor| at the best-objective start: 1.000</code></pre>
+<pre class="r"><code>cat(&quot;best |cor| achieved for each true source:\n&quot;)</code></pre>
+<pre><code>best |cor| achieved for each true source:</code></pre>
+<pre class="r"><code>print(round(apply(abs(cor(Lhat, L)), 2, max), 3))</code></pre>
+<pre><code>[1] 1 1 1 1 1 1 1 1 1</code></pre>
+<pre class="r"><code>cat(sprintf(&quot;frac of (iteration, start) pairs where J decreased: %.5f\n&quot;,
+            mean(diff(fit0$Jtrace) &lt; -1e-8)))</code></pre>
+<pre><code>frac of (iteration, start) pairs where J decreased: 0.00014</code></pre>
+<p>Every one of the 1000 starts converges to a true source, all nine sources are recovered, the best solution by objective is a true source, and the Newton update is empirically monotone for all but a handful of steps. Plotting the two extreme solutions:</p>
+<pre class="r"><code>plot(Lhat[, which.max(fit0$J)], ylab = &quot;x&quot;, main = &quot;best start (by objective)&quot;)</code></pre>
+<p><img src="figure/fastica_asymmetric_05.Rmd/unnamed-chunk-13-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(Lhat[, which.min(fit0$J)], ylab = &quot;x&quot;, main = &quot;worst start (by objective)&quot;)</code></pre>
+<p><img src="figure/fastica_asymmetric_05.Rmd/unnamed-chunk-13-2.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="sensitivity-to-pi_0" class="section level3">
+<h3>Sensitivity to <span class="math inline">\(\pi_0\)</span></h3>
+<pre class="r"><code>for (q in c(0, 0.02, 0.05, 0.1, 0.3, 0.5, 0.7, 0.8, 0.9)) {
+  set.seed(1)
+  f  = pe_fit(U, n_starts = 1000, n_iter = 50, pi0 = q, cc = sqrt(0.5), s2 = 0.5)
+  Lh = crossprod(U, f$W); bcr = apply(abs(cor(Lh, L)), 1, max)
+  cat(sprintf(&quot;pi_0=%.2f : frac&gt;0.9 = %.2f   best-obj |cor| = %.3f   #sources found = %d\n&quot;,
+      q, mean(bcr &gt; 0.9), bcr[which.max(f$J)], sum(apply(abs(cor(Lh, L)), 2, max) &gt; 0.9)))
+}</code></pre>
+<pre><code>pi_0=0.00 : frac&gt;0.9 = 1.00   best-obj |cor| = 1.000   #sources found = 9
+pi_0=0.02 : frac&gt;0.9 = 1.00   best-obj |cor| = 1.000   #sources found = 9
+pi_0=0.05 : frac&gt;0.9 = 1.00   best-obj |cor| = 1.000   #sources found = 9
+pi_0=0.10 : frac&gt;0.9 = 1.00   best-obj |cor| = 1.000   #sources found = 9
+pi_0=0.30 : frac&gt;0.9 = 1.00   best-obj |cor| = 1.000   #sources found = 9
+pi_0=0.50 : frac&gt;0.9 = 1.00   best-obj |cor| = 1.000   #sources found = 9
+pi_0=0.70 : frac&gt;0.9 = 1.00   best-obj |cor| = 1.000   #sources found = 9
+pi_0=0.80 : frac&gt;0.9 = 0.94   best-obj |cor| = 0.750   #sources found = 9
+pi_0=0.90 : frac&gt;0.9 = 0.15   best-obj |cor| = 0.699   #sources found = 6</code></pre>
+<p>Recovery is perfect for every <span class="math inline">\(\pi_0\)</span> from 0 up to 0.7 — including <span class="math inline">\(\pi_0 = 0\)</span>, the pure exponential slab with no spike at all — degrades slightly at 0.8, and falls apart at 0.9 (where only 6 of the 9 sources are found). So the method is insensitive to <span class="math inline">\(\pi_0\)</span> over a wide range, and <span class="math inline">\(\pi_0 = 0.5\)</span> remains a reasonable default.</p>
+</div>
+<div id="comparison-with-the-binary-prior" class="section level3">
+<h3>Comparison with the binary prior</h3>
+<p>The binary code from <code>04</code>, run on the same data for reference:</p>
+<pre class="r"><code>binary_newton_update = function(U, W, p = 0.5, c = 2/(1+sqrt(5)), s2 = c) {
+  y1 = sqrt((1-p)/p); y0 = -sqrt(p/(1-p)); ey0 = c*y0; ey1 = c*y1
+  P   = t(U) %*% W
+  lp0 = log(1-p) + (2*P*ey0 - ey0^2)/(2*s2)
+  lp1 = log(p)   + (2*P*ey1 - ey1^2)/(2*s2)
+  m = pmax(lp0, lp1); e0 = exp(lp0-m); e1 = exp(lp1-m); pi1 = e1/(e0+e1)
+  Mx  = (1-pi1)*ey0 + pi1*ey1
+  Mpx = pi1*(1-pi1)*(ey1-ey0)^2/s2
+  W = U %*% Mx - sweep(W, 2, colSums(Mpx), &quot;*&quot;)
+  sweep(W, 2, sqrt(colSums(W^2)) + 1e-15, &quot;/&quot;)
+}
+binary_objective = function(U, W, p = 0.5, c = 2/(1+sqrt(5)), s2 = c) {
+  y1 = sqrt((1-p)/p); y0 = -sqrt(p/(1-p)); ey0 = c*y0; ey1 = c*y1
+  P   = t(U) %*% W
+  lp0 = log(1-p) + (2*P*ey0 - ey0^2)/(2*s2)
+  lp1 = log(p)   + (2*P*ey1 - ey1^2)/(2*s2)
+  m = pmax(lp0, lp1); colSums(log(exp(lp0-m) + exp(lp1-m)) + m)
+}
+
+for (p in c(0.5, 0.25, 0.1, 0.05)) {
+  set.seed(1)
+  W = matrix(rnorm(nrow(U)*1000), nrow(U), 1000)
+  W = sweep(W, 2, sqrt(colSums(W^2)), &quot;/&quot;)
+  for (i in 1:50) W = binary_newton_update(U, W, p = p)
+  Lh = crossprod(U, W); bcr = apply(abs(cor(Lh, L)), 1, max); o = binary_objective(U, W, p = p)
+  cat(sprintf(&quot;binary p_obj=%.2f : frac&gt;0.9 = %.2f   best-obj |cor| = %.3f   #sources = %d\n&quot;,
+      p, mean(bcr &gt; 0.9), bcr[which.max(o)], sum(apply(abs(cor(Lh, L)), 2, max) &gt; 0.9)))
+}</code></pre>
+<pre><code>binary p_obj=0.50 : frac&gt;0.9 = 0.00   best-obj |cor| = 0.612   #sources = 0
+binary p_obj=0.25 : frac&gt;0.9 = 1.00   best-obj |cor| = 1.000   #sources = 9
+binary p_obj=0.10 : frac&gt;0.9 = 1.00   best-obj |cor| = 1.000   #sources = 9
+binary p_obj=0.05 : frac&gt;0.9 = 0.00   best-obj |cor| = 0.730   #sources = 0</code></pre>
+<p>Without the intercept the binary prior also does perfectly — but only at <span class="math inline">\(p_\text{obj} = 0.25\)</span> and <span class="math inline">\(0.1\)</span>. At <span class="math inline">\(p_\text{obj} = 0.5\)</span> (i.e. plain fastICA) and at <span class="math inline">\(p_\text{obj} = 0.05\)</span> it fails completely, recovering <em>none</em> of the nine sources from any of the 1000 starts.</p>
+<p>So this example illustrates a key advantage of the point-exponential: <strong>robustness to the hyperparameters</strong>. The point-exponential is at 100% for every <span class="math inline">\(\pi_0\)</span> in <span class="math inline">\([0, 0.7]\)</span> (no spike at all up to a 70% spike), whereas the binary prior has a narrow window around <span class="math inline">\(p_\text{obj} \approx 0.1\)</span>–<span class="math inline">\(0.25\)</span> and is useless on either side of it.</p>
+</div>
+</div>
+<div id="updating-the-hyperparameters" class="section level2">
+<h2>Updating the hyperparameters</h2>
+<p>Now we turn on the updates. <code>b = k/2</code> is used so that <span class="math inline">\(\nu = n - k - 2b\)</span> matches the EBproj convention from <code>03</code>.</p>
+<pre class="r"><code>run = function(lab, ...) {
+  set.seed(1); t0 = Sys.time()
+  f  = pe_fit(U, n_starts = 300, n_iter = 50, b = nrow(U)/2, ...)
+  Lh = crossprod(U, f$W); bcr = apply(abs(cor(Lh, L)), 1, max); im = which.max(f$F)
+  cat(sprintf(&quot;%-22s frac&gt;0.9=%.2f  bestF|cor|=%.3f  pi0=%.3f c=%.3f s2=%.4f  #src=%d  (%.1fs)\n&quot;,
+      lab, mean(bcr &gt; 0.9), bcr[im], f$pi0[im], f$c[im], f$s2[im],
+      sum(apply(abs(cor(Lh, L)), 2, max) &gt; 0.9), as.numeric(Sys.time()-t0, units = &quot;secs&quot;)))
+  invisible(f)
+}
+
+run(&quot;fixed&quot;)</code></pre>
+<pre><code>fixed                  frac&gt;0.9=1.00  bestF|cor|=1.000  pi0=0.500 c=0.707 s2=0.5000  #src=9  (0.2s)</code></pre>
+<pre class="r"><code>run(&quot;pi0 (grid)&quot;,   update_pi0 = TRUE)</code></pre>
+<pre><code>pi0 (grid)             frac&gt;0.9=1.00  bestF|cor|=1.000  pi0=0.586 c=0.707 s2=0.5000  #src=9  (6.3s)</code></pre>
+<pre class="r"><code>run(&quot;c (grid)&quot;,     update_c   = TRUE)</code></pre>
+<pre><code>c (grid)               frac&gt;0.9=1.00  bestF|cor|=1.000  pi0=0.500 c=0.948 s2=0.5000  #src=9  (6.8s)</code></pre>
+<pre class="r"><code>run(&quot;pi0+c (grid)&quot;, update_pi0 = TRUE, update_c = TRUE)</code></pre>
+<pre><code>pi0+c (grid)           frac&gt;0.9=1.00  bestF|cor|=1.000  pi0=0.647 c=1.052 s2=0.5000  #src=9  (13.5s)</code></pre>
+<pre class="r"><code>run(&quot;pi0+c (em)&quot;,   update_pi0 = TRUE, update_c = TRUE, g_method = &quot;em&quot;)</code></pre>
+<pre><code>pi0+c (em)             frac&gt;0.9=1.00  bestF|cor|=1.000  pi0=0.652 c=1.064 s2=0.5000  #src=9  (0.4s)</code></pre>
+<pre class="r"><code>run(&quot;s2 only&quot;,      update_s2  = TRUE)</code></pre>
+<pre><code>s2 only                frac&gt;0.9=1.00  bestF|cor|=1.000  pi0=0.500 c=0.707 s2=0.0104  #src=9  (0.4s)</code></pre>
+<pre class="r"><code>fit_all_grid = run(&quot;all (grid)&quot;, update_pi0 = TRUE, update_c = TRUE, update_s2 = TRUE)</code></pre>
+<pre><code>all (grid)             frac&gt;0.9=0.61  bestF|cor|=1.000  pi0=0.717 c=1.225 s2=0.0012  #src=9  (13.6s)</code></pre>
+<pre class="r"><code>fit_all_em   = run(&quot;all (em)&quot;,   update_pi0 = TRUE, update_c = TRUE, update_s2 = TRUE,
+                   g_method = &quot;em&quot;)</code></pre>
+<pre><code>all (em)               frac&gt;0.9=1.00  bestF|cor|=1.000  pi0=0.796 c=1.485 s2=0.0012  #src=9  (0.7s)</code></pre>
+<p>Almost everything works: every configuration except <code>all (grid)</code> recovers a true source from all 300 starts, and all of them put a true source at the global maximum. Three observations.</p>
+<ol style="list-style-type: decimal">
+<li><p><strong>Updating <span class="math inline">\(\pi_0\)</span> and <span class="math inline">\(c\)</span> is safe and well behaved.</strong> <span class="math inline">\(\pi_0\)</span> drifts up from 0.5 to about 0.59–0.65 and <span class="math inline">\(c\)</span> from 0.707 to about 0.95–1.05, both plausible for sources that are 20% dense.</p></li>
+<li><p><strong><code>grid</code> and <code>em</code> reach nearly the same answer.</strong> The table above only shows the single best-objective start, so it is not on its own evidence that the two methods agree; the chunk below compares all 300 starts, which are paired (same seed, hence the same starting <code>W</code>).</p></li>
+<li><p><strong><span class="math inline">\(\sigma^2\)</span> drops to about 0.01, but this is correct, not a collapse.</strong> The simulation is near-noiseless, so a small <span class="math inline">\(\sigma^2\)</span> is the right answer; <code>s2 only</code> still recovers a true source from every start. See the section below, where varying the noise confirms the update is tracking it. The one configuration that does suffer is <code>all (grid)</code>, which drops to 0.61.</p></li>
+</ol>
+<pre class="r"><code>set.seed(1); fg = pe_fit(U, n_starts = 300, n_iter = 50, b = nrow(U)/2,
+                         update_pi0 = TRUE, update_c = TRUE, g_method = &quot;grid&quot;)
+set.seed(1); fe = pe_fit(U, n_starts = 300, n_iter = 50, b = nrow(U)/2,
+                         update_pi0 = TRUE, update_c = TRUE, g_method = &quot;em&quot;)
+
+cat(sprintf(&quot;within grid: pi0 sd = %.2e, c sd = %.2e  (across 300 starts)\n&quot;, sd(fg$pi0), sd(fg$c)))</code></pre>
+<pre><code>within grid: pi0 sd = 4.32e-06, c sd = 5.95e-06  (across 300 starts)</code></pre>
+<pre class="r"><code>cat(sprintf(&quot;within em  : pi0 sd = %.2e, c sd = %.2e\n&quot;, sd(fe$pi0), sd(fe$c)))</code></pre>
+<pre><code>within em  : pi0 sd = 6.86e-06, c sd = 8.28e-06</code></pre>
+<pre class="r"><code>cat(sprintf(&quot;paired em - grid: pi0 %+.4f (max|.| %.4f),  c %+.4f (max|.| %.4f),  J %+.4f\n&quot;,
+    median(fe$pi0 - fg$pi0), max(abs(fe$pi0 - fg$pi0)),
+    median(fe$c   - fg$c),   max(abs(fe$c   - fg$c)), median(fe$J - fg$J)))</code></pre>
+<pre><code>paired em - grid: pi0 +0.0053 (max|.| 0.0053),  c +0.0124 (max|.| 0.0124),  J +0.0032</code></pre>
+<pre class="r"><code>xg = crossprod(U, fg$W); xe = crossprod(U, fe$W)
+same = sapply(seq_len(300), function(i) abs(cor(xg[, i], xe[, i])))
+cat(sprintf(&quot;paired |cor(x_grid, x_em)|: median %.4f, frac &gt; 0.999 = %.3f, min %.4f\n&quot;,
+    median(same), mean(same &gt; 0.999), min(same)))</code></pre>
+<pre><code>paired |cor(x_grid, x_em)|: median 1.0000, frac &gt; 0.999 = 0.970, min 0.0022</code></pre>
+<p>Two separate things are going on here, and they are worth keeping apart.</p>
+<p><em>Within</em> a method the 300 starts end up at essentially the same <span class="math inline">\((\pi_0, c)\)</span> — the standard deviation across starts is around <span class="math inline">\(10^{-5}\)</span>. That is not a degeneracy in the code (the updates are genuinely per-start: mid-run the spread is sd <span class="math inline">\(\approx 0.02\)</span> in <span class="math inline">\(\pi_0\)</span>, and all 300 final values are distinct). It happens because every start converges to one of the nine true sources, and in this simulation those nine are interchangeable by construction — each is exactly 20/100 dense — so they all imply the same prior. On data with heterogeneous sources this spread would be real, which is the reason for carrying per-start hyperparameters at all.</p>
+<p><em>Between</em> methods the difference is a near-constant offset: <code>em</code> ends about <span class="math inline">\(+0.005\)</span> higher in <span class="math inline">\(\pi_0\)</span> and <span class="math inline">\(+0.012\)</span> higher in <span class="math inline">\(c\)</span> than <code>grid</code>, i.e. under 1% and about 1% respectively, with <code>em</code> also very slightly higher in <span class="math inline">\(J\)</span>. So “agree” here means agreement to about 1% in the hyperparameters, and the same recovered source for 97% of the paired starts — not on all of them: 3% of pairs end on different sources. Given that, the choice between them is essentially about cost, and <code>em</code> is roughly 30x faster.</p>
+<div id="is-the-sigma2-update-really-collapsing" class="section level3">
+<h3>Is the <span class="math inline">\(\sigma^2\)</span> update really collapsing?</h3>
+<pre class="r"><code>nu = ncol(U) - nrow(U) - 2*(nrow(U)/2)
+set.seed(1)
+Wd = matrix(rnorm(nrow(U)*5), nrow(U), 5); Wd = sweep(Wd, 2, sqrt(colSums(Wd^2)), &quot;/&quot;)
+pi0d = rep(0.5, 5); ccd = rep(sqrt(0.5), 5); s2d = rep(0.5, 5)
+cat(&quot;iter |   rho (5 starts)                     |  sigma^2\n&quot;)</code></pre>
+<pre><code>iter |   rho (5 starts)                     |  sigma^2</code></pre>
+<pre class="r"><code>for (it in 1:12) {
+  P = crossprod(U, Wd); st = pe_stats(P, pi0d, ccd, s2d)
+  rho = colSums((U %*% st$M)^2)/(ncol(U)*colSums(st$M2))
+  s2d = pe_update_s2(U, P, pi0d, ccd, s2d, nu, ncol(U))
+  Wd  = pe_newton_update(U, Wd, pi0d, ccd, s2d)
+  cat(sprintf(&quot;%4d | %s | %s\n&quot;, it, paste(sprintf(&quot;%.4f&quot;, rho), collapse = &quot; &quot;),
+              paste(sprintf(&quot;%.4f&quot;, s2d), collapse = &quot; &quot;)))
+}</code></pre>
+<pre><code>   1 | 0.3460 0.3708 0.3921 0.3944 0.3647 | 0.7975 0.7674 0.7414 0.7386 0.7747
+   2 | 0.2864 0.4003 0.3856 0.3630 0.3921 | 0.8702 0.7314 0.7493 0.7768 0.7414
+   3 | 0.2737 0.5232 0.4142 0.4058 0.4567 | 0.8857 0.5815 0.7143 0.7246 0.6626
+   4 | 0.3387 0.6590 0.4554 0.4930 0.5656 | 0.8065 0.4158 0.6641 0.6183 0.5298
+   5 | 0.4246 0.7853 0.4959 0.6184 0.6990 | 0.7017 0.2618 0.6148 0.4654 0.3670
+   6 | 0.5086 0.8783 0.5404 0.7494 0.8174 | 0.5993 0.1484 0.5604 0.3057 0.2227
+   7 | 0.6108 0.9346 0.6095 0.8542 0.8986 | 0.4746 0.0797 0.4762 0.1778 0.1236
+   8 | 0.7356 0.9650 0.7183 0.9208 0.9459 | 0.3225 0.0426 0.3436 0.0966 0.0659
+   9 | 0.8440 0.9801 0.8294 0.9578 0.9708 | 0.1902 0.0243 0.2080 0.0514 0.0356
+  10 | 0.9147 0.9868 0.9058 0.9766 0.9827 | 0.1040 0.0161 0.1149 0.0285 0.0211
+  11 | 0.9546 0.9897 0.9498 0.9853 0.9880 | 0.0553 0.0126 0.0612 0.0179 0.0147
+  12 | 0.9751 0.9908 0.9727 0.9891 0.9901 | 0.0304 0.0112 0.0333 0.0134 0.0121</code></pre>
+<p><span class="math inline">\(\rho\)</span> climbs to about 0.99 within a dozen iterations and <span class="math inline">\(\sigma^2\)</span> falls by almost two orders of magnitude, which looks alarming. It is not: <strong><span class="math inline">\(\rho \approx 1\)</span> is the right answer for this simulation.</strong></p>
+<p>First, note what <span class="math inline">\(\rho\)</span> actually measures. Since <span class="math inline">\(UU^T = nI\)</span>, the matrix <span class="math inline">\(U^TU/n\)</span> is the orthogonal projection <span class="math inline">\(P\)</span> onto the <span class="math inline">\(k\)</span>-dimensional row space of <span class="math inline">\(U\)</span>, so <span class="math display">\[\rho = \frac{\|UM\|^2}{n\sum_i M_i^2} = \frac{M^TPM}{M^TM},\]</span> the fraction of <span class="math inline">\(\|M\|^2\)</span> lying in the fitted subspace. It is a signal-fraction, and it equals 1 when <span class="math inline">\(M \in \text{span}(U)\)</span> — not, as one might guess, only when <span class="math inline">\(M = x\)</span>.</p>
+<p>Second, the simulation is almost noiseless: the Gaussian noise has sd 0.1 against a signal built from <span class="math inline">\(\mathcal{N}(0,1)\)</span> factors, so the signal is over 99% of the total variance, and the recovered sources have <span class="math inline">\(|\text{cor}| = 1.000\)</span> to four decimal places. A signal fraction near 1 is simply correct here, and the corresponding <span class="math inline">\(\sigma^2\)</span> really should be near 0.</p>
+<p>The test that settles it is to vary the noise and ask whether the fitted <span class="math inline">\(\rho\)</span> and <span class="math inline">\(\sigma^2\)</span> track it:</p>
+<pre class="r"><code>run_noise = function(noise_sd, seed = 1, iters = 60, n_starts = 200) {
+  set.seed(seed)
+  nn = 100; pp = 1000; KK = 9
+  LL = matrix(0, nn, KK); for (i in 1:KK) LL[sample(nn, 20), i] = 1
+  Fm  = matrix(rnorm(pp*KK), pp)
+  Sig = LL %*% t(Fm)
+  Yn  = scale(Sig + matrix(rnorm(nn*pp, 0, noise_sd), nn), scale = FALSE)
+  sig_frac = sum(scale(Sig, scale = FALSE)^2)/sum(Yn^2)
+  Un = sqrt(nn) * t(svd(Yn)$u[, 1:9])
+  kk = nrow(Un); nun = nn - kk - 2*(kk/2)
+  set.seed(2)
+  Wn = matrix(rnorm(kk*n_starts), kk, n_starts); Wn = sweep(Wn, 2, sqrt(colSums(Wn^2)), &quot;/&quot;)
+  q = rep(0.5, n_starts); cn = rep(sqrt(0.5), n_starts); sn = rep(0.5, n_starts)
+  for (it in seq_len(iters)) {
+    Pn = crossprod(Un, Wn)
+    sn = pe_update_s2(Un, Pn, q, cn, sn, nun, nn)
+    Wn = pe_newton_update(Un, Wn, q, cn, sn)
+  }
+  Pn = crossprod(Un, Wn); stn = pe_stats(Pn, q, cn, sn)
+  rho = colSums((Un %*% stn$M)^2)/(nn*colSums(stn$M2))
+  bcr = apply(abs(cor(Pn, LL)), 1, max)
+  cat(sprintf(&quot;noise sd %4.1f | signal frac %.4f | rho %.4f | sigma^2 %.4f | frac&gt;0.9 %.2f | med |cor| %.3f\n&quot;,
+      noise_sd, sig_frac, median(rho), median(sn), mean(bcr &gt; 0.9), median(bcr)))
+}
+for (sd_ in c(0.1, 0.3, 1, 2, 4, 8)) run_noise(sd_)</code></pre>
+<pre><code>noise sd  0.1 | signal frac 0.9935 | rho 0.9915 | sigma^2 0.0104 | frac&gt;0.9 1.00 | med |cor| 1.000
+noise sd  0.3 | signal frac 0.9438 | rho 0.9908 | sigma^2 0.0112 | frac&gt;0.9 1.00 | med |cor| 1.000
+noise sd  1.0 | signal frac 0.6005 | rho 0.9830 | sigma^2 0.0207 | frac&gt;0.9 1.00 | med |cor| 0.997
+noise sd  2.0 | signal frac 0.2730 | rho 0.9552 | sigma^2 0.0546 | frac&gt;0.9 1.00 | med |cor| 0.984
+noise sd  4.0 | signal frac 0.0858 | rho 0.7843 | sigma^2 0.2630 | frac&gt;0.9 0.43 | med |cor| 0.892
+noise sd  8.0 | signal frac 0.0229 | rho 0.4313 | sigma^2 0.6936 | frac&gt;0.9 0.00 | med |cor| 0.438</code></pre>
+<p><span class="math inline">\(\rho\)</span> falls monotonically from 0.99 to 0.43 as the noise rises, and <span class="math inline">\(\sigma^2\)</span> rises correspondingly from 0.01 to 0.69. The update is estimating the noise level, and doing it sensibly. Recovery holds up to noise sd 2 and degrades beyond, which is a property of the problem rather than of the update.</p>
+<p>Two corrections to what one might have guessed:</p>
+<ul>
+<li>The point-exponential prior is <strong>bounded on the left</strong> (the atom sits at <span class="math inline">\(-\mu\)</span>, and the slab only extends to the right), so there is no “unbounded support lets <span class="math inline">\(M\)</span> track <span class="math inline">\(x\)</span>” story. Empirically the left boundary is not even active at convergence.</li>
+<li>The binary prior behaves the same way, not differently: running the same <span class="math inline">\(\tau\)</span> update with a binary prior on this data also drives <span class="math inline">\(\rho\)</span> to about 0.985 (no intercept). Bounded support does not protect it, because nothing needs protecting.</li>
+</ul>
+<p>There is one genuine degeneracy, but it is about the intercept rather than the prior. At convergence <span class="math inline">\(x\)</span> is essentially two-valued (it is a binary source recovered almost exactly, within-cluster sd <span class="math inline">\(\approx 0.008\)</span> against an overall sd of 1.005), and <em>any</em> function of a two-valued <span class="math inline">\(x\)</span> is exactly affine in <span class="math inline">\(x\)</span>. So <span class="math inline">\(M \in \text{span}(x, \mathbf{1})\)</span>. Without an intercept row <span class="math inline">\(\mathbf{1}\)</span> is orthogonal to <span class="math inline">\(\text{span}(U)\)</span>, so <span class="math inline">\(\rho\)</span> saturates just below 1. With the intercept row <span class="math inline">\(\mathbf{1} \in \text{span}(U)\)</span>, so <span class="math inline">\(M\)</span> lies exactly in the fitted subspace and <span class="math inline">\(\rho = 1\)</span> to machine precision, sending <span class="math inline">\(\sigma^2\)</span> to its floor regardless of the actual noise. That is a reason to leave the intercept out, and another instance of the intercept being the thing that breaks this method.</p>
+</div>
+<div id="recommended-configuration" class="section level3">
+<h3>Recommended configuration</h3>
+<p>Based on the above: fix <span class="math inline">\(\sigma^2\)</span>, update <span class="math inline">\((\pi_0, c)\)</span> by EM.</p>
+<pre class="r"><code>set.seed(1)
+fit_rec = pe_fit(U, n_starts = 1000, n_iter = 50, pi0 = 0.5, cc = sqrt(0.5), s2 = 0.5,
+                 b = nrow(U)/2, update_pi0 = TRUE, update_c = TRUE, g_method = &quot;em&quot;)
+Lh  = crossprod(U, fit_rec$W); bcr = apply(abs(cor(Lh, L)), 1, max)
+cat(sprintf(&quot;frac&gt;0.9 = %.2f   best-obj |cor| = %.3f   #sources = %d\n&quot;,
+    mean(bcr &gt; 0.9), bcr[which.max(fit_rec$J)], sum(apply(abs(cor(Lh, L)), 2, max) &gt; 0.9)))</code></pre>
+<pre><code>frac&gt;0.9 = 1.00   best-obj |cor| = 1.000   #sources = 9</code></pre>
+<pre class="r"><code>plot(bcr, fit_rec$J, xlab = &quot;best |cor| with a true source&quot;, ylab = &quot;J&quot;,
+     main = &quot;recommended configuration&quot;)</code></pre>
+<p><img src="figure/fastica_asymmetric_05.Rmd/unnamed-chunk-20-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>hist(fit_rec$pi0, breaks = 30, main = &quot;fitted pi_0 across starts&quot;, xlab = &quot;pi_0&quot;)</code></pre>
+<p><img src="figure/fastica_asymmetric_05.Rmd/unnamed-chunk-20-2.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>hist(fit_rec$c,   breaks = 30, main = &quot;fitted c across starts&quot;,    xlab = &quot;c&quot;)</code></pre>
+<p><img src="figure/fastica_asymmetric_05.Rmd/unnamed-chunk-20-3.png" alt="" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="summary" class="section level2">
+<h2>Summary</h2>
+<ul>
+<li>The centred, scaled point-exponential prior has closed-form <span class="math inline">\(\log Z\)</span>, posterior mean and posterior variance in terms of <span class="math inline">\(\Phi\)</span> and the inverse Mills ratio, all of which vectorise cleanly, so thousands of Newton starts run in parallel in about a second.</li>
+<li>Unlike the binary objective, the expected objective is monotone decreasing in <span class="math inline">\(p_\text{source}\)</span> for every <span class="math inline">\(\pi_0\)</span>: skewed sources always beat balanced ones. The objective cannot detect symmetric sources at all.</li>
+<li>The detectability boundary <span class="math inline">\(p^*(\pi_0)\)</span> — where the expected objective crosses the Gaussian baseline — is flat at about 0.45 for <span class="math inline">\(\pi_0 \lesssim 0.2\)</span> and then <em>falls</em> to about 0.21 by <span class="math inline">\(\pi_0 = 0.99\)</span>. Raising <span class="math inline">\(\pi_0\)</span> narrows the set of detectable sources rather than shifting it towards sparser ones, so there is no reason to push <span class="math inline">\(\pi_0\)</span> high; <span class="math inline">\(p^*\)</span> never reaches 0.5.</li>
+<li><strong>Dropping the intercept row matters more than any other choice here.</strong> With it, recovery on the nine-group simulation was 0.82 and several hyperparameter updates misbehaved; without it, recovery is 1.00 and almost every configuration works. The degenerate solutions that dominated the earlier diagnosis were the intercept.</li>
+<li>With fixed <span class="math inline">\(\pi_0 = 0.5\)</span>, <span class="math inline">\(c^2 = \sigma^2 = 0.5\)</span> every start recovers a true source and all nine are found. The binary prior also reaches 1.00, but only in a narrow window <span class="math inline">\(p_\text{obj} \approx 0.1\)</span>–<span class="math inline">\(0.25\)</span>; at <span class="math inline">\(0.5\)</span> and <span class="math inline">\(0.05\)</span> it finds nothing. The point-exponential is at 1.00 across <span class="math inline">\(\pi_0 \in [0, 0.7]\)</span>, so the gain is <strong>robustness to the shape hyperparameter</strong>, not a higher ceiling.</li>
+<li>Updating <span class="math inline">\((\pi_0, c)\)</span> is well behaved with the intercept gone: <code>grid</code> and <code>em</code> agree on <span class="math inline">\(\pi_0 \approx 0.6\)</span>, <span class="math inline">\(c \approx 1.0\)</span>, and <code>em</code> is ~30x cheaper.</li>
+<li>The EBproj <span class="math inline">\(\tau\)</span> update is <strong>not</strong> broken for this prior. It drives <span class="math inline">\(\rho \to 0.99\)</span> and <span class="math inline">\(\sigma^2 \to 0.01\)</span> here because that is correct: the simulation is over 99% signal. Varying the noise sd from 0.1 to 8 moves the fitted <span class="math inline">\(\rho\)</span> monotonically from 0.99 to 0.43 and <span class="math inline">\(\sigma^2\)</span> from 0.01 to 0.69, so the update is estimating the noise. The binary prior behaves the same way. The one real degeneracy is again the intercept: at convergence <span class="math inline">\(x\)</span> is two-valued, so <span class="math inline">\(M\)</span> is affine in <span class="math inline">\(x\)</span>, and if <span class="math inline">\(\mathbf{1} \in \text{span}(U)\)</span> then <span class="math inline">\(\rho = 1\)</span> exactly whatever the noise.</li>
+</ul>
+<p>Open questions: whether a prior on <span class="math inline">\(c\)</span> or a constraint such as <span class="math inline">\(c^2 + \sigma^2 = 1\)</span> maintained <em>during</em> the updates restores well-behaved <span class="math inline">\(\sigma^2\)</span> estimation; whether the robustness to <span class="math inline">\(\pi_0\)</span> seen here holds on harder problems (more components, sparser or more variable sources) where the binary window might be narrower still; and whether a two-sided version (point-exponential plus its mirror image, or point-Laplace) recovers the ability to detect symmetric sources without losing the advantage on skewed ones.</p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.4.2 (2024-10-31)
+Platform: aarch64-apple-darwin20
+Running under: macOS 26.5.2
+
+Matrix products: default
+BLAS:   /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libBLAS.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.0
+
+locale:
+[1] C
+
+time zone: America/Chicago
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+ [1] vctrs_0.7.2     cli_3.6.5       knitr_1.51      rlang_1.1.7    
+ [5] xfun_0.56       stringi_1.8.7   otel_0.2.0      promises_1.5.0 
+ [9] jsonlite_2.0.0  workflowr_1.7.2 glue_1.8.0      rprojroot_2.1.1
+[13] git2r_0.36.2    htmltools_0.5.9 httpuv_1.6.16   sass_0.4.10    
+[17] rmarkdown_2.30  evaluate_1.0.5  jquerylib_0.1.4 tibble_3.3.1   
+[21] fastmap_1.2.0   yaml_2.3.12     lifecycle_1.0.5 whisker_0.4.1  
+[25] stringr_1.6.0   compiler_4.4.2  fs_1.6.6        Rcpp_1.1.1     
+[29] pkgconfig_2.0.3 later_1.4.6     digest_0.6.39   R6_2.6.1       
+[33] pillar_1.11.1   magrittr_2.0.4  bslib_0.10.0    tools_4.4.2    
+[37] cachem_1.1.0   </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
