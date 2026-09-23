@@ -110,6 +110,7 @@ This repo is my "catch-all" for putting things in that may relate to various ong
 * [Preconditioned FastICA: homotopy method and TLC contrast](fastica_precondition.html)
 * [EB FastICA with asymmetric prior: alternating optimization for sparse sources](fastICA_asymmetric.html)
 * [EBproj: quasi-Newton with binary prior and Section-5 sigma (Test 1)](ebproj_newton.html)
+* [EBproj with a point-exponential prior: parallel Newton updates for w](fastica_asymmetric_05.html)
 * [fastICA with x|x| contrast on 1000 Genomes data](fastica_1kg.html)
 * [Optimizing the x|x| contrast on unwhitened data: a quasi-Newton family](fastica_unwhitened_optim.html)
 * [Unwhitened fastICA (x|x| contrast) on 1000 Genomes data](fastica_1kg_unwhitened.html)
