@@ -276,7 +276,7 @@ $(document).ready(function () {
 
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
-<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
 </button>
 </p>
 <div id="workflowr-report" class="collapse">
@@ -285,7 +285,7 @@ $(document).ready(function () {
 <a data-toggle="tab" href="#summary">Summary</a>
 </li>
 <li>
-<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -294,10 +294,10 @@ $(document).ready(function () {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2026-09-23
+<strong>Last updated:</strong> 2026-11-19
 </p>
 <p>
-<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 2 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 1 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
 </p>
 <p>
 <strong>Knit directory:</strong> <code>misc/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
@@ -313,28 +313,28 @@ This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a> analysi
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
 <div class="panel-body">
-<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+<p>The R Markdown file has unstaged changes. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
 </div>
 </div>
 </div>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree8801686652ad7d3b361b5afa3b9d5952b66f7389targetblank8801686a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/8801686652ad7d3b361b5afa3b9d5952b66f7389" target="_blank">8801686</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreee04b29dff58d6827ec0c9c5b10b4a71c08bb0339targetblanke04b29da"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/stephens999/misc/tree/e04b29dff58d6827ec0c9c5b10b4a71c08bb0339" target="_blank">e04b29d</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctree8801686652ad7d3b361b5afa3b9d5952b66f7389targetblank8801686a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomstephens999misctreee04b29dff58d6827ec0c9c5b10b4a71c08bb0339targetblanke04b29da" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/8801686652ad7d3b361b5afa3b9d5952b66f7389" target="_blank">8801686</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/stephens999/misc/tree/e04b29dff58d6827ec0c9c5b10b4a71c08bb0339" target="_blank">e04b29d</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -350,9 +350,12 @@ Ignored files:
     Ignored:    analysis/.Rhistory
     Ignored:    analysis/ALStruct_cache/
     Ignored:    analysis/binary_quad_comparison_cache/
+    Ignored:    analysis/drift_ebproj_cache/
     Ignored:    analysis/ebproj_01.html
+    Ignored:    analysis/ebproj_1kg_cache/
     Ignored:    analysis/gset_G63_cache/
     Ignored:    data/.Rhistory
+    Ignored:    data/bbc-fulltext.zip
     Ignored:    data/hgdp_hap_matrix.rds
     Ignored:    data/methylation-data-for-matthew.rds
     Ignored:    data/pbmc/
@@ -361,6 +364,16 @@ Ignored files:
     Ignored:    data/tgp_data_matrix.rds
     Ignored:    data/tgp_meta.rds
     Ignored:    output/admixture/
+    Ignored:    output/bbc_fasttopics_K80.rds
+    Ignored:    output/bbc_ica_K40_scaled.rds
+    Ignored:    output/bbc_ica_K40_scaled_3c.rds
+    Ignored:    output/bbc_ica_K40_scaled_c0.001.rds
+    Ignored:    output/bbc_ica_K80_scaled.rds
+    Ignored:    output/bbc_ica_K80_scaled_3c.rds
+    Ignored:    output/bbc_ica_K80_scaled_c0.001.rds
+    Ignored:    output/bbc_ica_K80_scaled_words.rds
+    Ignored:    output/bbc_log1pnmf_c0.001_K10.rds
+    Ignored:    output/bbc_log1pnmf_c0.001_K40.rds
     Ignored:    output/immgent_svd.rds
     Ignored:    output/immgent_svd_K200.rds
 
@@ -383,8 +396,10 @@ Untracked files:
     Untracked:  analysis/cache/
     Untracked:  analysis/cholesky.Rmd
     Untracked:  analysis/compare-transformed-models.Rmd
+    Untracked:  analysis/compare_immgent_contrasts.Rmd
     Untracked:  analysis/cormotif.Rmd
     Untracked:  analysis/cp_ash.Rmd
+    Untracked:  analysis/drift_ebproj.Rmd
     Untracked:  analysis/eQTL.perm.rand.pdf
     Untracked:  analysis/eb_power2.Rmd
     Untracked:  analysis/eb_prepilot.Rmd
@@ -392,12 +407,17 @@ Untracked files:
     Untracked:  analysis/ebpmf1.Rmd
     Untracked:  analysis/ebpmf_sla_text.Rmd
     Untracked:  analysis/ebproj_01.Rmd
+    Untracked:  analysis/ebproj_1kg.Rmd
+    Untracked:  analysis/ebproj_1kg_bimodal.Rmd
+    Untracked:  analysis/ebproj_hgdp.Rmd
+    Untracked:  analysis/ebproj_immgent.Rmd
     Untracked:  analysis/ebproj_newton.Rmd
     Untracked:  analysis/ebspca_sims.Rmd
     Untracked:  analysis/explore_psvd.Rmd
     Untracked:  analysis/fa_check_identify.Rmd
     Untracked:  analysis/fa_iterative.Rmd
     Untracked:  analysis/fastica_1kg_unwhitened.Rmd
+    Untracked:  analysis/fastica_bbc.Rmd
     Untracked:  analysis/fastica_heated.Rmd
     Untracked:  analysis/fastica_immgent.Rmd
     Untracked:  analysis/fastica_unwhitened.Rmd
@@ -412,6 +432,7 @@ Untracked files:
     Untracked:  analysis/gset_G63.Rmd
     Untracked:  analysis/ieQTL.perm.rand.pdf
     Untracked:  analysis/lasso_em_03.Rmd
+    Untracked:  analysis/leiden_dcsbm.Rmd
     Untracked:  analysis/m6amash.Rmd
     Untracked:  analysis/mash_bhat_z.Rmd
     Untracked:  analysis/mash_ieqtl_permutations.Rmd
@@ -461,14 +482,39 @@ Untracked files:
     Untracked:  code/compare_gp.R
     Untracked:  code/compare_rna_protein_ica.R
     Untracked:  code/coordinate_descent_symNMF.R
+    Untracked:  code/drift_fit.R
+    Untracked:  code/drift_plot.R
+    Untracked:  code/drift_tree.R
+    Untracked:  code/ebproj_altpriors.R
+    Untracked:  code/ebproj_pointexp.R
+    Untracked:  code/fit_bbc_fasttopics.R
+    Untracked:  code/fit_bbc_ica.R
+    Untracked:  code/fit_bbc_log1pnmf.R
+    Untracked:  code/fit_hgdp_ebproj.R
+    Untracked:  code/fit_hgdp_r.R
+    Untracked:  code/fit_hgdp_residual_ebproj.R
+    Untracked:  code/fit_immgent_cubic.R
+    Untracked:  code/fit_immgent_cubic_cross.R
+    Untracked:  code/fit_immgent_cubic_crosshalf.R
+    Untracked:  code/fit_immgent_ebproj.R
+    Untracked:  code/fit_immgent_ebproj_cross.R
+    Untracked:  code/fit_immgent_ebproj_fromxx.R
     Untracked:  code/fit_immgent_ica.R
     Untracked:  code/fit_immgent_mspace.R
     Untracked:  code/fit_immgent_protein_ica.R
+    Untracked:  code/fit_immgent_qvsl1.R
+    Untracked:  code/fit_immgent_slog_svd.R
     Untracked:  code/fit_immgent_split.R
     Untracked:  code/fit_immgent_split_mspace.R
     Untracked:  code/fit_immgent_structure.R
     Untracked:  code/fit_immgent_svd.R
+    Untracked:  code/fit_immgent_xx_fromebproj.R
+    Untracked:  code/fit_tgp_altpriors.R
+    Untracked:  code/fit_tgp_ebproj.R
+    Untracked:  code/fit_tgp_r20.R
     Untracked:  code/han_intermediate.R
+    Untracked:  code/hgdp_gram.R
+    Untracked:  code/hgdp_prune.R
     Untracked:  code/immgent_ica.sbatch
     Untracked:  code/immgent_split.sbatch
     Untracked:  code/immgent_structure.sbatch
@@ -476,6 +522,7 @@ Untracked files:
     Untracked:  code/immgent_svd200.sbatch
     Untracked:  code/multivariate_testfuncs.R
     Untracked:  code/plot_han_intermediate.R
+    Untracked:  code/prep_bbc_data.R
     Untracked:  code/prep_immgent_counts.R
     Untracked:  code/prep_immgent_meta.R
     Untracked:  code/project_immgent_protein.R
@@ -484,6 +531,9 @@ Untracked files:
     Untracked:  code/slim_immgent_ica.R
     Untracked:  code/slim_immgent_ica.sbatch
     Untracked:  code/summarize_protein_ica.R
+    Untracked:  code/tgp_gram.R
+    Untracked:  code/tgp_hessian.R
+    Untracked:  code/tgp_prune.R
     Untracked:  code/time_hgdp_fastica.R
     Untracked:  data/4matthew/
     Untracked:  data/4matthew2/
@@ -495,6 +545,7 @@ Untracked files:
     Untracked:  data/Muscle_Skeletal.ACTN3.pm1Mb.RDS
     Untracked:  data/P.rds
     Untracked:  data/Thyroid.FMO2.pm1Mb.RDS
+    Untracked:  data/bbc_dtm.rds
     Untracked:  data/bmass.HaemgenRBC2016.MAF01.Vs2.MergedDataSources.200kRanSubset.ChrBPMAFMarkerZScores.vs1.txt.gz
     Untracked:  data/bmass.HaemgenRBC2016.Vs2.NewSNPs.ZScores.hclust.vs1.txt
     Untracked:  data/bmass.HaemgenRBC2016.Vs2.PreviousSNPs.ZScores.hclust.vs1.txt
@@ -532,6 +583,10 @@ Untracked files:
     Untracked:  data/zscore_jointLCLs_m6AQTLs_susie_eQTLpruned.rds
     Untracked:  data/zscore_jointLCLs_random.rds
     Untracked:  explore_udi.R
+    Untracked:  output/drift_hgdp.rds
+    Untracked:  output/drift_hgdp_L1.rds
+    Untracked:  output/drift_tgp.rds
+    Untracked:  output/drift_tgp_L1.rds
     Untracked:  output/fit.k10.rds
     Untracked:  output/fit.nn.pbmc.purified.rds
     Untracked:  output/fit.nn.rds
@@ -545,7 +600,32 @@ Untracked files:
     Untracked:  output/fit.varbvs.RDS
     Untracked:  output/fit2.nn.pbmc.purified.rds
     Untracked:  output/glmnet.fit.RDS
+    Untracked:  output/hgdp_ebproj.rds
+    Untracked:  output/hgdp_ebproj_fit_exp_fixed.rds
+    Untracked:  output/hgdp_ebproj_fit_pointexp.rds
+    Untracked:  output/hgdp_gram.rds
     Untracked:  output/hgdp_han_f3.rds
+    Untracked:  output/hgdp_hessian.rds
+    Untracked:  output/hgdp_prune.rds
+    Untracked:  output/hgdp_r.rds
+    Untracked:  output/hgdp_residual_ebproj.rds
+    Untracked:  output/hgdp_residual_ebproj_K3.rds
+    Untracked:  output/hgdp_residual_ebproj_K5.rds
+    Untracked:  output/hgdp_residual_ebproj_K8.rds
+    Untracked:  output/immgent_cubic.rds
+    Untracked:  output/immgent_cubic_cross.rds
+    Untracked:  output/immgent_cubic_half1.rds
+    Untracked:  output/immgent_cubic_half2.rds
+    Untracked:  output/immgent_ebproj_exp_fixed.rds
+    Untracked:  output/immgent_ebproj_exp_fixed_cross.rds
+    Untracked:  output/immgent_ebproj_exp_fixed_fromxx.rds
+    Untracked:  output/immgent_ebproj_exp_fixed_half1.rds
+    Untracked:  output/immgent_ebproj_exp_fixed_half2.rds
+    Untracked:  output/immgent_ebproj_pointexp.rds
+    Untracked:  output/immgent_ebproj_pointexp_cross.rds
+    Untracked:  output/immgent_ebproj_pointexp_fromxx.rds
+    Untracked:  output/immgent_ebproj_pointexp_half1.rds
+    Untracked:  output/immgent_ebproj_pointexp_half2.rds
     Untracked:  output/immgent_gp_Fpm.rds
     Untracked:  output/immgent_gp_compare.rds
     Untracked:  output/immgent_ica_W.rds
@@ -555,12 +635,15 @@ Untracked files:
     Untracked:  output/immgent_protein_ica.rds
     Untracked:  output/immgent_protein_ica_summary.rds
     Untracked:  output/immgent_protein_projection.rds
+    Untracked:  output/immgent_qvsl1.rds
     Untracked:  output/immgent_rna_protein_compare.rds
     Untracked:  output/immgent_sinkhorn_ica_W.rds
     Untracked:  output/immgent_split_log1p.rds
     Untracked:  output/immgent_split_mspace.rds
     Untracked:  output/immgent_split_sinkhorn.rds
     Untracked:  output/immgent_structure.rds
+    Untracked:  output/immgent_xx_from_exp_fixed.rds
+    Untracked:  output/immgent_xx_from_pointexp.rds
     Untracked:  output/snn07.txt
     Untracked:  output/snn34.txt
     Untracked:  output/test.bv.txt
@@ -588,7 +671,17 @@ Untracked files:
     Untracked:  output/test5.hyp.txt
     Untracked:  output/test5.log.txt
     Untracked:  output/test5.param.txt
+    Untracked:  output/tgp_altpriors.rds
     Untracked:  output/tgp_corB14.rds
+    Untracked:  output/tgp_ebproj.rds
+    Untracked:  output/tgp_ebproj_fit_exp.rds
+    Untracked:  output/tgp_ebproj_fit_exp_fixed.rds
+    Untracked:  output/tgp_ebproj_fit_full_exp_fixed.rds
+    Untracked:  output/tgp_ebproj_fit_pointexp.rds
+    Untracked:  output/tgp_gram.rds
+    Untracked:  output/tgp_hessian.rds
+    Untracked:  output/tgp_prune.rds
+    Untracked:  output/tgp_r20.rds
 
 Unstaged changes:
     Modified:   .gitignore
@@ -601,6 +694,7 @@ Unstaged changes:
     Modified:   analysis/fastica_hgdp.Rmd
     Modified:   analysis/flashier_log1p.Rmd
     Modified:   analysis/flashier_sla_text.Rmd
+    Modified:   analysis/index.Rmd
     Modified:   analysis/logistic_z_scores.Rmd
     Modified:   analysis/mr_ash_pen.Rmd
     Modified:   analysis/nmu_em.Rmd
@@ -646,6 +740,23 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/stephens999/misc/e04b29dff58d6827ec0c9c5b10b4a71c08bb0339/docs/index.html" target="_blank">e04b29d</a>
+</td>
+<td>
+Matthew Stephens
+</td>
+<td>
+2026-09-23
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -4032,6 +4143,7 @@ Start workflowr project.
 <li><p><a href="fastica_1kg_unwhitened.html">Unwhitened fastICA (x|x| contrast) on 1000 Genomes data</a></p></li>
 <li><p><a href="fastica_1kg_structure.html">Structure plots from fastICA sources on 1000 Genomes data</a></p></li>
 <li><p><a href="fastica_hgdp.html">fastICA with x|x| contrast on HGDP haplotypes</a></p></li>
+<li><p><a href="fastica_bbc.html">fastICA and EBproj on the BBC news corpus</a></p></li>
 <li><p><a href="flash_pca.html">Motivated by ICA, I try a flash+low-rank approach</a></p></li>
 <li><p><a href="EB_subspace.html">Motivated by ICA, I try an EB approach to find subspaces</a></p></li>
 </ul>

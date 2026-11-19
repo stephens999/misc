@@ -1,0 +1,1307 @@
+---
+title: "fastICA and EBproj on the BBC news corpus"
+author: "Matthew Stephens"
+date: "2026-09-25"
+output:
+  workflowr::wflow_html:
+    toc: true
+    toc_float: true
+    toc_depth: 2
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
+
+# Introduction
+
+A first look at what the asymmetric contrasts do on **text**. The data is the
+BBC news corpus analysed by Weine et al. ([arXiv
+2601.05845](https://arxiv.org/html/2601.05845v1)) with the log1p link Poisson
+NMF, so the factors found here can eventually be put next to theirs.
+
+The counts are transformed with $\log(1 + X/s)$, where $s$ is the document
+length divided by the mean document length, as in the log1p NMF analysis. The
+columns are centred and the result whitened to $K = 80$ principal components.
+**Three** contrasts are run on that whitening, so they are directly
+comparable:
+
+* $x|x|$, the asymmetric fastICA contrast used in the earlier analyses;
+* $x^3/3$, the classical skewness contrast, of which $x|x| = x^2\,\text{sign}(x)$
+  is a robustified version;
+* EBproj with a **fixed exponential** prior ($\pi_0 = 0$,
+  $c^2 = \sigma^2 = 1/2$, nothing estimated --- the `exp_fixed` configuration
+  of
+  [`code/fit_tgp_ebproj.R`](https://github.com/stephenslab/misc/blob/master/code/fit_tgp_ebproj.R)).
+  Its loadings are the posterior means $M(U^Tw)$ rather than $U^Tw$ itself.
+
+Everything is done three times: on the full data and on each half of a random
+split of the documents, so that every maximum can be checked for
+reproducibility.
+
+The summary is that this works well, and that the three contrasts form a
+resolution ladder. All three find clean, interpretable topics; they agree
+almost exactly on the directions they share; and they differ mainly in how
+far they keep splitting --- $x|x|$ finds 18 factors, `exp_fixed` 24 and
+$x^3$ 36. Reproducibility runs the other way, so the choice among them is a
+resolution-against-stability trade.
+
+## The pipeline
+
+The search for local maxima runs in three stages.
+
+**Stage 1, the search**, independently in three *spaces* --- the full data and
+each half, each with its own SVD and whitening --- and under each contrast, so
+six searches. Each search is:
+
+* five rank-$r$ fits at $r = K$ from different random starts. All $5K$ fits are then considered, duplicates among
+  them are removed, and each distinct direction is then used to initialize the rank-1
+  update.
+* 1000 random rank-1 starts, run to convergence.
+
+The resulting fits are then clustered at correlation 0.95.
+
+**Stage 2, cross-contrast initialization.** Within each space, each contrast
+is re-run starting from each of the *other contrasts'* maxima.
+
+**Stage 3, cross-space initialization.** Within each contrast, each space is
+re-run starting from each of the other two spaces' maxima. The spaces have
+different whitenings, so a direction is carried through word space: the
+whitened-space direction $w$ corresponds to the word-space vector
+$g = V_{[,1:K]}\,\text{diag}(d_{1:K})\,w$, and the nearest direction in the
+target's row space is $w' = \text{diag}(1/d)\,V^T g$, renormalized. This is
+the transfer of
+[`code/fit_immgent_ebproj_cross.R`](https://github.com/stephenslab/misc/blob/master/code/fit_immgent_ebproj_cross.R).
+
+Stages 2 and 3 matter because a direction can be a genuine maximum in two
+places and still be missed by one of the searches. Without these steps, "half 1 does
+not have this factor" is ambiguous between "not a maximum there" and "a
+maximum the search missed". 
+
+## The data
+
+The csv that `bbc_fig.R` in the `log1pNMF` repository reads is not distributed
+with the package. It is a deduplicated copy of the original BBC news dataset of
+[Greene and Cunningham (2006)](http://mlg.ucd.ie/datasets/bbc.html), which is
+public, and was downloaded for this analysis from
+[`http://mlg.ucd.ie/files/datasets/bbc-fulltext.zip`](http://mlg.ucd.ie/files/datasets/bbc-fulltext.zip)
+(2.9 MB; SHA-256 `a351031a62325b3d7ff13146eeb035c22feca8290913b5183d1ff3be35109495`).
+Taking the 2225 articles from that zip, dropping the 98
+that are exact duplicates as plain text, and running their tokenisation
+verbatim (SMART stopwords, Porter stemming, terms in more than four documents)
+reproduces their matrix exactly: $2127 \times 5861$, with every one of their
+5861 terms matched.
+
+(One trap worth recording. The only non-ASCII content in the corpus is the
+pound sign, as valid UTF-8, in 647 of the 2225 files. Run in a non-UTF-8
+locale --- which is what `Rscript` gets when `LANG` is unset --- `tm` escapes
+those bytes to the literal string `<c2><a3>`, which splits `£bn` into two junk
+terms and leaves the escape text in every table downstream. `prep_bbc_data.R`
+now forces a UTF-8 locale; without that the vocabulary is 5862 terms and only
+5860 of theirs are matched.)
+
+Compute is in
+[`code/prep_bbc_data.R`](https://github.com/stephenslab/misc/blob/master/code/prep_bbc_data.R)
+and
+[`code/fit_bbc_ica.R`](https://github.com/stephenslab/misc/blob/master/code/fit_bbc_ica.R);
+the whole pipeline takes about 90 seconds.
+
+```{r load}
+library(ggplot2)
+library(fastTopics)
+
+sps <- c("full", "half1", "half2")
+
+name_by_words <- function(f)          # two leading words, as a factor label
+  make.unique(apply(f$words$B, 1, function(b)
+    paste(names(sort(b, decreasing = TRUE))[1:2], collapse = "/")))
+
+label_fits <- function(x) {
+  # Runs made before the contrast set became configurable have no $contrasts.
+  if (is.null(x$contrasts)) x$contrasts <- names(x$fits$full)
+  for (sp in sps) for (ct in x$contrasts) {
+    f <- x$fits[[sp]][[ct]]
+    colnames(f$L) <- colnames(f$G) <- rownames(f$words$B) <- name_by_words(f)
+    x$fits[[sp]][[ct]] <- f
+  }
+  x
+}
+
+r   <- label_fits(readRDS("../output/bbc_ica_K80_scaled_3c.rds"))
+cts <- r$contrasts
+lab <- r$labels
+get <- function(sp, ct) r$fits[[sp]][[ct]]
+
+# The two contrasts that every run on this page has, for comparisons with the
+# variants below, which were fitted before x^3 was added.
+cts2 <- c("x|x|", "exp_fixed")
+
+memb  <- function(L) { A <- pmax(L, 0); sweep(A, 2, apply(A, 2, max), "/") }
+r2_by <- function(x, g)
+  1 - sum(tapply(x, g, function(z) sum((z - mean(z))^2))) / sum((x - mean(x))^2)
+top_words <- function(f, j, n = 12)
+  paste(colnames(f$words$B)[order(-f$words$B[j, ])[1:n]], collapse = ", ")
+
+# Cosine between the word-space directions of two fits.
+cosmat <- function(fa, fb) crossprod(fa$G, fb$G)
+
+# Mutual nearest neighbours: row i and column j match when j is i's nearest
+# neighbour and i is j's. Returns, per row, its nearest column, the cosine,
+# and whether the pairing is mutual.
+mnn <- function(C) {
+  a <- max.col(C, "first"); b <- max.col(t(C), "first"); i <- seq_len(nrow(C))
+  data.frame(i = i, j = a, cos = C[cbind(i, a)], mutual = b[a] == i)
+}
+
+# Table formatting shared by the alignment tables below: a similarity is shown
+# only where the pairing is mutual, "-" otherwise, and a mutual pair below the
+# 0.7 cut is parenthesised.
+fmt <- function(x) ifelse(is.na(x), "-",
+                          ifelse(x > 0.7, sprintf("%.2f", x), sprintf("(%.2f)", x)))
+pick <- function(nms, i) ifelse(is.na(i), "-", nms[pmax(i, 1)])
+
+# Article headlines, used to name the documents a factor loads on.
+hd <- readRDS("../data/bbc_dtm.rds")$headlines
+
+# Raw projections U'w, unshrunken, for every contrast on the full data. For
+# x|x| and x^3 these are the loadings; for exp_fixed the loadings are the
+# posterior means, so this is the quantity before shrinkage.
+U80 <- sqrt(r$spaces$full$n) * t(r$spaces$full$U_c[, 1:r$K])
+Xraw <- lapply(cts, function(ct) {
+  M <- crossprod(U80, get("full", ct)$W)
+  colnames(M) <- colnames(get("full", ct)$L); M
+})
+names(Xraw) <- cts
+
+# Standard reproducibility summary for one contrast of one run.
+count_row <- function(g, ct) {
+  fu <- g("full", ct); f1 <- g("half1", ct); f2 <- g("half2", ct)
+  m1 <- mnn(cosmat(fu, f1)); m2 <- mnn(cosmat(fu, f2)); m12 <- mnn(cosmat(f1, f2))
+  ok <- function(m) m$mutual & m$cos > 0.7
+  c(full = ncol(fu$G), half1 = ncol(f1$G), half2 = ncol(f2$G),
+    `full in both halves` = sum(ok(m1) & ok(m2)),
+    `h1-h2 matched` = sum(ok(m12)), ceiling = min(ncol(f1$G), ncol(f2$G)),
+    rate = round(sum(ok(m12)) / min(ncol(f1$G), ncol(f2$G)), 2))
+}
+
+# Full-data maxima, key words, and how each fares in the two halves.
+factor_table <- function(g, ct) {
+  fu <- g("full", ct); f1 <- g("half1", ct); f2 <- g("half2", ct)
+  m1 <- mnn(cosmat(fu, f1)); m2 <- mnn(cosmat(fu, f2))
+  data.frame(
+    factor  = colnames(fu$L),
+    half1   = fmt(ifelse(m1$mutual, m1$cos, NA)),
+    half2   = fmt(ifelse(m2$mutual, m2$cos, NA)),
+    in_both = ifelse(m1$mutual & m2$mutual &
+                       pmin(m1$cos, m2$cos) > 0.7, "yes", ""),
+    top_words = sapply(seq_len(ncol(fu$L)), function(j) top_words(fu, j, 10)))
+}
+
+# Align two fits that share a whitening, one row per factor.
+pair_contrasts <- function(Xa, Xb, na, nb) {
+  C <- cor(Xa, Xb); m <- mnn(C)
+  ia <- ifelse(m$mutual, m$j, NA)
+  lb <- setdiff(seq_len(ncol(C)), na.omit(ia))
+  d <- data.frame(a = c(colnames(C[, 0, drop = FALSE]), rownames(C), rep("-", length(lb))),
+                  b = c(pick(colnames(C), ia), colnames(C)[lb]),
+                  cor = c(fmt(ifelse(m$mutual, m$cos, NA)), rep("-", length(lb))))
+  names(d) <- c(na, nb, "cor")
+  d
+}
+```
+
+The corpus is small and the spectrum is flat. There is no elbow to cut at: after the first few components the eigenvalues decay smoothly. So choice of whitening dimension is a tricky judgement call. We tried $K=40,80$ and since $K=80$ seems to find a bit more real structure without "false positives" we present that first, with $K=40$ as an addendum.
+
+```{r scree, fig.width=9, fig.height=3.4}
+nshow <- 120
+scree <- do.call(rbind, lapply(names(r$spaces), function(nm)
+  data.frame(space = nm, k = seq_len(nshow),
+             eigenvalue = r$spaces[[nm]]$d[seq_len(nshow)]^2,
+             pve = 100 * r$spaces[[nm]]$pve[seq_len(nshow)])))
+
+p1 <- ggplot(scree, aes(k, pve, colour = space)) +
+  geom_vline(xintercept = r$K, colour = "firebrick") +
+  geom_line() + geom_point(size = 0.7) +
+  labs(x = "component", y = "% of variance", colour = NULL,
+       title = "Scree plot") + theme_bw()
+p2 <- p1 + scale_x_log10() + scale_y_log10() +
+  labs(title = "Scree plot, log-log")
+cowplot::plot_grid(p1 + theme(legend.position = "none"), p2, nrow = 1,
+                   rel_widths = c(1, 1.3))
+```
+
+
+# Results: K = 80, three contrasts
+
+## The search
+
+The five rank-$r$ fits overlap but do not completely agree: of the 400
+columns they produce, 185 ($x|x|$), 128 (`exp_fixed`) and 125 ($x^3$) are
+distinct. Initializing at these does not add to the number of topics found.
+Clustering results are insensitive to the choice of cutoff (threshold varied
+between correlation 0.90 and 0.99).
+
+```{r search-summary}
+t(sapply(cts, function(ct) {
+  f <- get("full", ct)
+  c(`distinct rank-r` = f$n_rankr_distinct, `cut 0.90` = f$sens[1],
+    `cut 0.95` = f$sens[2], `cut 0.99` = f$sens[3], maxima = ncol(f$W))
+}))
+```
+
+### Cross-initialization adds nothing, anywhere
+
+Stages 2 and 3 produce no additional maxima --- under no contrast and in no
+space. Every direction transferred in, whether from another contrast or from
+another space, relaxes onto a maximum the receiving search had already found.
+
+```{r cross-summary}
+z <- unlist(lapply(sps, function(sp) lapply(cts, function(ct)
+  unlist(get(sp, ct)$n_cross))))
+c(`transfers performed` = length(z), `new maxima found` = sum(z))
+```
+
+Thus, when a half does not have a factor, it is because the factor is not a
+maximum of that half's objective, not because 1000 starts failed to find it.
+The same applies across contrasts: a factor one contrast finds and another
+does not is a genuine difference between the objectives.
+
+### Maxima on the full data {.tabset}
+
+```{r sizes, results='asis'}
+for (ct in cts) {
+  f <- get("full", ct); A <- memb(f$L)
+  cat(sprintf("\n#### %s\n\n", ct))
+  print(knitr::kable(data.frame(
+    factor = colnames(f$L), from_random = f$n_random, from_rankr = f$n_from_rankr,
+    docs_above_0.5 = colSums(A > 0.5),
+    top_category = apply(A, 2, function(a)
+      names(sort(tapply(a, lab, mean), decreasing = TRUE))[1]),
+    R2_category = round(apply(A, 2, function(a) r2_by(a, lab)), 2)),
+    row.names = FALSE,
+    caption = "How each maximum was reached, and how it relates to the editorial categories"))
+  cat("\n")
+}
+```
+
+### {-}
+
+## What the factors are
+
+Word loadings come from regressing the centred $\log(1 + X/s)$ matrix on the
+non-negative part of the document loadings (scaled to a maximum of 1) with an
+intercept, as in
+[`code/fit_immgent_ebproj.R`](https://github.com/stephenslab/misc/blob/master/code/fit_immgent_ebproj.R).
+The `half1` and `half2` columns are the cosine to each half's mutual nearest
+neighbour and `in_both` flags the factors that reproduce; those come from the
+split analysed further down, and are repeated here so each factor can be read
+off with its key words in one place.
+
+### {.tabset}
+
+```{r words, results='asis'}
+for (ct in cts) {
+  cat(sprintf("\n#### %s\n\n", ct))
+  print(knitr::kable(factor_table(get, ct), row.names = FALSE,
+    caption = "Full-data maxima, key words, and reproducibility in each half"))
+  cat("\n")
+}
+```
+
+### {-}
+
+Every factor under every contrast is a recognisable topic, and none is a
+nuisance axis: there is no document-length or vocabulary-size factor, which
+is what dividing by $s$ and then applying a variance-stabilising transform is
+supposed to achieve.
+
+The three lists are nested rather than different. $x|x|$ finds 18: athletics
+and doping, Yukos, computer security, takeover bids, the macroeconomy, party
+politics, film awards, rugby, tennis, mobile phones, music, law and civil
+liberties, football clubs, company results, television, video games,
+corporate fraud, and developing-world aid. `exp_fixed` finds those and splits
+six of them further --- doping from track championships, party competition
+from the Blair/Brown government, the dollar and trade deficit from the
+macroeconomy, digital music from music, the football match report from rugby,
+and a box-office axis out of entertainment.
+
+$x^3$ goes further again, to 36. Where `exp_fixed` has one tennis factor it
+has two; where it has one rugby factor it has three; and it separates
+business stories the others merge --- the LSE/Deutsche Börse bid, oil prices,
+company results. The most striking addition is **`unit/club`**, led by
+*"Shares rise on new Man Utd offer"*: the Glazer takeover, which appears in
+the cross-cutting section below as the clearest example of a story the
+editorial partition misfiles, is resolved by $x^3$ as a topic in its own
+right.
+
+## Structure plots
+
+Documents grouped by their editorial category, memberships on the max-1
+scale. The unnormalized panels keep the bar heights: a short bar is a
+document that none of the factors explains.
+
+```{r struct-fn}
+# glasbey tops out at 32 colours and x^3 has 36 factors, so fall back to a
+# generated palette when the list is longer.
+factor_colours <- function(k) {
+  if (k + 1 <= 32) return(Polychrome::glasbey.colors(k + 1)[-1])
+  unname(Polychrome::createPalette(k, c("#5A5156", "#E4E1E3", "#F6222E"),
+                                   M = 2000))
+}
+
+plot_struct <- function(A, normalize, title) {
+  keep <- rowSums(A) > 0
+  M <- A[keep, ]
+  if (normalize) M <- M / rowSums(M)
+  set.seed(1)   # structure_plot orders within each group by t-SNE
+  structure_plot(M, grouping = droplevels(lab[keep]), gap = 20, verbose = FALSE,
+                 colors = factor_colours(ncol(M))) +
+    labs(y = "membership", fill = NULL,
+         title = sprintf("%s: %d maxima, %s%s", title, ncol(M),
+                         if (normalize) "normalized" else "unnormalized",
+                         if (all(keep)) "" else
+                           sprintf(" - %d document(s) dropped", sum(!keep)))) +
+    theme(axis.text.x = element_text(size = 9),
+          legend.text = element_text(size = 6),
+          legend.key.size = unit(0.3, "cm"))
+}
+```
+
+### {.tabset}
+
+```{r struct, results='asis', fig.width=10, fig.height=4}
+for (ct in cts) for (nz in c(TRUE, FALSE)) {
+  cat(sprintf("\n#### %s, %s\n\n", ct, if (nz) "normalized" else "unnormalized"))
+  print(plot_struct(memb(get("full", ct)$L), nz, ct))
+  cat("\n")
+}
+```
+
+### {-}
+
+The unnormalized panels separate the three
+contrasts more clearly than the factor lists do.
+
+```{r struct-stats}
+t(sapply(cts, function(ct) {
+  A <- memb(get("full", ct)$L)
+  c(factors = ncol(A), `median total membership` = round(median(rowSums(A)), 2),
+    `docs explained by nothing` = sum(rowSums(A) < 0.1),
+    `median docs above 0.5` = median(colSums(A > 0.5)))
+}))
+```
+
+Under $x|x|$ and `exp_fixed` the decomposition is sparse in the documents ---
+most bars are well short of 1, and `exp_fixed` leaves 172 documents, 8% of
+the corpus, with essentially nothing on them. $x^3$ is different: with 36
+narrow factors the median total membership rises above 1 and **no** document
+is left unexplained. So the resolution ladder is also a coverage ladder.
+
+## Do the contrasts agree?
+
+Comparison on the **raw projections** $U^Tw$, unshrunken on all three sides
+--- `exp_fixed`'s reported loadings are posterior means, and the shrinkage
+attenuates correlations that are otherwise near 1.
+
+```{r agree-summary}
+t(sapply(list(c("x|x|", "exp_fixed"), c("x|x|", "x^3"), c("exp_fixed", "x^3")),
+         function(pr) {
+  m <- mnn(cor(Xraw[[pr[1]]], Xraw[[pr[2]]]))
+  c(`factors, first` = ncol(Xraw[[pr[1]]]), `factors, second` = ncol(Xraw[[pr[2]]]),
+    `mutual pairs` = sum(m$mutual), `median r` = round(median(m$cos[m$mutual]), 3),
+    `pairs above 0.9` = sum(m$mutual & m$cos > 0.9))
+})) |> `rownames<-`(c("x|x| vs exp_fixed", "x|x| vs x^3", "exp_fixed vs x^3"))
+```
+
+The three are not finding different structure. Every $x|x|$ factor has an
+`exp_fixed` partner at a median correlation of 0.980; `exp_fixed` and $x^3$
+agree even more closely, 23 of 24 pairs at 0.983. They are finding the same
+structure at three resolutions, and each contrast in turn keeps splitting
+after the previous one has stopped.
+
+### {.tabset}
+
+```{r agree-tables, results='asis'}
+for (pr in list(c("x|x|", "exp_fixed"), c("exp_fixed", "x^3"))) {
+  cat(sprintf("\n#### %s vs %s\n\n", pr[1], pr[2]))
+  print(knitr::kable(pair_contrasts(Xraw[[pr[1]]], Xraw[[pr[2]]], pr[1], pr[2]),
+    row.names = FALSE, caption = "One row per factor, paired by mutual nearest neighbour"))
+  cat("\n")
+}
+```
+
+### {-}
+
+Thirteen of the 36 $x^3$ factors have no `exp_fixed` counterpart, and they
+are all genuine extra resolution: the Man Utd takeover, a second tennis
+factor, oil prices, broadband, UKIP, public-sector pensions, EU patent law,
+film festivals, the Budget, search engines, DVD technology, France/Wales
+rugby, and games in schools. Going the other way, only one `exp_fixed`
+factor, `band/album`, has no $x^3$ partner.
+
+### Where the contrasts differ, and by how much
+
+```{r raw-scatter, fig.width=10, fig.height=9}
+mr  <- mnn(cor(Xraw[["x|x|"]], Xraw[["exp_fixed"]]))
+ord <- order(mr$cos)
+pd <- do.call(rbind, lapply(ord, function(i) data.frame(
+  xx = Xraw[["x|x|"]][, i], ef = Xraw[["exp_fixed"]][, mr$j[i]], category = lab,
+  panel = sprintf("%s  /  %s\nr = %.3f", colnames(Xraw[["x|x|"]])[i],
+                  colnames(Xraw[["exp_fixed"]])[mr$j[i]], mr$cos[i]))))
+pd$panel <- factor(pd$panel, levels = unique(pd$panel))
+
+ggplot(pd, aes(ef, xx, colour = category)) +
+  geom_abline(slope = 1, intercept = 0, colour = "grey60") +
+  geom_point(size = 0.4, alpha = 0.4) +
+  facet_wrap(~ panel, ncol = 4, scales = "free") +
+  labs(x = "exp_fixed,  U'w (unshrunken)", y = "x|x|,  U'w", colour = NULL) +
+  theme_bw() +
+  theme(strip.text = element_text(size = 6.5), legend.position = "bottom",
+        axis.text = element_text(size = 6))
+```
+
+```{r raw-skew}
+skew <- function(x) mean(x^3) / sd(x)^3
+data.frame(
+  `x|x|` = colnames(Xraw[["x|x|"]]),
+  exp_fixed = colnames(Xraw[["exp_fixed"]])[mr$j],
+  r = round(mr$cos, 3),
+  `skew, x|x|` = round(apply(Xraw[["x|x|"]], 2, skew), 2),
+  `skew, exp_fixed` = round(apply(Xraw[["exp_fixed"]], 2, skew)[mr$j], 2),
+  check.names = FALSE)[ord, ] |> knitr::kable(row.names = FALSE,
+  caption = "x|x| against exp_fixed on the raw projections, worst-matching pairs first")
+```
+
+Panels are ordered worst match first. The bulk of documents sits in a tight
+blob near the origin and falls exactly on the diagonal, and the two contrasts
+agree completely about which documents are in the long positive tail. Where
+they disagree is the *near* tail --- the middling documents at 2 to 5 ---
+which `exp_fixed` pushes out slightly further. That shows up as skewness:
+`exp_fixed`'s direction is more skewed than $x|x|$'s in **every** pair
+without exception, though usually only slightly (median 3.99 against 3.84).
+
+The one substantially different pair is `countri/world` against
+`countri/aid` at 0.820, and the disagreement there is one-sided: 25 documents
+are strongly positive on both, six on $x|x|$ alone, and none on `exp_fixed`
+alone. The six are not tsunami stories --- *"Radcliffe yet to answer GB
+call"*, *"Kenya lift Chepkemei's suspension"*, *"GB quartet get cross country
+call"* --- so the $x|x|$ version of this factor has picked up African and
+international distance running through `countri`, `world` and `nation`, while
+the EBproj version stays on the tsunami and aid story. That is the only pair
+where two contrasts resolve a topic differently rather than by degree, and
+there the exponential prior gives the cleaner factor.
+
+## Reproducibility across halves
+
+Each half has its own SVD, whitening and search, and stage 3 has already
+carried every maximum into every other space, so what follows is about the
+objectives and not about the search. Factors are compared in word space, the
+only representation the three fits share. (Correlating the fitted
+word-loading vectors $B$ instead picks the same partner for every factor
+whose best match is above 0.6 and agrees with the cosine to within 0.07 on
+those, so nothing below hinges on the choice of metric.)
+
+### When are two factors the same?
+
+Pooling the three comparisons (half 1 vs half 2, full vs each half) and all
+three contrasts, here is every pairwise cosine, first all together and then
+split by whether the pair are mutual nearest neighbours.
+
+```{r cos-dist, fig.width=9, fig.height=3.2}
+pairs_all <- do.call(rbind, lapply(cts, function(ct)
+  do.call(rbind, lapply(list(c("half1", "half2"), c("full", "half1"),
+                             c("full", "half2")), function(pr) {
+    C <- cosmat(get(pr[1], ct), get(pr[2], ct))
+    m <- mnn(C)
+    is_p <- matrix(FALSE, nrow(C), ncol(C))
+    is_p[cbind(m$i[m$mutual], m$j[m$mutual])] <- TRUE
+    data.frame(cos = as.vector(C),
+               kind = ifelse(as.vector(is_p), "mutual nearest neighbours",
+                             "all other pairs"))
+  }))))
+both <- transform(pairs_all, kind = "all pairs together")
+
+ggplot(rbind(both, pairs_all), aes(cos)) +
+  geom_histogram(binwidth = 0.05, boundary = 0, fill = "grey35") +
+  geom_vline(xintercept = 0.7, colour = "firebrick") +
+  facet_wrap(~ factor(kind, c("all pairs together",
+                              "mutual nearest neighbours",
+                              "all other pairs")), scales = "free_y") +
+  labs(x = "cosine between word-space directions", y = "pairs") +
+  theme_bw()
+```
+
+The combined histogram is bimodal: a large mode at zero decaying through
+0.5, a trough between 0.65 and 0.80, and a second mode above 0.85. Split
+apart, neither component is bimodal on its own --- the non-partner pairs
+decay smoothly from zero, the mutual pairs are unimodal with the mode
+against 1 and a thin tail reaching down. The tail is what a threshold is
+for: a factor with no real counterpart still has a nearest neighbour, and if
+its counterpart is equally orphaned the two pair up regardless.
+
+```{r cos-quantiles}
+np <- pairs_all$cos[pairs_all$kind != "mutual nearest neighbours"]
+mp <- pairs_all$cos[pairs_all$kind == "mutual nearest neighbours"]
+rbind(`non-partner pairs` = c(n = length(np),
+        round(quantile(np, c(.95, .99, .995, 1)), 2)),
+      `mutual pairs`      = c(n = length(mp),
+        round(quantile(mp, c(.05, .1, .5, 1)), 2)))
+```
+
+The null agrees with the antimode: non-partner cosines reach 0.66 at their
+99.5th percentile. **The criterion used throughout is mutual nearest
+neighbour plus cosine > 0.7**, which sits in the trough of the combined
+distribution and just above the 99.5th percentile of the null.
+
+### The result
+
+```{r half-summary}
+t(sapply(cts, function(ct) count_row(get, ct)))
+```
+
+**Resolution and reproducibility pull in opposite directions.** The
+half-to-half match rate --- the fraction of the maximum possible pairs that
+match, and the most demanding of these measures --- falls monotonically as
+the contrasts get finer: 0.75 for $x|x|$, 0.64 for `exp_fixed`, 0.31 for
+$x^3$. Against the full data rather than between the halves, $x^3$ still has
+the most reproducible factors in absolute terms (19, against 16 and 14), but
+that is barely half its list.
+
+The reason is visible in the contrasts themselves. $x^3$ weights a loading
+by its cube, so a direction is rewarded for a few very large values much
+more strongly than $x|x|$, which weights by the square. That is what lets it
+isolate a topic carried by ten documents, and also what makes the particular
+ten depend on the sample.
+
+### All three fits side by side {.tabset}
+
+One row per topic, aligning the full data and the two halves. Rows are
+anchored on the full-data maxima; any half factor that no full-data factor
+claims gets its own row at the bottom, paired with its own mutual nearest
+neighbour in the other half where it has one. The `h1-h2` column is the
+cosine between the two half factors on that row --- reported, but not
+required for `in_both`, which uses the same rule as the summary above.
+
+```{r half-detail, results='asis'}
+consolidate <- function(ct) {
+  fu <- get("full", ct); f1 <- get("half1", ct); f2 <- get("half2", ct)
+  m1 <- mnn(cosmat(fu, f1)); m2 <- mnn(cosmat(fu, f2))
+  C12 <- cosmat(f1, f2); m12 <- mnn(C12)
+  i1 <- ifelse(m1$mutual, m1$j, NA); i2 <- ifelse(m2$mutual, m2$j, NA)
+  c1 <- ifelse(m1$mutual, m1$cos, NA); c2 <- ifelse(m2$mutual, m2$cos, NA)
+
+  l1 <- setdiff(seq_len(ncol(f1$L)), na.omit(i1))
+  l2 <- setdiff(seq_len(ncol(f2$L)), na.omit(i2))
+  j1 <- ifelse(m12$mutual[l1] & m12$j[l1] %in% l2, m12$j[l1], NA)
+  l2 <- setdiff(l2, na.omit(j1))
+  x1 <- c(l1, rep(NA, length(l2))); x2 <- c(j1, l2)
+
+  d <- data.frame(
+    full  = c(colnames(fu$L), rep("-", length(x1))),
+    half1 = c(pick(colnames(f1$L), i1), pick(colnames(f1$L), x1)),
+    half2 = c(pick(colnames(f2$L), i2), pick(colnames(f2$L), x2)),
+    `full-h1` = fmt(c(c1, rep(NA, length(x1)))),
+    `full-h2` = fmt(c(c2, rep(NA, length(x2)))),
+    `h1-h2` = fmt(c(ifelse(is.na(i1) | is.na(i2), NA,
+                           C12[cbind(pmax(i1, 1), pmax(i2, 1))]),
+                    ifelse(is.na(x1) | is.na(x2), NA,
+                           C12[cbind(pmax(x1, 1), pmax(x2, 1))]))),
+    check.names = FALSE)
+  d$in_both <- ifelse(d$half1 != "-" & d$half2 != "-" &
+                        !grepl("\\(", paste(d$`full-h1`, d$`full-h2`)),
+                      "yes", "")
+  d
+}
+for (ct in cts) {
+  cat(sprintf("\n#### %s\n\n", ct))
+  print(knitr::kable(consolidate(ct), row.names = FALSE,
+    caption = "Every maximum across the three fits, one row per topic"))
+  cat("\n")
+}
+```
+
+### {-}
+
+# Follow-up: cross-cutting factors at K = 80
+
+The editorial categories are a crude partition --- a story about the
+Manchester United takeover is filed under Sport but is a business story --- so
+a useful question about any decomposition is whether it finds topics that cut
+across them. This section looks for those in the $K = 80$ `exp_fixed` fit.
+
+Nothing here uses the labels to fit anything; they are only used to describe
+what the factors turn out to contain.
+
+```{r xc-setup}
+efx <- get("full", "exp_fixed")
+Ax  <- memb(efx$L)
+
+# A factor's "home" category is the commonest among its 30 strongest
+# documents; the mix over those 30 is how cross-cutting it is.
+topN <- 30
+mixtab <- sapply(seq_len(ncol(Ax)), function(j)
+  table(lab[order(-Ax[, j])[1:topN]]))
+rownames(mixtab) <- levels(lab)
+share <- sweep(mixtab, 2, colSums(mixtab), "/")
+home  <- levels(lab)[apply(share, 2, which.max)]
+ent   <- apply(share, 2, function(p) { p <- p[p > 0]; -sum(p * log(p)) })
+```
+
+## Which factors cut across categories
+
+```{r xc-table}
+knitr::kable(data.frame(
+  factor = colnames(Ax), home = home,
+  categories = colSums(mixtab > 0),
+  `largest share` = round(apply(share, 2, max), 2),
+  entropy = round(ent, 2),
+  mix = apply(share, 2, function(p)
+    paste(sprintf("%s %.0f%%", levels(lab)[p > 0], 100 * p[p > 0]),
+          collapse = ", ")),
+  check.names = FALSE)[order(-ent), ], row.names = FALSE,
+  caption = "Editorial categories of the 30 strongest documents on each factor")
+```
+
+Most factors are almost perfectly category-pure: sixteen of the 24 draw all
+30 of their strongest documents from a single category. That is reassuring
+rather than disappointing --- nobody told the method the categories exist ---
+but it means the interesting cases are few, and they are of two kinds.
+
+**One factor is genuinely cross-cutting.** `countri/aid` (`countri, aid,
+tsunami, disast, debt, world, nation, relief`) draws its top 30 from four
+categories: half Business, over a third Politics, and a scattering of
+Entertainment and Tech. The Indian Ocean tsunami was simultaneously a
+disaster-relief story, a debt-and-aid story, a government story and a
+charity-telethon story, and the factor spans all of those. It is the one
+place where the decomposition clearly identifies a subject the editorial
+partition splits up.
+
+**One is a two-category topic.** `music/digit` (`music, digit, file,
+download, industri, share, peer, legal`) is 80% Tech and 20% Entertainment:
+legal downloading sits on the boundary by construction.
+
+## Documents filed under one category, loading on another's topic
+
+The more common pattern is not a factor that spans categories but a factor
+with a clear home and a handful of documents from elsewhere that belong to it
+anyway. These are the individual stories the editorial partition misfiles.
+The table below is restricted to the 22 factors that do have a home --- at
+least 80% of their top 30 from one category --- since for `countri/aid` and
+`music/digit` an out-of-category document is the normal case rather than the
+exception.
+
+```{r xc-offcat}
+# Only factors with a real home: at least 80% of the top 30 from one
+# category. The two cross-cutting factors above are excluded by construction
+# -- a document from "another" category is not surprising for a factor that
+# does not belong to one in the first place.
+concentrated <- apply(share, 2, max) > 0.8
+off <- do.call(rbind, lapply(which(concentrated), function(j) {
+  i <- which(Ax[, j] > 0.4 & lab != home[j])
+  if (!length(i)) return(NULL)
+  i <- i[order(-Ax[i, j])][1:min(3, length(i))]
+  data.frame(factor = colnames(Ax)[j], home = home[j],
+             filed_under = as.character(lab[i]),
+             membership = round(Ax[i, j], 2), headline = hd[i])
+}))
+knitr::kable(off[order(-off$membership), ], row.names = FALSE,
+  caption = "Documents loading above 0.4 on a concentrated factor from outside its home category")
+```
+
+The clearest example of the kind is **`bid/offer`**, the takeover factor
+(`bid, offer, share, deutsch, takeov, lse, boers, sharehold`), whose home is
+Business and
+whose strongest outside document is *"Ferdinand casts doubt over Glazer"*,
+filed under Sport --- the Glazer bid for Manchester United, a takeover story
+that happens to be about a football club. *"Tottenham bid £8m for Forest
+duo"* comes next, which is the same word bag applied to transfer fees.
+
+Others worth naming:
+
+* **`mobil/phone`** (Tech) picks up *"MPs issued with Blackberry threat"*
+  (Politics) and *"Brussels raps mobile call charges"* (Business) --- the
+  regulatory and parliamentary side of a technology topic.
+* **`game/consol`** (Tech) picks up *"Game warnings 'must be clearer'"*
+  (Politics), a classification-and-regulation story, and *"News Corp eyes
+  video games market"* (Business). That last headline appears twice: the
+  corpus contains two near-identical versions of the story whose text differs
+  slightly, so only exact duplicates were removed in the preparation.
+* **`show/bbc`** (Entertainment) picks up *"UK net users leading TV
+  downloads"* (Tech) and *"'Poll Idols' face first hurdles"* (Politics), the
+  latter about reality-TV formats applied to elections.
+
+## Documents that bridge two topics
+
+The same thing seen document-first: articles loading above 0.3 on factors
+whose home categories differ.
+
+```{r xc-bridge}
+dom <- home
+br <- do.call(rbind, lapply(seq_len(nrow(Ax)), function(i) {
+  j <- which(Ax[i, ] > 0.3)
+  if (length(j) < 2 || length(unique(dom[j])) < 2) return(NULL)
+  data.frame(filed_under = as.character(lab[i]), headline = hd[i],
+             factors = paste(sprintf("%s [%s] %.2f", colnames(Ax)[j],
+                                     dom[j], Ax[i, j]), collapse = "; "))
+}))
+knitr::kable(head(br[order(-nchar(br$factors)), ], 15), row.names = FALSE,
+  caption = "Documents loading on factors with different home categories")
+```
+
+## A caveat: not every crossing is real
+
+Sorting sport documents by their largest loading on a non-sport factor shows
+the failure mode as well as the successes.
+
+```{r xc-sport}
+sp <- which(lab == "Sports"); ns <- which(dom != "Sports")
+b  <- apply(Ax[sp, ns, drop = FALSE], 1, function(a) c(which.max(a), max(a)))
+o  <- order(-b[2, ])[1:8]
+knitr::kable(data.frame(headline = hd[sp[o]], factor = colnames(Ax)[ns[b[1, o]]],
+                        home = dom[ns[b[1, o]]], membership = round(b[2, o], 2)),
+             row.names = FALSE,
+             caption = "Sport documents and their strongest non-sport factor")
+```
+
+The top entry, the Glazer story on `bid/offer`, is a genuine crossing. The
+next few are not: *"Moya fights back for Indian title"* loads 0.40 on
+`countri/aid` because of `indian`, and *"Sydney to host north v south game"*
+and the Lions tour stories load on it through `world`, `nation` and
+`countri`. So the method is finding shared *vocabulary*, which is usually but
+not always shared *subject*. At memberships below about 0.4 on this data the
+crossings should be read as word overlap unless the headline says otherwise.
+
+# Addendum: K = 40
+
+The same pipeline at $K = 40$, all three contrasts, everything else
+unchanged. It was the main analysis in an earlier version of this page and
+is kept because it makes the resolution-against-stability trade very clear.
+
+```{r k40-load}
+r40 <- label_fits(readRDS("../output/bbc_ica_K40_scaled_3c.rds"))
+get40 <- function(sp, ct) r40$fits[[sp]][[ct]]
+```
+
+```{r k40-counts}
+tab <- rbind(t(sapply(cts, function(ct) count_row(get, ct))),
+             t(sapply(cts, function(ct) count_row(get40, ct))))
+rownames(tab) <- sprintf("K=%d, %s", rep(c(80, 40), each = length(cts)), cts)
+tab
+```
+
+Halving $K$ costs factors under every contrast --- 18 to 15, 24 to 18, 36 to
+20 --- and buys a large amount of stability: the half-to-half match rate goes
+from 0.75 to 0.92 for $x|x|$, 0.64 to 0.88 for `exp_fixed`, and 0.31 to 0.75
+for $x^3$. At $K = 40$ even the cubic contrast is more reproducible than
+$x|x|$ was at $K = 80$.
+
+Cross-initialization adds nothing here either, and adding $x^3$ to the
+$K = 40$ run leaves the other two contrasts bit-identical to the
+two-contrast fit, exactly as at $K = 80$.
+
+$K = 40$ is a coarsening rather than a different answer: every $K = 40$
+factor is a mutual nearest neighbour of a $K = 80$ factor under the same
+contrast.
+
+```{r k40-vs-k80, results='asis'}
+for (ct in cts) {
+  a <- get40("full", ct); b <- get("full", ct); m <- mnn(cosmat(a, b))
+  cat(sprintf("\n- **%s**: %d of %d $K = 40$ factors matched, median cosine %.2f\n",
+              ct, sum(m$mutual), ncol(a$G), median(m$cos[m$mutual])))
+}
+```
+
+So if the aim is a decomposition whose factors will still be there in a fresh
+sample, $K = 40$ is the better operating point at any of the three contrasts.
+If the aim is to enumerate candidate topics for inspection, $K = 80$ with
+$x^3$ finds roughly twice as many, and the half-split says which to trust.
+
+# Follow-up: a small pseudo-count, $\log(0.001 + X/s)$
+
+Everything above uses $\log(1 + X/s)$. The log1p NMF of Weine et al. carries a
+pseudo-count $c$ and their headline BBC fit uses $c = 0.001$, so this section
+runs the identical pipeline on $\log(c + X/s)$ at $c = 0.001$, at $K = 80$
+and, for reference, at $K = 40$.
+
+Note first that the pseudo-count only rescales and shifts:
+$$\log(c + z) = \log(c) + \log(1 + z/c),$$
+and the constant disappears in the column centring. So $\log(0.001 + X/s)$ and
+$\log(1 + X/(0.001\,s))$ give exactly the same whitening --- the two readings of
+"$c$" coincide --- and the sparse form $\log(1 + z/c)$ is what is computed.
+What $c$ actually controls is how much the transform flattens the non-zero
+counts relative to the zeros. At $c = 0.001$ a count of 1 maps to about 6.9
+and a count of 2 to 7.6, so the gap between absent and present dwarfs every
+gap between one occurrence and many: the analysis is close to
+presence/absence.
+
+```{r c0-load}
+rc <- lapply(c(`K = 40` = "bbc_ica_K40_scaled_c0.001",
+               `K = 80` = "bbc_ica_K80_scaled_c0.001"),
+             function(stem) label_fits(readRDS(sprintf("../output/%s.rds", stem))))
+getc <- function(k) function(sp, ct) rc[[k]]$fits[[sp]][[ct]]
+```
+
+### The topics are coherent, and coarser
+
+They are. Every $K = 80$ factor under both contrasts is a recognisable topic,
+with no nuisance axis --- in particular none of the `number/top` box-office
+oddity that $c = 1$ threw up at this rank. The factors are also *broader*:
+`x|x|` finds 14 rather than 18 and `exp_fixed` 18 rather than 24, and what
+disappears is the finer splits. Television goes under both contrasts; $x|x|$
+additionally loses corporate results, video games and the WorldCom fraud,
+while `exp_fixed` loses the dollar and trade deficit, digital music, the
+Chelsea-specific football factor and the `number/top` box-office axis. The
+survivors are the large subject areas.
+
+They are not different factors, though. Matched in word space, all 14 of the
+$K = 80$ $x|x|$ factors and 17 of the 18 `exp_fixed` factors are mutual
+nearest neighbours of a $c = 1$ factor at the same rank, median cosine 0.94
+to 0.95 --- so with one exception nothing at $c = 0.001$ is new. The small
+pseudo-count coarsens the decomposition rather than reorienting it. (The
+exception, `exp_fixed`'s `parti/elect`, is the UKIP and Kilroy-Silk factor,
+which $c = 1$ splits differently.)
+
+```{r c0-vs-c1, results='asis'}
+for (ct in cts2) {
+  a <- get("full", ct); b <- getc("K = 80")("full", ct)
+  m <- mnn(cosmat(b, a))
+  print(knitr::kable(data.frame(
+    `c = 0.001` = colnames(b$L),
+    `c = 1`     = pick(colnames(a$L), ifelse(m$mutual, m$j, NA)),
+    cos         = fmt(ifelse(m$mutual, m$cos, NA)), check.names = FALSE),
+    row.names = FALSE,
+    caption = sprintf("K = 80, %s: the c = 0.001 factors against the c = 1 factors", ct)))
+  cat("\n")
+}
+```
+
+The two contrasts still agree almost perfectly with each other at
+$c = 0.001$: 12 of 13 mutual pairs at $K = 40$ and 13 of 14 at $K = 80$,
+median cosine 0.94--0.96.
+
+### But they reproduce worse
+
+This is the part that argues against the small pseudo-count. Across both
+ranks and both contrasts, the fraction of possible half-to-half pairs that
+match drops sharply.
+
+```{r c0-counts}
+rbind(`K=40 c=1,     x|x|`      = count_row(get40, "x|x|"),
+      `K=40 c=1,     exp_fixed` = count_row(get40, "exp_fixed"),
+      `K=40 c=0.001, x|x|`      = count_row(getc("K = 40"), "x|x|"),
+      `K=40 c=0.001, exp_fixed` = count_row(getc("K = 40"), "exp_fixed"),
+      `K=80 c=1,     x|x|`      = count_row(get, "x|x|"),
+      `K=80 c=1,     exp_fixed` = count_row(get, "exp_fixed"),
+      `K=80 c=0.001, x|x|`      = count_row(getc("K = 80"), "x|x|"),
+      `K=80 c=0.001, exp_fixed` = count_row(getc("K = 80"), "exp_fixed"))
+```
+
+At $K = 40$ the half-to-half match rate falls from 0.92 to 0.62 under $x|x|$
+and from 0.88 to 0.57 under `exp_fixed`; at $K = 80$ from 0.75 to 0.57 and
+from 0.64 to 0.56. Both the numerator and the denominator shrink, so this is
+not an artefact of finding fewer factors --- the factors that *are* found hold
+up less well. The whitening is also slightly less efficient: 40 PCs carry
+18.9% of the variance at $c = 0.001$ against 21.4% at $c = 1$, and 80 PCs
+27.4% against 30.4%.
+
+Cross-initialization again adds nothing at either rank, so this is a property
+of the objectives and not of the search.
+
+```{r c0-cross}
+z <- unlist(lapply(names(rc), function(k) lapply(sps, function(sp)
+  lapply(cts2, function(ct) unlist(getc(k)(sp, ct)$n_cross)))))
+c(`transfers performed` = length(z), `new maxima found` = sum(z))
+```
+
+So $c = 0.001$ buys nothing here. It gives a coarser view of the same
+structure --- fewer factors, all of them matching $c = 1$ factors, none of
+them new --- and it makes that structure less reproducible. Pushing the
+transform towards presence/absence throws away the information in *how often*
+a word appears, and on this corpus that information is evidently what makes
+the maxima stable. $\log(1 + X/s)$ remains the better choice.
+
+### The factors {.tabset}
+
+```{r c0-factors, results='asis'}
+for (ct in cts2) {
+  cat(sprintf("\n#### %s\n\n", ct))
+  print(knitr::kable(factor_table(getc("K = 80"), ct), row.names = FALSE,
+    caption = "K = 80, c = 0.001: full-data maxima, key words, and reproducibility"))
+  cat("\n")
+}
+```
+
+### {-}
+
+# Follow-up: searching over words instead of documents
+
+Everything so far searches for sparse directions over **documents**: a factor
+is a set of articles, and its words come afterwards from a regression. The
+transpose is equally well defined --- search the row space instead, so that a
+factor is a sparse set of **words** and the documents come from the
+regression. $K = 80$, $\log(1 + X/s)$, both contrasts, the same document
+half-split, everything else unchanged (`BBC_SPACE=words` in
+[`code/fit_bbc_ica.R`](https://github.com/stephenslab/misc/blob/master/code/fit_bbc_ica.R)).
+
+**The centring has to be transposed too**, and this is not a detail. The
+contrasts and the centred priors assume the loadings they see are mean zero.
+Centring the columns makes every column of $X_c$ sum to zero over documents,
+so the column space is orthogonal to $\mathbf{1}_n$ and every *document*
+loading is mean zero --- right for the document search. For the word search
+the *rows* must be centred instead, so that the same holds in $\mathbb{R}^p$.
+On this data, row-centring puts the mean of each word-space singular vector
+at $4\times10^{-18}$ while column-centring leaves it at $4\times10^{-4}$; run
+the word search on the column-centred matrix and the all-ones word direction
+stays inside the space being searched, and the contrasts duly report
+overall-word-frequency axes (`year, time, make, work, run`) as factors.
+
+One simplification does fall out of word mode: every fit lives in the same
+5861-dimensional word space, so half-to-half comparison is direct and the
+$V\,\text{diag}(d)\,w$ transfer is not needed.
+
+```{r words-load}
+rw <- readRDS("../output/bbc_ica_K80_scaled_words.rds")
+getw <- function(sp, ct) rw$fits[[sp]][[ct]]
+# In word mode the loadings are per word, so a factor names itself.
+for (sp in sps) for (ct in names(rw$fits$full)) {
+  f <- rw$fits[[sp]][[ct]]
+  colnames(f$L) <- colnames(f$G) <-
+    make.unique(apply(f$L, 2, function(x)
+      paste(rownames(f$L)[order(-x)[1:2]], collapse = "/")))
+  rw$fits[[sp]][[ct]] <- f
+}
+```
+
+## The two contrasts behave very differently here
+
+```{r words-counts}
+rbind(`documents, x|x|`      = count_row(get, "x|x|"),
+      `documents, exp_fixed` = count_row(get, "exp_fixed"),
+      `words, x|x|`          = count_row(getw, "x|x|"),
+      `words, exp_fixed`     = count_row(getw, "exp_fixed"))
+```
+
+Over documents the two contrasts found 18 and 24 factors and agreed with each
+other almost perfectly. Over words they diverge: $x|x|$ finds 15, close to
+its document-space count, while `exp_fixed` collapses to 10 on the full data
+and to 7 and 5 in the halves. Cross-initialization adds nothing in either
+case, and the clustering is insensitive to the cut, so the collapse is a
+property of the objective in this space rather than a search failure.
+
+Why the exponential prior should do so much worse over words than over
+documents is not obvious. One guess: the word marginals are far more
+skewed than the document marginals --- a handful of words appear everywhere
+and most appear in a handful of documents --- so a prior with a fixed scale
+$c^2 = 1/2$ is a much worse description of a word loading than of a document
+loading. Estimating $c$ (the `exp` configuration) would test that.
+
+## The factors {.tabset}
+
+Each factor with its strongest words, how it fares in the two halves, and the
+article that loads on it most, from the regression of documents on the word
+memberships.
+
+```{r words-factors, results='asis'}
+for (ct in cts2) {
+  f <- getw("full", ct); A <- memb(f$L)
+  m1 <- mnn(cosmat(f, getw("half1", ct))); m2 <- mnn(cosmat(f, getw("half2", ct)))
+  top <- apply(f$words$B, 1, which.max)
+  cat(sprintf("\n### %s\n\n", ct))
+  print(knitr::kable(data.frame(
+    factor = colnames(f$L), `words > 0.5` = colSums(A > 0.5),
+    half1 = fmt(ifelse(m1$mutual, m1$cos, NA)),
+    half2 = fmt(ifelse(m2$mutual, m2$cos, NA)),
+    top_words = sapply(seq_len(ncol(f$L)), function(j)
+      paste(rownames(f$L)[order(-f$L[, j])[1:9]], collapse = ", ")),
+    leading_document = hd[top],
+    filed_under = as.character(lab[top]), check.names = FALSE),
+    row.names = FALSE,
+    caption = "Word-space maxima: strongest words, reproducibility, and leading article"))
+  cat("\n")
+}
+```
+
+## {-}
+
+The $x|x|$ factors are mostly recognisable topics --- tennis, the
+macroeconomy, party politics, video games, music charts, film awards, mobile
+phones, doping, athletics, Yukos, share dealing, computer security, company
+results --- and each picks out a sensible leading article. Two are not: a
+`year/work` axis that no half reproduces, and `year/open`, which is a second
+copy of tennis. Note also how many factors have `year` among their top two
+words; with the rows centred, `year` behaves as a high-frequency word that
+co-varies with almost everything, and it tends to ride along.
+
+## Against the document-space factors
+
+Both searches produce word-space directions --- explicitly in word mode, as
+$V\,\text{diag}(d)\,w$ in document mode --- so they match directly.
+
+```{r words-vs-docs, results='asis'}
+for (ct in cts2) {
+  a <- getw("full", ct); b <- get("full", ct); m <- mnn(cosmat(a, b))
+  print(knitr::kable(data.frame(
+    `word space` = colnames(a$L),
+    `document space` = pick(colnames(b$L), ifelse(m$mutual, m$j, NA)),
+    cos = fmt(ifelse(m$mutual, m$cos, NA)), check.names = FALSE),
+    row.names = FALSE,
+    caption = sprintf("%s: word-space factors against document-space factors", ct)))
+  cat("\n")
+}
+```
+
+Twelve of the 15 $x|x|$ word-space factors have a document-space partner, at
+a median cosine of 0.86 --- so where the word search finds a topic, it is one
+the document search already found. Nothing is gained. Six document-space
+factors have no word-space counterpart, and they are the specific ones: rugby,
+law and civil liberties, the Chelsea football factor, television, the
+WorldCom fraud, developing-world aid. For `exp_fixed` the loss is far larger,
+16 of 24.
+
+## Reproducibility
+
+```{r words-repro}
+t(sapply(cts2, function(ct) count_row(getw, ct)))
+```
+
+For $x|x|$, 9 of 15 factors are matched in both halves and 10 of a possible
+13 pairs match between the halves --- a rate of 0.77, slightly better than
+the 0.75 of the document search at the same $K$, at a median cosine of 0.88.
+So the word search is not unstable; it simply finds fewer and coarser
+topics. `exp_fixed` is a different story: 3 of 10 matched in both halves and
+3 of a possible 5 between them.
+
+One caveat on the search budget. The $x|x|$ word runs finish with a worst
+`1 - |cos|` of about $5\times10^{-5}$ against roughly $10^{-15}$ in document
+mode, so 500 iterations is only marginally enough; `exp_fixed`, which stops
+on a tolerance, reached $10^{-8}$ everywhere. Worth raising before leaning on
+the $x|x|$ numbers, though it would not explain the `exp_fixed` collapse.
+
+Overall, searching over words is not a good substitute for searching over
+documents on this data: $x|x|$ recovers a subset of the same topics and adds
+nothing, and the exponential prior largely fails.
+
+# Follow-up: EBproj as an initialization for a topic model
+
+A different use for the EBproj solution: as a starting point for a Poisson
+NMF on the **raw counts**. EBproj works on a centred, whitened,
+$\log(1 + X/s)$ matrix and returns signed factors; the topic model works on
+the counts themselves and returns non-negative ones. If the EBproj maxima are
+picking out real structure, they should be a good place to start the topic
+model from.
+
+The normalized memberships of the $K = 80$ `exp_fixed` fit on the full data
+--- the positive part of the posterior means, each column scaled to a maximum
+of 1, i.e. exactly what the structure plots show --- are used as the loadings
+initialization for `fastTopics::fit_poisson_nmf`, floored at $10^{-4}$ so no
+document is stuck at zero. There are 24 of them, so $k = 24$. The same fit is
+then run from fastTopics' own default initialization, 500 SCD iterations
+each. Compute is in
+[`code/fit_bbc_fasttopics.R`](https://github.com/stephenslab/misc/blob/master/code/fit_bbc_fasttopics.R).
+
+```{r ft-load}
+library(fastTopics)
+ft <- readRDS("../output/bbc_fasttopics_K80.rds")
+ef <- get("full", "exp_fixed")
+A  <- ft$A_init; colnames(A) <- colnames(ef$L)
+M  <- list(ebproj = poisson2multinom(ft$ebp)$L,
+           default = poisson2multinom(ft$def)$L)
+ft_words <- function(fit, j, n = 8)
+  paste(ft$terms[order(-fit$F[, j])[1:n]], collapse = ", ")
+ft_name <- function(fit)
+  make.unique(apply(fit$F, 2, function(f)
+    paste(ft$terms[order(-f)[1:2]], collapse = "/")))
+for (k in names(M)) colnames(M[[k]]) <- ft_name(ft[[c(ebproj = "ebp",
+                                                      default = "def")[k]]])
+```
+
+## The EBproj start reaches a better optimum
+
+```{r ft-loglik}
+c(`EBproj-initialized` = round(ft$loglik_ebp, 1),
+  `default init`       = round(ft$loglik_def, 1),
+  difference           = round(ft$loglik_ebp - ft$loglik_def, 1))
+```
+
+Same $k$, same iteration budget, same method, and the two runs took the same
+time (1.9 minutes each). Starting from the EBproj memberships gains about
+1350 log-likelihood units. That is not a small reordering of the same answer:
+20 of the 24 topics are mutual nearest neighbours across the two fits (median
+membership correlation 0.88), and four are unique to each. The four the
+EBproj start finds and the default does not are television
+(`show, bbc, broadcast, programm, televis`), government and public services,
+corporate share and stock, and digital music (`music, digit, gadget, appl,
+download`) --- the first and last being topics the EBproj fit itself has. The
+default run instead splits off two rather diffuse factors
+(`peopl, time, thing, make, work, good` and
+`peopl, search, hunt, inform, blog, onlin`).
+
+## Structure plots for the two fits {.tabset}
+
+Topic proportions, so every bar is full height by construction --- unlike the
+EBproj structure plots earlier, where the bar height carried information.
+
+```{r ft-struct, results='asis', fig.width=10, fig.height=4}
+for (k in names(M)) {
+  cat(sprintf("\n### %s\n\n", c(ebproj = "initialized from EBproj",
+                                  default = "default initialization")[k]))
+  print(plot_struct(M[[k]], TRUE, sprintf("topic model, %s init", k)))
+  cat("\n")
+}
+```
+
+## {-}
+
+## Memberships against the initialization
+
+Comparing memberships rather than word loadings is the fairer test here: the
+EBproj word loadings are fitted **with an intercept**, so they measure
+departure from the corpus average, whereas the topic model has no intercept
+and its $F$ is an absolute word distribution. The document memberships carry
+no such asymmetry --- both are non-negative per-document weights on a topic
+--- so they can be correlated directly.
+
+```{r ft-membership, results='asis'}
+mm <- mnn(cor(A, M$ebproj))
+knitr::kable(data.frame(
+  `EBproj factor` = colnames(A),
+  topic = ifelse(mm$mutual, paste0("t", mm$j), "-"),
+  r     = fmt(ifelse(mm$mutual, mm$cos, NA)),
+  `top words of the topic` = ifelse(mm$mutual,
+    sapply(mm$j, function(j) ft_words(ft$ebp, j)), "-"),
+  check.names = FALSE), row.names = FALSE,
+  caption = "EBproj memberships against the fitted topic proportions")
+```
+
+```{r ft-membership-summary}
+t(sapply(names(M), function(k) {
+  m <- mnn(cor(A, M[[k]]))
+  c(`mutual pairs` = sum(m$mutual), `of` = ncol(A),
+    `median r` = round(median(m$cos[m$mutual]), 2),
+    `min r` = round(min(m$cos[m$mutual]), 2),
+    `max r` = round(max(m$cos[m$mutual]), 2))
+}))
+```
+
+Nineteen of the 24 EBproj factors survive into the fitted topic model as a
+mutual nearest neighbour, at a median membership correlation of 0.77. The
+strong ones are the large, distinctive topics --- tennis at 0.94, rugby 0.93,
+athletics 0.91, music 0.91, television 0.87, video games 0.86 --- and the
+weak one is doping (`test/athlet`) at 0.36, which the topic model apparently
+absorbs into a broader sport topic. Five EBproj factors have no mutual
+partner at all: the `number/top` box-office axis, the tax-and-spend politics
+factor, the dollar and trade deficit, the football match report, and the
+WorldCom fraud.
+
+### Everything found by any of the three
+
+One row per topic across the union of the EBproj initialization and the two
+topic model fits, anchored on the EBproj factors, with any topic that no
+EBproj factor claims added below. Each of the three columns holds the
+membership correlation where the topic is present and `-` where it is not, so
+the columns double as presence indicators. Key words come from the
+EBproj-initialized topic model where the row appears in it, otherwise from
+the default fit, otherwise from the EBproj word loadings.
+
+```{r ft-union}
+me <- mnn(cor(A, M$ebproj)); md <- mnn(cor(A, M$default))
+ie <- ifelse(me$mutual, me$j, NA); id <- ifelse(md$mutual, md$j, NA)
+med <- mnn(cor(M$ebproj, M$default))
+
+# Topics that no EBproj factor claimed, paired with each other where mutual.
+le <- setdiff(seq_len(ncol(M$ebproj)), na.omit(ie))
+ld <- setdiff(seq_len(ncol(M$default)), na.omit(id))
+je <- ifelse(med$mutual[le] & med$j[le] %in% ld, med$j[le], NA)
+ld <- setdiff(ld, na.omit(je))
+xe <- c(le, rep(NA, length(ld))); xd <- c(je, ld)
+
+n_eb <- ncol(A); n_x <- length(xe)
+col_e <- c(ie, xe); col_d <- c(id, xd)          # topic index per row, or NA
+
+# Row label: the EBproj factor name, or the topic's own name if EBproj has no
+# such factor.
+lbl <- c(colnames(A),
+         ifelse(!is.na(xe), colnames(M$ebproj)[pmax(xe, 1)],
+                colnames(M$default)[pmax(xd, 1)]))
+
+# Key words: from the EBproj-initialized fit where the row is in it, else the
+# default fit, else the EBproj word loadings.
+kw <- ifelse(!is.na(col_e),
+             sapply(pmax(col_e, 1), function(j) ft_words(ft$ebp, j)),
+      ifelse(!is.na(col_d),
+             sapply(pmax(col_d, 1), function(j) ft_words(ft$def, j)),
+             c(sapply(seq_len(n_eb), function(j) top_words(efx, j, 8)),
+               rep("", n_x))))
+
+# A correlation where the row has an EBproj factor to correlate against,
+# "present" where it does not, "-" where the fit lacks the topic entirely.
+tab <- data.frame(
+  factor = lbl,
+  EBproj = c(rep("yes", n_eb), rep("-", n_x)),
+  `topic: EBproj init` = c(fmt(ifelse(me$mutual, me$cos, NA)),
+                           ifelse(is.na(xe), "-", "present")),
+  `topic: default`     = c(fmt(ifelse(md$mutual, md$cos, NA)),
+                           ifelse(is.na(xd), "-", "present")),
+  `key words` = kw, check.names = FALSE)
+knitr::kable(tab, row.names = FALSE,
+  caption = "Union of the EBproj factors and the topics of the two fits")
+```
+
+```{r ft-union-counts}
+c(`EBproj factors` = ncol(A),
+  `topics, EBproj init` = ncol(M$ebproj),
+  `topics, default` = ncol(M$default),
+  `rows in the union` = nrow(tab),
+  `in all three` = sum(tab$EBproj == "yes" &
+                         tab$`topic: EBproj init` != "-" &
+                         tab$`topic: default` != "-"))
+```
+
+Across the three there are 33 distinct topics, of which 16 appear in all
+three and nine are found by only one. The EBproj-only ones are the four
+listed above plus `chelsea/club`, which both topic models find only loosely
+(0.66 and 0.64). Going the other way, the default fit contributes four topics
+neither of the others has, and two of them --- `peopl, time, thing, make,
+work, good` and `peopl, search, hunt, inform, blog, onlin` --- are the
+diffuse factors noted earlier, so the extra topics it finds are the weaker
+ones.
+
+Two caveats on reading this as "the initialization persisted". First, the
+correspondence is one of *topics*, not of column indices: only `L` is
+supplied, so `F` starts random and the topic labels shuffle in the first few
+updates. Second, and more importantly, the default fit agrees with the EBproj
+memberships about as well as the EBproj-initialized fit does --- 17 mutual
+pairs at median 0.77, against 19 at 0.77. Much of that agreement is therefore
+just both topic models finding the same structure the EBproj factors describe,
+not a trace of the starting point. **The benefit of the initialization shows
+up in the likelihood and in which topics get separated, not in the
+memberships being closer to where they started.**
+
+Worth noting how different the starting point is from what fastTopics would
+normally be given: the EBproj memberships are 84.5% exactly zero, with a
+median of 30 documents above 0.5 per factor. It is a far sparser and more
+committed initialization than `topicscore` produces, which is presumably why
+it lands in a different basin.
+
+# Next steps
+
+* The $K$ sweep is now two points, 40 and 80, and they disagree about which
+  is better: $K = 40$ is far more reproducible at every contrast, $K = 80$
+  finds roughly twice as many topics. Filling in 50--60 would say whether the
+  reproducibility falls off gradually or has a knee.
+* Repeat the split under a few different seeds. One split is enough to rank
+  the three contrasts --- the ordering 0.75 / 0.64 / 0.31 is not close ---
+  but not to put an error bar on any single rate.
+* $x^3$ is the most interesting of the three and the least stable. Worth
+  asking whether its extra factors can be filtered rather than avoided: they
+  are individually checkable against the half-split, and the ones that
+  survive (19 of 36) include several the other contrasts never find.
+* Compare against the log1p NMF fits of Weine et al. at the same $K$, which
+  is the actual point of using this corpus. Fits at $c = 0.001$ and
+  $K = 10, 40$ are already in `output/`.
+* Try the point-exponential prior, which estimates $\pi_0$, $c$ and
+  $\sigma^2$ rather than fixing them. The word-space result below suggests
+  the fixed scale $c^2 = 1/2$ is doing real work, since relaxing the search
+  to a space where it fits badly is where `exp_fixed` collapses.

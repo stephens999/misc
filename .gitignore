@@ -16,3 +16,10 @@ output/admixture/
 # ADMIXTURE working directory: PLINK binaries, per-seed runs and the binary
 # itself. The results the analysis uses are in output/hgdp_admixture_compare.rds.
 output/admixture/
+
+# BBC news corpus: the source zip is re-downloaded by code/prep_bbc_data.R,
+# and the fits are 165 MB and rebuilt by code/fit_bbc_ica.R in a few minutes.
+# The document-term matrix the analysis starts from, data/bbc_dtm.rds, is
+# 596 KB and is tracked.
+data/bbc-fulltext.zip
+output/bbc_*.rds
